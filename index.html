@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="DreamScapes creates personalised children’s bedtime and anytime stories."
+    />
+    <title>DreamScapes | Personalised Bedtime Stories</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="stars" aria-hidden="true"></div>
+    <main class="app-shell">
+      <section class="screen welcome-screen active" id="welcome-screen" aria-labelledby="welcome-title">
+        <div class="brand-lockup">
+          <img
+            class="brand-logo"
+            src="./assets/dreamscapes-logo.png"
+            alt="DreamScapes logo with moon, stars, clouds, and storybook"
+          />
+        </div>
+        <div class="welcome-copy">
+          <h1 id="welcome-title">DreamScapes</h1>
+          <p>
+            Create gentle, imaginative stories shaped around your child, their mood,
+            and the kind of adventure they are ready for today.
+          </p>
+          <div class="welcome-actions">
+            <button class="button primary-button" id="start-button" type="button">
+              Create a Story
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen builder-screen" id="builder-screen" aria-labelledby="builder-title">
+        <header class="top-bar">
+          <img class="mini-logo" src="./assets/dreamscapes-logo.png" alt="DreamScapes" />
+          <div>
+            <p class="eyebrow">Story Builder</p>
+            <h2 id="builder-title">Create a Story</h2>
+          </div>
+        </header>
+
+        <section class="package-panel" aria-labelledby="package-title">
+          <div>
+            <p class="eyebrow">Subscription</p>
+            <h3 id="package-title">Current Plan</h3>
+          </div>
+          <div class="subscription-card">
+            <strong id="current-plan-name">Free</strong>
+            <span id="current-plan-summary">3 stories/month, up to 10 min</span>
+          </div>
+          <p class="plan-note" id="plan-note">
+            Free package: 3 stories this month, no saved library or audio narration.
+          </p>
+          <button class="button secondary-button compact-button" data-screen-target="upgrade" type="button">
+            Manage Plan
+          </button>
+        </section>
+
+        <form class="story-form" id="story-form">
+
+          <div class="form-grid">
+            <label class="field">
+              <span>Child name</span>
+              <input id="child-name" name="childName" type="text" placeholder="Rosie" required />
+            </label>
+
+            <label class="field">
+              <span>Age</span>
+              <input id="child-age" name="childAge" type="number" min="1" max="12" placeholder="5" required />
+            </label>
+          </div>
+
+          <div class="form-grid profile-grid">
+            <label class="field">
+              <span>Interests</span>
+              <input name="interests" type="text" placeholder="Unicorns, space, football" />
+            </label>
+          </div>
+
+          <fieldset class="choice-group">
+            <legend>Story duration</legend>
+            <div class="duration-grid" role="radiogroup" aria-label="Story duration">
+              <label>
+                <input type="radio" name="durationChoice" value="5" checked />
+                <span>5 min <small>Free</small></span>
+              </label>
+              <label>
+                <input type="radio" name="durationChoice" value="10" />
+                <span>10 min <small>Free</small></span>
+              </label>
+              <label>
+                <input type="radio" name="durationChoice" value="15" />
+                <span>15 min <small>Premier</small></span>
+              </label>
+              <label>
+                <input type="radio" name="durationChoice" value="20" />
+                <span>20 min <small>Premier</small></span>
+              </label>
+              <label>
+                <input type="radio" name="durationChoice" value="30" />
+                <span>30 min <small>Premier</small></span>
+              </label>
+              <label>
+                <input type="radio" name="durationChoice" value="45" />
+                <span>45 min <small>Plus</small></span>
+              </label>
+              <label>
+                <input type="radio" name="durationChoice" value="60" />
+                <span>1 hour <small>Plus</small></span>
+              </label>
+            </div>
+          </fieldset>
+
+          <fieldset class="choice-group">
+            <legend>Story time</legend>
+            <div class="segmented-control" role="radiogroup" aria-label="Story type">
+              <label>
+                <input type="radio" name="storyType" value="bedtime" checked />
+                <span>Bedtime story</span>
+              </label>
+              <label>
+                <input type="radio" name="storyType" value="anytime" />
+                <span>Anytime story</span>
+              </label>
+            </div>
+          </fieldset>
+
+          <fieldset class="choice-group">
+            <legend>Moods</legend>
+            <div class="mood-grid" aria-label="Story moods">
+              <label>
+                <input type="checkbox" name="moods" value="relaxing" checked />
+                <span>Relaxing</span>
+              </label>
+              <label>
+                <input type="checkbox" name="moods" value="magical" />
+                <span>Magical</span>
+              </label>
+              <label>
+                <input type="checkbox" name="moods" value="funny" />
+                <span>Funny</span>
+              </label>
+              <label>
+                <input type="checkbox" name="moods" value="adventurous" />
+                <span>Adventurous</span>
+              </label>
+              <label>
+                <input type="checkbox" name="moods" value="energetic" />
+                <span>Energetic</span>
+              </label>
+              <label>
+                <input type="checkbox" name="moods" value="sleepy bedtime" />
+                <span>Sleepy bedtime</span>
+              </label>
+              <label>
+                <input type="checkbox" name="moods" value="educational" />
+                <span>Educational</span>
+              </label>
+            </div>
+          </fieldset>
+
+          <fieldset class="choice-group safety-grid">
+            <legend>Parent safety controls</legend>
+            <label class="field">
+              <span>Avoid topics</span>
+              <input name="avoidTopics" type="text" placeholder="Dragons, storms, getting lost" />
+            </label>
+            <label class="field">
+              <span>Preferred lesson</span>
+              <input name="preferredLesson" type="text" placeholder="Kindness, confidence, sharing" />
+            </label>
+            <label class="feature-toggle calm-toggle">
+              <input name="calmMode" type="checkbox" />
+              <span>
+                <strong>Bedtime calm mode</strong>
+                <small>Soft pacing, lower excitement, peaceful ending</small>
+              </span>
+            </label>
+          </fieldset>
+
+          <label class="field">
+            <span>Story idea</span>
+            <div class="idea-examples" aria-label="Story idea examples">
+              <button type="button" data-idea="A brave child helps a shy moon dragon learn to make friends.">
+                Moon dragon
+              </button>
+              <button type="button" data-idea="A child visits a cloud bakery and learns that sharing makes treats taste better.">
+                Cloud bakery
+              </button>
+              <button type="button" data-idea="A curious child explores a rainbow library and learns a new fact on every shelf.">
+                Rainbow library
+              </button>
+            </div>
+            <textarea
+              id="story-idea"
+              name="storyIdea"
+              rows="5"
+              placeholder="A little girl called Rosie goes on an adventure with a unicorn and learns to be kind."
+              required
+            ></textarea>
+          </label>
+
+          <label class="feature-toggle">
+            <input id="audio-narration" name="audioNarration" type="checkbox" />
+            <span>
+              <strong>Add audio narration</strong>
+              <small>Available with DreamScapes Plus</small>
+            </span>
+          </label>
+
+          <label class="field voice-field">
+            <span>Narration voice</span>
+            <select id="voice-style" name="voiceStyle">
+              <option value="calm bedtime">Calm bedtime narrator</option>
+              <option value="warm parent">Warm parent-style voice</option>
+              <option value="magical storyteller">Magical storyteller</option>
+              <option value="playful character">Playful character voice</option>
+              <option value="calm educational">Calm educational voice</option>
+            </select>
+          </label>
+
+          <div class="builder-actions">
+            <button class="button secondary-button" id="welcome-back-button" type="button">
+              Back
+            </button>
+            <button class="button primary-button" type="submit">Generate Story</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="screen loading-screen" id="loading-screen" aria-live="polite">
+        <div class="moon-loader" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+        <h2>Creating your magical story...</h2>
+      </section>
+
+      <section class="screen result-screen" id="result-screen" aria-labelledby="story-title">
+        <header class="result-header">
+          <img class="mini-logo" src="./assets/dreamscapes-logo.png" alt="DreamScapes" />
+          <div class="result-title-block">
+            <p class="eyebrow">Your Story</p>
+            <h2 id="story-title"></h2>
+          </div>
+          <div class="audio-controls" aria-label="Audio narration controls">
+            <button
+              class="button secondary-button icon-button"
+              id="audio-play-button"
+              type="button"
+              aria-label="Play narration"
+              title="Play narration"
+            >
+              <span class="play-icon" aria-hidden="true"></span>
+            </button>
+            <button
+              class="button secondary-button icon-button"
+              id="audio-pause-button"
+              type="button"
+              aria-label="Pause or resume narration"
+              title="Pause or resume narration"
+            >
+              <span class="pause-icon" aria-hidden="true"></span>
+            </button>
+          </div>
+        </header>
+
+        <article class="story-card">
+          <div class="story-meta" id="story-meta"></div>
+          <div class="story-text" id="story-text"></div>
+        </article>
+
+        <div class="result-actions">
+          <button class="button secondary-button" id="calmer-story-button" type="button">
+            Make Calmer
+          </button>
+          <button class="button secondary-button" id="funnier-story-button" type="button">
+            Make Funnier
+          </button>
+          <button class="button secondary-button" id="ending-story-button" type="button">
+            Regenerate Ending
+          </button>
+          <button class="button secondary-button" id="save-story-button" type="button">
+            Save Story
+          </button>
+          <button class="button secondary-button" id="copy-story-button" type="button">
+            Copy Story
+          </button>
+          <button class="button primary-button" id="create-another-button" type="button">
+            Create Another Story
+          </button>
+        </div>
+
+        <div class="premium-extras" aria-label="Premium future features">
+          <button class="button secondary-button" data-premium-extra="illustration" type="button">
+            AI Illustration
+          </button>
+          <button class="button secondary-button" data-premium-extra="pdf" type="button">
+            Printable PDF
+          </button>
+          <button class="button secondary-button" data-premium-extra="share" type="button">
+            Share Story
+          </button>
+          <button class="button secondary-button" data-premium-extra="sleep timer" type="button">
+            Sleep Timer
+          </button>
+        </div>
+
+        <p class="status-note" id="status-note" role="status"></p>
+      </section>
+
+      <section class="screen library-screen" id="library-screen" aria-labelledby="library-title">
+        <header class="top-bar">
+          <img class="mini-logo" src="./assets/dreamscapes-logo.png" alt="DreamScapes" />
+          <div>
+            <p class="eyebrow">Saved Stories</p>
+            <h2 id="library-title">Library</h2>
+          </div>
+        </header>
+        <div class="library-list" id="library-list"></div>
+      </section>
+
+      <section class="screen upgrade-screen" id="upgrade-screen" aria-labelledby="upgrade-title">
+        <header class="top-bar">
+          <img class="mini-logo" src="./assets/dreamscapes-logo.png" alt="DreamScapes" />
+          <div>
+            <p class="eyebrow">Packages</p>
+            <h2 id="upgrade-title">Choose a Plan</h2>
+          </div>
+        </header>
+        <div class="upgrade-grid">
+          <article>
+            <h3>Free</h3>
+            <p>Try DreamScapes with short text stories.</p>
+            <ul>
+              <li>3 stories per month</li>
+              <li>5 and 10 minute stories</li>
+              <li>Text only</li>
+            </ul>
+            <button class="button secondary-button" data-plan-select="free" type="button">
+              Use Free
+            </button>
+          </article>
+          <article>
+            <h3>Premier</h3>
+            <p>For families who want more stories and a saved library.</p>
+            <ul>
+              <li>15 stories per month</li>
+              <li>Stories up to 30 minutes</li>
+              <li>Saved story library</li>
+            </ul>
+            <button class="button primary-button" data-plan-select="premier" type="button">
+              Choose Premier
+            </button>
+          </article>
+          <article>
+            <h3>DreamScapes Plus</h3>
+            <p>For long stories, bedtime narration, and premium extras.</p>
+            <ul>
+              <li>30 stories per month</li>
+              <li>Stories up to 1 hour</li>
+              <li>Audio narration and future PDFs</li>
+            </ul>
+            <button class="button primary-button" data-plan-select="plus" type="button">
+              Choose Plus
+            </button>
+          </article>
+        </div>
+        <p class="status-note" id="upgrade-note" role="status"></p>
+      </section>
+
+      <nav class="app-tabbar" aria-label="App navigation">
+        <button type="button" data-screen-target="welcome">
+          <span aria-hidden="true">⌂</span>
+          Home
+        </button>
+        <button type="button" data-screen-target="builder">
+          <span aria-hidden="true">✦</span>
+          Create
+        </button>
+        <button type="button" data-screen-target="library">
+          <span aria-hidden="true">▣</span>
+          Library
+        </button>
+        <button type="button" data-screen-target="upgrade">
+          <span aria-hidden="true">★</span>
+          Plans
+        </button>
+      </nav>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

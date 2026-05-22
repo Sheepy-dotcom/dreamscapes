@@ -1,0 +1,72 @@
+# DreamScapes Domain Setup
+
+Domain: `dreamscapes.cloud`  
+Preferred public URL: `www.dreamscapes.cloud`
+
+## Recommended Hosting: Vercel
+
+DreamScapes is currently a static app, so it can be deployed directly to Vercel.
+
+## Vercel Dashboard Deployment
+
+1. Go to the Vercel dashboard.
+2. Create a new project.
+3. Upload/import the `DreamScapes` folder as the project root.
+4. Use the default static-site settings. There is no build command.
+5. Deploy the project.
+6. Open Project Settings, then Domains.
+7. Add:
+
+```txt
+www.dreamscapes.cloud
+dreamscapes.cloud
+```
+
+Set `www.dreamscapes.cloud` as the primary domain, and redirect `dreamscapes.cloud` to `www.dreamscapes.cloud`.
+
+## DNS Records
+
+After the app is deployed, the hosting provider will give you a target address. Add these records wherever the domain DNS is managed.
+
+### For `www.dreamscapes.cloud`
+
+Use a CNAME record:
+
+```txt
+Type: CNAME
+Name: www
+Value: your-hosting-target
+TTL: Auto
+```
+
+Vercel may show a project-specific CNAME. Use the exact value shown in the Vercel dashboard.
+
+### For `dreamscapes.cloud`
+
+Point the root domain to the same site using the hosting provider's recommended root-domain setup.
+
+Common Vercel option:
+
+```txt
+Type: A
+Name: @
+Value: 76.76.21.21
+TTL: Auto
+```
+
+Vercel may show a different or project-specific value. Use the exact value shown in the Vercel dashboard if it differs.
+
+## Redirect
+
+Set the root domain to redirect to:
+
+```txt
+https://www.dreamscapes.cloud
+```
+
+## Before Launch
+
+- Confirm HTTPS is active.
+- Confirm `www.dreamscapes.cloud` loads the app.
+- Confirm `dreamscapes.cloud` redirects to `www.dreamscapes.cloud`.
+- Add real backend services before taking payments, generating AI stories, or storing user accounts.
