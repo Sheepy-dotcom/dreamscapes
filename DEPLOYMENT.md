@@ -11,7 +11,12 @@ DreamScapes is currently a static app, so it can be deployed directly to Vercel.
 
 1. Go to the Vercel dashboard.
 2. Create a new project.
-3. Upload/import the `DreamScapes` folder as the project root.
+3. Import the GitHub repository:
+
+```txt
+https://github.com/Sheepy-dotcom/dreamscapes
+```
+
 4. Use the default static-site settings. There is no build command.
 5. Deploy the project.
 6. Open Project Settings, then Domains.
