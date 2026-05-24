@@ -648,49 +648,6 @@ document.querySelector("#save-story-button").addEventListener("click", () => {
   renderLibrary();
 });
 
-document.querySelector("#copy-story-button").addEventListener("click", async () => {
-  if (!currentStory) return;
-  const text = storyAsText(currentStory);
-
-  try {
-    await navigator.clipboard.writeText(text);
-    statusNote.textContent = "Story copied.";
-  } catch {
-    statusNote.textContent = "Copy was blocked by the browser, but the story is ready to select.";
-  }
-});
-
-function regenerateStoryMood(mood) {
-  if (!currentStory) return;
-  currentStory = generateStory({
-    ...currentStory,
-    moods: Array.from(new Set([...getSelectedMoods(currentStory.moods), mood])),
-  });
-  renderStory(currentStory);
-  statusNote.textContent = `Story refreshed with a ${mood} tone.`;
-}
-
-document.querySelector("#calmer-story-button").addEventListener("click", () => {
-  regenerateStoryMood("relaxing");
-});
-
-document.querySelector("#funnier-story-button").addEventListener("click", () => {
-  regenerateStoryMood("funny");
-});
-
-document.querySelector("#ending-story-button").addEventListener("click", () => {
-  if (!currentStory) return;
-  const endings = [
-    `And so ${currentStory.childName} carried the lesson home, where it glowed softly through every dream that followed.`,
-    `By bedtime, ${currentStory.childName} felt proud, peaceful, and ready for the next kind adventure.`,
-    `The DreamScape faded gently, but the happy feeling stayed tucked safely in ${currentStory.childName}'s heart.`,
-  ];
-  const newEnding = endings[Math.floor(Math.random() * endings.length)];
-  currentStory.text[currentStory.text.length - 1] = newEnding;
-  renderStory(currentStory);
-  statusNote.textContent = "Ending regenerated.";
-});
-
 document.querySelectorAll("[data-premium-extra]").forEach((button) => {
   button.addEventListener("click", () => {
     if (!currentStory) return;
