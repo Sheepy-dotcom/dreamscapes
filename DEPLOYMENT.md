@@ -47,10 +47,10 @@ OPENAI_API_KEY=your_openai_api_key
 Optional story model override:
 
 ```txt
-OPENAI_STORY_MODEL=gpt-5.2
+OPENAI_STORY_MODEL=gpt-5-mini
 ```
 
-After adding the key, redeploy the project. Story generation will use `/api/story`, and DreamScapes Plus audio will generate MP3 narration through `/api/narrate`. If the key is missing, the app falls back to the local template story and device voice.
+After adding the key, redeploy the project. Story generation will use `/api/story`, and DreamScapes Plus audio will generate MP3 narration through `/api/narrate`. Generated audio is cached with the saved story on the device so replaying does not make another AI request. If the key is missing, the app falls back to the local template story and device voice.
 
 ## DNS Records
 

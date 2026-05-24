@@ -20,6 +20,7 @@ const upgradeNote = document.querySelector("#upgrade-note");
 const audioToggle = document.querySelector("#audio-narration");
 const audioPlayButton = document.querySelector("#audio-play-button");
 const audioPauseButton = document.querySelector("#audio-pause-button");
+const narrationNote = document.querySelector("#narration-note");
 const voiceStyle = document.querySelector("#voice-style");
 const deviceVoice = document.querySelector("#device-voice");
 const voiceRate = document.querySelector("#voice-rate");
@@ -36,6 +37,7 @@ let currentAudio = null;
 let currentAudioTracks = [];
 let currentAudioIndex = 0;
 let aiAudioPausedBetweenTracks = false;
+let narrationRequestInFlight = false;
 let availableVoices = [];
 const AI_ENDPOINT = window.DREAMSCAPES_AI_ENDPOINT || "/api/story";
 const NARRATION_ENDPOINT = window.DREAMSCAPES_NARRATION_ENDPOINT || "/api/narrate";
@@ -485,6 +487,11 @@ function renderStory(story) {
   document.querySelector("#story-text").innerHTML = story.text
     .map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`)
     .join("");
+  narrationNote.textContent = story.audioNarration
+    ? story.aiAudioTracks?.length
+      ? "Premium audio saved with this story"
+      : "First play creates and saves premium audio"
+    : "Turn on audio before generating a story";
 }
 
 function storyAsText(story) {
@@ -572,6 +579,68 @@ function setSavedStories(stories) {
     "dreamscapesStories",
     JSON.stringify(stories.slice(0, MAX_LOCAL_SAVED_STORIES))
   );
+}
+
+function createStoryId() {
+  if ("crypto" in window && typeof window.crypto.randomUUID === "function") {
+    return window.crypto.randomUUID();
+  }
+
+  return `story-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function getStoryStorageSize(story) {
+  return JSON.stringify(story).length;
+}
+
+function saveStoryToLibrary(story, { silent = false } = {}) {
+  const plan = getPlan(story.plan);
+
+  if (!plan.canSave) {
+    if (!silent) statusNote.textContent = "Saved story libraries are included with Premier and DreamScapes Plus.";
+    return false;
+  }
+
+  const storyToSave = {
+    ...story,
+    id: story.id || createStoryId(),
+    savedAt: new Date().toISOString(),
+  };
+  const savedStories = getSavedStories().filter((savedStory) => savedStory.id !== storyToSave.id);
+  savedStories.unshift(storyToSave);
+
+  try {
+    setSavedStories(savedStories.slice(0, Math.min(plan.savedLimit, MAX_LOCAL_SAVED_STORIES)));
+  } catch {
+    const withoutAudio = {
+      ...storyToSave,
+      aiAudioTracks: [],
+      aiAudioGeneratedAt: "",
+    };
+    const smallerStories = [withoutAudio, ...savedStories.slice(1)];
+    try {
+      setSavedStories(smallerStories.slice(0, Math.min(plan.savedLimit, MAX_LOCAL_SAVED_STORIES)));
+    } catch {
+      if (!silent) {
+        statusNote.textContent = "This device storage is full, so the story could not be saved here.";
+      }
+      return false;
+    }
+  }
+
+  currentStory = storyToSave;
+
+  if (!silent) {
+    statusNote.textContent = `Story saved to this device. ${plan.label} keeps up to ${plan.savedLimit} saved stories here.`;
+  }
+
+  trackEvent("story_saved", {
+    plan: story.plan,
+    hasAudio: Boolean(storyToSave.aiAudioTracks?.length),
+    size: getStoryStorageSize(storyToSave),
+  });
+  renderLibrary();
+  return true;
 }
 
 function loadDeviceVoices() {
@@ -695,9 +764,20 @@ form.addEventListener("submit", async (event) => {
   };
 
   window.setTimeout(async () => {
-    currentStory = await createStory(storyData);
+    currentStory = {
+      ...(await createStory(storyData)),
+      id: createStoryId(),
+      aiAudioTracks: [],
+      aiAudioGeneratedAt: "",
+    };
     incrementStoriesUsed(selectedPlanKey);
     renderStory(currentStory);
+    if (selectedPlan.canSave) {
+      saveStoryToLibrary(currentStory, { silent: true });
+      statusNote.textContent = "Story saved automatically to your library.";
+    } else {
+      statusNote.textContent = "";
+    }
     trackEvent("story_generated", {
       plan: selectedPlanKey,
       duration: storyData.duration,
@@ -709,19 +789,7 @@ form.addEventListener("submit", async (event) => {
 
 document.querySelector("#save-story-button").addEventListener("click", () => {
   if (!currentStory) return;
-  const plan = getPlan(currentStory.plan);
-
-  if (!plan.canSave) {
-    statusNote.textContent = "Saved story libraries are included with Premier and DreamScapes Plus.";
-    return;
-  }
-
-  const savedStories = getSavedStories();
-  savedStories.unshift(currentStory);
-  setSavedStories(savedStories.slice(0, Math.min(plan.savedLimit, MAX_LOCAL_SAVED_STORIES)));
-  statusNote.textContent = `Story saved to this device. ${plan.label} keeps up to ${plan.savedLimit} saved stories here.`;
-  trackEvent("story_saved", { plan: currentStory.plan });
-  renderLibrary();
+  saveStoryToLibrary(currentStory);
 });
 
 document.querySelectorAll("[data-premium-extra]").forEach((button) => {
@@ -893,6 +961,16 @@ function playAiAudioTrack() {
 }
 
 async function startAiNarration() {
+  if (Array.isArray(currentStory.aiAudioTracks) && currentStory.aiAudioTracks.length > 0) {
+    currentAudioTracks = currentStory.aiAudioTracks;
+    currentAudioIndex = 0;
+    playAiAudioTrack();
+    statusNote.textContent = "Playing saved premium AI narration.";
+    narrationNote.textContent = "Using saved audio, no new AI request";
+    trackEvent("cached_ai_audio_played", { voiceStyle: currentStory.voiceStyle });
+    return true;
+  }
+
   try {
     const response = await fetch(NARRATION_ENDPOINT, {
       method: "POST",
@@ -912,9 +990,19 @@ async function startAiNarration() {
 
     currentAudioTracks = data.audio;
     currentAudioIndex = 0;
+    currentStory = {
+      ...currentStory,
+      aiAudioTracks: data.audio,
+      aiAudioGeneratedAt: new Date().toISOString(),
+    };
+    saveStoryToLibrary(currentStory, { silent: true });
     playAiAudioTrack();
-    statusNote.textContent = "Playing premium AI narration.";
-    trackEvent("ai_audio_played", { voiceStyle: currentStory.voiceStyle });
+    statusNote.textContent = "Playing premium AI narration. Audio saved for replay.";
+    narrationNote.textContent = "Premium audio saved with this story";
+    trackEvent("ai_audio_played", {
+      voiceStyle: currentStory.voiceStyle,
+      chunks: data.audio.length,
+    });
     return true;
   } catch {
     return false;
@@ -935,6 +1023,11 @@ function startDeviceNarration() {
 
 audioPlayButton.addEventListener("click", async () => {
   if (!canUseNarration()) return;
+
+  if (narrationRequestInFlight) {
+    statusNote.textContent = "Audio is already being prepared.";
+    return;
+  }
 
   if (currentAudio) {
     currentAudio.play().catch(() => {
@@ -967,7 +1060,9 @@ audioPlayButton.addEventListener("click", async () => {
 
   stopNarration();
   statusNote.textContent = "Preparing premium AI narration...";
+  narrationRequestInFlight = true;
   const usedAiNarration = await startAiNarration();
+  narrationRequestInFlight = false;
   if (!usedAiNarration) startDeviceNarration();
   trackEvent("audio_played", { voiceStyle: currentStory.voiceStyle });
 });

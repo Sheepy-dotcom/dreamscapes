@@ -556,6 +556,35 @@ textarea:focus-visible {
   min-height: 44px;
 }
 
+.narration-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 16px 0 4px;
+  border: 1px solid rgba(123, 78, 216, 0.18);
+  border-radius: 8px;
+  padding: 12px;
+  background: linear-gradient(135deg, rgba(255, 248, 220, 0.9), rgba(255, 228, 238, 0.75));
+}
+
+.narration-panel strong,
+.narration-panel span {
+  display: block;
+}
+
+.narration-panel strong {
+  color: var(--ink);
+  font-weight: 900;
+}
+
+.narration-panel span {
+  color: #5e5f80;
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
 .icon-button {
   display: inline-grid;
   width: 48px;
@@ -813,6 +842,11 @@ textarea:focus-visible {
   .top-bar,
   .result-header {
     align-items: center;
+  }
+
+  .narration-panel {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .mini-logo {

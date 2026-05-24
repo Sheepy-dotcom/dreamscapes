@@ -1,13 +1,13 @@
 const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
 
 const durationTargets = {
-  5: { words: 650, paragraphs: 7 },
-  10: { words: 1200, paragraphs: 10 },
-  15: { words: 1800, paragraphs: 14 },
-  20: { words: 2400, paragraphs: 18 },
-  30: { words: 3200, paragraphs: 24 },
-  45: { words: 4200, paragraphs: 32 },
-  60: { words: 5200, paragraphs: 40 },
+  5: { words: 420, paragraphs: 6 },
+  10: { words: 850, paragraphs: 8 },
+  15: { words: 1300, paragraphs: 11 },
+  20: { words: 1700, paragraphs: 14 },
+  30: { words: 2400, paragraphs: 20 },
+  45: { words: 3300, paragraphs: 27 },
+  60: { words: 4200, paragraphs: 34 },
 };
 
 function cleanText(value, fallback = "") {
@@ -94,7 +94,7 @@ async function createStory(data) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: process.env.OPENAI_STORY_MODEL || "gpt-5.2",
+      model: process.env.OPENAI_STORY_MODEL || "gpt-5-mini",
       input: [
         {
           role: "developer",
