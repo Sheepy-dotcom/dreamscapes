@@ -29,9 +29,16 @@ function extractResponseText(data) {
 
   return (data.output || [])
     .flatMap((item) => item.content || [])
-    .map((content) => content.text || "")
+    .map((content) => content.text || content.refusal || "")
     .join("")
     .trim();
+}
+
+function getStoryModel() {
+  const model = cleanText(process.env.OPENAI_STORY_MODEL, "gpt-4o-mini");
+  const expensivePrototypeModels = new Set(["gpt-5.2", "gpt-5-mini"]);
+
+  return expensivePrototypeModels.has(model) ? "gpt-4o-mini" : model;
 }
 
 function buildPrompt(data) {
@@ -94,7 +101,7 @@ async function createStory(data) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: process.env.OPENAI_STORY_MODEL || "gpt-5-mini",
+      model: getStoryModel(),
       input: [
         {
           role: "developer",
@@ -106,7 +113,7 @@ async function createStory(data) {
           content: buildPrompt(data),
         },
       ],
-      max_output_tokens: Math.min(getTarget(data.duration).words * 2, 9000),
+      max_output_tokens: Math.min(getTarget(data.duration).words * 3, 12000),
       text: {
         format: {
           type: "json_schema",
@@ -125,6 +132,11 @@ async function createStory(data) {
 
   const result = await response.json();
   const text = extractResponseText(result);
+
+  if (!text) {
+    throw new Error(`Story model returned no text. Status: ${result.status || "unknown"}`);
+  }
+
   const story = JSON.parse(text);
 
   return {
