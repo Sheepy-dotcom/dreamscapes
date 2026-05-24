@@ -29,21 +29,28 @@ dreamscapes.cloud
 
 Set `www.dreamscapes.cloud` as the primary domain, and redirect `dreamscapes.cloud` to `www.dreamscapes.cloud`.
 
-## Premium AI Narration
+## OpenAI Features
 
-DreamScapes includes a Vercel serverless endpoint at:
+DreamScapes includes Vercel serverless endpoints for real AI features:
 
 ```txt
+/api/story
 /api/narrate
 ```
 
-To enable studio-quality narration, add this environment variable in Vercel Project Settings:
+To enable AI story generation and studio-quality narration, add this environment variable in Vercel Project Settings:
 
 ```txt
 OPENAI_API_KEY=your_openai_api_key
 ```
 
-After adding the key, redeploy the project. DreamScapes Plus audio will generate MP3 narration through the server endpoint. If the key is missing, the app falls back to the device voice.
+Optional story model override:
+
+```txt
+OPENAI_STORY_MODEL=gpt-5.2
+```
+
+After adding the key, redeploy the project. Story generation will use `/api/story`, and DreamScapes Plus audio will generate MP3 narration through `/api/narrate`. If the key is missing, the app falls back to the local template story and device voice.
 
 ## DNS Records
 
