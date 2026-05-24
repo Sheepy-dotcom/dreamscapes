@@ -83,8 +83,7 @@ button {
 .screen {
   display: none;
   width: 100%;
-  max-height: calc(100vh - 120px);
-  overflow: auto;
+  min-height: calc(100vh - 120px);
   border: 1px solid rgba(255, 255, 255, 0.42);
   border-radius: 8px;
   background:
@@ -354,14 +353,16 @@ textarea:focus-visible {
 .segmented-control label,
 .duration-grid label,
 .mood-grid label {
+  position: relative;
+  display: block;
   min-width: 0;
+  cursor: pointer;
 }
 
 .segmented-control input,
 .duration-grid input,
 .mood-grid input {
-  position: absolute;
-  opacity: 0;
+  display: none;
   pointer-events: none;
 }
 

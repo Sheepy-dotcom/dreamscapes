@@ -539,7 +539,6 @@ document.querySelectorAll("[data-screen-target]").forEach((button) => {
 document.querySelectorAll("[data-idea]").forEach((button) => {
   button.addEventListener("click", () => {
     storyIdea.value = button.dataset.idea;
-    storyIdea.focus();
     trackEvent("idea_example_selected", { label: button.textContent.trim() });
   });
 });
