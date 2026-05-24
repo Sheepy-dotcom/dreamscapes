@@ -32,8 +32,13 @@ let currentNarrationSegments = [];
 let currentNarrationIndex = 0;
 let currentNarrationTimer = null;
 let narrationPausedBetweenSegments = false;
+let currentAudio = null;
+let currentAudioTracks = [];
+let currentAudioIndex = 0;
+let aiAudioPausedBetweenTracks = false;
 let availableVoices = [];
 const AI_ENDPOINT = window.DREAMSCAPES_AI_ENDPOINT || "";
+const NARRATION_ENDPOINT = window.DREAMSCAPES_NARRATION_ENDPOINT || "/api/narrate";
 const MAX_LOCAL_SAVED_STORIES = 30;
 const MAX_LIBRARY_RENDER_ITEMS = 30;
 
@@ -524,6 +529,35 @@ function storyAsNarrationSegments(story) {
   ].filter(Boolean);
 }
 
+function getAiNarrationVoice(style) {
+  const voices = {
+    "calm bedtime": "cedar",
+    "warm parent": "marin",
+    "magical storyteller": "fable",
+    "playful character": "nova",
+    "calm educational": "sage",
+  };
+
+  return voices[style] || "cedar";
+}
+
+function getAiNarrationInstructions(story) {
+  const mood = getSelectedMoods(story.moods).join(", ") || "gentle";
+  const bedtimeDirection =
+    story.storyType === "bedtime"
+      ? "Use a soft bedtime pace with soothing pauses and a calm final line."
+      : "Use a warm, clear daytime storytelling pace.";
+
+  return [
+    "Narrate this children's story in a safe, warm, expressive voice.",
+    `The child is age ${story.childAge}.`,
+    `Mood: ${mood}.`,
+    bedtimeDirection,
+    "Avoid sounding robotic. Use natural intonation, gentle emotion, and parent-friendly warmth.",
+    "Do not add extra words that are not in the story.",
+  ].join(" ");
+}
+
 function getSavedStories() {
   try {
     const stories = JSON.parse(localStorage.getItem("dreamscapesStories") || "[]");
@@ -772,23 +806,26 @@ function canUseNarration() {
     return false;
   }
 
-  if (!("speechSynthesis" in window)) {
-    statusNote.textContent = "Audio narration is not available in this browser.";
-    return false;
-  }
-
   return true;
 }
 
 function stopNarration() {
-  if (!("speechSynthesis" in window)) return;
   window.clearTimeout(currentNarrationTimer);
   currentNarrationTimer = null;
-  window.speechSynthesis.cancel();
+  if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.removeAttribute("src");
+    currentAudio.load();
+  }
   currentNarration = null;
   currentNarrationSegments = [];
   currentNarrationIndex = 0;
   narrationPausedBetweenSegments = false;
+  currentAudio = null;
+  currentAudioTracks = [];
+  currentAudioIndex = 0;
+  aiAudioPausedBetweenTracks = false;
 }
 
 function getNarrationPause(story = currentStory) {
@@ -797,6 +834,11 @@ function getNarrationPause(story = currentStory) {
 }
 
 function speakNarrationSegment() {
+  if (!("speechSynthesis" in window)) {
+    statusNote.textContent = "Device narration is not available in this browser.";
+    return;
+  }
+
   if (narrationPausedBetweenSegments) return;
 
   if (!currentStory || currentNarrationIndex >= currentNarrationSegments.length) {
@@ -821,10 +863,95 @@ function speakNarrationSegment() {
   window.speechSynthesis.speak(currentNarration);
 }
 
-audioPlayButton.addEventListener("click", () => {
+function playAiAudioTrack() {
+  if (aiAudioPausedBetweenTracks) return;
+
+  if (currentAudioIndex >= currentAudioTracks.length) {
+    currentAudio = null;
+    currentAudioTracks = [];
+    currentAudioIndex = 0;
+    aiAudioPausedBetweenTracks = false;
+    statusNote.textContent = "AI narration finished.";
+    return;
+  }
+
+  currentAudio = new Audio(currentAudioTracks[currentAudioIndex]);
+  currentAudio.onended = () => {
+    currentAudioIndex += 1;
+    currentNarrationTimer = window.setTimeout(playAiAudioTrack, getNarrationPause());
+  };
+  currentAudio.onerror = () => {
+    currentAudio = null;
+    statusNote.textContent = "AI narration stopped. Trying the device voice instead.";
+    startDeviceNarration();
+  };
+  currentAudio.play().catch(() => {
+    currentAudio = null;
+    statusNote.textContent = "AI narration could not play. Trying the device voice instead.";
+    startDeviceNarration();
+  });
+}
+
+async function startAiNarration() {
+  try {
+    const response = await fetch(NARRATION_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: currentStory.title,
+        text: storyAsText(currentStory),
+        voice: getAiNarrationVoice(currentStory.voiceStyle),
+        instructions: getAiNarrationInstructions(currentStory),
+      }),
+    });
+
+    if (!response.ok) return false;
+
+    const data = await response.json();
+    if (!Array.isArray(data.audio) || data.audio.length === 0) return false;
+
+    currentAudioTracks = data.audio;
+    currentAudioIndex = 0;
+    playAiAudioTrack();
+    statusNote.textContent = "Playing premium AI narration.";
+    trackEvent("ai_audio_played", { voiceStyle: currentStory.voiceStyle });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function startDeviceNarration() {
+  if (!("speechSynthesis" in window)) {
+    statusNote.textContent = "AI narration is not configured yet, and device narration is not available in this browser.";
+    return;
+  }
+
+  currentNarrationSegments = storyAsNarrationSegments(currentStory);
+  currentNarrationIndex = 0;
+  speakNarrationSegment();
+  statusNote.textContent = "AI narration is not configured yet, so this is using the device voice.";
+}
+
+audioPlayButton.addEventListener("click", async () => {
   if (!canUseNarration()) return;
 
-  if (window.speechSynthesis.paused) {
+  if (currentAudio) {
+    currentAudio.play().catch(() => {
+      statusNote.textContent = "AI narration could not resume. Try pressing play again.";
+    });
+    statusNote.textContent = "AI narration resumed.";
+    return;
+  }
+
+  if (aiAudioPausedBetweenTracks && currentAudioTracks.length > 0) {
+    aiAudioPausedBetweenTracks = false;
+    playAiAudioTrack();
+    statusNote.textContent = "AI narration resumed.";
+    return;
+  }
+
+  if ("speechSynthesis" in window && window.speechSynthesis.paused) {
     window.speechSynthesis.resume();
     statusNote.textContent = "Audio narration resumed.";
     return;
@@ -839,17 +966,35 @@ audioPlayButton.addEventListener("click", () => {
   }
 
   stopNarration();
-  currentNarrationSegments = storyAsNarrationSegments(currentStory);
-  currentNarrationIndex = 0;
-  speakNarrationSegment();
+  statusNote.textContent = "Preparing premium AI narration...";
+  const usedAiNarration = await startAiNarration();
+  if (!usedAiNarration) startDeviceNarration();
   trackEvent("audio_played", { voiceStyle: currentStory.voiceStyle });
-  statusNote.textContent = "Playing smoother paragraph-by-paragraph narration.";
 });
 
 audioPauseButton.addEventListener("click", () => {
   if (!canUseNarration()) return;
 
-  if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
+  if (currentAudio && !currentAudio.paused) {
+    currentAudio.pause();
+    trackEvent("audio_paused");
+    statusNote.textContent = "AI narration paused.";
+    return;
+  }
+
+  if (currentAudioTracks.length > 0) {
+    window.clearTimeout(currentNarrationTimer);
+    aiAudioPausedBetweenTracks = true;
+    trackEvent("audio_paused");
+    statusNote.textContent = "AI narration paused.";
+    return;
+  }
+
+  if (
+    "speechSynthesis" in window &&
+    window.speechSynthesis.speaking &&
+    !window.speechSynthesis.paused
+  ) {
     window.speechSynthesis.pause();
     trackEvent("audio_paused");
     statusNote.textContent = "Audio narration paused.";
@@ -864,7 +1009,7 @@ audioPauseButton.addEventListener("click", () => {
     return;
   }
 
-  if (window.speechSynthesis.paused) {
+  if ("speechSynthesis" in window && window.speechSynthesis.paused) {
     window.speechSynthesis.resume();
     trackEvent("audio_resumed");
     statusNote.textContent = "Audio narration resumed.";
