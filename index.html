@@ -14,7 +14,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?v=20260524" />
   </head>
   <body>
     <div class="stars" aria-hidden="true"></div>
@@ -220,7 +220,7 @@
           </label>
 
           <label class="field voice-field">
-            <span>Narration voice</span>
+            <span>Voice style</span>
             <select id="voice-style" name="voiceStyle">
               <option value="calm bedtime">Calm bedtime narrator</option>
               <option value="warm parent">Warm parent-style voice</option>
@@ -229,6 +229,22 @@
               <option value="calm educational">Calm educational voice</option>
             </select>
           </label>
+
+          <div class="audio-settings">
+            <label class="field voice-field">
+              <span>Device voice</span>
+              <select id="device-voice" name="deviceVoice">
+                <option value="">Default device voice</option>
+              </select>
+            </label>
+            <label class="field speed-field">
+              <span>Narration speed</span>
+              <input id="voice-rate" name="voiceRate" type="range" min="0.75" max="1.05" step="0.05" value="0.85" />
+            </label>
+            <button class="button secondary-button compact-button" id="voice-preview-button" type="button">
+              Preview Voice
+            </button>
+          </div>
 
           <div class="builder-actions">
             <button class="button secondary-button" id="welcome-back-button" type="button">
@@ -378,7 +394,93 @@
             </button>
           </article>
         </div>
+        <div class="trust-links" aria-label="Trust and support">
+          <button class="button secondary-button" data-screen-target="safety" type="button">
+            Child Safety
+          </button>
+          <button class="button secondary-button" data-screen-target="privacy" type="button">
+            Privacy
+          </button>
+          <button class="button secondary-button" data-screen-target="terms" type="button">
+            Terms
+          </button>
+          <button class="button secondary-button" data-screen-target="contact" type="button">
+            Contact
+          </button>
+        </div>
         <p class="status-note" id="upgrade-note" role="status"></p>
+      </section>
+
+      <section class="screen info-screen" id="safety-screen" aria-labelledby="safety-title">
+        <header class="top-bar">
+          <img class="mini-logo" src="./assets/dreamscapes-logo.png" alt="DreamScapes" />
+          <div>
+            <p class="eyebrow">Trust</p>
+            <h2 id="safety-title">Child Safety</h2>
+          </div>
+        </header>
+        <article class="info-card">
+          <p>DreamScapes is designed for parent-led story creation. Stories should be warm, age-aware, non-frightening, and suitable for children.</p>
+          <ul>
+            <li>Parents can add topics to avoid before generating.</li>
+            <li>Bedtime calm mode softens exciting moments.</li>
+            <li>Generated stories should end positively and avoid unsafe instructions.</li>
+            <li>Production AI will need server-side safety checks before launch.</li>
+          </ul>
+        </article>
+      </section>
+
+      <section class="screen info-screen" id="privacy-screen" aria-labelledby="privacy-title">
+        <header class="top-bar">
+          <img class="mini-logo" src="./assets/dreamscapes-logo.png" alt="DreamScapes" />
+          <div>
+            <p class="eyebrow">Trust</p>
+            <h2 id="privacy-title">Privacy</h2>
+          </div>
+        </header>
+        <article class="info-card">
+          <p>This prototype stores saved stories and plan state on this device only. A production version should use secure accounts, encrypted transport, and clear parent consent.</p>
+          <ul>
+            <li>Do not collect more child information than needed.</li>
+            <li>Explain how story prompts and audio are processed.</li>
+            <li>Let parents delete stories and account data.</li>
+            <li>Add a formal privacy policy before accepting payments.</li>
+          </ul>
+        </article>
+      </section>
+
+      <section class="screen info-screen" id="terms-screen" aria-labelledby="terms-title">
+        <header class="top-bar">
+          <img class="mini-logo" src="./assets/dreamscapes-logo.png" alt="DreamScapes" />
+          <div>
+            <p class="eyebrow">Legal</p>
+            <h2 id="terms-title">Terms</h2>
+          </div>
+        </header>
+        <article class="info-card">
+          <p>These placeholder terms are for planning only. Add solicitor-reviewed terms before launch.</p>
+          <ul>
+            <li>Parents are responsible for reviewing stories before sharing them with children.</li>
+            <li>Subscriptions, refunds, and cancellation rules should be stated clearly.</li>
+            <li>AI output may vary and should not replace professional advice.</li>
+            <li>Audio, PDFs, and illustrations may have usage limits by package.</li>
+          </ul>
+        </article>
+      </section>
+
+      <section class="screen info-screen" id="contact-screen" aria-labelledby="contact-title">
+        <header class="top-bar">
+          <img class="mini-logo" src="./assets/dreamscapes-logo.png" alt="DreamScapes" />
+          <div>
+            <p class="eyebrow">Support</p>
+            <h2 id="contact-title">Contact</h2>
+          </div>
+        </header>
+        <article class="info-card">
+          <p>For the live product, add a real support inbox such as:</p>
+          <p><strong>support@dreamscapes.cloud</strong></p>
+          <p>Use this page for parent support, billing help, safety reports, and account deletion requests.</p>
+        </article>
       </section>
 
       <nav class="app-tabbar" aria-label="App navigation">
@@ -401,6 +503,6 @@
       </nav>
     </main>
 
-    <script src="./app.js"></script>
+    <script src="./app.js?v=20260524"></script>
   </body>
 </html>

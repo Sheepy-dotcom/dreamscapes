@@ -5,6 +5,10 @@ const screens = {
   result: document.querySelector("#result-screen"),
   library: document.querySelector("#library-screen"),
   upgrade: document.querySelector("#upgrade-screen"),
+  safety: document.querySelector("#safety-screen"),
+  privacy: document.querySelector("#privacy-screen"),
+  terms: document.querySelector("#terms-screen"),
+  contact: document.querySelector("#contact-screen"),
 };
 
 const form = document.querySelector("#story-form");
@@ -17,10 +21,14 @@ const audioToggle = document.querySelector("#audio-narration");
 const audioPlayButton = document.querySelector("#audio-play-button");
 const audioPauseButton = document.querySelector("#audio-pause-button");
 const voiceStyle = document.querySelector("#voice-style");
+const deviceVoice = document.querySelector("#device-voice");
+const voiceRate = document.querySelector("#voice-rate");
+const voicePreviewButton = document.querySelector("#voice-preview-button");
 const storyIdea = document.querySelector("#story-idea");
 const libraryList = document.querySelector("#library-list");
 let currentStory = null;
 let currentNarration = null;
+let availableVoices = [];
 const AI_ENDPOINT = window.DREAMSCAPES_AI_ENDPOINT || "";
 const MAX_LOCAL_SAVED_STORIES = 30;
 const MAX_LIBRARY_RENDER_ITEMS = 30;
@@ -218,7 +226,27 @@ function showScreen(name) {
     button.classList.toggle("active", button.dataset.screenTarget === name);
   });
   if (name === "library") renderLibrary();
+  trackEvent("screen_view", { screen: name });
   window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function trackEvent(name, details = {}) {
+  const event = {
+    name,
+    details,
+    createdAt: new Date().toISOString(),
+  };
+  let events = [];
+
+  try {
+    const storedEvents = JSON.parse(localStorage.getItem("dreamscapesAnalytics") || "[]");
+    events = Array.isArray(storedEvents) ? storedEvents : [];
+  } catch {
+    events = [];
+  }
+
+  events.unshift(event);
+  localStorage.setItem("dreamscapesAnalytics", JSON.stringify(events.slice(0, 80)));
 }
 
 function getValue(name) {
@@ -470,6 +498,38 @@ function setSavedStories(stories) {
   );
 }
 
+function loadDeviceVoices() {
+  if (!("speechSynthesis" in window)) return;
+
+  availableVoices = window.speechSynthesis.getVoices();
+  const currentValue = deviceVoice.value;
+  deviceVoice.innerHTML = `<option value="">Default device voice</option>`;
+
+  availableVoices
+    .filter((voice) => voice.lang?.toLowerCase().startsWith("en"))
+    .forEach((voice, index) => {
+      const option = document.createElement("option");
+      option.value = voice.voiceURI || `${voice.name}-${index}`;
+      option.textContent = `${voice.name} (${voice.lang})`;
+      deviceVoice.appendChild(option);
+    });
+
+  deviceVoice.value = currentValue;
+}
+
+function getSelectedDeviceVoice(voiceUri) {
+  return availableVoices.find((voice) => voice.voiceURI === voiceUri) || null;
+}
+
+function applyNarrationSettings(utterance, story = currentStory) {
+  const style = voiceStyles[story?.voiceStyle] || voiceStyles["calm bedtime"];
+  utterance.rate = Number(story?.voiceRate || voiceRate.value || style.rate);
+  utterance.pitch = style.pitch;
+
+  const selectedVoice = getSelectedDeviceVoice(story?.deviceVoice);
+  if (selectedVoice) utterance.voice = selectedVoice;
+}
+
 document.querySelector("#start-button").addEventListener("click", () => showScreen("builder"));
 document.querySelector("#welcome-back-button").addEventListener("click", () => showScreen("welcome"));
 document.querySelectorAll("[data-screen-target]").forEach((button) => {
@@ -480,7 +540,27 @@ document.querySelectorAll("[data-idea]").forEach((button) => {
   button.addEventListener("click", () => {
     storyIdea.value = button.dataset.idea;
     storyIdea.focus();
+    trackEvent("idea_example_selected", { label: button.textContent.trim() });
   });
+});
+
+voicePreviewButton.addEventListener("click", () => {
+  if (!("speechSynthesis" in window)) {
+    planNote.textContent = "Voice preview is not available in this browser.";
+    return;
+  }
+
+  window.speechSynthesis.cancel();
+  const preview = new SpeechSynthesisUtterance(
+    "Hello from DreamScapes. This is how bedtime narration could sound."
+  );
+  applyNarrationSettings(preview, {
+    voiceStyle: voiceStyle.value,
+    voiceRate: voiceRate.value,
+    deviceVoice: deviceVoice.value,
+  });
+  window.speechSynthesis.speak(preview);
+  trackEvent("voice_preview", { voiceStyle: voiceStyle.value });
 });
 
 document.querySelector("#create-another-button").addEventListener("click", () => {
@@ -534,12 +614,19 @@ form.addEventListener("submit", async (event) => {
     calmMode: new FormData(form).has("calmMode"),
     audioNarration: selectedPlan.canUseAudio && audioToggle.checked,
     voiceStyle: getValue("voiceStyle"),
+    voiceRate: getValue("voiceRate"),
+    deviceVoice: getValue("deviceVoice"),
   };
 
   window.setTimeout(async () => {
     currentStory = await createStory(storyData);
     incrementStoriesUsed(selectedPlanKey);
     renderStory(currentStory);
+    trackEvent("story_generated", {
+      plan: selectedPlanKey,
+      duration: storyData.duration,
+      audio: storyData.audioNarration,
+    });
     showScreen("result");
   }, 900);
 });
@@ -557,6 +644,7 @@ document.querySelector("#save-story-button").addEventListener("click", () => {
   savedStories.unshift(currentStory);
   setSavedStories(savedStories.slice(0, Math.min(plan.savedLimit, MAX_LOCAL_SAVED_STORIES)));
   statusNote.textContent = `Story saved to this device. ${plan.label} keeps up to ${plan.savedLimit} saved stories here.`;
+  trackEvent("story_saved", { plan: currentStory.plan });
   renderLibrary();
 });
 
@@ -665,6 +753,7 @@ function renderLibrary() {
       const nextStories = getSavedStories();
       nextStories.splice(index, 1);
       setSavedStories(nextStories);
+      trackEvent("story_deleted", { index });
       renderLibrary();
     });
   });
@@ -709,14 +798,13 @@ audioPlayButton.addEventListener("click", () => {
 
   window.speechSynthesis.cancel();
   currentNarration = new SpeechSynthesisUtterance(storyAsText(currentStory));
-  const voice = voiceStyles[currentStory.voiceStyle] || voiceStyles["calm bedtime"];
-  currentNarration.rate = voice.rate;
-  currentNarration.pitch = voice.pitch;
+  applyNarrationSettings(currentNarration);
   currentNarration.onend = () => {
     currentNarration = null;
     statusNote.textContent = "Audio narration finished.";
   };
   window.speechSynthesis.speak(currentNarration);
+  trackEvent("audio_played", { voiceStyle: currentStory.voiceStyle });
   statusNote.textContent = "Playing audio narration.";
 });
 
@@ -725,12 +813,14 @@ audioPauseButton.addEventListener("click", () => {
 
   if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
     window.speechSynthesis.pause();
+    trackEvent("audio_paused");
     statusNote.textContent = "Audio narration paused.";
     return;
   }
 
   if (window.speechSynthesis.paused) {
     window.speechSynthesis.resume();
+    trackEvent("audio_resumed");
     statusNote.textContent = "Audio narration resumed.";
     return;
   }
@@ -739,3 +829,8 @@ audioPauseButton.addEventListener("click", () => {
 });
 
 updatePlanFeatures();
+loadDeviceVoices();
+
+if ("speechSynthesis" in window) {
+  window.speechSynthesis.onvoiceschanged = loadDeviceVoices;
+}
