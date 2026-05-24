@@ -28,6 +28,10 @@ const storyIdea = document.querySelector("#story-idea");
 const libraryList = document.querySelector("#library-list");
 let currentStory = null;
 let currentNarration = null;
+let currentNarrationSegments = [];
+let currentNarrationIndex = 0;
+let currentNarrationTimer = null;
+let narrationPausedBetweenSegments = false;
 let availableVoices = [];
 const AI_ENDPOINT = window.DREAMSCAPES_AI_ENDPOINT || "";
 const MAX_LOCAL_SAVED_STORIES = 30;
@@ -212,11 +216,11 @@ const durationDetails = {
 };
 
 const voiceStyles = {
-  "calm bedtime": { rate: 0.82, pitch: 0.96 },
-  "warm parent": { rate: 0.88, pitch: 1 },
-  "magical storyteller": { rate: 0.9, pitch: 1.12 },
-  "playful character": { rate: 0.96, pitch: 1.18 },
-  "calm educational": { rate: 0.9, pitch: 1.02 },
+  "calm bedtime": { rate: 0.82, pitch: 0.96, volume: 0.92, pause: 650 },
+  "warm parent": { rate: 0.88, pitch: 1, volume: 0.96, pause: 520 },
+  "magical storyteller": { rate: 0.9, pitch: 1.12, volume: 0.94, pause: 560 },
+  "playful character": { rate: 0.96, pitch: 1.18, volume: 0.96, pause: 420 },
+  "calm educational": { rate: 0.9, pitch: 1.02, volume: 0.94, pause: 480 },
 };
 
 function showScreen(name) {
@@ -482,6 +486,44 @@ function storyAsText(story) {
   return `${story.title}\n\n${story.text.join("\n\n")}`;
 }
 
+function cleanNarrationText(text) {
+  return text
+    .replace(/\s+/g, " ")
+    .replace(/DreamScape/g, "Dream Scape")
+    .replace(/DreamScapes/g, "Dream Scapes")
+    .trim();
+}
+
+function splitNarrationText(text) {
+  const cleanText = cleanNarrationText(text);
+  if (cleanText.length <= 260) return [cleanText];
+
+  const sentences = cleanText.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [cleanText];
+  const chunks = [];
+  let chunk = "";
+
+  sentences.forEach((sentence) => {
+    const nextChunk = `${chunk} ${sentence}`.trim();
+    if (nextChunk.length > 260 && chunk) {
+      chunks.push(chunk);
+      chunk = sentence.trim();
+      return;
+    }
+
+    chunk = nextChunk;
+  });
+
+  if (chunk) chunks.push(chunk);
+  return chunks;
+}
+
+function storyAsNarrationSegments(story) {
+  return [
+    cleanNarrationText(story.title),
+    ...story.text.flatMap((paragraph) => splitNarrationText(paragraph)),
+  ].filter(Boolean);
+}
+
 function getSavedStories() {
   try {
     const stories = JSON.parse(localStorage.getItem("dreamscapesStories") || "[]");
@@ -525,6 +567,7 @@ function applyNarrationSettings(utterance, story = currentStory) {
   const style = voiceStyles[story?.voiceStyle] || voiceStyles["calm bedtime"];
   utterance.rate = Number(story?.voiceRate || voiceRate.value || style.rate);
   utterance.pitch = style.pitch;
+  utterance.volume = style.volume;
 
   const selectedVoice = getSelectedDeviceVoice(story?.deviceVoice);
   if (selectedVoice) utterance.voice = selectedVoice;
@@ -739,8 +782,43 @@ function canUseNarration() {
 
 function stopNarration() {
   if (!("speechSynthesis" in window)) return;
+  window.clearTimeout(currentNarrationTimer);
+  currentNarrationTimer = null;
   window.speechSynthesis.cancel();
   currentNarration = null;
+  currentNarrationSegments = [];
+  currentNarrationIndex = 0;
+  narrationPausedBetweenSegments = false;
+}
+
+function getNarrationPause(story = currentStory) {
+  const style = voiceStyles[story?.voiceStyle] || voiceStyles["calm bedtime"];
+  return story?.storyType === "bedtime" ? style.pause + 180 : style.pause;
+}
+
+function speakNarrationSegment() {
+  if (narrationPausedBetweenSegments) return;
+
+  if (!currentStory || currentNarrationIndex >= currentNarrationSegments.length) {
+    currentNarration = null;
+    currentNarrationSegments = [];
+    currentNarrationIndex = 0;
+    narrationPausedBetweenSegments = false;
+    statusNote.textContent = "Audio narration finished.";
+    return;
+  }
+
+  currentNarration = new SpeechSynthesisUtterance(currentNarrationSegments[currentNarrationIndex]);
+  applyNarrationSettings(currentNarration);
+  currentNarration.onend = () => {
+    currentNarrationIndex += 1;
+    currentNarrationTimer = window.setTimeout(speakNarrationSegment, getNarrationPause());
+  };
+  currentNarration.onerror = () => {
+    currentNarration = null;
+    statusNote.textContent = "Audio narration stopped. Try another device voice.";
+  };
+  window.speechSynthesis.speak(currentNarration);
 }
 
 audioPlayButton.addEventListener("click", () => {
@@ -752,16 +830,20 @@ audioPlayButton.addEventListener("click", () => {
     return;
   }
 
-  window.speechSynthesis.cancel();
-  currentNarration = new SpeechSynthesisUtterance(storyAsText(currentStory));
-  applyNarrationSettings(currentNarration);
-  currentNarration.onend = () => {
-    currentNarration = null;
-    statusNote.textContent = "Audio narration finished.";
-  };
-  window.speechSynthesis.speak(currentNarration);
+  if (narrationPausedBetweenSegments && currentNarrationSegments.length > 0) {
+    narrationPausedBetweenSegments = false;
+    speakNarrationSegment();
+    trackEvent("audio_resumed");
+    statusNote.textContent = "Audio narration resumed.";
+    return;
+  }
+
+  stopNarration();
+  currentNarrationSegments = storyAsNarrationSegments(currentStory);
+  currentNarrationIndex = 0;
+  speakNarrationSegment();
   trackEvent("audio_played", { voiceStyle: currentStory.voiceStyle });
-  statusNote.textContent = "Playing audio narration.";
+  statusNote.textContent = "Playing smoother paragraph-by-paragraph narration.";
 });
 
 audioPauseButton.addEventListener("click", () => {
@@ -769,6 +851,14 @@ audioPauseButton.addEventListener("click", () => {
 
   if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
     window.speechSynthesis.pause();
+    trackEvent("audio_paused");
+    statusNote.textContent = "Audio narration paused.";
+    return;
+  }
+
+  if (currentNarrationSegments.length > 0) {
+    window.clearTimeout(currentNarrationTimer);
+    narrationPausedBetweenSegments = true;
     trackEvent("audio_paused");
     statusNote.textContent = "Audio narration paused.";
     return;

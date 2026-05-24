@@ -485,6 +485,14 @@ textarea:focus-visible {
   align-items: end;
 }
 
+.audio-note {
+  margin: -4px 0 0;
+  color: #5e5f80;
+  font-size: 0.86rem;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
 .builder-actions,
 .result-actions,
 .premium-extras {
