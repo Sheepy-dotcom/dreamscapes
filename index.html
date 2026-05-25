@@ -14,21 +14,22 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026052407" />
+    <link rel="stylesheet" href="./styles.css?v=2026052501" />
   </head>
   <body>
     <div class="stars" aria-hidden="true"></div>
     <main class="app-shell">
-      <section class="screen welcome-screen active" id="welcome-screen" aria-labelledby="welcome-title">
+      <section class="screen welcome-screen active" id="welcome-screen" aria-label="DreamScapes home">
         <div class="brand-lockup">
-          <img
-            class="brand-logo"
-            src="./assets/dreamscapes-logo.png"
-            alt="DreamScapes logo with moon, stars, clouds, and storybook"
-          />
+          <button class="logo-button" data-screen-target="welcome" type="button" aria-label="Go to home">
+            <img
+              class="brand-logo"
+              src="./assets/dreamscapes-logo.png"
+              alt="DreamScapes logo with moon, stars, clouds, and storybook"
+            />
+          </button>
         </div>
         <div class="welcome-copy">
-          <h1 id="welcome-title">DreamScapes</h1>
           <p>
             Create gentle, imaginative stories shaped around your child, their mood,
             and the kind of adventure they are ready for today.
@@ -43,7 +44,9 @@
 
       <section class="screen builder-screen" id="builder-screen" aria-labelledby="builder-title">
         <header class="top-bar">
-          <img class="mini-logo" src="./assets/dreamscapes-logo.png" alt="DreamScapes" />
+          <button class="logo-button" data-screen-target="welcome" type="button" aria-label="Go to home">
+            <img class="mini-logo" src="./assets/dreamscapes-logo.png" alt="DreamScapes" />
+          </button>
           <div>
             <p class="eyebrow">Story Builder</p>
             <h2 id="builder-title">Create a Story</h2>
@@ -269,7 +272,9 @@
 
       <section class="screen result-screen" id="result-screen" aria-labelledby="story-title">
         <header class="result-header">
-          <img class="mini-logo" src="./assets/dreamscapes-logo.png" alt="DreamScapes" />
+          <button class="logo-button" data-screen-target="welcome" type="button" aria-label="Go to home">
+            <img class="mini-logo" src="./assets/dreamscapes-logo.png" alt="DreamScapes" />
+          </button>
           <div class="result-title-block">
             <p class="eyebrow">Your Story</p>
             <h2 id="story-title"></h2>
@@ -330,7 +335,9 @@
 
       <section class="screen library-screen" id="library-screen" aria-labelledby="library-title">
         <header class="top-bar">
-          <img class="mini-logo" src="./assets/dreamscapes-logo.png" alt="DreamScapes" />
+          <button class="logo-button" data-screen-target="welcome" type="button" aria-label="Go to home">
+            <img class="mini-logo" src="./assets/dreamscapes-logo.png" alt="DreamScapes" />
+          </button>
           <div>
             <p class="eyebrow">Saved Stories</p>
             <h2 id="library-title">Library</h2>
@@ -341,7 +348,9 @@
 
       <section class="screen upgrade-screen" id="upgrade-screen" aria-labelledby="upgrade-title">
         <header class="top-bar">
-          <img class="mini-logo" src="./assets/dreamscapes-logo.png" alt="DreamScapes" />
+          <button class="logo-button" data-screen-target="welcome" type="button" aria-label="Go to home">
+            <img class="mini-logo" src="./assets/dreamscapes-logo.png" alt="DreamScapes" />
+          </button>
           <div>
             <p class="eyebrow">Packages</p>
             <h2 id="upgrade-title">Choose a Plan</h2>
@@ -404,7 +413,9 @@
 
       <section class="screen info-screen" id="safety-screen" aria-labelledby="safety-title">
         <header class="top-bar">
-          <img class="mini-logo" src="./assets/dreamscapes-logo.png" alt="DreamScapes" />
+          <button class="logo-button" data-screen-target="welcome" type="button" aria-label="Go to home">
+            <img class="mini-logo" src="./assets/dreamscapes-logo.png" alt="DreamScapes" />
+          </button>
           <div>
             <p class="eyebrow">Trust</p>
             <h2 id="safety-title">Child Safety</h2>
@@ -423,7 +434,9 @@
 
       <section class="screen info-screen" id="privacy-screen" aria-labelledby="privacy-title">
         <header class="top-bar">
-          <img class="mini-logo" src="./assets/dreamscapes-logo.png" alt="DreamScapes" />
+          <button class="logo-button" data-screen-target="welcome" type="button" aria-label="Go to home">
+            <img class="mini-logo" src="./assets/dreamscapes-logo.png" alt="DreamScapes" />
+          </button>
           <div>
             <p class="eyebrow">Trust</p>
             <h2 id="privacy-title">Privacy</h2>
@@ -442,7 +455,9 @@
 
       <section class="screen info-screen" id="terms-screen" aria-labelledby="terms-title">
         <header class="top-bar">
-          <img class="mini-logo" src="./assets/dreamscapes-logo.png" alt="DreamScapes" />
+          <button class="logo-button" data-screen-target="welcome" type="button" aria-label="Go to home">
+            <img class="mini-logo" src="./assets/dreamscapes-logo.png" alt="DreamScapes" />
+          </button>
           <div>
             <p class="eyebrow">Legal</p>
             <h2 id="terms-title">Terms</h2>
@@ -461,7 +476,9 @@
 
       <section class="screen info-screen" id="contact-screen" aria-labelledby="contact-title">
         <header class="top-bar">
-          <img class="mini-logo" src="./assets/dreamscapes-logo.png" alt="DreamScapes" />
+          <button class="logo-button" data-screen-target="welcome" type="button" aria-label="Go to home">
+            <img class="mini-logo" src="./assets/dreamscapes-logo.png" alt="DreamScapes" />
+          </button>
           <div>
             <p class="eyebrow">Support</p>
             <h2 id="contact-title">Contact</h2>
@@ -494,6 +511,6 @@
       </nav>
     </main>
 
-    <script src="./app.js?v=2026052407"></script>
+    <script src="./app.js?v=2026052501"></script>
   </body>
 </html>

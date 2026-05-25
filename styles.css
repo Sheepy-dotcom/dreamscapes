@@ -111,6 +111,20 @@ button {
   gap: 14px;
 }
 
+.logo-button {
+  display: inline-grid;
+  place-items: center;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.logo-button:focus-visible {
+  outline: 3px solid rgba(255, 217, 106, 0.9);
+  outline-offset: 6px;
+}
+
 .brand-logo {
   width: min(440px, 82vw);
   display: block;
