@@ -229,8 +229,10 @@ const durationDetails = {
 const voiceStyles = {
   "female calm": { rate: 0.72, pitch: 1, volume: 0.86, pause: 850 },
   "female default": { rate: 0.8, pitch: 1.02, volume: 0.88, pause: 680 },
+  "female cheerful": { rate: 0.84, pitch: 1.06, volume: 0.9, pause: 560 },
   "male calm": { rate: 0.72, pitch: 0.88, volume: 0.86, pause: 850 },
   "male default": { rate: 0.8, pitch: 0.92, volume: 0.88, pause: 680 },
+  "male cheerful": { rate: 0.84, pitch: 0.96, volume: 0.9, pause: 560 },
 };
 
 function showScreen(name) {
@@ -543,8 +545,10 @@ function getAiNarrationVoice(style) {
   const voices = {
     "female calm": "shimmer",
     "female default": "nova",
+    "female cheerful": "coral",
     "male calm": "onyx",
     "male default": "echo",
+    "male cheerful": "echo",
   };
 
   return voices[style] || "shimmer";
@@ -555,8 +559,10 @@ function getAiNarrationInstructions(story) {
   const voiceLabel = {
     "female calm": "a calm English woman reading softly at bedtime",
     "female default": "a warm English woman reading naturally to a child",
+    "female cheerful": "a cheerful English woman reading warmly to a child, bright but still gentle",
     "male calm": "a calm English man reading softly at bedtime",
     "male default": "a warm English man reading naturally to a child",
+    "male cheerful": "a cheerful English man reading warmly to a child, bright but still gentle",
   }[story.voiceStyle] || "a warm English adult reading to a child";
   const bedtimeDirection =
     story.storyType === "bedtime"
