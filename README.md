@@ -29,9 +29,9 @@ Stories up to 10 minutes are treated as the standard tier. Durations over 10 min
 
 ## Package Prototype
 
-- Free: 3 stories per month, up to 10 minutes, no saved library or audio narration.
-- Premier: 15 stories per month, saved story library, up to 30 minutes.
-- DreamScapes Plus: 30 stories per month, larger saved story library, audio narration, up to 1 hour.
+- Free: £0, 3 stories per month, up to 10 minutes, no saved library or audio narration.
+- Premier: £4.99/month, 15 stories per month, saved story library, up to 30 minutes.
+- DreamScapes Plus: £11.99/month, 30 stories per month, larger saved story library, audio narration, 150 audio minutes per month, up to 1 hour.
 
 The prototype also includes screens and controls for saved stories, package upgrades, child profiles, safety preferences, narration voice styles, regeneration actions, AI illustrations, printable PDFs, sharing, and a sleep timer. Payment, account storage, generated images, PDF export, and production audio still need backend services.
 

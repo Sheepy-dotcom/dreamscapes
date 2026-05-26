@@ -756,6 +756,14 @@ textarea:focus-visible {
   margin-bottom: 6px;
 }
 
+.plan-price {
+  margin: 0 0 10px;
+  color: #241f52;
+  font-size: 1.35rem;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
 .library-item p,
 .upgrade-grid p {
   margin-bottom: 12px;
