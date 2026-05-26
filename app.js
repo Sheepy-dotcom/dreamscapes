@@ -671,10 +671,35 @@ document.querySelectorAll("[data-idea]").forEach((button) => {
   });
 });
 
-voicePreviewButton.addEventListener("click", () => {
+async function playAiVoicePreview() {
+  const response = await fetch(NARRATION_ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      text: "Hello from DreamScapes. This is a short preview of your selected English narration voice.",
+      voice: getAiNarrationVoice(voiceStyle.value),
+      instructions: getAiNarrationInstructions({
+        childAge: "5",
+        moods: ["relaxing"],
+        storyType: "bedtime",
+        voiceStyle: voiceStyle.value,
+      }),
+    }),
+  });
+
+  if (!response.ok) return false;
+
+  const data = await response.json();
+  if (!Array.isArray(data.audio) || !data.audio[0]) return false;
+
+  const previewAudio = new Audio(data.audio[0]);
+  await previewAudio.play();
+  return true;
+}
+
+function playDeviceVoicePreview() {
   if (!("speechSynthesis" in window)) {
-    planNote.textContent = "Voice preview is not available in this browser.";
-    return;
+    return false;
   }
 
   window.speechSynthesis.cancel();
@@ -686,7 +711,35 @@ voicePreviewButton.addEventListener("click", () => {
     voiceRate: voiceRate.value,
   });
   window.speechSynthesis.speak(preview);
-  trackEvent("voice_preview", { voiceStyle: voiceStyle.value });
+  return true;
+}
+
+voicePreviewButton.addEventListener("click", async () => {
+  voicePreviewButton.disabled = true;
+  voicePreviewButton.textContent = "Playing...";
+  planNote.textContent = "Preparing voice preview...";
+
+  try {
+    const usedAiPreview = await playAiVoicePreview();
+    if (usedAiPreview) {
+      planNote.textContent = "Playing premium AI voice preview.";
+      trackEvent("voice_preview", { voiceStyle: voiceStyle.value, source: "ai" });
+      return;
+    }
+  } catch {
+    // Fall through to device preview.
+  } finally {
+    voicePreviewButton.disabled = false;
+    voicePreviewButton.textContent = "Preview Voice";
+  }
+
+  if (playDeviceVoicePreview()) {
+    planNote.textContent = "Playing device voice preview. Premium AI preview needs the OpenAI key and credits.";
+    trackEvent("voice_preview", { voiceStyle: voiceStyle.value, source: "device" });
+    return;
+  }
+
+  planNote.textContent = "Voice preview is not available in this browser.";
 });
 
 document.querySelector("#create-another-button").addEventListener("click", () => {
