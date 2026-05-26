@@ -227,10 +227,10 @@ const durationDetails = {
 };
 
 const voiceStyles = {
-  "female calm": { rate: 0.82, pitch: 1.04, volume: 0.94, pause: 650 },
-  "female default": { rate: 0.9, pitch: 1.08, volume: 0.96, pause: 500 },
-  "male calm": { rate: 0.82, pitch: 0.92, volume: 0.94, pause: 650 },
-  "male default": { rate: 0.9, pitch: 0.96, volume: 0.96, pause: 500 },
+  "female calm": { rate: 0.72, pitch: 1, volume: 0.86, pause: 850 },
+  "female default": { rate: 0.8, pitch: 1.02, volume: 0.88, pause: 680 },
+  "male calm": { rate: 0.72, pitch: 0.88, volume: 0.86, pause: 850 },
+  "male default": { rate: 0.8, pitch: 0.92, volume: 0.88, pause: 680 },
 };
 
 function showScreen(name) {
@@ -553,22 +553,24 @@ function getAiNarrationVoice(style) {
 function getAiNarrationInstructions(story) {
   const mood = getSelectedMoods(story.moods).join(", ") || "gentle";
   const voiceLabel = {
-    "female calm": "a calm English female narrator",
-    "female default": "a natural English female narrator",
-    "male calm": "a calm English male narrator",
-    "male default": "a natural English male narrator",
-  }[story.voiceStyle] || "a warm English narrator";
+    "female calm": "a calm English woman reading softly at bedtime",
+    "female default": "a warm English woman reading naturally to a child",
+    "male calm": "a calm English man reading softly at bedtime",
+    "male default": "a warm English man reading naturally to a child",
+  }[story.voiceStyle] || "a warm English adult reading to a child";
   const bedtimeDirection =
     story.storyType === "bedtime"
-      ? "Use a soft bedtime pace with soothing pauses and a calm final line."
-      : "Use a warm, clear daytime storytelling pace.";
+      ? "Use a slow, cosy bedtime pace with gentle pauses, soft phrasing, and a sleepy final line."
+      : "Use a gentle, clear storytelling pace with relaxed energy.";
 
   return [
-    `Narrate this children's story as ${voiceLabel}.`,
+    `Read this children's story as ${voiceLabel}.`,
     `The child is age ${story.childAge}.`,
     `Mood: ${mood}.`,
     bedtimeDirection,
-    "Avoid sounding robotic. Use natural intonation, gentle emotion, and parent-friendly warmth.",
+    "Sound close, human, and reassuring, like a parent calmly reading beside the bed.",
+    "Use soft consonants, mild expression, relaxed pacing, and tiny pauses after emotional sentences.",
+    "Avoid announcer energy, theatrical exaggeration, sharp emphasis, or robotic cadence.",
     "Do not add extra words that are not in the story.",
   ].join(" ");
 }
@@ -676,7 +678,7 @@ async function playAiVoicePreview() {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      text: "Hello from DreamScapes. This is a short preview of your selected English narration voice.",
+      text: "Hello from DreamScapes. Settle in, take a gentle breath, and let the story begin softly.",
       voice: getAiNarrationVoice(voiceStyle.value),
       instructions: getAiNarrationInstructions({
         childAge: "5",
@@ -704,7 +706,7 @@ function playDeviceVoicePreview() {
 
   window.speechSynthesis.cancel();
   const preview = new SpeechSynthesisUtterance(
-    "Hello from DreamScapes. This is how bedtime narration could sound."
+    "Hello from DreamScapes. Settle in, take a gentle breath, and let the story begin softly."
   );
   applyNarrationSettings(preview, {
     voiceStyle: voiceStyle.value,
