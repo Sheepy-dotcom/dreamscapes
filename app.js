@@ -710,7 +710,7 @@ async function playAiVoicePreview() {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      text: "Hello from DreamScapes. Settle in, take a gentle breath, and let the story begin softly.",
+      text: "Hello from DreamScapes. Settle in, take a gentle breath, and let the story begin.",
       voice: getAiNarrationVoice(voiceStyle.value),
       instructions: getAiNarrationInstructions({
         childAge: "5",
@@ -738,7 +738,7 @@ function playDeviceVoicePreview() {
 
   window.speechSynthesis.cancel();
   const preview = new SpeechSynthesisUtterance(
-    "Hello from DreamScapes. Settle in, take a gentle breath, and let the story begin softly."
+    "Hello from DreamScapes. Settle in, take a gentle breath, and let the story begin."
   );
   applyNarrationSettings(preview, {
     voiceStyle: voiceStyle.value,
