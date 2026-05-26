@@ -553,7 +553,7 @@ function getAiNarrationVoice(style) {
     "female cheerful": "coral",
     "male calm": "onyx",
     "male default": "echo",
-    "male cheerful": "echo",
+    "male cheerful": "verse",
   };
 
   return voices[style] || "shimmer";
@@ -573,11 +573,16 @@ function getAiNarrationInstructions(story) {
     story.storyType === "bedtime"
       ? "Use a slow, cosy bedtime pace with gentle pauses, soft phrasing, and a sleepy final line."
       : "Use a gentle, clear storytelling pace with relaxed energy.";
+  const styleDirection =
+    story.voiceStyle === "male cheerful"
+      ? "For this male cheerful voice, use the shared OpenAI.fm style: warm, enthusiastic, welcoming, playful yet dignified, with gentle rises and falls in pitch."
+      : "";
 
   return [
     `Read this children's story as ${voiceLabel}.`,
     "Use a natural UK/British accent and British English pronunciation throughout.",
     "Avoid American pronunciation, American intonation, or American-style announcer delivery.",
+    styleDirection,
     `The child is age ${story.childAge}.`,
     `Mood: ${mood}.`,
     bedtimeDirection,
