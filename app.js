@@ -235,6 +235,11 @@ const voiceStyles = {
   "male cheerful": { rate: 0.84, pitch: 0.96, volume: 0.9, pause: 560 },
 };
 
+const britishVoiceHints = {
+  female: ["serena", "susan", "kate", "karen", "moira", "tessa", "samantha"],
+  male: ["daniel", "arthur", "oliver", "george", "tom"],
+};
+
 function showScreen(name) {
   Object.values(screens).forEach((screen) => screen.classList.remove("active"));
   screens[name].classList.add("active");
@@ -557,13 +562,13 @@ function getAiNarrationVoice(style) {
 function getAiNarrationInstructions(story) {
   const mood = getSelectedMoods(story.moods).join(", ") || "gentle";
   const voiceLabel = {
-    "female calm": "a calm English woman reading softly at bedtime",
-    "female default": "a warm English woman reading naturally to a child",
-    "female cheerful": "a cheerful English woman reading warmly to a child, bright but still gentle",
-    "male calm": "a calm English man reading softly at bedtime",
-    "male default": "a warm English man reading naturally to a child",
-    "male cheerful": "a cheerful English man reading warmly to a child, bright but still gentle",
-  }[story.voiceStyle] || "a warm English adult reading to a child";
+    "female calm": "a calm British English woman reading softly at bedtime",
+    "female default": "a warm British English woman reading naturally to a child",
+    "female cheerful": "a cheerful British English woman reading warmly to a child, bright but still gentle",
+    "male calm": "a calm British English man reading softly at bedtime",
+    "male default": "a warm British English man reading naturally to a child",
+    "male cheerful": "a cheerful British English man reading warmly to a child, bright but still gentle",
+  }[story.voiceStyle] || "a warm British English adult reading to a child";
   const bedtimeDirection =
     story.storyType === "bedtime"
       ? "Use a slow, cosy bedtime pace with gentle pauses, soft phrasing, and a sleepy final line."
@@ -571,6 +576,8 @@ function getAiNarrationInstructions(story) {
 
   return [
     `Read this children's story as ${voiceLabel}.`,
+    "Use a natural UK/British accent and British English pronunciation throughout.",
+    "Avoid American pronunciation, American intonation, or American-style announcer delivery.",
     `The child is age ${story.childAge}.`,
     `Mood: ${mood}.`,
     bedtimeDirection,
@@ -664,6 +671,25 @@ function applyNarrationSettings(utterance, story = currentStory) {
   utterance.rate = Number(story?.voiceRate || voiceRate.value || style.rate);
   utterance.pitch = style.pitch;
   utterance.volume = style.volume;
+  utterance.lang = "en-GB";
+  const preferredVoice = getPreferredDeviceVoice(story?.voiceStyle);
+  if (preferredVoice) utterance.voice = preferredVoice;
+}
+
+function getPreferredDeviceVoice(style = "female calm") {
+  if (!("speechSynthesis" in window)) return null;
+
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices.length) return null;
+
+  const gender = style.includes("male") ? "male" : "female";
+  const hints = britishVoiceHints[gender];
+  const britishVoices = voices.filter((voice) => voice.lang?.toLowerCase().startsWith("en-gb"));
+  const hintedVoice = britishVoices.find((voice) =>
+    hints.some((hint) => voice.name.toLowerCase().includes(hint))
+  );
+
+  return hintedVoice || britishVoices[0] || voices.find((voice) => voice.lang?.toLowerCase().startsWith("en")) || null;
 }
 
 document.querySelector("#start-button").addEventListener("click", () => showScreen("builder"));
