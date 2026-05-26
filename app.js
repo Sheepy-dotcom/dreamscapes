@@ -22,7 +22,6 @@ const audioPlayButton = document.querySelector("#audio-play-button");
 const audioPauseButton = document.querySelector("#audio-pause-button");
 const narrationNote = document.querySelector("#narration-note");
 const voiceStyle = document.querySelector("#voice-style");
-const deviceVoice = document.querySelector("#device-voice");
 const voiceRate = document.querySelector("#voice-rate");
 const voicePreviewButton = document.querySelector("#voice-preview-button");
 const storyIdea = document.querySelector("#story-idea");
@@ -38,7 +37,6 @@ let currentAudioTracks = [];
 let currentAudioIndex = 0;
 let aiAudioPausedBetweenTracks = false;
 let narrationRequestInFlight = false;
-let availableVoices = [];
 const AI_ENDPOINT = window.DREAMSCAPES_AI_ENDPOINT || "/api/story";
 const NARRATION_ENDPOINT = window.DREAMSCAPES_NARRATION_ENDPOINT || "/api/narrate";
 const MAX_LOCAL_SAVED_STORIES = 30;
@@ -229,11 +227,10 @@ const durationDetails = {
 };
 
 const voiceStyles = {
-  "calm bedtime": { rate: 0.82, pitch: 0.96, volume: 0.92, pause: 650 },
-  "warm parent": { rate: 0.88, pitch: 1, volume: 0.96, pause: 520 },
-  "magical storyteller": { rate: 0.9, pitch: 1.12, volume: 0.94, pause: 560 },
-  "playful character": { rate: 0.96, pitch: 1.18, volume: 0.96, pause: 420 },
-  "calm educational": { rate: 0.9, pitch: 1.02, volume: 0.94, pause: 480 },
+  "female calm": { rate: 0.82, pitch: 1.04, volume: 0.94, pause: 650 },
+  "female default": { rate: 0.9, pitch: 1.08, volume: 0.96, pause: 500 },
+  "male calm": { rate: 0.82, pitch: 0.92, volume: 0.94, pause: 650 },
+  "male default": { rate: 0.9, pitch: 0.96, volume: 0.96, pause: 500 },
 };
 
 function showScreen(name) {
@@ -544,25 +541,30 @@ function storyAsNarrationSegments(story) {
 
 function getAiNarrationVoice(style) {
   const voices = {
-    "calm bedtime": "cedar",
-    "warm parent": "marin",
-    "magical storyteller": "fable",
-    "playful character": "nova",
-    "calm educational": "sage",
+    "female calm": "shimmer",
+    "female default": "nova",
+    "male calm": "onyx",
+    "male default": "echo",
   };
 
-  return voices[style] || "cedar";
+  return voices[style] || "shimmer";
 }
 
 function getAiNarrationInstructions(story) {
   const mood = getSelectedMoods(story.moods).join(", ") || "gentle";
+  const voiceLabel = {
+    "female calm": "a calm English female narrator",
+    "female default": "a natural English female narrator",
+    "male calm": "a calm English male narrator",
+    "male default": "a natural English male narrator",
+  }[story.voiceStyle] || "a warm English narrator";
   const bedtimeDirection =
     story.storyType === "bedtime"
       ? "Use a soft bedtime pace with soothing pauses and a calm final line."
       : "Use a warm, clear daytime storytelling pace.";
 
   return [
-    "Narrate this children's story in a safe, warm, expressive voice.",
+    `Narrate this children's story as ${voiceLabel}.`,
     `The child is age ${story.childAge}.`,
     `Mood: ${mood}.`,
     bedtimeDirection,
@@ -649,37 +651,11 @@ function saveStoryToLibrary(story, { silent = false } = {}) {
   return true;
 }
 
-function loadDeviceVoices() {
-  if (!("speechSynthesis" in window)) return;
-
-  availableVoices = window.speechSynthesis.getVoices();
-  const currentValue = deviceVoice.value;
-  deviceVoice.innerHTML = `<option value="">Default device voice</option>`;
-
-  availableVoices
-    .filter((voice) => voice.lang?.toLowerCase().startsWith("en"))
-    .forEach((voice, index) => {
-      const option = document.createElement("option");
-      option.value = voice.voiceURI || `${voice.name}-${index}`;
-      option.textContent = `${voice.name} (${voice.lang})`;
-      deviceVoice.appendChild(option);
-    });
-
-  deviceVoice.value = currentValue;
-}
-
-function getSelectedDeviceVoice(voiceUri) {
-  return availableVoices.find((voice) => voice.voiceURI === voiceUri) || null;
-}
-
 function applyNarrationSettings(utterance, story = currentStory) {
-  const style = voiceStyles[story?.voiceStyle] || voiceStyles["calm bedtime"];
+  const style = voiceStyles[story?.voiceStyle] || voiceStyles["female calm"];
   utterance.rate = Number(story?.voiceRate || voiceRate.value || style.rate);
   utterance.pitch = style.pitch;
   utterance.volume = style.volume;
-
-  const selectedVoice = getSelectedDeviceVoice(story?.deviceVoice);
-  if (selectedVoice) utterance.voice = selectedVoice;
 }
 
 document.querySelector("#start-button").addEventListener("click", () => showScreen("builder"));
@@ -708,7 +684,6 @@ voicePreviewButton.addEventListener("click", () => {
   applyNarrationSettings(preview, {
     voiceStyle: voiceStyle.value,
     voiceRate: voiceRate.value,
-    deviceVoice: deviceVoice.value,
   });
   window.speechSynthesis.speak(preview);
   trackEvent("voice_preview", { voiceStyle: voiceStyle.value });
@@ -769,7 +744,6 @@ form.addEventListener("submit", async (event) => {
     audioNarration: selectedPlan.canUseAudio && audioToggle.checked,
     voiceStyle: getValue("voiceStyle"),
     voiceRate: getValue("voiceRate"),
-    deviceVoice: getValue("deviceVoice"),
   };
 
   window.setTimeout(async () => {
@@ -906,7 +880,7 @@ function stopNarration() {
 }
 
 function getNarrationPause(story = currentStory) {
-  const style = voiceStyles[story?.voiceStyle] || voiceStyles["calm bedtime"];
+  const style = voiceStyles[story?.voiceStyle] || voiceStyles["female calm"];
   return story?.storyType === "bedtime" ? style.pause + 180 : style.pause;
 }
 
@@ -1124,8 +1098,3 @@ audioPauseButton.addEventListener("click", () => {
 });
 
 updatePlanFeatures();
-loadDeviceVoices();
-
-if ("speechSynthesis" in window) {
-  window.speechSynthesis.onvoiceschanged = loadDeviceVoices;
-}
