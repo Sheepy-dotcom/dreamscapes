@@ -22,7 +22,6 @@ const audioPlayButton = document.querySelector("#audio-play-button");
 const audioPauseButton = document.querySelector("#audio-pause-button");
 const narrationNote = document.querySelector("#narration-note");
 const voiceStyle = document.querySelector("#voice-style");
-const voiceRate = document.querySelector("#voice-rate");
 const voicePreviewButton = document.querySelector("#voice-preview-button");
 const storyIdea = document.querySelector("#story-idea");
 const libraryList = document.querySelector("#library-list");
@@ -228,11 +227,11 @@ const durationDetails = {
 
 const voiceStyles = {
   "female calm": { rate: 0.72, pitch: 1, volume: 0.86, pause: 850 },
-  "female default": { rate: 0.8, pitch: 1.02, volume: 0.88, pause: 680 },
-  "female cheerful": { rate: 0.84, pitch: 1.06, volume: 0.9, pause: 560 },
+  "female default": { rate: 0.72, pitch: 1, volume: 0.86, pause: 850 },
+  "female cheerful": { rate: 0.72, pitch: 1, volume: 0.86, pause: 850 },
   "male calm": { rate: 0.72, pitch: 0.88, volume: 0.86, pause: 850 },
-  "male default": { rate: 0.8, pitch: 0.92, volume: 0.88, pause: 680 },
-  "male cheerful": { rate: 0.84, pitch: 0.96, volume: 0.9, pause: 560 },
+  "male default": { rate: 0.72, pitch: 0.88, volume: 0.86, pause: 850 },
+  "male cheerful": { rate: 0.72, pitch: 0.88, volume: 0.86, pause: 850 },
 };
 
 const britishVoiceHints = {
@@ -549,11 +548,11 @@ function storyAsNarrationSegments(story) {
 function getAiNarrationVoice(style) {
   const voices = {
     "female calm": "shimmer",
-    "female default": "nova",
-    "female cheerful": "coral",
+    "female default": "shimmer",
+    "female cheerful": "shimmer",
     "male calm": "fable",
-    "male default": "ash",
-    "male cheerful": "verse",
+    "male default": "fable",
+    "male cheerful": "fable",
   };
 
   return voices[style] || "shimmer";
@@ -563,11 +562,11 @@ function getAiNarrationInstructions(story) {
   const mood = getSelectedMoods(story.moods).join(", ") || "gentle";
   const voiceLabel = {
     "female calm": "a calm British English woman reading softly at bedtime",
-    "female default": "a warm British English woman reading naturally to a child",
-    "female cheerful": "a cheerful British English woman reading warmly to a child, bright but still gentle",
+    "female default": "a calm British English woman reading softly at bedtime",
+    "female cheerful": "a calm British English woman reading softly at bedtime",
     "male calm": "a calm British English man reading softly at bedtime",
-    "male default": "a warm British English man reading naturally to a child",
-    "male cheerful": "a cheerful British English man reading warmly to a child, bright but still gentle",
+    "male default": "a calm British English man reading softly at bedtime",
+    "male cheerful": "a calm British English man reading softly at bedtime",
   }[story.voiceStyle] || "a warm British English adult reading to a child";
   const bedtimeDirection =
     story.storyType === "bedtime"
@@ -577,15 +576,15 @@ function getAiNarrationInstructions(story) {
     "female calm":
       "For this female calm voice, use a soft British bedtime storyteller style: gentle, cosy, unhurried, and soothing.",
     "female default":
-      "For this female default voice, use a natural British parent-reader style: warm, clear, kind, and easy to follow.",
+      "For this female calm voice, use a soft British bedtime storyteller style: gentle, cosy, unhurried, and soothing.",
     "female cheerful":
-      "For this female cheerful voice, use a bright British storyteller style: happy, welcoming, and playful, but never loud or sharp.",
+      "For this female calm voice, use a soft British bedtime storyteller style: gentle, cosy, unhurried, and soothing.",
     "male calm":
       "For this male calm voice, use a gentle British storybook narrator style: steady, warm, low-energy, and peaceful.",
     "male default":
-      "For this male default voice, use a natural British parent-reader style: friendly, clear, relaxed, and reassuring.",
+      "For this male calm voice, use a gentle British storybook narrator style: steady, warm, low-energy, and peaceful.",
     "male cheerful":
-      "For this male cheerful voice, use the shared OpenAI.fm style: warm, enthusiastic, welcoming, playful yet dignified, with gentle rises and falls in pitch.",
+      "For this male calm voice, use a gentle British storybook narrator style: steady, warm, low-energy, and peaceful.",
   }[story.voiceStyle];
 
   return [
@@ -683,7 +682,7 @@ function saveStoryToLibrary(story, { silent = false } = {}) {
 
 function applyNarrationSettings(utterance, story = currentStory) {
   const style = voiceStyles[story?.voiceStyle] || voiceStyles["female calm"];
-  utterance.rate = Number(story?.voiceRate || voiceRate.value || style.rate);
+  utterance.rate = style.rate;
   utterance.pitch = style.pitch;
   utterance.volume = style.volume;
   utterance.lang = "en-GB";
@@ -757,7 +756,6 @@ function playDeviceVoicePreview() {
   );
   applyNarrationSettings(preview, {
     voiceStyle: voiceStyle.value,
-    voiceRate: voiceRate.value,
   });
   window.speechSynthesis.speak(preview);
   return true;
@@ -845,7 +843,6 @@ form.addEventListener("submit", async (event) => {
     calmMode: new FormData(form).has("calmMode"),
     audioNarration: selectedPlan.canUseAudio && audioToggle.checked,
     voiceStyle: getValue("voiceStyle"),
-    voiceRate: getValue("voiceRate"),
   };
 
   window.setTimeout(async () => {
