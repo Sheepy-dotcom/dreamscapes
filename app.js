@@ -38,6 +38,8 @@ let aiAudioPausedBetweenTracks = false;
 let narrationRequestInFlight = false;
 const AI_ENDPOINT = window.DREAMSCAPES_AI_ENDPOINT || "/api/story";
 const NARRATION_ENDPOINT = window.DREAMSCAPES_NARRATION_ENDPOINT || "/api/narrate";
+const VOICE_PREVIEW_CACHE_KEY = "dreamscapesVoicePreviews";
+const VOICE_PREVIEW_TEXT = "Hello from DreamScapes. Settle in, take a gentle breath, and let the story begin.";
 const MAX_LOCAL_SAVED_STORIES = 30;
 const MAX_LIBRARY_RENDER_ITEMS = 30;
 
@@ -275,6 +277,29 @@ function getValue(name) {
 
 function getValues(name) {
   return new FormData(form).getAll(name).map((value) => value.toString().trim());
+}
+
+function getCachedVoicePreviews() {
+  try {
+    const previews = JSON.parse(localStorage.getItem(VOICE_PREVIEW_CACHE_KEY) || "{}");
+    return previews && typeof previews === "object" && !Array.isArray(previews) ? previews : {};
+  } catch {
+    return {};
+  }
+}
+
+function getCachedVoicePreview(style) {
+  return getCachedVoicePreviews()[style] || null;
+}
+
+function setCachedVoicePreview(style, audio) {
+  try {
+    const previews = getCachedVoicePreviews();
+    previews[style] = audio;
+    localStorage.setItem(VOICE_PREVIEW_CACHE_KEY, JSON.stringify(previews));
+  } catch {
+    // If storage is full, previews still work; they just will not be reused.
+  }
 }
 
 function tidyIdea(idea, childName) {
@@ -720,17 +745,25 @@ document.querySelectorAll("[data-idea]").forEach((button) => {
 });
 
 async function playAiVoicePreview() {
+  const selectedVoiceStyle = voiceStyle.value;
+  const cachedPreview = getCachedVoicePreview(selectedVoiceStyle);
+  if (cachedPreview) {
+    const previewAudio = new Audio(cachedPreview);
+    await previewAudio.play();
+    return "cached-ai";
+  }
+
   const response = await fetch(NARRATION_ENDPOINT, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      text: "Hello from DreamScapes. Settle in, take a gentle breath, and let the story begin.",
-      voice: getAiNarrationVoice(voiceStyle.value),
+      text: VOICE_PREVIEW_TEXT,
+      voice: getAiNarrationVoice(selectedVoiceStyle),
       instructions: getAiNarrationInstructions({
         childAge: "5",
         moods: ["relaxing"],
         storyType: "bedtime",
-        voiceStyle: voiceStyle.value,
+        voiceStyle: selectedVoiceStyle,
       }),
     }),
   });
@@ -740,9 +773,10 @@ async function playAiVoicePreview() {
   const data = await response.json();
   if (!Array.isArray(data.audio) || !data.audio[0]) return false;
 
+  setCachedVoicePreview(selectedVoiceStyle, data.audio[0]);
   const previewAudio = new Audio(data.audio[0]);
   await previewAudio.play();
-  return true;
+  return "new-ai";
 }
 
 function playDeviceVoicePreview() {
@@ -751,9 +785,7 @@ function playDeviceVoicePreview() {
   }
 
   window.speechSynthesis.cancel();
-  const preview = new SpeechSynthesisUtterance(
-    "Hello from DreamScapes. Settle in, take a gentle breath, and let the story begin."
-  );
+  const preview = new SpeechSynthesisUtterance(VOICE_PREVIEW_TEXT);
   applyNarrationSettings(preview, {
     voiceStyle: voiceStyle.value,
   });
@@ -769,8 +801,11 @@ voicePreviewButton.addEventListener("click", async () => {
   try {
     const usedAiPreview = await playAiVoicePreview();
     if (usedAiPreview) {
-      planNote.textContent = "Playing premium AI voice preview.";
-      trackEvent("voice_preview", { voiceStyle: voiceStyle.value, source: "ai" });
+      planNote.textContent =
+        usedAiPreview === "cached-ai"
+          ? "Playing saved premium AI voice preview."
+          : "Playing premium AI voice preview. Saved for next time.";
+      trackEvent("voice_preview", { voiceStyle: voiceStyle.value, source: usedAiPreview });
       return;
     }
   } catch {
