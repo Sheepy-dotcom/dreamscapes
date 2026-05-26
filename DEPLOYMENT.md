@@ -36,6 +36,7 @@ DreamScapes includes Vercel serverless endpoints for real AI features:
 ```txt
 /api/story
 /api/narrate
+/api/create-checkout-session
 ```
 
 To enable AI story generation and studio-quality narration, add this environment variable in Vercel Project Settings:
@@ -51,6 +52,26 @@ OPENAI_STORY_MODEL=gpt-4o-mini
 ```
 
 After adding the key, redeploy the project. Story generation will use `/api/story`, and DreamScapes Plus audio will generate MP3 narration through `/api/narrate`. Generated audio is cached with the saved story on the device so replaying does not make another AI request. If the key is missing, the app falls back to the local template story and device voice.
+
+## Stripe Subscriptions
+
+DreamScapes can start hosted Stripe Checkout for Premier and DreamScapes Plus subscriptions. Create two recurring monthly Prices in Stripe:
+
+```txt
+Premier: £4.99/month
+DreamScapes Plus: £9.99/month
+```
+
+Then add these environment variables in Vercel:
+
+```txt
+STRIPE_SECRET_KEY=sk_live_or_test_...
+STRIPE_PREMIER_PRICE_ID=price_...
+STRIPE_PLUS_PRICE_ID=price_...
+SITE_URL=https://www.dreamscapes.cloud
+```
+
+Until these are configured, the pricing buttons keep working in preview mode and switch the local prototype plan without taking payment.
 
 ## DNS Records
 
