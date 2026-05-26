@@ -41,7 +41,6 @@ let narrationRequestInFlight = false;
 let availableVoices = [];
 const AI_ENDPOINT = window.DREAMSCAPES_AI_ENDPOINT || "/api/story";
 const NARRATION_ENDPOINT = window.DREAMSCAPES_NARRATION_ENDPOINT || "/api/narrate";
-const CHECKOUT_ENDPOINT = window.DREAMSCAPES_CHECKOUT_ENDPOINT || "/api/create-checkout-session";
 const MAX_LOCAL_SAVED_STORIES = 30;
 const MAX_LIBRARY_RENDER_ITEMS = 30;
 
@@ -328,31 +327,6 @@ function getCurrentPlanKey() {
 function setCurrentPlan(plan) {
   localStorage.setItem("dreamscapesCurrentPlan", plan);
   updatePlanFeatures();
-}
-
-async function startCheckout(planKey) {
-  const plan = getPlan(planKey);
-  upgradeNote.textContent = `Opening secure checkout for ${plan.label}...`;
-
-  try {
-    const response = await fetch(CHECKOUT_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ plan: planKey }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok || !data.url) {
-      throw new Error(data.error || "Checkout is not configured yet");
-    }
-
-    window.location.href = data.url;
-  } catch (error) {
-    setCurrentPlan(planKey);
-    upgradeNote.textContent = `${plan.label} is active in preview mode. Add Stripe keys in Vercel to take real payments.`;
-    trackEvent("checkout_preview_fallback", { plan: planKey, error: error.message });
-  }
 }
 
 function getUsageKey(plan) {
@@ -748,17 +722,15 @@ document.querySelector("#create-another-button").addEventListener("click", () =>
 });
 
 document.querySelectorAll("[data-plan-select]").forEach((button) => {
-  button.addEventListener("click", async () => {
+  button.addEventListener("click", () => {
     const planKey = button.dataset.planSelect;
     const plan = getPlan(planKey);
-    if (planKey === "free") {
-      setCurrentPlan(planKey);
-      upgradeNote.textContent = `${plan.label} is now the active package.`;
-      showScreen("builder");
-      return;
-    }
-
-    await startCheckout(planKey);
+    setCurrentPlan(planKey);
+    upgradeNote.textContent =
+      planKey === "free"
+        ? `${plan.label} is now the active package.`
+        : `${plan.label} is active in app-preview mode. App Store and Google Play subscriptions will handle real payments.`;
+    showScreen("builder");
   });
 });
 

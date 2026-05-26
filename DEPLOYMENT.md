@@ -36,7 +36,6 @@ DreamScapes includes Vercel serverless endpoints for real AI features:
 ```txt
 /api/story
 /api/narrate
-/api/create-checkout-session
 ```
 
 To enable AI story generation and studio-quality narration, add this environment variable in Vercel Project Settings:
@@ -53,25 +52,25 @@ OPENAI_STORY_MODEL=gpt-4o-mini
 
 After adding the key, redeploy the project. Story generation will use `/api/story`, and DreamScapes Plus audio will generate MP3 narration through `/api/narrate`. Generated audio is cached with the saved story on the device so replaying does not make another AI request. If the key is missing, the app falls back to the local template story and device voice.
 
-## Stripe Subscriptions
+## App Store Subscriptions
 
-DreamScapes can start hosted Stripe Checkout for Premier and DreamScapes Plus subscriptions. Create two recurring monthly Prices in Stripe:
+DreamScapes is intended to be a full iOS and Android app. Subscriptions should be handled through Apple in-app purchase and Google Play Billing, ideally through RevenueCat so both stores share one entitlement system.
 
-```txt
-Premier: £4.99/month
-DreamScapes Plus: £9.99/month
-```
-
-Then add these environment variables in Vercel:
+Create monthly app-store subscription products:
 
 ```txt
-STRIPE_SECRET_KEY=sk_live_or_test_...
-STRIPE_PREMIER_PRICE_ID=price_...
-STRIPE_PLUS_PRICE_ID=price_...
-SITE_URL=https://www.dreamscapes.cloud
+dreamscapes_premier_monthly = £4.99/month
+dreamscapes_plus_monthly = £9.99/month
 ```
 
-Until these are configured, the pricing buttons keep working in preview mode and switch the local prototype plan without taking payment.
+Recommended entitlements:
+
+```txt
+premier
+plus
+```
+
+The current web plan buttons are preview-only and switch the local prototype plan. Before launch, connect the mobile app to RevenueCat/App Store/Google Play entitlements and move usage limits to the backend.
 
 ## DNS Records
 
