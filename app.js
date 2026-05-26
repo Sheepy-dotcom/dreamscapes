@@ -551,8 +551,8 @@ function getAiNarrationVoice(style) {
     "female calm": "shimmer",
     "female default": "nova",
     "female cheerful": "coral",
-    "male calm": "onyx",
-    "male default": "echo",
+    "male calm": "fable",
+    "male default": "ash",
     "male cheerful": "verse",
   };
 
@@ -573,10 +573,20 @@ function getAiNarrationInstructions(story) {
     story.storyType === "bedtime"
       ? "Use a slow, cosy bedtime pace with gentle pauses, soft phrasing, and a sleepy final line."
       : "Use a gentle, clear storytelling pace with relaxed energy.";
-  const styleDirection =
-    story.voiceStyle === "male cheerful"
-      ? "For this male cheerful voice, use the shared OpenAI.fm style: warm, enthusiastic, welcoming, playful yet dignified, with gentle rises and falls in pitch."
-      : "";
+  const styleDirection = {
+    "female calm":
+      "For this female calm voice, use a soft British bedtime storyteller style: gentle, cosy, unhurried, and soothing.",
+    "female default":
+      "For this female default voice, use a natural British parent-reader style: warm, clear, kind, and easy to follow.",
+    "female cheerful":
+      "For this female cheerful voice, use a bright British storyteller style: happy, welcoming, and playful, but never loud or sharp.",
+    "male calm":
+      "For this male calm voice, use a gentle British storybook narrator style: steady, warm, low-energy, and peaceful.",
+    "male default":
+      "For this male default voice, use a natural British parent-reader style: friendly, clear, relaxed, and reassuring.",
+    "male cheerful":
+      "For this male cheerful voice, use the shared OpenAI.fm style: warm, enthusiastic, welcoming, playful yet dignified, with gentle rises and falls in pitch.",
+  }[story.voiceStyle];
 
   return [
     `Read this children's story as ${voiceLabel}.`,
