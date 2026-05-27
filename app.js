@@ -235,12 +235,12 @@ const durationDetails = {
 };
 
 const voiceStyles = {
-  "female calm": { rate: 0.72, pitch: 1, volume: 0.86, pause: 850 },
-  "female default": { rate: 0.72, pitch: 1, volume: 0.86, pause: 850 },
-  "female cheerful": { rate: 0.72, pitch: 1, volume: 0.86, pause: 850 },
-  "male calm": { rate: 0.72, pitch: 0.88, volume: 0.86, pause: 850 },
-  "male default": { rate: 0.72, pitch: 0.88, volume: 0.86, pause: 850 },
-  "male cheerful": { rate: 0.72, pitch: 0.88, volume: 0.86, pause: 850 },
+  "female calm": { rate: 0.64, pitch: 1, volume: 0.86, pause: 1150 },
+  "female default": { rate: 0.64, pitch: 1, volume: 0.86, pause: 1150 },
+  "female cheerful": { rate: 0.64, pitch: 1, volume: 0.86, pause: 1150 },
+  "male calm": { rate: 0.64, pitch: 0.88, volume: 0.86, pause: 1150 },
+  "male default": { rate: 0.64, pitch: 0.88, volume: 0.86, pause: 1150 },
+  "male cheerful": { rate: 0.64, pitch: 0.88, volume: 0.86, pause: 1150 },
 };
 
 const britishVoiceHints = {
@@ -581,8 +581,8 @@ function getAiNarrationInstructions(story) {
   }[story.voiceStyle] || "a warm British English adult reading to a child";
   const bedtimeDirection =
     story.storyType === "bedtime"
-      ? "Use a slow, cosy bedtime pace with gentle pauses, soft phrasing, and a sleepy final line."
-      : "Use a gentle, clear storytelling pace with relaxed energy.";
+      ? "Use a very slow, cosy bedtime pace with generous pauses, soft phrasing, and a sleepy final line."
+      : "Use a calm, unhurried storytelling pace with relaxed energy and small pauses between ideas.";
   const styleDirection = {
     "female calm":
       "For this female calm voice, use a soft southern British bedtime storyteller style: gentle, cosy, unhurried, and soothing, like a calm UK parent reading before sleep.",
@@ -607,7 +607,7 @@ function getAiNarrationInstructions(story) {
     `Mood: ${mood}.`,
     bedtimeDirection,
     "Sound close, human, and reassuring, like a parent calmly reading beside the bed.",
-    "Use soft consonants, mild expression, relaxed pacing, and tiny pauses after emotional sentences.",
+    "Speak slower than normal conversational speech, with soft consonants, mild expression, relaxed pacing, and clear pauses after emotional sentences.",
     "Avoid announcer energy, theatrical exaggeration, sharp emphasis, or robotic cadence.",
     "Do not add extra words that are not in the story.",
   ].join(" ");
