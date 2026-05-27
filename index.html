@@ -14,7 +14,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026052612" />
+    <link rel="stylesheet" href="./styles.css?v=2026052613" />
   </head>
   <body>
     <div class="stars" aria-hidden="true"></div>
@@ -295,6 +295,18 @@
                 <span class="pause-icon" aria-hidden="true"></span>
               </button>
             </div>
+            <div class="audio-progress" id="audio-progress-wrap" hidden>
+              <input
+                id="audio-progress"
+                type="range"
+                min="0"
+                max="100"
+                value="0"
+                step="1"
+                aria-label="Audio story progress"
+              />
+              <span id="audio-progress-label">0%</span>
+            </div>
           </div>
           <div class="story-text" id="story-text"></div>
         </article>
@@ -502,6 +514,6 @@
       </nav>
     </main>
 
-    <script src="./app.js?v=2026052612"></script>
+    <script src="./app.js?v=2026052613"></script>
   </body>
 </html>

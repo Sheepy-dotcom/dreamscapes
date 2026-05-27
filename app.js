@@ -21,6 +21,9 @@ const audioToggle = document.querySelector("#audio-narration");
 const audioPlayButton = document.querySelector("#audio-play-button");
 const audioPauseButton = document.querySelector("#audio-pause-button");
 const narrationNote = document.querySelector("#narration-note");
+const audioProgressWrap = document.querySelector("#audio-progress-wrap");
+const audioProgress = document.querySelector("#audio-progress");
+const audioProgressLabel = document.querySelector("#audio-progress-label");
 const voiceStyle = document.querySelector("#voice-style");
 const voicePreviewButton = document.querySelector("#voice-preview-button");
 const storyIdea = document.querySelector("#story-idea");
@@ -36,6 +39,7 @@ let currentAudioTracks = [];
 let currentAudioIndex = 0;
 let aiAudioPausedBetweenTracks = false;
 let narrationRequestInFlight = false;
+let pendingAudioSeekPercent = null;
 const AI_ENDPOINT = window.DREAMSCAPES_AI_ENDPOINT || "/api/story";
 const NARRATION_ENDPOINT = window.DREAMSCAPES_NARRATION_ENDPOINT || "/api/narrate";
 const VOICE_PREVIEW_TEXT = "Hello from DreamScapes. Settle in, take a gentle breath, and let the story begin.";
@@ -506,6 +510,8 @@ function renderStory(story) {
       ? "Premium audio saved with this story"
       : "First play creates and saves premium audio"
     : "Turn on audio before generating a story";
+  resetAudioProgress();
+  setAudioProgressVisible(Boolean(story.audioNarration));
 }
 
 function storyAsText(story) {
@@ -973,6 +979,81 @@ function canUseNarration() {
   return true;
 }
 
+function setAudioProgressVisible(visible) {
+  audioProgressWrap.hidden = !visible;
+}
+
+function setAudioProgress(percent) {
+  const safePercent = Math.max(0, Math.min(100, Number.isFinite(percent) ? percent : 0));
+  audioProgress.value = String(Math.round(safePercent));
+  audioProgressLabel.textContent = `${Math.round(safePercent)}%`;
+}
+
+function resetAudioProgress() {
+  pendingAudioSeekPercent = null;
+  setAudioProgress(0);
+}
+
+function finishAudioProgress() {
+  pendingAudioSeekPercent = null;
+  setAudioProgress(100);
+}
+
+function getAiAudioProgress() {
+  if (!currentAudioTracks.length) return 0;
+  const trackProgress =
+    currentAudio && Number.isFinite(currentAudio.duration) && currentAudio.duration > 0
+      ? currentAudio.currentTime / currentAudio.duration
+      : 0;
+  return ((currentAudioIndex + trackProgress) / currentAudioTracks.length) * 100;
+}
+
+function updateAiAudioProgress() {
+  setAudioProgress(getAiAudioProgress());
+}
+
+function updateDeviceAudioProgress() {
+  if (!currentNarrationSegments.length) return;
+  setAudioProgress((currentNarrationIndex / currentNarrationSegments.length) * 100);
+}
+
+function seekAiAudio(percent) {
+  if (!currentAudioTracks.length) return false;
+
+  window.clearTimeout(currentNarrationTimer);
+  currentNarrationTimer = null;
+  aiAudioPausedBetweenTracks = false;
+
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.removeAttribute("src");
+    currentAudio.load();
+  }
+
+  const target = (percent / 100) * currentAudioTracks.length;
+  currentAudioIndex = Math.min(currentAudioTracks.length - 1, Math.floor(target));
+  pendingAudioSeekPercent = Math.max(0, Math.min(100, (target - currentAudioIndex) * 100));
+  playAiAudioTrack();
+  statusNote.textContent = "AI narration moved to a new part of the story.";
+  return true;
+}
+
+function seekDeviceNarration(percent) {
+  if (!currentNarrationSegments.length || !("speechSynthesis" in window)) return false;
+
+  window.clearTimeout(currentNarrationTimer);
+  currentNarrationTimer = null;
+  window.speechSynthesis.cancel();
+  currentNarrationIndex = Math.min(
+    currentNarrationSegments.length - 1,
+    Math.floor((percent / 100) * currentNarrationSegments.length)
+  );
+  narrationPausedBetweenSegments = false;
+  speakNarrationSegment();
+  statusNote.textContent = "Audio narration moved to a new part of the story.";
+  return true;
+}
+
 function stopNarration() {
   window.clearTimeout(currentNarrationTimer);
   currentNarrationTimer = null;
@@ -990,6 +1071,7 @@ function stopNarration() {
   currentAudioTracks = [];
   currentAudioIndex = 0;
   aiAudioPausedBetweenTracks = false;
+  resetAudioProgress();
 }
 
 function getNarrationPause(story = currentStory) {
@@ -1010,14 +1092,17 @@ function speakNarrationSegment() {
     currentNarrationSegments = [];
     currentNarrationIndex = 0;
     narrationPausedBetweenSegments = false;
+    finishAudioProgress();
     statusNote.textContent = "Audio narration finished.";
     return;
   }
 
+  updateDeviceAudioProgress();
   currentNarration = new SpeechSynthesisUtterance(currentNarrationSegments[currentNarrationIndex]);
   applyNarrationSettings(currentNarration);
   currentNarration.onend = () => {
     currentNarrationIndex += 1;
+    updateDeviceAudioProgress();
     currentNarrationTimer = window.setTimeout(speakNarrationSegment, getNarrationPause());
   };
   currentNarration.onerror = () => {
@@ -1035,13 +1120,23 @@ function playAiAudioTrack() {
     currentAudioTracks = [];
     currentAudioIndex = 0;
     aiAudioPausedBetweenTracks = false;
+    finishAudioProgress();
     statusNote.textContent = "AI narration finished.";
     return;
   }
 
   currentAudio = new Audio(currentAudioTracks[currentAudioIndex]);
+  currentAudio.ontimeupdate = updateAiAudioProgress;
+  currentAudio.onloadedmetadata = () => {
+    if (pendingAudioSeekPercent !== null && Number.isFinite(currentAudio.duration)) {
+      currentAudio.currentTime = (pendingAudioSeekPercent / 100) * currentAudio.duration;
+      pendingAudioSeekPercent = null;
+    }
+    updateAiAudioProgress();
+  };
   currentAudio.onended = () => {
     currentAudioIndex += 1;
+    updateAiAudioProgress();
     currentNarrationTimer = window.setTimeout(playAiAudioTrack, getNarrationPause());
   };
   currentAudio.onerror = () => {
@@ -1208,6 +1303,23 @@ audioPauseButton.addEventListener("click", () => {
   }
 
   statusNote.textContent = "Start the narration before pausing.";
+});
+
+audioProgress.addEventListener("input", () => {
+  audioProgressLabel.textContent = `${audioProgress.value}%`;
+});
+
+audioProgress.addEventListener("change", () => {
+  if (!canUseNarration()) return;
+
+  const percent = Number(audioProgress.value);
+  if (seekAiAudio(percent) || seekDeviceNarration(percent)) {
+    trackEvent("audio_seek", { percent });
+    return;
+  }
+
+  statusNote.textContent = "Start the narration before moving through the story.";
+  resetAudioProgress();
 });
 
 updatePlanFeatures();

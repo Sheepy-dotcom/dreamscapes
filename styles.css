@@ -574,6 +574,7 @@ textarea:focus-visible {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 14px;
   margin: 16px 0 4px;
   border: 1px solid rgba(123, 78, 216, 0.18);
@@ -597,6 +598,28 @@ textarea:focus-visible {
   font-size: 0.82rem;
   font-weight: 800;
   line-height: 1.35;
+}
+
+.audio-progress {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  flex: 1 0 100%;
+}
+
+.audio-progress[hidden] {
+  display: none;
+}
+
+.audio-progress input {
+  width: 100%;
+  accent-color: #7b4ed8;
+}
+
+.audio-progress span {
+  min-width: 42px;
+  text-align: right;
 }
 
 .icon-button {
