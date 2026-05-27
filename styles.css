@@ -622,6 +622,30 @@ textarea:focus-visible {
   text-align: right;
 }
 
+.audio-speed {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 0 100%;
+  color: #5e5f80;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.audio-speed[hidden] {
+  display: none;
+}
+
+.audio-speed select {
+  min-height: 36px;
+  border: 1px solid rgba(123, 78, 216, 0.22);
+  border-radius: 8px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--ink);
+  font: inherit;
+}
+
 .icon-button {
   display: inline-grid;
   width: 48px;

@@ -14,7 +14,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026052614" />
+    <link rel="stylesheet" href="./styles.css?v=2026052615" />
   </head>
   <body>
     <div class="stars" aria-hidden="true"></div>
@@ -307,6 +307,14 @@
               />
               <span id="audio-progress-label">0%</span>
             </div>
+            <label class="audio-speed" id="audio-speed-wrap" hidden>
+              <span>Playback speed</span>
+              <select id="audio-speed" aria-label="Audio playback speed">
+                <option value="1">Normal</option>
+                <option value="0.85">Slow</option>
+                <option value="0.75">Extra slow</option>
+              </select>
+            </label>
           </div>
           <div class="story-text" id="story-text"></div>
         </article>
@@ -514,6 +522,6 @@
       </nav>
     </main>
 
-    <script src="./app.js?v=2026052614"></script>
+    <script src="./app.js?v=2026052615"></script>
   </body>
 </html>
