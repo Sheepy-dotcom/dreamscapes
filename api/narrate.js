@@ -19,7 +19,8 @@ const SUPPORTED_VOICES = new Set([
 
 function cleanText(value) {
   return String(value || "")
-    .replace(/\s+/g, " ")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
 

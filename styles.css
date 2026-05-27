@@ -747,6 +747,11 @@ textarea:focus-visible {
   margin-bottom: 1.1em;
 }
 
+.story-text .sentence-break {
+  display: block;
+  height: 0.7em;
+}
+
 .status-note {
   min-height: 24px;
   margin: 14px 0 0;

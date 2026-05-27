@@ -64,6 +64,7 @@ function buildPrompt(data) {
     "- Use warm, sensory, magical language with clear scenes and character moments.",
     "- Keep it age-appropriate, safe, non-frightening, and parent-friendly.",
     "- Give the child small choices, feelings, and discoveries.",
+    "- Use shorter, gentle sentences with natural breathing room for bedtime narration.",
     "- Include a positive ending and a gentle lesson without sounding preachy.",
     "- For bedtime, slow the ending down and make the final paragraph peaceful.",
     "- Do not mention AI, prompts, packages, subscriptions, or app settings.",

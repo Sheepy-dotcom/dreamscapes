@@ -380,6 +380,30 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+function splitIntoSentences(text) {
+  return String(text || "")
+    .match(/[^.!?]+[.!?]+["”’']?|[^.!?]+$/g)
+    ?.map((sentence) => sentence.trim())
+    .filter(Boolean) || [];
+}
+
+function formatParagraphForDisplay(paragraph) {
+  const sentences = splitIntoSentences(paragraph);
+  if (sentences.length <= 1) return escapeHtml(paragraph);
+
+  return sentences
+    .map((sentence, index) => {
+      const gap = index < sentences.length - 1 ? '<span class="sentence-break" aria-hidden="true"></span>' : "";
+      return `${escapeHtml(sentence)}${gap}`;
+    })
+    .join("");
+}
+
+function addNarrationSentenceBreaks(text) {
+  const sentences = splitIntoSentences(text);
+  return sentences.length > 1 ? sentences.join("\n\n") : String(text || "");
+}
+
 function generateStory(data) {
   const moods = getSelectedMoods(data.moods);
   const mood = blendMoods(moods);
@@ -457,6 +481,7 @@ function createPrompt(data) {
     `Moods: ${getSelectedMoods(data.moods).join(", ")}`,
     `Story idea: ${tidyIdea(data.storyIdea, data.childName)}`,
     "Use warm imaginative language, a positive ending, and a gentle lesson where appropriate.",
+    "Use shorter, gentle sentences with natural pauses, especially for bedtime narration.",
     "Return JSON with title and paragraphs fields.",
   ].join("\n");
 }
@@ -503,7 +528,7 @@ function renderStory(story) {
     <span>Age ${story.childAge}</span>
   `;
   document.querySelector("#story-text").innerHTML = story.text
-    .map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`)
+    .map((paragraph) => `<p>${formatParagraphForDisplay(paragraph)}</p>`)
     .join("");
   narrationNote.textContent = story.audioNarration
     ? story.aiAudioTracks?.length
@@ -515,7 +540,7 @@ function renderStory(story) {
 }
 
 function storyAsText(story) {
-  return `${story.title}\n\n${story.text.join("\n\n")}`;
+  return `${story.title}\n\n${story.text.map(addNarrationSentenceBreaks).join("\n\n\n")}`;
 }
 
 function cleanNarrationText(text) {
