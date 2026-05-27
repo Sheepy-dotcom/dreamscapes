@@ -43,7 +43,6 @@ let pendingAudioSeekPercent = null;
 const AI_ENDPOINT = window.DREAMSCAPES_AI_ENDPOINT || "/api/story";
 const NARRATION_ENDPOINT = window.DREAMSCAPES_NARRATION_ENDPOINT || "/api/narrate";
 const VOICE_PREVIEW_TEXT = "Hello from DreamScapes. Settle in, take a gentle breath, and let the story begin.";
-const SAVED_AUDIO_PLAYBACK_RATE = 0.85;
 const VOICE_PREVIEW_FILES = {
   "female calm": "./assets/voice-preview-female-british-calm.mp3",
   "male calm": "./assets/voice-preview-male-british-calm.mp3",
@@ -582,8 +581,8 @@ function getAiNarrationInstructions(story) {
   }[story.voiceStyle] || "a warm British English adult reading to a child";
   const bedtimeDirection =
     story.storyType === "bedtime"
-      ? "Use a very slow, cosy bedtime pace with generous pauses, soft phrasing, and a sleepy final line."
-      : "Use a calm, unhurried storytelling pace with relaxed energy and small pauses between ideas.";
+      ? "Use a cosy bedtime pace with natural breathing room, gentle pauses, soft phrasing, and a sleepy final line."
+      : "Use a calm, unhurried storytelling pace with relaxed energy and natural pauses between ideas.";
   const styleDirection = {
     "female calm":
       "For this female calm voice, use a soft southern British bedtime storyteller style: gentle, cosy, unhurried, and soothing, like a calm UK parent reading before sleep.",
@@ -608,7 +607,7 @@ function getAiNarrationInstructions(story) {
     `Mood: ${mood}.`,
     bedtimeDirection,
     "Sound close, human, and reassuring, like a parent calmly reading beside the bed.",
-    "Speak slower than normal conversational speech, with soft consonants, mild expression, relaxed pacing, and clear pauses after emotional sentences.",
+    "Do not stretch words or sound slowed down. Keep the voice natural and human, using pauses and phrasing to create a gentle pace.",
     "Avoid announcer energy, theatrical exaggeration, sharp emphasis, or robotic cadence.",
     "Do not add extra words that are not in the story.",
   ].join(" ");
@@ -1127,7 +1126,6 @@ function playAiAudioTrack() {
   }
 
   currentAudio = new Audio(currentAudioTracks[currentAudioIndex]);
-  currentAudio.playbackRate = SAVED_AUDIO_PLAYBACK_RATE;
   currentAudio.ontimeupdate = updateAiAudioProgress;
   currentAudio.onloadedmetadata = () => {
     if (pendingAudioSeekPercent !== null && Number.isFinite(currentAudio.duration)) {
