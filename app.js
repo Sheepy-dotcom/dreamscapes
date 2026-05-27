@@ -24,8 +24,6 @@ const narrationNote = document.querySelector("#narration-note");
 const audioProgressWrap = document.querySelector("#audio-progress-wrap");
 const audioProgress = document.querySelector("#audio-progress");
 const audioProgressLabel = document.querySelector("#audio-progress-label");
-const audioSpeedWrap = document.querySelector("#audio-speed-wrap");
-const audioSpeed = document.querySelector("#audio-speed");
 const voiceStyle = document.querySelector("#voice-style");
 const voicePreviewButton = document.querySelector("#voice-preview-button");
 const storyIdea = document.querySelector("#story-idea");
@@ -45,6 +43,7 @@ let pendingAudioSeekPercent = null;
 const AI_ENDPOINT = window.DREAMSCAPES_AI_ENDPOINT || "/api/story";
 const NARRATION_ENDPOINT = window.DREAMSCAPES_NARRATION_ENDPOINT || "/api/narrate";
 const VOICE_PREVIEW_TEXT = "Hello from DreamScapes. Settle in, take a gentle breath, and let the story begin.";
+const SAVED_AUDIO_PLAYBACK_RATE = 0.85;
 const VOICE_PREVIEW_FILES = {
   "female calm": "./assets/voice-preview-female-british-calm.mp3",
   "male calm": "./assets/voice-preview-male-british-calm.mp3",
@@ -514,7 +513,6 @@ function renderStory(story) {
     : "Turn on audio before generating a story";
   resetAudioProgress();
   setAudioProgressVisible(Boolean(story.audioNarration));
-  setAudioSpeedVisible(Boolean(story.audioNarration));
 }
 
 function storyAsText(story) {
@@ -986,15 +984,6 @@ function setAudioProgressVisible(visible) {
   audioProgressWrap.hidden = !visible;
 }
 
-function setAudioSpeedVisible(visible) {
-  audioSpeedWrap.hidden = !visible;
-}
-
-function getAudioPlaybackRate() {
-  const rate = Number(audioSpeed.value);
-  return Number.isFinite(rate) && rate > 0 ? rate : 1;
-}
-
 function setAudioProgress(percent) {
   const safePercent = Math.max(0, Math.min(100, Number.isFinite(percent) ? percent : 0));
   audioProgress.value = String(Math.round(safePercent));
@@ -1112,7 +1101,6 @@ function speakNarrationSegment() {
   updateDeviceAudioProgress();
   currentNarration = new SpeechSynthesisUtterance(currentNarrationSegments[currentNarrationIndex]);
   applyNarrationSettings(currentNarration);
-  currentNarration.rate = Math.max(0.1, currentNarration.rate * getAudioPlaybackRate());
   currentNarration.onend = () => {
     currentNarrationIndex += 1;
     updateDeviceAudioProgress();
@@ -1139,7 +1127,7 @@ function playAiAudioTrack() {
   }
 
   currentAudio = new Audio(currentAudioTracks[currentAudioIndex]);
-  currentAudio.playbackRate = getAudioPlaybackRate();
+  currentAudio.playbackRate = SAVED_AUDIO_PLAYBACK_RATE;
   currentAudio.ontimeupdate = updateAiAudioProgress;
   currentAudio.onloadedmetadata = () => {
     if (pendingAudioSeekPercent !== null && Number.isFinite(currentAudio.duration)) {
@@ -1334,16 +1322,6 @@ audioProgress.addEventListener("change", () => {
 
   statusNote.textContent = "Start the narration before moving through the story.";
   resetAudioProgress();
-});
-
-audioSpeed.addEventListener("change", () => {
-  if (currentAudio) {
-    currentAudio.playbackRate = getAudioPlaybackRate();
-    statusNote.textContent = "Audio speed updated.";
-  } else if (currentNarrationSegments.length > 0) {
-    statusNote.textContent = "Audio speed will update on the next spoken section.";
-  }
-  trackEvent("audio_speed_changed", { rate: getAudioPlaybackRate() });
 });
 
 updatePlanFeatures();
