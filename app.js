@@ -39,6 +39,7 @@ let narrationRequestInFlight = false;
 const AI_ENDPOINT = window.DREAMSCAPES_AI_ENDPOINT || "/api/story";
 const NARRATION_ENDPOINT = window.DREAMSCAPES_NARRATION_ENDPOINT || "/api/narrate";
 const VOICE_PREVIEW_CACHE_KEY = "dreamscapesVoicePreviews";
+const VOICE_PREVIEW_CACHE_VERSION = "british-calm-v2";
 const VOICE_PREVIEW_TEXT = "Hello from DreamScapes. Settle in, take a gentle breath, and let the story begin.";
 const MAX_LOCAL_SAVED_STORIES = 30;
 const MAX_LIBRARY_RENDER_ITEMS = 30;
@@ -289,17 +290,21 @@ function getCachedVoicePreviews() {
 }
 
 function getCachedVoicePreview(style) {
-  return getCachedVoicePreviews()[style] || null;
+  return getCachedVoicePreviews()[getVoicePreviewCacheId(style)] || null;
 }
 
 function setCachedVoicePreview(style, audio) {
   try {
     const previews = getCachedVoicePreviews();
-    previews[style] = audio;
+    previews[getVoicePreviewCacheId(style)] = audio;
     localStorage.setItem(VOICE_PREVIEW_CACHE_KEY, JSON.stringify(previews));
   } catch {
     // If storage is full, previews still work; they just will not be reused.
   }
+}
+
+function getVoicePreviewCacheId(style) {
+  return `${VOICE_PREVIEW_CACHE_VERSION}:${style}:${getAiNarrationVoice(style)}`;
 }
 
 function tidyIdea(idea, childName) {
@@ -572,9 +577,9 @@ function storyAsNarrationSegments(story) {
 
 function getAiNarrationVoice(style) {
   const voices = {
-    "female calm": "shimmer",
-    "female default": "shimmer",
-    "female cheerful": "shimmer",
+    "female calm": "nova",
+    "female default": "nova",
+    "female cheerful": "nova",
     "male calm": "fable",
     "male default": "fable",
     "male cheerful": "fable",
@@ -599,11 +604,11 @@ function getAiNarrationInstructions(story) {
       : "Use a gentle, clear storytelling pace with relaxed energy.";
   const styleDirection = {
     "female calm":
-      "For this female calm voice, use a soft British bedtime storyteller style: gentle, cosy, unhurried, and soothing.",
+      "For this female calm voice, use a soft southern British bedtime storyteller style: gentle, cosy, unhurried, and soothing, like a calm UK parent reading before sleep.",
     "female default":
-      "For this female calm voice, use a soft British bedtime storyteller style: gentle, cosy, unhurried, and soothing.",
+      "For this female calm voice, use a soft southern British bedtime storyteller style: gentle, cosy, unhurried, and soothing, like a calm UK parent reading before sleep.",
     "female cheerful":
-      "For this female calm voice, use a soft British bedtime storyteller style: gentle, cosy, unhurried, and soothing.",
+      "For this female calm voice, use a soft southern British bedtime storyteller style: gentle, cosy, unhurried, and soothing, like a calm UK parent reading before sleep.",
     "male calm":
       "For this male calm voice, use a gentle British storybook narrator style: steady, warm, low-energy, and peaceful.",
     "male default":
@@ -615,7 +620,7 @@ function getAiNarrationInstructions(story) {
   return [
     `Read this children's story as ${voiceLabel}.`,
     "Use a natural UK/British accent and British English pronunciation throughout.",
-    "Avoid American pronunciation, American intonation, or American-style announcer delivery.",
+    "Avoid American pronunciation, American intonation, or American-style announcer delivery. Do not sound American.",
     styleDirection,
     `The child is age ${story.childAge}.`,
     `Mood: ${mood}.`,
