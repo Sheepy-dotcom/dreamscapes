@@ -16,7 +16,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026052623" />
+    <link rel="stylesheet" href="./styles.css?v=2026052810" />
   </head>
   <body class="home-active">
     <div class="stars" aria-hidden="true"></div>
@@ -416,6 +416,48 @@
         <p class="status-note" id="upgrade-note" role="status"></p>
       </section>
 
+      <section class="screen account-screen" id="account-screen" aria-labelledby="account-title">
+        <header class="top-bar">
+          <button class="logo-button" data-screen-target="welcome" type="button" aria-label="Go to home">
+            <img class="mini-logo" src="./assets/dreamscapes-logo.png" alt="DreamScapes" />
+          </button>
+          <div>
+            <p class="eyebrow">Account</p>
+            <h2 id="account-title">Parent Login</h2>
+          </div>
+        </header>
+
+        <div class="auth-grid">
+          <article class="auth-card" id="auth-signed-out">
+            <h3>Sign in or create an account</h3>
+            <p>Accounts are the first step toward saving stories and audio across devices.</p>
+            <form class="auth-form" id="auth-form">
+              <label class="field">
+                <span>Email</span>
+                <input id="auth-email" type="email" autocomplete="email" placeholder="you@example.com" />
+              </label>
+              <label class="field">
+                <span>Password</span>
+                <input id="auth-password" type="password" autocomplete="current-password" minlength="6" />
+              </label>
+              <div class="auth-actions">
+                <button class="button primary-button" id="sign-in-button" type="button">Sign In</button>
+                <button class="button secondary-button" id="sign-up-button" type="button">Create Account</button>
+              </div>
+            </form>
+          </article>
+
+          <article class="auth-card" id="auth-signed-in" hidden>
+            <h3>You are signed in</h3>
+            <p id="account-email"></p>
+            <p id="account-cloud-status">Account connected. Cloud story saving is the next setup step.</p>
+            <button class="button secondary-button" id="sign-out-button" type="button">Sign Out</button>
+          </article>
+        </div>
+
+        <p class="status-note account-status" id="auth-status" role="status"></p>
+      </section>
+
       <section class="screen info-screen" id="safety-screen" aria-labelledby="safety-title">
         <header class="top-bar">
           <button class="logo-button" data-screen-target="welcome" type="button" aria-label="Go to home">
@@ -448,7 +490,7 @@
           </div>
         </header>
         <article class="info-card">
-          <p>This prototype stores saved stories and plan state on this device only. A production version should use secure accounts, encrypted transport, and clear parent consent.</p>
+          <p>This prototype now supports parent account login. Saved stories and plan state still stay on this device until cloud story saving is added.</p>
           <ul>
             <li>Do not collect more child information than needed.</li>
             <li>Explain how story prompts and audio are processed.</li>
@@ -513,9 +555,14 @@
           <span aria-hidden="true">★</span>
           Plans
         </button>
+        <button type="button" data-screen-target="account">
+          <span aria-hidden="true">◐</span>
+          Account
+        </button>
       </nav>
     </main>
 
-    <script src="./app.js?v=2026052809"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./app.js?v=2026052810"></script>
   </body>
 </html>

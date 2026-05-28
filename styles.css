@@ -261,6 +261,7 @@ textarea:focus-visible {
 .result-screen,
 .library-screen,
 .upgrade-screen,
+.account-screen,
 .info-screen {
   padding: clamp(18px, 3vw, 32px);
 }
@@ -545,7 +546,7 @@ textarea:focus-visible {
   left: 50%;
   bottom: 14px;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   width: min(520px, calc(100% - 28px));
   transform: translateX(-50%);
   border: 1px solid rgba(255, 255, 255, 0.36);
@@ -782,6 +783,7 @@ textarea:focus-visible {
 
 .library-list,
 .upgrade-grid,
+.auth-grid,
 .trust-links {
   display: grid;
   gap: 14px;
@@ -792,7 +794,8 @@ textarea:focus-visible {
 }
 
 .library-item,
-.upgrade-grid article {
+.upgrade-grid article,
+.auth-card {
   border: 1px solid rgba(123, 78, 216, 0.18);
   border-radius: 8px;
   padding: 16px;
@@ -800,7 +803,8 @@ textarea:focus-visible {
 }
 
 .library-item h3,
-.upgrade-grid h3 {
+.upgrade-grid h3,
+.auth-card h3 {
   margin-bottom: 6px;
 }
 
@@ -813,10 +817,31 @@ textarea:focus-visible {
 }
 
 .library-item p,
-.upgrade-grid p {
+.upgrade-grid p,
+.auth-card p {
   margin-bottom: 12px;
   color: #5e5f80;
   line-height: 1.45;
+}
+
+.auth-card[hidden] {
+  display: none;
+}
+
+.auth-form {
+  display: grid;
+  gap: 14px;
+}
+
+.auth-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.account-status.error {
+  color: #7f1d45;
 }
 
 .library-actions {

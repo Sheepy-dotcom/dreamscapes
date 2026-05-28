@@ -5,6 +5,7 @@ const screens = {
   result: document.querySelector("#result-screen"),
   library: document.querySelector("#library-screen"),
   upgrade: document.querySelector("#upgrade-screen"),
+  account: document.querySelector("#account-screen"),
   safety: document.querySelector("#safety-screen"),
   privacy: document.querySelector("#privacy-screen"),
   terms: document.querySelector("#terms-screen"),
@@ -28,7 +29,17 @@ const voiceStyle = document.querySelector("#voice-style");
 const voicePreviewButton = document.querySelector("#voice-preview-button");
 const storyIdea = document.querySelector("#story-idea");
 const libraryList = document.querySelector("#library-list");
+const authForm = document.querySelector("#auth-form");
+const authEmail = document.querySelector("#auth-email");
+const authPassword = document.querySelector("#auth-password");
+const authStatus = document.querySelector("#auth-status");
+const authSignedOut = document.querySelector("#auth-signed-out");
+const authSignedIn = document.querySelector("#auth-signed-in");
+const accountEmail = document.querySelector("#account-email");
+const accountCloudStatus = document.querySelector("#account-cloud-status");
 let currentStory = null;
+let currentUser = null;
+let supabaseClient = null;
 let currentNarration = null;
 let currentNarrationSegments = [];
 let currentNarrationIndex = 0;
@@ -43,6 +54,9 @@ let narrationRequestInFlight = false;
 let pendingAudioSeekPercent = null;
 const AI_ENDPOINT = window.DREAMSCAPES_AI_ENDPOINT || "/api/story";
 const NARRATION_ENDPOINT = window.DREAMSCAPES_NARRATION_ENDPOINT || "/api/narrate";
+const SUPABASE_URL = "https://khgzzrixhetaontmdhez.supabase.co";
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtoZ3p6cml4aGV0YW9udG1kaGV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5OTkwMjMsImV4cCI6MjA5NTU3NTAyM30.Zij8eBhzxNecuPRsMliWChxYmogLBFbd1GScpKPM_5g";
 const VOICE_PREVIEW_TEXT = "Hello from DreamScapes. Settle in, take a gentle breath, and let the story begin.";
 const VOICE_PREVIEW_FILES = {
   "female calm": "./assets/voice-preview-female-british-calm.mp3",
@@ -259,6 +273,53 @@ function showScreen(name) {
   if (name === "library") renderLibrary();
   trackEvent("screen_view", { screen: name });
   window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function setAuthStatus(message, isError = false) {
+  if (!authStatus) return;
+  authStatus.textContent = message;
+  authStatus.classList.toggle("error", Boolean(isError));
+}
+
+function updateAccountUI() {
+  const signedIn = Boolean(currentUser);
+
+  if (authSignedOut) authSignedOut.hidden = signedIn;
+  if (authSignedIn) authSignedIn.hidden = !signedIn;
+  if (accountEmail) accountEmail.textContent = currentUser?.email || "";
+  if (accountCloudStatus) {
+    accountCloudStatus.textContent = signedIn
+      ? "Account connected. Cloud story saving is the next setup step."
+      : "Sign in to prepare cloud saving across devices.";
+  }
+}
+
+function setCurrentUser(user) {
+  currentUser = user || null;
+  updateAccountUI();
+}
+
+function initSupabase() {
+  if (!window.supabase?.createClient) {
+    setAuthStatus("Account login could not load. Check the Supabase script connection.", true);
+    updateAccountUI();
+    return;
+  }
+
+  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+    },
+  });
+
+  supabaseClient.auth.getSession().then(({ data }) => {
+    setCurrentUser(data.session?.user);
+  });
+
+  supabaseClient.auth.onAuthStateChange((_event, session) => {
+    setCurrentUser(session?.user);
+  });
 }
 
 function trackEvent(name, details = {}) {
@@ -837,6 +898,78 @@ document.querySelector("#start-button").addEventListener("click", () => showScre
 document.querySelector("#welcome-back-button").addEventListener("click", () => showScreen("welcome"));
 document.querySelectorAll("[data-screen-target]").forEach((button) => {
   button.addEventListener("click", () => showScreen(button.dataset.screenTarget));
+});
+
+authForm?.addEventListener("submit", (event) => {
+  event.preventDefault();
+  document.querySelector("#sign-in-button")?.click();
+});
+
+document.querySelector("#sign-in-button")?.addEventListener("click", async () => {
+  if (!supabaseClient) {
+    setAuthStatus("Account login is not ready yet. Try refreshing the page.", true);
+    return;
+  }
+
+  const email = authEmail.value.trim();
+  const password = authPassword.value;
+
+  if (!email || password.length < 6) {
+    setAuthStatus("Enter an email and a password with at least 6 characters.", true);
+    return;
+  }
+
+  setAuthStatus("Signing in...");
+  const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    setAuthStatus(error.message, true);
+    return;
+  }
+
+  setAuthStatus("Signed in.");
+  trackEvent("account_signed_in");
+});
+
+document.querySelector("#sign-up-button")?.addEventListener("click", async () => {
+  if (!supabaseClient) {
+    setAuthStatus("Account signup is not ready yet. Try refreshing the page.", true);
+    return;
+  }
+
+  const email = authEmail.value.trim();
+  const password = authPassword.value;
+
+  if (!email || password.length < 6) {
+    setAuthStatus("Enter an email and a password with at least 6 characters.", true);
+    return;
+  }
+
+  setAuthStatus("Creating account...");
+  const { error } = await supabaseClient.auth.signUp({ email, password });
+
+  if (error) {
+    setAuthStatus(error.message, true);
+    return;
+  }
+
+  setAuthStatus("Account created. Check your email if Supabase asks you to confirm it.");
+  trackEvent("account_signed_up");
+});
+
+document.querySelector("#sign-out-button")?.addEventListener("click", async () => {
+  if (!supabaseClient) return;
+
+  setAuthStatus("Signing out...");
+  const { error } = await supabaseClient.auth.signOut();
+
+  if (error) {
+    setAuthStatus(error.message, true);
+    return;
+  }
+
+  setAuthStatus("Signed out.");
+  trackEvent("account_signed_out");
 });
 
 document.querySelectorAll("[data-idea]").forEach((button) => {
@@ -1508,3 +1641,5 @@ audioProgress.addEventListener("change", () => {
 });
 
 updatePlanFeatures();
+updateAccountUI();
+initSupabase();
