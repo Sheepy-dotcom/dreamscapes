@@ -37,6 +37,7 @@ let narrationPausedBetweenSegments = false;
 let currentAudio = null;
 let currentAudioTracks = [];
 let currentAudioIndex = 0;
+let currentAudioTrackDurations = [];
 let aiAudioPausedBetweenTracks = false;
 let narrationRequestInFlight = false;
 let pendingAudioSeekPercent = null;
@@ -533,10 +534,12 @@ function renderStory(story) {
   const selectedMoods = getSelectedMoods(story.moods);
   const duration = getDuration(story.duration);
   const plan = getPlan(story.plan);
+  const savedAudioDuration = getSavedAudioDurationSeconds(story);
   document.querySelector("#story-title").textContent = story.title;
   document.querySelector("#story-meta").innerHTML = `
     <span>${plan.label}</span>
     <span>${duration.label}${duration.premium ? " Premium" : ""}</span>
+    ${savedAudioDuration ? `<span>Audio ${formatAudioTime(savedAudioDuration)}</span>` : ""}
     <span>${story.storyType === "bedtime" ? "Bedtime story" : "Anytime story"}</span>
     <span>${selectedMoods.map(sentenceCase).join(" + ")}</span>
     <span>${story.audioNarration ? "Audio narration" : "Text only"}</span>
@@ -547,7 +550,9 @@ function renderStory(story) {
     .join("");
   narrationNote.textContent = story.audioNarration
     ? story.aiAudioTracks?.length
-      ? "Premium audio saved with this story"
+      ? savedAudioDuration
+        ? `Saved audio length: ${formatAudioTime(savedAudioDuration)}`
+        : "Premium audio saved with this story"
       : "First play creates and saves premium audio"
     : "Turn on audio before generating a story";
   resetAudioProgress();
@@ -594,6 +599,69 @@ function storyAsNarrationSegments(story) {
     cleanNarrationText(story.title),
     ...story.text.flatMap((paragraph) => splitNarrationText(paragraph)),
   ].filter(Boolean);
+}
+
+function formatAudioTime(totalSeconds) {
+  const safeSeconds = Math.max(0, Math.round(Number(totalSeconds) || 0));
+  const hours = Math.floor(safeSeconds / 3600);
+  const minutes = Math.floor((safeSeconds % 3600) / 60);
+  const seconds = safeSeconds % 60;
+
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  }
+
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+function getAudioPauseSeconds(story = currentStory) {
+  return getNarrationPause(story) / 1000;
+}
+
+function getPlaybackDurationSeconds(trackDurations, story = currentStory) {
+  if (!Array.isArray(trackDurations) || trackDurations.length === 0) return 0;
+
+  const audioSeconds = trackDurations.reduce(
+    (total, duration) => total + (Number.isFinite(duration) ? duration : 0),
+    0
+  );
+  const pauseSeconds = Math.max(0, trackDurations.length - 1) * getAudioPauseSeconds(story);
+
+  return audioSeconds + pauseSeconds;
+}
+
+function getSavedAudioDurationSeconds(story) {
+  if (Number.isFinite(story?.aiAudioDurationSeconds) && story.aiAudioDurationSeconds > 0) {
+    return story.aiAudioDurationSeconds;
+  }
+
+  const calculatedDuration = getPlaybackDurationSeconds(story?.aiAudioTrackDurations, story);
+  return calculatedDuration > 0 ? calculatedDuration : 0;
+}
+
+function measureAudioTrackDuration(src) {
+  return new Promise((resolve) => {
+    const audio = new Audio(src);
+    const finish = (duration) => {
+      audio.removeAttribute("src");
+      audio.load();
+      resolve(Number.isFinite(duration) && duration > 0 ? duration : 0);
+    };
+
+    audio.preload = "metadata";
+    audio.onloadedmetadata = () => finish(audio.duration);
+    audio.onerror = () => finish(0);
+  });
+}
+
+async function measureAudioTrackDurations(tracks) {
+  const durations = [];
+
+  for (const track of tracks) {
+    durations.push(await measureAudioTrackDuration(track));
+  }
+
+  return durations;
 }
 
 function getAiNarrationVoice(style) {
@@ -1026,7 +1094,15 @@ function setAudioProgressVisible(visible) {
 function setAudioProgress(percent) {
   const safePercent = Math.max(0, Math.min(100, Number.isFinite(percent) ? percent : 0));
   audioProgress.value = String(Math.round(safePercent));
-  audioProgressLabel.textContent = `${Math.round(safePercent)}%`;
+  audioProgressLabel.textContent = getAudioProgressLabel(safePercent);
+}
+
+function getAudioProgressLabel(percent) {
+  const totalSeconds = getSavedAudioDurationSeconds(currentStory);
+  if (!totalSeconds || !currentAudioTracks.length) return `${Math.round(percent)}%`;
+
+  const elapsedSeconds = getAiAudioElapsedSeconds(percent);
+  return `${formatAudioTime(elapsedSeconds)} / ${formatAudioTime(totalSeconds)}`;
 }
 
 function resetAudioProgress() {
@@ -1041,11 +1117,36 @@ function finishAudioProgress() {
 
 function getAiAudioProgress() {
   if (!currentAudioTracks.length) return 0;
+  const totalSeconds = getSavedAudioDurationSeconds(currentStory);
+  if (totalSeconds && currentAudioTrackDurations.length === currentAudioTracks.length) {
+    return (getAiAudioElapsedSeconds() / totalSeconds) * 100;
+  }
+
   const trackProgress =
     currentAudio && Number.isFinite(currentAudio.duration) && currentAudio.duration > 0
       ? currentAudio.currentTime / currentAudio.duration
       : 0;
   return ((currentAudioIndex + trackProgress) / currentAudioTracks.length) * 100;
+}
+
+function getAiAudioElapsedSeconds(percent = null) {
+  const totalSeconds = getSavedAudioDurationSeconds(currentStory);
+  if (Number.isFinite(percent) && totalSeconds) {
+    return (Math.max(0, Math.min(100, percent)) / 100) * totalSeconds;
+  }
+
+  if (!currentAudioTracks.length || currentAudioTrackDurations.length !== currentAudioTracks.length) {
+    return 0;
+  }
+
+  const completedTrackSeconds = currentAudioTrackDurations
+    .slice(0, currentAudioIndex)
+    .reduce((total, duration) => total + (Number.isFinite(duration) ? duration : 0), 0);
+  const completedPauseSeconds = Math.min(currentAudioIndex, currentAudioTracks.length - 1) * getAudioPauseSeconds();
+  const currentTrackSeconds =
+    currentAudio && Number.isFinite(currentAudio.currentTime) ? currentAudio.currentTime : 0;
+
+  return completedTrackSeconds + completedPauseSeconds + currentTrackSeconds;
 }
 
 function updateAiAudioProgress() {
@@ -1070,9 +1171,27 @@ function seekAiAudio(percent) {
     currentAudio.load();
   }
 
-  const target = (percent / 100) * currentAudioTracks.length;
-  currentAudioIndex = Math.min(currentAudioTracks.length - 1, Math.floor(target));
-  pendingAudioSeekPercent = Math.max(0, Math.min(100, (target - currentAudioIndex) * 100));
+  const totalSeconds = getSavedAudioDurationSeconds(currentStory);
+  if (totalSeconds && currentAudioTrackDurations.length === currentAudioTracks.length) {
+    let remainingSeconds = (Math.max(0, Math.min(100, percent)) / 100) * totalSeconds;
+    currentAudioIndex = 0;
+
+    for (let index = 0; index < currentAudioTrackDurations.length; index += 1) {
+      const trackSeconds = currentAudioTrackDurations[index] || 0;
+      if (remainingSeconds <= trackSeconds || index === currentAudioTrackDurations.length - 1) {
+        currentAudioIndex = index;
+        pendingAudioSeekPercent =
+          trackSeconds > 0 ? (Math.max(0, remainingSeconds) / trackSeconds) * 100 : 0;
+        break;
+      }
+
+      remainingSeconds -= trackSeconds + getAudioPauseSeconds();
+    }
+  } else {
+    const target = (percent / 100) * currentAudioTracks.length;
+    currentAudioIndex = Math.min(currentAudioTracks.length - 1, Math.floor(target));
+    pendingAudioSeekPercent = Math.max(0, Math.min(100, (target - currentAudioIndex) * 100));
+  }
   playAiAudioTrack();
   statusNote.textContent = "AI narration moved to a new part of the story.";
   return true;
@@ -1110,6 +1229,7 @@ function stopNarration() {
   currentAudio = null;
   currentAudioTracks = [];
   currentAudioIndex = 0;
+  currentAudioTrackDurations = [];
   aiAudioPausedBetweenTracks = false;
   resetAudioProgress();
 }
@@ -1168,6 +1288,9 @@ function playAiAudioTrack() {
   currentAudio = new Audio(currentAudioTracks[currentAudioIndex]);
   currentAudio.ontimeupdate = updateAiAudioProgress;
   currentAudio.onloadedmetadata = () => {
+    if (Number.isFinite(currentAudio.duration) && currentAudio.duration > 0) {
+      currentAudioTrackDurations[currentAudioIndex] = currentAudio.duration;
+    }
     if (pendingAudioSeekPercent !== null && Number.isFinite(currentAudio.duration)) {
       currentAudio.currentTime = (pendingAudioSeekPercent / 100) * currentAudio.duration;
       pendingAudioSeekPercent = null;
@@ -1194,10 +1317,15 @@ function playAiAudioTrack() {
 async function startAiNarration() {
   if (Array.isArray(currentStory.aiAudioTracks) && currentStory.aiAudioTracks.length > 0) {
     currentAudioTracks = currentStory.aiAudioTracks;
+    currentAudioTrackDurations = Array.isArray(currentStory.aiAudioTrackDurations)
+      ? currentStory.aiAudioTrackDurations
+      : [];
     currentAudioIndex = 0;
     playAiAudioTrack();
     statusNote.textContent = "Playing saved premium AI narration.";
-    narrationNote.textContent = "Using saved audio, no new AI request";
+    narrationNote.textContent = getSavedAudioDurationSeconds(currentStory)
+      ? `Using saved audio: ${formatAudioTime(getSavedAudioDurationSeconds(currentStory))}`
+      : "Using saved audio, no new AI request";
     trackEvent("cached_ai_audio_played", { voiceStyle: currentStory.voiceStyle });
     return true;
   }
@@ -1222,16 +1350,22 @@ async function startAiNarration() {
     if (!Array.isArray(data.audio) || data.audio.length === 0) return false;
 
     currentAudioTracks = data.audio;
+    currentAudioTrackDurations = await measureAudioTrackDurations(data.audio);
+    const aiAudioDurationSeconds = getPlaybackDurationSeconds(currentAudioTrackDurations, currentStory);
     currentAudioIndex = 0;
     currentStory = {
       ...currentStory,
       aiAudioTracks: data.audio,
+      aiAudioTrackDurations: currentAudioTrackDurations,
+      aiAudioDurationSeconds,
       aiAudioGeneratedAt: new Date().toISOString(),
     };
     saveStoryToLibrary(currentStory, { silent: true });
     playAiAudioTrack();
     statusNote.textContent = "Audio complete. Playing now.";
-    narrationNote.textContent = "Audio complete and saved";
+    narrationNote.textContent = aiAudioDurationSeconds
+      ? `Audio complete and saved: ${formatAudioTime(aiAudioDurationSeconds)}`
+      : "Audio complete and saved";
     trackEvent("ai_audio_played", {
       voiceStyle: currentStory.voiceStyle,
       chunks: data.audio.length,
@@ -1349,7 +1483,7 @@ audioPauseButton.addEventListener("click", () => {
 });
 
 audioProgress.addEventListener("input", () => {
-  audioProgressLabel.textContent = `${audioProgress.value}%`;
+  audioProgressLabel.textContent = getAudioProgressLabel(Number(audioProgress.value));
 });
 
 audioProgress.addEventListener("change", () => {
