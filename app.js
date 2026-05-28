@@ -1201,6 +1201,8 @@ async function startAiNarration() {
   }
 
   try {
+    statusNote.textContent = "Creating audio. This can take a moment...";
+    narrationNote.textContent = "Creating audio";
     const response = await fetch(NARRATION_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -1226,8 +1228,8 @@ async function startAiNarration() {
     };
     saveStoryToLibrary(currentStory, { silent: true });
     playAiAudioTrack();
-    statusNote.textContent = "Playing premium AI narration. Audio saved for replay.";
-    narrationNote.textContent = "Premium audio saved with this story";
+    statusNote.textContent = "Audio complete. Playing now.";
+    narrationNote.textContent = "Audio complete and saved";
     trackEvent("ai_audio_played", {
       voiceStyle: currentStory.voiceStyle,
       chunks: data.audio.length,
@@ -1288,7 +1290,8 @@ audioPlayButton.addEventListener("click", async () => {
   }
 
   stopNarration();
-  statusNote.textContent = "Preparing premium AI narration...";
+  statusNote.textContent = "Creating audio. This can take a moment...";
+  narrationNote.textContent = "Creating audio";
   narrationRequestInFlight = true;
   const usedAiNarration = await startAiNarration();
   narrationRequestInFlight = false;
