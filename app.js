@@ -47,7 +47,6 @@ const VOICE_PREVIEW_TEXT = "Hello from DreamScapes. Settle in, take a gentle bre
 const VOICE_PREVIEW_FILES = {
   "female calm": "./assets/voice-preview-female-british-calm.mp3",
   "male calm": "./assets/voice-preview-male-british-calm.mp3",
-  "boy calm": "./assets/voice-preview-boy-calm-v3.wav",
 };
 const MAX_LOCAL_SAVED_STORIES = 30;
 const MAX_LIBRARY_RENDER_ITEMS = 30;
@@ -243,7 +242,6 @@ const voiceStyles = {
   "male calm": { rate: 0.64, pitch: 0.88, volume: 0.86, pause: 1150 },
   "male default": { rate: 0.64, pitch: 0.88, volume: 0.86, pause: 1150 },
   "male cheerful": { rate: 0.64, pitch: 0.88, volume: 0.86, pause: 1150 },
-  "boy calm": { rate: 0.66, pitch: 1.08, volume: 0.86, pause: 1150 },
 };
 
 const britishVoiceHints = {
@@ -682,7 +680,6 @@ function getAiNarrationVoice(style) {
     "male calm": "fable",
     "male default": "fable",
     "male cheerful": "fable",
-    "boy calm": "alloy",
   };
 
   return voices[style] || "shimmer";
@@ -697,7 +694,6 @@ function getAiNarrationInstructions(story) {
     "male calm": "a calm British English man reading softly at bedtime",
     "male default": "a calm British English man reading softly at bedtime",
     "male cheerful": "a calm British English man reading softly at bedtime",
-    "boy calm": "a calm British English boy reading gently at bedtime",
   }[story.voiceStyle] || "a warm British English adult reading to a child";
   const bedtimeDirection =
     story.storyType === "bedtime"
@@ -716,8 +712,6 @@ function getAiNarrationInstructions(story) {
       "For this male calm voice, use a gentle British storybook narrator style: steady, warm, low-energy, and peaceful.",
     "male cheerful":
       "For this male calm voice, use a gentle British storybook narrator style: steady, warm, low-energy, and peaceful.",
-    "boy calm":
-      "For this boy voice, use a light, youthful British bedtime storyteller style: soft, gentle, clear, calm, and natural. Avoid sounding like an adult man, announcer, performer, or cartoon character.",
   }[story.voiceStyle];
 
   return [
@@ -829,7 +823,7 @@ function getPreferredDeviceVoice(style = "female calm") {
   const voices = window.speechSynthesis.getVoices();
   if (!voices.length) return null;
 
-  const gender = style.includes("male") || style.includes("boy") ? "male" : "female";
+  const gender = style.includes("male") ? "male" : "female";
   const hints = britishVoiceHints[gender];
   const britishVoices = voices.filter((voice) => voice.lang?.toLowerCase().startsWith("en-gb"));
   const hintedVoice = britishVoices.find((voice) =>
