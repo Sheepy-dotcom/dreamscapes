@@ -408,11 +408,12 @@ function addNarrationSentenceBreaks(text) {
 
 function addNarrationWordBreathing(text) {
   const words = String(text || "").split(/\s+/).filter(Boolean);
-  if (words.length <= 8) return String(text || "");
+  const phraseLength = 5;
+  if (words.length <= phraseLength) return String(text || "");
 
   const groups = [];
-  for (let index = 0; index < words.length; index += 8) {
-    groups.push(words.slice(index, index + 8).join(" "));
+  for (let index = 0; index < words.length; index += phraseLength) {
+    groups.push(words.slice(index, index + phraseLength).join(" "));
   }
 
   return groups.join("\n");
@@ -495,7 +496,7 @@ function createPrompt(data) {
     `Moods: ${getSelectedMoods(data.moods).join(", ")}`,
     `Story idea: ${tidyIdea(data.storyIdea, data.childName)}`,
     "Use warm imaginative language, a positive ending, and a gentle lesson where appropriate.",
-    "Use shorter, gentle sentences with natural pauses and a little space between important phrases, especially for bedtime narration.",
+    "Use short, gentle sentences with frequent natural pauses between phrases, especially for bedtime narration.",
     "Return JSON with title and paragraphs fields.",
   ].join("\n");
 }

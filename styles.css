@@ -760,7 +760,7 @@ textarea:focus-visible {
   color: #26345f;
   font-size: clamp(1.02rem, 2vw, 1.16rem);
   line-height: 1.78;
-  word-spacing: 0.06em;
+  word-spacing: 0.1em;
 }
 
 .story-text p {
@@ -769,7 +769,7 @@ textarea:focus-visible {
 
 .story-text .sentence-break {
   display: block;
-  height: 0.7em;
+  height: 0.95em;
 }
 
 .status-note {
