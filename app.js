@@ -682,7 +682,7 @@ function getAiNarrationVoice(style) {
     "male calm": "fable",
     "male default": "fable",
     "male cheerful": "fable",
-    "boy calm": "ash",
+    "boy calm": "alloy",
   };
 
   return voices[style] || "shimmer";
@@ -717,7 +717,7 @@ function getAiNarrationInstructions(story) {
     "male cheerful":
       "For this male calm voice, use a gentle British storybook narrator style: steady, warm, low-energy, and peaceful.",
     "boy calm":
-      "For this British boy voice, sound like a gentle older child from the UK reading calmly and clearly: youthful, soft, natural, unhurried, and kind. Keep it suitable for bedtime and avoid cartoonish or exaggerated child acting.",
+      "For this boy voice, use a light, youthful British bedtime storyteller style: soft, gentle, clear, calm, and natural. Avoid sounding like an adult man, announcer, performer, or cartoon character.",
   }[story.voiceStyle];
 
   return [
