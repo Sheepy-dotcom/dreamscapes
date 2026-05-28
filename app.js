@@ -40,6 +40,8 @@ const accountCloudStatus = document.querySelector("#account-cloud-status");
 let currentStory = null;
 let currentUser = null;
 let supabaseClient = null;
+let cloudStories = [];
+let cloudStoriesLoaded = false;
 let currentNarration = null;
 let currentNarrationSegments = [];
 let currentNarrationIndex = 0;
@@ -319,6 +321,9 @@ function initSupabase() {
 
   supabaseClient.auth.onAuthStateChange((_event, session) => {
     setCurrentUser(session?.user);
+    cloudStories = [];
+    cloudStoriesLoaded = false;
+    if (screens.library.classList.contains("active")) renderLibrary();
   });
 }
 
@@ -818,6 +823,102 @@ function getStoryStorageSize(story) {
   return JSON.stringify(story).length;
 }
 
+function canUseCloudLibrary() {
+  return Boolean(currentUser && supabaseClient);
+}
+
+function storyToCloudRow(story) {
+  return {
+    user_id: currentUser.id,
+    title: story.title,
+    child_name: story.childName,
+    child_age: story.childAge || null,
+    story_type: story.storyType,
+    duration_minutes: Number(story.duration) || 5,
+    moods: getSelectedMoods(story.moods),
+    story_idea: story.storyIdea || null,
+    paragraphs: story.text || [],
+    plan: story.plan || "free",
+    voice_style: story.voiceStyle || null,
+    audio_duration_seconds: getSavedAudioDurationSeconds(story) || null,
+    audio_generated_at: story.aiAudioGeneratedAt || null,
+    created_at: story.createdAt || new Date().toISOString(),
+  };
+}
+
+function cloudRowToStory(row) {
+  return {
+    id: row.id,
+    cloudId: row.id,
+    plan: row.plan || "free",
+    childName: row.child_name,
+    childAge: row.child_age || "",
+    duration: String(row.duration_minutes || 5),
+    storyType: row.story_type || "bedtime",
+    moods: row.moods || ["relaxing"],
+    storyIdea: row.story_idea || "",
+    title: row.title,
+    text: Array.isArray(row.paragraphs) ? row.paragraphs : [],
+    voiceStyle: row.voice_style || "female calm",
+    audioNarration: Boolean(row.audio_generated_at || row.audio_duration_seconds),
+    aiAudioTracks: [],
+    aiAudioTrackDurations: [],
+    aiAudioDurationSeconds: row.audio_duration_seconds || 0,
+    aiAudioGeneratedAt: row.audio_generated_at || "",
+    createdAt: row.created_at,
+    savedAt: row.updated_at || row.created_at,
+  };
+}
+
+async function saveStoryToCloud(story) {
+  if (!canUseCloudLibrary()) return false;
+
+  const row = storyToCloudRow(story);
+  const query = story.cloudId
+    ? supabaseClient.from("stories").update(row).eq("id", story.cloudId || story.id).select().single()
+    : supabaseClient.from("stories").insert(row).select().single();
+  const { data, error } = await query;
+
+  if (error) throw error;
+
+  const savedStory = cloudRowToStory(data);
+  currentStory = {
+    ...story,
+    ...savedStory,
+    aiAudioTracks: story.aiAudioTracks || [],
+    aiAudioTrackDurations: story.aiAudioTrackDurations || [],
+  };
+  cloudStories = [currentStory, ...cloudStories.filter((savedStory) => savedStory.id !== currentStory.id)];
+  cloudStoriesLoaded = true;
+  return currentStory;
+}
+
+async function loadCloudStories() {
+  if (!canUseCloudLibrary()) return [];
+
+  const { data, error } = await supabaseClient
+    .from("stories")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(MAX_LIBRARY_RENDER_ITEMS);
+
+  if (error) throw error;
+
+  cloudStories = (data || []).map(cloudRowToStory);
+  cloudStoriesLoaded = true;
+  return cloudStories;
+}
+
+async function deleteCloudStory(story) {
+  if (!canUseCloudLibrary() || !story?.cloudId) return false;
+
+  const { error } = await supabaseClient.from("stories").delete().eq("id", story.cloudId);
+  if (error) throw error;
+
+  cloudStories = cloudStories.filter((savedStory) => savedStory.cloudId !== story.cloudId);
+  return true;
+}
+
 function saveStoryToLibrary(story, { silent = false } = {}) {
   const plan = getPlan(story.plan);
 
@@ -831,6 +932,25 @@ function saveStoryToLibrary(story, { silent = false } = {}) {
     id: story.id || createStoryId(),
     savedAt: new Date().toISOString(),
   };
+
+  if (canUseCloudLibrary()) {
+    saveStoryToCloud(storyToSave)
+      .then((savedStory) => {
+        currentStory = savedStory;
+        if (!silent) statusNote.textContent = "Story saved to your cloud library.";
+        if (screens.library.classList.contains("active")) renderLibrary();
+        trackEvent("story_saved", {
+          plan: story.plan,
+          hasAudio: Boolean(storyToSave.aiAudioTracks?.length),
+          source: "cloud",
+        });
+      })
+      .catch(() => {
+        if (!silent) statusNote.textContent = "Cloud save failed, so this story stayed on this device.";
+      });
+    return true;
+  }
+
   const savedStories = getSavedStories().filter((savedStory) => savedStory.id !== storyToSave.id);
   savedStories.unshift(storyToSave);
 
@@ -1158,15 +1278,37 @@ document.querySelectorAll("[data-premium-extra]").forEach((button) => {
   });
 });
 
-function renderLibrary() {
-  const savedStories = getSavedStories();
+async function renderLibrary() {
+  if (canUseCloudLibrary() && !cloudStoriesLoaded) {
+    libraryList.innerHTML = `
+      <article class="library-item">
+        <h3>Loading your cloud library...</h3>
+        <p>DreamScapes is checking your saved stories.</p>
+      </article>
+    `;
+
+    try {
+      await loadCloudStories();
+    } catch {
+      libraryList.innerHTML = `
+        <article class="library-item">
+          <h3>Cloud library could not load</h3>
+          <p>Check the Supabase table setup, then try again.</p>
+        </article>
+      `;
+      return;
+    }
+  }
+
+  const usingCloudLibrary = canUseCloudLibrary();
+  const savedStories = usingCloudLibrary ? cloudStories : getSavedStories();
   const visibleStories = savedStories.slice(0, MAX_LIBRARY_RENDER_ITEMS);
 
   if (savedStories.length === 0) {
     libraryList.innerHTML = `
       <article class="library-item">
         <h3>No saved stories yet</h3>
-        <p>Premier and DreamScapes Plus stories can be saved here.</p>
+        <p>${usingCloudLibrary ? "Stories you create while signed in will save to your cloud library." : "Premier and DreamScapes Plus stories can be saved here."}</p>
         <button class="button primary-button" data-screen-target="builder" type="button">Create a Story</button>
       </article>
     `;
@@ -1200,12 +1342,26 @@ function renderLibrary() {
   });
 
   libraryList.querySelectorAll("[data-delete-index]").forEach((button) => {
-    button.addEventListener("click", () => {
+    button.addEventListener("click", async () => {
       const index = Number(button.dataset.deleteIndex);
-      const nextStories = getSavedStories();
-      nextStories.splice(index, 1);
-      setSavedStories(nextStories);
-      trackEvent("story_deleted", { index });
+
+      if (usingCloudLibrary) {
+        try {
+          await deleteCloudStory(savedStories[index]);
+        } catch {
+          libraryList.insertAdjacentHTML(
+            "afterbegin",
+            '<p class="status-note account-status error">Could not delete that cloud story. Try again.</p>'
+          );
+          return;
+        }
+      } else {
+        const nextStories = getSavedStories();
+        nextStories.splice(index, 1);
+        setSavedStories(nextStories);
+      }
+
+      trackEvent("story_deleted", { index, source: usingCloudLibrary ? "cloud" : "local" });
       renderLibrary();
     });
   });
