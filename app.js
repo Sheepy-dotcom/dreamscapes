@@ -59,6 +59,7 @@ const NARRATION_ENDPOINT = window.DREAMSCAPES_NARRATION_ENDPOINT || "/api/narrat
 const SUPABASE_URL = "https://khgzzrixhetaontmdhez.supabase.co";
 const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtoZ3p6cml4aGV0YW9udG1kaGV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5OTkwMjMsImV4cCI6MjA5NTU3NTAyM30.Zij8eBhzxNecuPRsMliWChxYmogLBFbd1GScpKPM_5g";
+const AUDIO_BUCKET = "story-audio";
 const VOICE_PREVIEW_TEXT = "Hello from DreamScapes. Settle in, take a gentle breath, and let the story begin.";
 const VOICE_PREVIEW_FILES = {
   "female calm": "./assets/voice-preview-female-british-calm.mp3",
@@ -738,6 +739,53 @@ async function measureAudioTrackDurations(tracks) {
   return durations;
 }
 
+function dataUrlToBlob(dataUrl) {
+  const [metadata, base64] = String(dataUrl || "").split(",");
+  const mimeType = metadata.match(/data:(.*?);base64/)?.[1] || "audio/mpeg";
+  const bytes = atob(base64 || "");
+  const buffer = new Uint8Array(bytes.length);
+
+  for (let index = 0; index < bytes.length; index += 1) {
+    buffer[index] = bytes.charCodeAt(index);
+  }
+
+  return new Blob([buffer], { type: mimeType });
+}
+
+async function getSignedAudioUrls(paths) {
+  if (!canUseCloudLibrary() || !Array.isArray(paths) || paths.length === 0) return [];
+
+  const { data, error } = await supabaseClient.storage
+    .from(AUDIO_BUCKET)
+    .createSignedUrls(paths, 60 * 60);
+
+  if (error) throw error;
+
+  return (data || []).map((item) => item.signedUrl).filter(Boolean);
+}
+
+async function uploadAudioTracksToCloud(story, tracks) {
+  if (!canUseCloudLibrary() || !Array.isArray(tracks) || tracks.length === 0) return [];
+
+  const storyId = story.cloudId || story.id || createStoryId();
+  const uploadedPaths = [];
+
+  for (let index = 0; index < tracks.length; index += 1) {
+    const path = `${currentUser.id}/${storyId}/track-${String(index + 1).padStart(2, "0")}.mp3`;
+    const { error } = await supabaseClient.storage
+      .from(AUDIO_BUCKET)
+      .upload(path, dataUrlToBlob(tracks[index]), {
+        contentType: "audio/mpeg",
+        upsert: true,
+      });
+
+    if (error) throw error;
+    uploadedPaths.push(path);
+  }
+
+  return uploadedPaths;
+}
+
 function getAiNarrationVoice(style) {
   const voices = {
     "female calm": "nova",
@@ -840,6 +888,8 @@ function storyToCloudRow(story) {
     paragraphs: story.text || [],
     plan: story.plan || "free",
     voice_style: story.voiceStyle || null,
+    audio_paths: story.aiAudioPaths || [],
+    audio_track_durations: story.aiAudioTrackDurations || [],
     audio_duration_seconds: getSavedAudioDurationSeconds(story) || null,
     audio_generated_at: story.aiAudioGeneratedAt || null,
     created_at: story.createdAt || new Date().toISOString(),
@@ -860,9 +910,10 @@ function cloudRowToStory(row) {
     title: row.title,
     text: Array.isArray(row.paragraphs) ? row.paragraphs : [],
     voiceStyle: row.voice_style || "female calm",
-    audioNarration: Boolean(row.audio_generated_at || row.audio_duration_seconds),
+    audioNarration: Boolean(row.audio_generated_at || row.audio_duration_seconds || row.audio_paths?.length),
     aiAudioTracks: [],
-    aiAudioTrackDurations: [],
+    aiAudioPaths: row.audio_paths || [],
+    aiAudioTrackDurations: row.audio_track_durations || [],
     aiAudioDurationSeconds: row.audio_duration_seconds || 0,
     aiAudioGeneratedAt: row.audio_generated_at || "",
     createdAt: row.created_at,
@@ -886,6 +937,7 @@ async function saveStoryToCloud(story) {
     ...story,
     ...savedStory,
     aiAudioTracks: story.aiAudioTracks || [],
+    aiAudioPaths: story.aiAudioPaths || savedStory.aiAudioPaths || [],
     aiAudioTrackDurations: story.aiAudioTrackDurations || [],
   };
   cloudStories = [currentStory, ...cloudStories.filter((savedStory) => savedStory.id !== currentStory.id)];
@@ -1239,6 +1291,7 @@ form.addEventListener("submit", async (event) => {
       ...(await createStory(storyData)),
       id: createStoryId(),
       aiAudioTracks: [],
+      aiAudioPaths: [],
       aiAudioGeneratedAt: "",
     };
     incrementStoriesUsed(selectedPlanKey);
@@ -1627,6 +1680,25 @@ async function startAiNarration() {
     return true;
   }
 
+  if (Array.isArray(currentStory.aiAudioPaths) && currentStory.aiAudioPaths.length > 0) {
+    try {
+      currentAudioTracks = await getSignedAudioUrls(currentStory.aiAudioPaths);
+      currentAudioTrackDurations = Array.isArray(currentStory.aiAudioTrackDurations)
+        ? currentStory.aiAudioTrackDurations
+        : [];
+      currentAudioIndex = 0;
+      playAiAudioTrack();
+      statusNote.textContent = "Playing saved cloud AI narration.";
+      narrationNote.textContent = getSavedAudioDurationSeconds(currentStory)
+        ? `Using cloud audio: ${formatAudioTime(getSavedAudioDurationSeconds(currentStory))}`
+        : "Using saved cloud audio";
+      trackEvent("cloud_ai_audio_played", { voiceStyle: currentStory.voiceStyle });
+      return true;
+    } catch {
+      statusNote.textContent = "Cloud audio could not load. Creating audio again.";
+    }
+  }
+
   try {
     statusNote.textContent = "Creating audio. This can take a moment...";
     narrationNote.textContent = "Creating audio";
@@ -1649,10 +1721,19 @@ async function startAiNarration() {
     currentAudioTracks = data.audio;
     currentAudioTrackDurations = await measureAudioTrackDurations(data.audio);
     const aiAudioDurationSeconds = getPlaybackDurationSeconds(currentAudioTrackDurations, currentStory);
+    let aiAudioPaths = currentStory.aiAudioPaths || [];
+    if (canUseCloudLibrary()) {
+      try {
+        aiAudioPaths = await uploadAudioTracksToCloud(currentStory, data.audio);
+      } catch {
+        aiAudioPaths = [];
+      }
+    }
     currentAudioIndex = 0;
     currentStory = {
       ...currentStory,
-      aiAudioTracks: data.audio,
+      aiAudioTracks: aiAudioPaths.length ? [] : data.audio,
+      aiAudioPaths,
       aiAudioTrackDurations: currentAudioTrackDurations,
       aiAudioDurationSeconds,
       aiAudioGeneratedAt: new Date().toISOString(),
