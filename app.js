@@ -242,6 +242,7 @@ const voiceStyles = {
   "male calm": { rate: 0.64, pitch: 0.88, volume: 0.86, pause: 1150 },
   "male default": { rate: 0.64, pitch: 0.88, volume: 0.86, pause: 1150 },
   "male cheerful": { rate: 0.64, pitch: 0.88, volume: 0.86, pause: 1150 },
+  "boy calm": { rate: 0.66, pitch: 1.08, volume: 0.86, pause: 1150 },
 };
 
 const britishVoiceHints = {
@@ -680,6 +681,7 @@ function getAiNarrationVoice(style) {
     "male calm": "fable",
     "male default": "fable",
     "male cheerful": "fable",
+    "boy calm": "ash",
   };
 
   return voices[style] || "shimmer";
@@ -694,6 +696,7 @@ function getAiNarrationInstructions(story) {
     "male calm": "a calm British English man reading softly at bedtime",
     "male default": "a calm British English man reading softly at bedtime",
     "male cheerful": "a calm British English man reading softly at bedtime",
+    "boy calm": "a calm British English boy reading gently at bedtime",
   }[story.voiceStyle] || "a warm British English adult reading to a child";
   const bedtimeDirection =
     story.storyType === "bedtime"
@@ -712,6 +715,8 @@ function getAiNarrationInstructions(story) {
       "For this male calm voice, use a gentle British storybook narrator style: steady, warm, low-energy, and peaceful.",
     "male cheerful":
       "For this male calm voice, use a gentle British storybook narrator style: steady, warm, low-energy, and peaceful.",
+    "boy calm":
+      "For this British boy voice, sound like a gentle older child from the UK reading calmly and clearly: youthful, soft, natural, unhurried, and kind. Keep it suitable for bedtime and avoid cartoonish or exaggerated child acting.",
   }[story.voiceStyle];
 
   return [
@@ -823,7 +828,7 @@ function getPreferredDeviceVoice(style = "female calm") {
   const voices = window.speechSynthesis.getVoices();
   if (!voices.length) return null;
 
-  const gender = style.includes("male") ? "male" : "female";
+  const gender = style.includes("male") || style.includes("boy") ? "male" : "female";
   const hints = britishVoiceHints[gender];
   const britishVoices = voices.filter((voice) => voice.lang?.toLowerCase().startsWith("en-gb"));
   const hintedVoice = britishVoices.find((voice) =>
