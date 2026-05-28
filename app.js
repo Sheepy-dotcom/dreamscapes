@@ -304,6 +304,14 @@ function joinNatural(items) {
   return `${items.slice(0, -1).join(", ")}, and ${items.at(-1)}`;
 }
 
+function getChildAgePrompt(age) {
+  return age ? age : "not specified; use a warm young-child style around age 5";
+}
+
+function getChildAgePhrase(age) {
+  return age ? `, who was ${age},` : "";
+}
+
 function getSelectedMoods(moods) {
   const selected = Array.isArray(moods) ? moods : [moods].filter(Boolean);
   return selected.filter((mood) => moodDetails[mood]);
@@ -446,7 +454,7 @@ function generateStory(data) {
     : "";
 
   const paragraphs = [
-    `${opener}, ${data.childName}, who was ${data.childAge}, heard a tiny whisper from a place where stories are born. ${typeLine} The whisper carried one special idea: ${idea}`,
+    `${opener}, ${data.childName}${getChildAgePhrase(data.childAge)} heard a tiny whisper from a place where stories are born. ${typeLine} The whisper carried one special idea: ${idea}`,
     `${data.childName} stepped carefully into the DreamScape, where clouds curled like cushions and stars blinked hello. Everything felt ${mood.tone}. ${duration.pacing}`,
     `Soon, ${data.childName} met a small problem that needed a gentle heart. Instead of rushing, ${data.childName} listened, noticed who needed help, and chose the kindest next step. Bit by bit, the story became warmer.`,
   ];
@@ -484,7 +492,7 @@ function createPrompt(data) {
   return [
     "Write a safe, child-friendly personalised children's story.",
     `Child name: ${data.childName}`,
-    `Child age: ${data.childAge}`,
+    `Child age: ${getChildAgePrompt(data.childAge)}`,
     `Package: ${plan.label}`,
     `Interests: ${data.interests || "not specified"}`,
     `Avoid topics: ${data.avoidTopics || "none specified"}`,
@@ -543,7 +551,7 @@ function renderStory(story) {
     <span>${story.storyType === "bedtime" ? "Bedtime story" : "Anytime story"}</span>
     <span>${selectedMoods.map(sentenceCase).join(" + ")}</span>
     <span>${story.audioNarration ? "Audio narration" : "Text only"}</span>
-    <span>Age ${story.childAge}</span>
+    ${story.childAge ? `<span>Age ${story.childAge}</span>` : ""}
   `;
   document.querySelector("#story-text").innerHTML = story.text
     .map((paragraph) => `<p>${formatParagraphForDisplay(paragraph)}</p>`)
@@ -711,7 +719,7 @@ function getAiNarrationInstructions(story) {
     "Use a natural UK/British accent and British English pronunciation throughout.",
     "Avoid American pronunciation, American intonation, or American-style announcer delivery. Do not sound American.",
     styleDirection,
-    `The child is age ${story.childAge}.`,
+    `Child age: ${getChildAgePrompt(story.childAge)}.`,
     `Mood: ${mood}.`,
     bedtimeDirection,
     "Sound close, human, and reassuring, like a parent calmly reading beside the bed.",
