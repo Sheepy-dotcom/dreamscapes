@@ -39,6 +39,11 @@ body {
     linear-gradient(145deg, #10194a 0%, #452a83 48%, #f5a7c5 140%);
 }
 
+body.home-active {
+  height: 100vh;
+  overflow: hidden;
+}
+
 button,
 input,
 textarea,
@@ -103,6 +108,20 @@ button {
     linear-gradient(118deg, rgba(16, 25, 74, 0.96) 0%, rgba(39, 37, 105, 0.88) 42%, rgba(255, 228, 238, 0.92) 100%),
     radial-gradient(circle at 80% 16%, rgba(255, 217, 106, 0.4), transparent 15rem);
   color: var(--white);
+}
+
+body.home-active .app-shell {
+  min-height: 100vh;
+  padding: 12px 0 86px;
+}
+
+body.home-active .welcome-screen {
+  min-height: calc(100vh - 98px);
+}
+
+body.home-active .welcome-screen.active {
+  display: grid;
+  align-content: center;
 }
 
 .brand-lockup {

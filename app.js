@@ -251,6 +251,7 @@ const britishVoiceHints = {
 function showScreen(name) {
   Object.values(screens).forEach((screen) => screen.classList.remove("active"));
   screens[name].classList.add("active");
+  document.body.classList.toggle("home-active", name === "welcome");
   document.querySelectorAll("[data-screen-target]").forEach((button) => {
     button.classList.toggle("active", button.dataset.screenTarget === name);
   });
