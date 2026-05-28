@@ -47,7 +47,7 @@ const VOICE_PREVIEW_TEXT = "Hello from DreamScapes. Settle in, take a gentle bre
 const VOICE_PREVIEW_FILES = {
   "female calm": "./assets/voice-preview-female-british-calm.mp3",
   "male calm": "./assets/voice-preview-male-british-calm.mp3",
-  "boy calm": "./assets/voice-preview-boy-british-calm.mp3",
+  "boy calm": "./assets/voice-preview-boy-calm-v2.mp3",
 };
 const MAX_LOCAL_SAVED_STORIES = 30;
 const MAX_LIBRARY_RENDER_ITEMS = 30;
