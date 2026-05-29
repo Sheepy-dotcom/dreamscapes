@@ -1,4 +1,5 @@
 const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
+const { enforceStoryAccess, incrementUsage, sendApiError } = require("./auth");
 
 const durationTargets = {
   5: { words: 620, minWords: 560, maxWords: 700, paragraphs: 8 },
@@ -156,19 +157,17 @@ module.exports = async function handler(request, response) {
     return response.status(405).json({ error: "Method not allowed" });
   }
 
-  if (!process.env.OPENAI_API_KEY) {
-    return response.status(501).json({ error: "OPENAI_API_KEY is not configured" });
-  }
-
   try {
     const body = typeof request.body === "string" ? JSON.parse(request.body) : request.body || {};
+    const account = await enforceStoryAccess(request, body);
+    if (!process.env.OPENAI_API_KEY) {
+      return response.status(501).json({ error: "OPENAI_API_KEY is not configured" });
+    }
     const story = await createStory(body);
+    const usage = await incrementUsage(account, { stories: 1 });
 
-    return response.status(200).json(story);
+    return response.status(200).json({ ...story, usage });
   } catch (error) {
-    return response.status(500).json({
-      error: "Could not create story",
-      detail: error.message,
-    });
+    return sendApiError(response, error, "Could not create story");
   }
 };

@@ -1,4 +1,5 @@
 const OPENAI_SPEECH_URL = "https://api.openai.com/v1/audio/speech";
+const { enforceNarrationAccess, incrementUsage, sendApiError } = require("./auth");
 const MAX_CHUNK_LENGTH = 3800;
 const MAX_CHUNKS = 20;
 const SUPPORTED_VOICES = new Set([
@@ -78,12 +79,12 @@ module.exports = async function handler(request, response) {
     return response.status(405).json({ error: "Method not allowed" });
   }
 
-  if (!process.env.OPENAI_API_KEY) {
-    return response.status(501).json({ error: "OPENAI_API_KEY is not configured" });
-  }
-
   try {
     const body = typeof request.body === "string" ? JSON.parse(request.body) : request.body || {};
+    const account = await enforceNarrationAccess(request, body);
+    if (!process.env.OPENAI_API_KEY) {
+      return response.status(501).json({ error: "OPENAI_API_KEY is not configured" });
+    }
     const text = cleanText(body.text);
     const voice = SUPPORTED_VOICES.has(body.voice) ? body.voice : "cedar";
     const instructions = cleanText(body.instructions).slice(0, 1000);
@@ -97,16 +98,16 @@ module.exports = async function handler(request, response) {
       audio.push(await createSpeech({ input: chunk, voice, instructions }));
     }
 
+    const usage = await incrementUsage(account, { audioSeconds: account.requestedAudioSeconds });
+
     return response.status(200).json({
       audio,
       chunks: audio.length,
       voice,
+      usage,
       disclosure: "AI-generated narration",
     });
   } catch (error) {
-    return response.status(500).json({
-      error: "Could not create narration",
-      detail: error.message,
-    });
+    return sendApiError(response, error, "Could not create narration");
   }
 };

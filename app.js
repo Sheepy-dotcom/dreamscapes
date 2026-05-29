@@ -392,6 +392,16 @@ async function updateProfilePlan(planKey) {
   return getPlan(planKey);
 }
 
+async function getApiHeaders() {
+  const headers = { "Content-Type": "application/json" };
+  if (!supabaseClient) return headers;
+
+  const { data } = await supabaseClient.auth.getSession();
+  const token = data.session?.access_token;
+  if (token) headers.Authorization = `Bearer ${token}`;
+  return headers;
+}
+
 function initSupabase() {
   if (!window.supabase?.createClient) {
     setAuthStatus("Account login could not load. Check the Supabase script connection.", true);
@@ -764,15 +774,24 @@ async function createStory(data) {
   try {
     const response = await fetch(AI_ENDPOINT, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: await getApiHeaders(),
       body: JSON.stringify({ ...data, prompt: createPrompt(data) }),
     });
 
-    if (!response.ok) throw new Error("Story endpoint unavailable");
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.detail || error.error || "Story endpoint unavailable");
+    }
 
     const aiStory = await response.json();
     if (!aiStory.title || !Array.isArray(aiStory.paragraphs)) {
       throw new Error("Story endpoint returned an unexpected shape");
+    }
+
+    if (aiStory.usage) {
+      currentUsage = aiStory.usage;
+      updateAccountUI();
+      updatePlanFeatures();
     }
 
     return {
@@ -781,8 +800,8 @@ async function createStory(data) {
       text: aiStory.paragraphs,
       createdAt: new Date().toISOString(),
     };
-  } catch {
-    return generateStory(data);
+  } catch (error) {
+    throw error;
   }
 }
 
@@ -1478,6 +1497,12 @@ document.querySelectorAll("[data-plan-select]").forEach((button) => {
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
 
+  if (!currentUser) {
+    planNote.textContent = "Sign in or create a free DreamScapes account before creating stories.";
+    showScreen("account");
+    return;
+  }
+
   if (audioToggle.checked && getCurrentPlanKey() !== "plus") {
     try {
       await requestPlusForAudio();
@@ -1535,31 +1560,32 @@ form.addEventListener("submit", async (event) => {
   };
 
   window.setTimeout(async () => {
-    currentStory = {
-      ...(await createStory(storyData)),
-      id: createStoryId(),
-      aiAudioTracks: [],
-      aiAudioPaths: [],
-      aiAudioGeneratedAt: "",
-    };
-    if (canUseCloudLibrary()) {
-      await addCloudUsage({ stories: 1 });
-    } else {
-      incrementStoriesUsed(selectedPlanKey);
+    try {
+      currentStory = {
+        ...(await createStory(storyData)),
+        id: createStoryId(),
+        aiAudioTracks: [],
+        aiAudioPaths: [],
+        aiAudioGeneratedAt: "",
+      };
+      if (!canUseCloudLibrary()) incrementStoriesUsed(selectedPlanKey);
+      renderStory(currentStory);
+      if (selectedPlan.canSave) {
+        saveStoryToLibrary(currentStory, { silent: true });
+        statusNote.textContent = "Story saved automatically to your library.";
+      } else {
+        statusNote.textContent = "";
+      }
+      trackEvent("story_generated", {
+        plan: selectedPlanKey,
+        duration: storyData.duration,
+        audio: storyData.audioNarration,
+      });
+      showScreen("result");
+    } catch (error) {
+      showScreen("builder");
+      planNote.textContent = error.message || "Could not create that story. Try again.";
     }
-    renderStory(currentStory);
-    if (selectedPlan.canSave) {
-      saveStoryToLibrary(currentStory, { silent: true });
-      statusNote.textContent = "Story saved automatically to your library.";
-    } else {
-      statusNote.textContent = "";
-    }
-    trackEvent("story_generated", {
-      plan: selectedPlanKey,
-      duration: storyData.duration,
-      audio: storyData.audioNarration,
-    });
-    showScreen("result");
   }, 900);
 });
 
@@ -1956,19 +1982,30 @@ async function startAiNarration() {
     narrationNote.textContent = "Creating audio";
     const response = await fetch(NARRATION_ENDPOINT, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: await getApiHeaders(),
       body: JSON.stringify({
         title: currentStory.title,
         text: storyAsText(currentStory),
+        duration: currentStory.duration,
         voice: getAiNarrationVoice(currentStory.voiceStyle),
         instructions: getAiNarrationInstructions(currentStory),
       }),
     });
 
-    if (!response.ok) return false;
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      statusNote.textContent = error.detail || error.error || "Audio could not be created.";
+      narrationNote.textContent = "Audio not created";
+      return response.status === 401 || response.status === 403 || response.status === 429 ? "blocked" : false;
+    }
 
     const data = await response.json();
     if (!Array.isArray(data.audio) || data.audio.length === 0) return false;
+    if (data.usage) {
+      currentUsage = data.usage;
+      updateAccountUI();
+      updatePlanFeatures();
+    }
 
     currentAudioTracks = data.audio;
     currentAudioTrackDurations = await measureAudioTrackDurations(data.audio);
@@ -1991,9 +2028,6 @@ async function startAiNarration() {
       aiAudioGeneratedAt: new Date().toISOString(),
     };
     saveStoryToLibrary(currentStory, { silent: true });
-    if (canUseCloudLibrary() && aiAudioDurationSeconds) {
-      await addCloudUsage({ audioSeconds: aiAudioDurationSeconds });
-    }
     playAiAudioTrack();
     statusNote.textContent = "Audio complete. Playing now.";
     narrationNote.textContent = aiAudioDurationSeconds
