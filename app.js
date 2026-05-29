@@ -448,6 +448,14 @@ function updatePlanFeatures() {
   if (!plan.canUseAudio) audioToggle.checked = false;
 }
 
+function requestPlusForAudio() {
+  if (getCurrentPlanKey() === "plus") return;
+
+  setCurrentPlan("plus");
+  audioToggle.checked = true;
+  planNote.textContent = "Audio narration is a DreamScapes Plus feature, so Plus is selected for this story.";
+}
+
 function escapeHtml(value) {
   return value
     .replaceAll("&", "&amp;")
@@ -1072,6 +1080,10 @@ document.querySelectorAll("[data-screen-target]").forEach((button) => {
   button.addEventListener("click", () => showScreen(button.dataset.screenTarget));
 });
 
+audioToggle.addEventListener("change", () => {
+  if (audioToggle.checked) requestPlusForAudio();
+});
+
 authForm?.addEventListener("submit", (event) => {
   event.preventDefault();
   document.querySelector("#sign-in-button")?.click();
@@ -1252,6 +1264,10 @@ document.querySelectorAll("[data-plan-select]").forEach((button) => {
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
+
+  if (audioToggle.checked && getCurrentPlanKey() !== "plus") {
+    requestPlusForAudio();
+  }
 
   const selectedPlanKey = getCurrentPlanKey();
   const selectedPlan = getPlan(selectedPlanKey);
