@@ -300,9 +300,13 @@ function getAuthCredentials() {
   };
 }
 
-function validateAuthCredentials(email, password) {
+function validateAuthCredentials(email, password, mode = "sign-in") {
   if (!email) return "Enter your email address.";
-  if (!password) return "Enter your password.";
+  if (!password) {
+    return mode === "sign-up"
+      ? "Enter a password to create your account."
+      : "Enter your password.";
+  }
   if (password.length < 6) return "Use a password with at least 6 characters.";
   return "";
 }
@@ -1300,7 +1304,7 @@ document.querySelector("#sign-in-button")?.addEventListener("click", async () =>
   }
 
   const { email, password } = getAuthCredentials();
-  const validationMessage = validateAuthCredentials(email, password);
+  const validationMessage = validateAuthCredentials(email, password, "sign-in");
 
   if (validationMessage) {
     setAuthStatus(validationMessage, true);
@@ -1326,7 +1330,7 @@ document.querySelector("#sign-up-button")?.addEventListener("click", async () =>
   }
 
   const { email, password } = getAuthCredentials();
-  const validationMessage = validateAuthCredentials(email, password);
+  const validationMessage = validateAuthCredentials(email, password, "sign-up");
 
   if (validationMessage) {
     setAuthStatus(validationMessage, true);
