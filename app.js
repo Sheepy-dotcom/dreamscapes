@@ -45,6 +45,7 @@ let currentUser = null;
 let supabaseClient = null;
 let cloudStories = [];
 let cloudStoriesLoaded = false;
+let currentUsage = null;
 let currentNarration = null;
 let currentNarrationSegments = [];
 let currentNarrationIndex = 0;
@@ -295,13 +296,16 @@ function updateAccountUI() {
     (total, story) => total + (Number(story.aiAudioDurationSeconds) || 0),
     0
   );
+  const plan = getPlan(getCurrentPlanKey());
+  const storiesUsed = signedIn ? getStoriesUsed(getCurrentPlanKey()) : 0;
+  const audioUsed = signedIn ? getAudioSecondsUsed() : 0;
 
   if (authSignedOut) authSignedOut.hidden = signedIn;
   if (authSignedIn) authSignedIn.hidden = !signedIn;
   if (accountEmail) accountEmail.textContent = currentUser?.email || "";
-  if (accountPlan) accountPlan.textContent = getPlan(getCurrentPlanKey()).label;
-  if (accountStories) accountStories.textContent = String(stories.length);
-  if (accountAudio) accountAudio.textContent = formatAudioTime(totalAudioSeconds);
+  if (accountPlan) accountPlan.textContent = plan.label;
+  if (accountStories) accountStories.textContent = `${storiesUsed}/${plan.monthlyStories}`;
+  if (accountAudio) accountAudio.textContent = `${formatAudioTime(audioUsed)} / ${formatAudioTime(plan.audioMinutes * 60)}`;
   if (accountCloudStatus) {
     accountCloudStatus.textContent = signedIn
       ? cloudStoriesLoaded
@@ -318,6 +322,7 @@ async function refreshAccountSummary() {
   }
 
   try {
+    await loadCloudUsage();
     await loadCloudStories();
   } catch {
     setAuthStatus("Could not refresh account totals yet.", true);
@@ -353,6 +358,7 @@ function initSupabase() {
     setCurrentUser(session?.user);
     cloudStories = [];
     cloudStoriesLoaded = false;
+    currentUsage = null;
     if (screens.library.classList.contains("active")) renderLibrary();
   });
 }
@@ -452,14 +458,87 @@ function getUsageKey(plan) {
   return `dreamscapesUsage:${plan}:${date.getFullYear()}-${date.getMonth() + 1}`;
 }
 
+function getCurrentMonthKey() {
+  const date = new Date();
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
 function getStoriesUsed(plan) {
+  if (canUseCloudLibrary() && currentUsage) {
+    return currentUsage.stories_created || 0;
+  }
+
   return Number(localStorage.getItem(getUsageKey(plan)) || "0");
 }
 
 function incrementStoriesUsed(plan) {
+  if (canUseCloudLibrary()) return currentUsage?.stories_created || 0;
+
   const used = getStoriesUsed(plan) + 1;
   localStorage.setItem(getUsageKey(plan), String(used));
   return used;
+}
+
+function getAudioSecondsUsed() {
+  return canUseCloudLibrary() && currentUsage ? Number(currentUsage.audio_seconds_used || 0) : 0;
+}
+
+async function loadCloudUsage() {
+  if (!canUseCloudLibrary()) return null;
+
+  const monthKey = getCurrentMonthKey();
+  const { data, error } = await supabaseClient
+    .from("usage_months")
+    .select("*")
+    .eq("user_id", currentUser.id)
+    .eq("month_key", monthKey)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  if (data) {
+    currentUsage = data;
+    return currentUsage;
+  }
+
+  const { data: insertedUsage, error: insertError } = await supabaseClient
+    .from("usage_months")
+    .insert({
+      user_id: currentUser.id,
+      month_key: monthKey,
+      stories_created: 0,
+      audio_seconds_used: 0,
+    })
+    .select()
+    .single();
+
+  if (insertError) throw insertError;
+
+  currentUsage = insertedUsage;
+  return currentUsage;
+}
+
+async function addCloudUsage({ stories = 0, audioSeconds = 0 } = {}) {
+  if (!canUseCloudLibrary()) return null;
+
+  if (!currentUsage) await loadCloudUsage();
+
+  const nextUsage = {
+    stories_created: Number(currentUsage?.stories_created || 0) + stories,
+    audio_seconds_used: Number(currentUsage?.audio_seconds_used || 0) + audioSeconds,
+  };
+  const { data, error } = await supabaseClient
+    .from("usage_months")
+    .update(nextUsage)
+    .eq("id", currentUsage.id)
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  currentUsage = data;
+  updateAccountUI();
+  return currentUsage;
 }
 
 function updatePlanFeatures() {
@@ -1304,10 +1383,24 @@ form.addEventListener("submit", async (event) => {
   const selectedPlanKey = getCurrentPlanKey();
   const selectedPlan = getPlan(selectedPlanKey);
   const selectedDuration = Number(getValue("durationChoice"));
+  if (canUseCloudLibrary()) {
+    try {
+      await loadCloudUsage();
+    } catch {
+      planNote.textContent = "Could not check your monthly cloud usage. Try again.";
+      return;
+    }
+  }
   const usedStories = getStoriesUsed(selectedPlanKey);
+  const audioSecondsUsed = getAudioSecondsUsed();
 
   if (usedStories >= selectedPlan.monthlyStories) {
     planNote.textContent = `${selectedPlan.label} has reached its ${selectedPlan.monthlyStories} story monthly limit. Choose another package to continue.`;
+    return;
+  }
+
+  if (audioToggle.checked && selectedPlan.audioMinutes > 0 && audioSecondsUsed >= selectedPlan.audioMinutes * 60) {
+    planNote.textContent = `${selectedPlan.label} has reached its ${selectedPlan.audioMinutes} audio minute monthly limit.`;
     return;
   }
 
@@ -1342,7 +1435,11 @@ form.addEventListener("submit", async (event) => {
       aiAudioPaths: [],
       aiAudioGeneratedAt: "",
     };
-    incrementStoriesUsed(selectedPlanKey);
+    if (canUseCloudLibrary()) {
+      await addCloudUsage({ stories: 1 });
+    } else {
+      incrementStoriesUsed(selectedPlanKey);
+    }
     renderStory(currentStory);
     if (selectedPlan.canSave) {
       saveStoryToLibrary(currentStory, { silent: true });
@@ -1787,6 +1884,9 @@ async function startAiNarration() {
       aiAudioGeneratedAt: new Date().toISOString(),
     };
     saveStoryToLibrary(currentStory, { silent: true });
+    if (canUseCloudLibrary() && aiAudioDurationSeconds) {
+      await addCloudUsage({ audioSeconds: aiAudioDurationSeconds });
+    }
     playAiAudioTrack();
     statusNote.textContent = "Audio complete. Playing now.";
     narrationNote.textContent = aiAudioDurationSeconds
