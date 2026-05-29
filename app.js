@@ -893,6 +893,7 @@ function storyToCloudRow(story) {
     paragraphs: story.text || [],
     plan: story.plan || "free",
     voice_style: story.voiceStyle || null,
+    audio_requested: Boolean(story.audioNarration),
     audio_paths: story.aiAudioPaths || [],
     audio_track_durations: story.aiAudioTrackDurations || [],
     audio_duration_seconds: getSavedAudioDurationSeconds(story) || null,
@@ -915,7 +916,9 @@ function cloudRowToStory(row) {
     title: row.title,
     text: Array.isArray(row.paragraphs) ? row.paragraphs : [],
     voiceStyle: row.voice_style || "female calm",
-    audioNarration: Boolean(row.audio_generated_at || row.audio_duration_seconds || row.audio_paths?.length),
+    audioNarration: Boolean(
+      row.audio_requested || row.audio_generated_at || row.audio_duration_seconds || row.audio_paths?.length
+    ),
     aiAudioTracks: [],
     aiAudioPaths: row.audio_paths || [],
     aiAudioTrackDurations: row.audio_track_durations || [],
@@ -941,6 +944,7 @@ async function saveStoryToCloud(story) {
   currentStory = {
     ...story,
     ...savedStory,
+    audioNarration: Boolean(story.audioNarration || savedStory.audioNarration),
     aiAudioTracks: story.aiAudioTracks || [],
     aiAudioPaths: story.aiAudioPaths || savedStory.aiAudioPaths || [],
     aiAudioTrackDurations: story.aiAudioTrackDurations || [],

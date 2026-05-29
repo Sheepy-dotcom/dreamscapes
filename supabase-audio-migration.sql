@@ -2,6 +2,9 @@
 -- Run this once in Supabase SQL Editor after creating the private `story-audio` bucket.
 
 alter table public.stories
+add column if not exists audio_requested boolean not null default false;
+
+alter table public.stories
 add column if not exists audio_paths text[] not null default '{}';
 
 alter table public.stories

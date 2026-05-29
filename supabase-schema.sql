@@ -24,6 +24,7 @@ create table if not exists public.stories (
   paragraphs jsonb not null,
   plan text not null default 'free' check (plan in ('free', 'premier', 'plus')),
   voice_style text,
+  audio_requested boolean not null default false,
   audio_paths text[] not null default '{}',
   audio_track_durations numeric[] not null default '{}',
   audio_duration_seconds numeric,
@@ -145,6 +146,9 @@ on public.stories (user_id, created_at desc);
 
 create index if not exists usage_months_user_month_idx
 on public.usage_months (user_id, month_key);
+
+alter table public.stories
+add column if not exists audio_requested boolean not null default false;
 
 alter table public.stories
 add column if not exists audio_paths text[] not null default '{}';
