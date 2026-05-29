@@ -370,28 +370,6 @@ async function loadProfile() {
   return currentProfile;
 }
 
-async function updateProfilePlan(planKey) {
-  if (!canUseCloudLibrary()) {
-    localStorage.setItem("dreamscapesCurrentPlan", planKey);
-    updatePlanFeatures();
-    return getPlan(planKey);
-  }
-
-  const { data, error } = await supabaseClient
-    .from("profiles")
-    .update({ plan: planKey })
-    .eq("id", currentUser.id)
-    .select()
-    .single();
-
-  if (error) throw error;
-
-  currentProfile = data;
-  updatePlanFeatures();
-  updateAccountUI();
-  return getPlan(planKey);
-}
-
 async function getApiHeaders() {
   const headers = { "Content-Type": "application/json" };
   if (!supabaseClient) return headers;
@@ -523,12 +501,7 @@ function getPlan(plan) {
 
 function getCurrentPlanKey() {
   if (canUseCloudLibrary() && currentProfile?.plan) return currentProfile.plan;
-  return localStorage.getItem("dreamscapesCurrentPlan") || "free";
-}
-
-function setCurrentPlan(plan) {
-  localStorage.setItem("dreamscapesCurrentPlan", plan);
-  updatePlanFeatures();
+  return "free";
 }
 
 function getUsageKey(plan) {
@@ -634,9 +607,10 @@ function updatePlanFeatures() {
 async function requestPlusForAudio() {
   if (getCurrentPlanKey() === "plus") return;
 
-  await updateProfilePlan("plus");
-  audioToggle.checked = true;
-  planNote.textContent = "Audio narration is a DreamScapes Plus feature, so Plus is selected for this story.";
+  audioToggle.checked = false;
+  planNote.textContent = "Audio narration is included with DreamScapes Plus. App Store and Google Play subscriptions are coming soon.";
+  showScreen("upgrade");
+  throw new Error("DreamScapes Plus is required for audio.");
 }
 
 function escapeHtml(value) {
@@ -1247,7 +1221,7 @@ audioToggle.addEventListener("change", () => {
   if (audioToggle.checked) {
     requestPlusForAudio().catch(() => {
       audioToggle.checked = false;
-      planNote.textContent = "Could not switch to Plus for audio. Try again.";
+      planNote.textContent = "Audio narration is included with DreamScapes Plus.";
     });
   }
 });
@@ -1474,23 +1448,14 @@ document.querySelector("#create-another-button").addEventListener("click", () =>
   showScreen("builder");
 });
 
-document.querySelectorAll("[data-plan-select]").forEach((button) => {
-  button.addEventListener("click", async () => {
-    const planKey = button.dataset.planSelect;
-    let plan = getPlan(planKey);
-    try {
-      plan = await updateProfilePlan(planKey);
-    } catch {
-      upgradeNote.textContent = "Could not update your account plan. Try again.";
-      return;
-    }
+document.querySelectorAll("[data-plan-preview]").forEach((button) => {
+  button.addEventListener("click", () => {
+    const planKey = button.dataset.planPreview;
+    const plan = getPlan(planKey);
     upgradeNote.textContent =
       planKey === "free"
-        ? `${plan.label} is now the active package.`
-        : canUseCloudLibrary()
-          ? `${plan.label} is saved on your account in app-preview mode.`
-          : `${plan.label} is active in app-preview mode. App Store and Google Play subscriptions will handle real payments.`;
-    showScreen("builder");
+        ? "Free is the active starter plan."
+        : `${plan.label} subscriptions will be available through the App Store and Google Play.`;
   });
 });
 
@@ -1507,7 +1472,6 @@ form.addEventListener("submit", async (event) => {
     try {
       await requestPlusForAudio();
     } catch {
-      planNote.textContent = "Could not switch to Plus for audio. Try again.";
       return;
     }
   }
@@ -1537,7 +1501,8 @@ form.addEventListener("submit", async (event) => {
   }
 
   if (selectedDuration > selectedPlan.maxDuration) {
-    planNote.textContent = `${selectedPlan.label} includes stories up to ${selectedPlan.maxDuration} minutes. Choose a shorter duration or select a higher package.`;
+    planNote.textContent = `${selectedPlan.label} includes stories up to ${selectedPlan.maxDuration} minutes. App Store and Google Play subscriptions are coming soon for longer stories.`;
+    showScreen("upgrade");
     return;
   }
 
