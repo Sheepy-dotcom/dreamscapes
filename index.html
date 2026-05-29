@@ -443,8 +443,21 @@
               <div class="auth-actions">
                 <button class="button primary-button" id="sign-in-button" type="button">Sign In</button>
                 <button class="button secondary-button" id="sign-up-button" type="button">Create Account</button>
+                <button class="button secondary-button" id="forgot-password-button" type="button">Forgot Password</button>
               </div>
             </form>
+          </article>
+
+          <article class="auth-card" id="password-reset-card" hidden>
+            <h3>Set a new password</h3>
+            <p>Enter a new password for your DreamScapes account.</p>
+            <label class="field">
+              <span>New password</span>
+              <input id="new-password" type="password" autocomplete="new-password" minlength="6" />
+            </label>
+            <div class="auth-actions">
+              <button class="button primary-button" id="update-password-button" type="button">Update Password</button>
+            </div>
           </article>
 
           <article class="auth-card" id="auth-signed-in" hidden>
@@ -580,6 +593,6 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./app.js?v=2026052818"></script>
+    <script src="./app.js?v=2026052819"></script>
   </body>
 </html>

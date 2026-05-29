@@ -35,6 +35,8 @@ const authPassword = document.querySelector("#auth-password");
 const authStatus = document.querySelector("#auth-status");
 const authSignedOut = document.querySelector("#auth-signed-out");
 const authSignedIn = document.querySelector("#auth-signed-in");
+const passwordResetCard = document.querySelector("#password-reset-card");
+const newPassword = document.querySelector("#new-password");
 const accountEmail = document.querySelector("#account-email");
 const accountCloudStatus = document.querySelector("#account-cloud-status");
 const accountPlan = document.querySelector("#account-plan");
@@ -303,6 +305,9 @@ function updateAccountUI() {
 
   if (authSignedOut) authSignedOut.hidden = signedIn;
   if (authSignedIn) authSignedIn.hidden = !signedIn;
+  if (passwordResetCard && !window.location.hash.includes("type=recovery")) {
+    passwordResetCard.hidden = true;
+  }
   if (accountEmail) accountEmail.textContent = currentUser?.email || "";
   if (accountPlan) accountPlan.textContent = plan.label;
   if (accountStories) accountStories.textContent = `${storiesUsed}/${plan.monthlyStories}`;
@@ -314,6 +319,13 @@ function updateAccountUI() {
         : "Account connected. Library totals load when your cloud stories sync."
       : "Sign in to prepare cloud saving across devices.";
   }
+}
+
+function showPasswordResetCard() {
+  if (authSignedOut) authSignedOut.hidden = true;
+  if (authSignedIn) authSignedIn.hidden = true;
+  if (passwordResetCard) passwordResetCard.hidden = false;
+  showScreen("account");
 }
 
 async function refreshAccountSummary() {
@@ -396,12 +408,16 @@ function initSupabase() {
     if (data.session?.user) refreshAccountSummary();
   });
 
-  supabaseClient.auth.onAuthStateChange((_event, session) => {
+  supabaseClient.auth.onAuthStateChange((event, session) => {
     setCurrentUser(session?.user);
     cloudStories = [];
     cloudStoriesLoaded = false;
     currentUsage = null;
     currentProfile = null;
+    if (event === "PASSWORD_RECOVERY") {
+      showPasswordResetCard();
+      setAuthStatus("Choose a new password to finish resetting your account.");
+    }
     if (session?.user) refreshAccountSummary();
     if (screens.library.classList.contains("active")) renderLibrary();
   });
@@ -1300,6 +1316,62 @@ document.querySelector("#sign-up-button")?.addEventListener("click", async () =>
 
   setAuthStatus("Account created. Check your email if Supabase asks you to confirm it.");
   trackEvent("account_signed_up");
+});
+
+document.querySelector("#forgot-password-button")?.addEventListener("click", async () => {
+  if (!supabaseClient) {
+    setAuthStatus("Password reset is not ready yet. Try refreshing the page.", true);
+    return;
+  }
+
+  const email = authEmail.value.trim();
+
+  if (!email) {
+    setAuthStatus("Enter your email first, then press Forgot Password.", true);
+    return;
+  }
+
+  setAuthStatus("Sending password reset email...");
+  const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}${window.location.pathname}`,
+  });
+
+  if (error) {
+    setAuthStatus(error.message, true);
+    return;
+  }
+
+  setAuthStatus("Password reset email sent. Check your inbox.");
+  trackEvent("password_reset_requested");
+});
+
+document.querySelector("#update-password-button")?.addEventListener("click", async () => {
+  if (!supabaseClient) {
+    setAuthStatus("Password reset is not ready yet. Try refreshing the page.", true);
+    return;
+  }
+
+  const password = newPassword.value;
+
+  if (password.length < 6) {
+    setAuthStatus("Use a new password with at least 6 characters.", true);
+    return;
+  }
+
+  setAuthStatus("Updating password...");
+  const { error } = await supabaseClient.auth.updateUser({ password });
+
+  if (error) {
+    setAuthStatus(error.message, true);
+    return;
+  }
+
+  newPassword.value = "";
+  if (passwordResetCard) passwordResetCard.hidden = true;
+  setAuthStatus("Password updated. You are signed in.");
+  updateAccountUI();
+  window.history.replaceState({}, document.title, window.location.pathname);
+  trackEvent("password_reset_completed");
 });
 
 document.querySelector("#sign-out-button")?.addEventListener("click", async () => {
