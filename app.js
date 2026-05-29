@@ -293,6 +293,20 @@ function setAuthStatus(message, isError = false) {
   authStatus.classList.toggle("error", Boolean(isError));
 }
 
+function getAuthCredentials() {
+  return {
+    email: authEmail?.value.trim() || "",
+    password: authPassword?.value || "",
+  };
+}
+
+function validateAuthCredentials(email, password) {
+  if (!email) return "Enter your email address.";
+  if (!password) return "Enter your password.";
+  if (password.length < 6) return "Use a password with at least 6 characters.";
+  return "";
+}
+
 function isPasswordRecoveryUrl() {
   const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
   const query = new URLSearchParams(window.location.search);
@@ -1285,11 +1299,11 @@ document.querySelector("#sign-in-button")?.addEventListener("click", async () =>
     return;
   }
 
-  const email = authEmail.value.trim();
-  const password = authPassword.value;
+  const { email, password } = getAuthCredentials();
+  const validationMessage = validateAuthCredentials(email, password);
 
-  if (!email || password.length < 6) {
-    setAuthStatus("Enter an email and a password with at least 6 characters.", true);
+  if (validationMessage) {
+    setAuthStatus(validationMessage, true);
     return;
   }
 
@@ -1311,11 +1325,11 @@ document.querySelector("#sign-up-button")?.addEventListener("click", async () =>
     return;
   }
 
-  const email = authEmail.value.trim();
-  const password = authPassword.value;
+  const { email, password } = getAuthCredentials();
+  const validationMessage = validateAuthCredentials(email, password);
 
-  if (!email || password.length < 6) {
-    setAuthStatus("Enter an email and a password with at least 6 characters.", true);
+  if (validationMessage) {
+    setAuthStatus(validationMessage, true);
     return;
   }
 
