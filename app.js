@@ -1345,7 +1345,7 @@ document.querySelector("#sign-up-button")?.addEventListener("click", async () =>
     return;
   }
 
-  setAuthStatus("Account created. Check your email if Supabase asks you to confirm it.");
+  setAuthStatus("Account created. Check your email to confirm your DreamScapes account.");
   trackEvent("account_signed_up");
 });
 
