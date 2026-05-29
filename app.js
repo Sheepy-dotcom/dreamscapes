@@ -29,6 +29,7 @@ const voiceStyle = document.querySelector("#voice-style");
 const voicePreviewButton = document.querySelector("#voice-preview-button");
 const storyIdea = document.querySelector("#story-idea");
 const libraryList = document.querySelector("#library-list");
+const durationInputs = Array.from(document.querySelectorAll('input[name="durationChoice"]'));
 const authForm = document.querySelector("#auth-form");
 const authEmail = document.querySelector("#auth-email");
 const authPassword = document.querySelector("#auth-password");
@@ -602,6 +603,40 @@ function updatePlanFeatures() {
   currentPlanSummary.textContent = plan.summary;
   planNote.textContent = `${plan.note} ${remaining} of ${plan.monthlyStories} story creations left this month.`;
   audioToggle.closest(".feature-toggle").classList.toggle("locked", !plan.canUseAudio);
+  updateDurationLocks(plan);
+  keepDurationWithinPlan(plan);
+}
+
+function getHighestAllowedDuration(plan) {
+  return durationInputs
+    .map((input) => Number(input.value))
+    .filter((duration) => duration <= plan.maxDuration)
+    .sort((a, b) => b - a)[0] || 5;
+}
+
+function updateDurationLocks(plan = getPlan(getCurrentPlanKey())) {
+  durationInputs.forEach((input) => {
+    const duration = Number(input.value);
+    const locked = duration > plan.maxDuration;
+    const label = input.closest("label");
+    input.setAttribute("aria-disabled", String(locked));
+    label?.classList.toggle("locked-choice", locked);
+    if (label) {
+      label.title = locked
+        ? `${plan.label} includes stories up to ${plan.maxDuration} minutes.`
+        : "";
+    }
+  });
+}
+
+function keepDurationWithinPlan(plan = getPlan(getCurrentPlanKey())) {
+  const selectedDuration = Number(getValue("durationChoice"));
+  if (selectedDuration <= plan.maxDuration) return false;
+
+  const fallback = getHighestAllowedDuration(plan);
+  const fallbackInput = durationInputs.find((input) => Number(input.value) === fallback);
+  if (fallbackInput) fallbackInput.checked = true;
+  return true;
 }
 
 async function requestPlusForAudio() {
@@ -609,7 +644,6 @@ async function requestPlusForAudio() {
 
   audioToggle.checked = false;
   planNote.textContent = "Audio narration is included with DreamScapes Plus. App Store and Google Play subscriptions are coming soon.";
-  showScreen("upgrade");
   throw new Error("DreamScapes Plus is required for audio.");
 }
 
@@ -1224,6 +1258,18 @@ audioToggle.addEventListener("change", () => {
       planNote.textContent = "Audio narration is included with DreamScapes Plus.";
     });
   }
+});
+
+durationInputs.forEach((input) => {
+  input.addEventListener("change", () => {
+    const plan = getPlan(getCurrentPlanKey());
+    const duration = Number(input.value);
+
+    if (duration <= plan.maxDuration) return;
+
+    keepDurationWithinPlan(plan);
+    planNote.textContent = `${plan.label} includes stories up to ${plan.maxDuration} minutes. Premier and Plus subscriptions are coming soon in the app stores.`;
+  });
 });
 
 authForm?.addEventListener("submit", (event) => {

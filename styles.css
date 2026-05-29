@@ -451,6 +451,26 @@ textarea:focus-visible {
   line-height: 1.1;
 }
 
+.duration-grid label.locked-choice span {
+  color: rgba(36, 31, 82, 0.48);
+  background: rgba(255, 255, 255, 0.42);
+  border-color: rgba(123, 78, 216, 0.1);
+  box-shadow: none;
+}
+
+.duration-grid label.locked-choice small {
+  color: rgba(94, 95, 128, 0.7);
+}
+
+.duration-grid label.locked-choice span::after {
+  content: "Locked";
+  display: block;
+  margin-top: 2px;
+  color: #7b6e98;
+  font-size: 0.62rem;
+  font-weight: 900;
+}
+
 .segmented-control input:checked + span,
 .duration-grid input:checked + span,
 .mood-grid input:checked + span {
