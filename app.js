@@ -46,6 +46,7 @@ let supabaseClient = null;
 let cloudStories = [];
 let cloudStoriesLoaded = false;
 let currentUsage = null;
+let currentProfile = null;
 let currentNarration = null;
 let currentNarrationSegments = [];
 let currentNarrationIndex = 0;
@@ -322,6 +323,7 @@ async function refreshAccountSummary() {
   }
 
   try {
+    await loadProfile();
     await loadCloudUsage();
     await loadCloudStories();
   } catch {
@@ -334,6 +336,45 @@ async function refreshAccountSummary() {
 function setCurrentUser(user) {
   currentUser = user || null;
   updateAccountUI();
+}
+
+async function loadProfile() {
+  if (!canUseCloudLibrary()) return null;
+
+  const { data, error } = await supabaseClient
+    .from("profiles")
+    .select("*")
+    .eq("id", currentUser.id)
+    .single();
+
+  if (error) throw error;
+
+  currentProfile = data;
+  updateAccountUI();
+  updatePlanFeatures();
+  return currentProfile;
+}
+
+async function updateProfilePlan(planKey) {
+  if (!canUseCloudLibrary()) {
+    localStorage.setItem("dreamscapesCurrentPlan", planKey);
+    updatePlanFeatures();
+    return getPlan(planKey);
+  }
+
+  const { data, error } = await supabaseClient
+    .from("profiles")
+    .update({ plan: planKey })
+    .eq("id", currentUser.id)
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  currentProfile = data;
+  updatePlanFeatures();
+  updateAccountUI();
+  return getPlan(planKey);
 }
 
 function initSupabase() {
@@ -352,6 +393,7 @@ function initSupabase() {
 
   supabaseClient.auth.getSession().then(({ data }) => {
     setCurrentUser(data.session?.user);
+    if (data.session?.user) refreshAccountSummary();
   });
 
   supabaseClient.auth.onAuthStateChange((_event, session) => {
@@ -359,6 +401,8 @@ function initSupabase() {
     cloudStories = [];
     cloudStoriesLoaded = false;
     currentUsage = null;
+    currentProfile = null;
+    if (session?.user) refreshAccountSummary();
     if (screens.library.classList.contains("active")) renderLibrary();
   });
 }
@@ -445,6 +489,7 @@ function getPlan(plan) {
 }
 
 function getCurrentPlanKey() {
+  if (canUseCloudLibrary() && currentProfile?.plan) return currentProfile.plan;
   return localStorage.getItem("dreamscapesCurrentPlan") || "free";
 }
 
@@ -553,10 +598,10 @@ function updatePlanFeatures() {
   audioToggle.closest(".feature-toggle").classList.toggle("locked", !plan.canUseAudio);
 }
 
-function requestPlusForAudio() {
+async function requestPlusForAudio() {
   if (getCurrentPlanKey() === "plus") return;
 
-  setCurrentPlan("plus");
+  await updateProfilePlan("plus");
   audioToggle.checked = true;
   planNote.textContent = "Audio narration is a DreamScapes Plus feature, so Plus is selected for this story.";
 }
@@ -1192,7 +1237,12 @@ document.querySelectorAll("[data-screen-target]").forEach((button) => {
 });
 
 audioToggle.addEventListener("change", () => {
-  if (audioToggle.checked) requestPlusForAudio();
+  if (audioToggle.checked) {
+    requestPlusForAudio().catch(() => {
+      audioToggle.checked = false;
+      planNote.textContent = "Could not switch to Plus for audio. Try again.";
+    });
+  }
 });
 
 authForm?.addEventListener("submit", (event) => {
@@ -1361,14 +1411,21 @@ document.querySelector("#create-another-button").addEventListener("click", () =>
 });
 
 document.querySelectorAll("[data-plan-select]").forEach((button) => {
-  button.addEventListener("click", () => {
+  button.addEventListener("click", async () => {
     const planKey = button.dataset.planSelect;
-    const plan = getPlan(planKey);
-    setCurrentPlan(planKey);
+    let plan = getPlan(planKey);
+    try {
+      plan = await updateProfilePlan(planKey);
+    } catch {
+      upgradeNote.textContent = "Could not update your account plan. Try again.";
+      return;
+    }
     upgradeNote.textContent =
       planKey === "free"
         ? `${plan.label} is now the active package.`
-        : `${plan.label} is active in app-preview mode. App Store and Google Play subscriptions will handle real payments.`;
+        : canUseCloudLibrary()
+          ? `${plan.label} is saved on your account in app-preview mode.`
+          : `${plan.label} is active in app-preview mode. App Store and Google Play subscriptions will handle real payments.`;
     showScreen("builder");
   });
 });
@@ -1377,7 +1434,12 @@ form.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   if (audioToggle.checked && getCurrentPlanKey() !== "plus") {
-    requestPlusForAudio();
+    try {
+      await requestPlusForAudio();
+    } catch {
+      planNote.textContent = "Could not switch to Plus for audio. Try again.";
+      return;
+    }
   }
 
   const selectedPlanKey = getCurrentPlanKey();
