@@ -49,6 +49,7 @@ let cloudStories = [];
 let cloudStoriesLoaded = false;
 let currentUsage = null;
 let currentProfile = null;
+let passwordRecoveryActive = false;
 let currentNarration = null;
 let currentNarrationSegments = [];
 let currentNarrationIndex = 0;
@@ -292,6 +293,13 @@ function setAuthStatus(message, isError = false) {
   authStatus.classList.toggle("error", Boolean(isError));
 }
 
+function isPasswordRecoveryUrl() {
+  const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  const query = new URLSearchParams(window.location.search);
+
+  return hash.get("type") === "recovery" || query.get("type") === "recovery";
+}
+
 function updateAccountUI() {
   const signedIn = Boolean(currentUser);
   const stories = signedIn ? cloudStories : [];
@@ -305,7 +313,7 @@ function updateAccountUI() {
 
   if (authSignedOut) authSignedOut.hidden = signedIn;
   if (authSignedIn) authSignedIn.hidden = !signedIn;
-  if (passwordResetCard && !window.location.hash.includes("type=recovery")) {
+  if (passwordResetCard && !passwordRecoveryActive) {
     passwordResetCard.hidden = true;
   }
   if (accountEmail) accountEmail.textContent = currentUser?.email || "";
@@ -322,6 +330,7 @@ function updateAccountUI() {
 }
 
 function showPasswordResetCard() {
+  passwordRecoveryActive = true;
   if (authSignedOut) authSignedOut.hidden = true;
   if (authSignedIn) authSignedIn.hidden = true;
   if (passwordResetCard) passwordResetCard.hidden = false;
@@ -405,6 +414,10 @@ function initSupabase() {
 
   supabaseClient.auth.getSession().then(({ data }) => {
     setCurrentUser(data.session?.user);
+    if (isPasswordRecoveryUrl()) {
+      showPasswordResetCard();
+      setAuthStatus("Choose a new password to finish resetting your account.");
+    }
     if (data.session?.user) refreshAccountSummary();
   });
 
@@ -1367,6 +1380,7 @@ document.querySelector("#update-password-button")?.addEventListener("click", asy
   }
 
   newPassword.value = "";
+  passwordRecoveryActive = false;
   if (passwordResetCard) passwordResetCard.hidden = true;
   setAuthStatus("Password updated. You are signed in.");
   updateAccountUI();
