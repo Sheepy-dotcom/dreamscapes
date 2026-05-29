@@ -92,26 +92,26 @@ const plans = {
   premier: {
     label: "Premier",
     price: "£4.99/month",
-    summary: "£4.99/month, 15 stories, saves, up to 30 min",
+    summary: "£4.99/month, 15 stories, saves, up to 20 min",
     monthlyStories: 15,
-    maxDuration: 30,
+    maxDuration: 20,
     canSave: true,
     canUseAudio: false,
     savedLimit: 15,
     audioMinutes: 0,
-    note: "Premier package: £4.99/month for 15 stories, saved story library, and stories up to 30 minutes.",
+    note: "Premier package: £4.99/month for 15 stories, saved story library, and stories up to 20 minutes.",
   },
   plus: {
     label: "DreamScapes Plus",
     price: "£9.99/month",
-    summary: "£9.99/month, 30 stories, saves + audio",
+    summary: "£9.99/month, 30 stories, 30 min + audio",
     monthlyStories: 30,
-    maxDuration: 60,
+    maxDuration: 30,
     canSave: true,
     canUseAudio: true,
     savedLimit: 30,
     audioMinutes: 150,
-    note: "DreamScapes Plus: £9.99/month for 30 stories, larger saved library, audio narration, 150 audio minutes, and stories up to 1 hour.",
+    note: "DreamScapes Plus: £9.99/month for 30 stories, larger saved library, audio narration, 150 audio minutes, and stories up to 30 minutes.",
   },
 };
 
@@ -218,44 +218,6 @@ const durationDetails = {
         `The DreamScape opened into a moonlit meadow where the adventure paused for a quiet celebration. Everyone shared one brave thing they had tried, and each brave thing made the meadow shine a little brighter.`,
       (name) =>
         `When it was time to continue, ${name} knew the way forward would not be rushed. Step by step, with kindness and imagination, the path became clear.`,
-    ],
-  },
-  45: {
-    label: "45 min",
-    premium: true,
-    pacing: "This extended story had space for a wide trail of wonder, friendship, and gentle discovery.",
-    extraBeats: [
-      (name) =>
-        `${name} crossed into the Library of Little Dreams, where books fluttered their pages like sleepy wings. One book opened to a map that could only be read by someone willing to help without being asked.`,
-      (name) =>
-        `The first part of the journey led to a garden of giggling flowers. The flowers had mixed up their colours, so ${name} helped them find what made each one special instead of trying to make them all the same.`,
-      (name) =>
-        `A soft silver rain came next. It did not make anyone cold; it washed worries into tiny puddles, and ${name} learned that worries feel smaller when they are spoken kindly.`,
-      (name) =>
-        `After that, the path led to a hill where a shy light waited under a leaf. ${name} did not tug or shout. ${name} simply sat nearby until the light felt ready to glow.`,
-      (name) =>
-        `By the final stretch, the whole DreamScape had become a circle of friends, each carrying a little piece of the answer. Together, they made a happy ending bigger than any one of them could have made alone.`,
-    ],
-  },
-  60: {
-    label: "1 hour",
-    premium: true,
-    pacing: "This full-length story unfolded as a cosy bedtime journey with many gentle moments and a slow, peaceful landing.",
-    extraBeats: [
-      (name) =>
-        `${name} began in the Village of Whispering Windows, where every window showed a kind thing someone had done. The village bell rang softly whenever a child chose patience.`,
-      (name) =>
-        `The first part of the journey led through Cloud Orchard, where fluffy cloud-fruit drifted just out of reach. ${name} discovered that asking for help made the reaching easier and the sharing sweeter.`,
-      (name) =>
-        `Next came the River of Remembering. Its water carried pictures of brave tries, gentle apologies, and moments when someone kept going. ${name} watched the pictures sparkle and felt a calm sort of pride.`,
-      (name) =>
-        `At the Sleepy Mountain, a door in the rock asked a question: what makes a heart strong? ${name} thought about all the friends along the way and answered with care, kindness, rest, and courage.`,
-      (name) =>
-        `Behind the door was a room full of tiny stars learning how to shine. Some stars were bold, some were quiet, and some needed more time. ${name} helped them see that every light matters.`,
-      (name) =>
-        `The journey home was slow and soft. Each friend gave ${name} a small blessing for peaceful dreams, and each blessing settled like a feather in the evening air.`,
-      (name) =>
-        `When the last path appeared, ${name} did not feel sad that the adventure was ending. A good story, ${name} realised, can come home with you and keep glowing inside your heart.`,
     ],
   },
 };

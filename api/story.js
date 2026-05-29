@@ -6,8 +6,6 @@ const durationTargets = {
   15: { words: 1880, minWords: 1725, maxWords: 2070, paragraphs: 20 },
   20: { words: 2500, minWords: 2300, maxWords: 2760, paragraphs: 26 },
   30: { words: 3700, minWords: 3400, maxWords: 4050, paragraphs: 36 },
-  45: { words: 5400, minWords: 5000, maxWords: 5900, paragraphs: 52 },
-  60: { words: 7000, minWords: 6500, maxWords: 7600, paragraphs: 68 },
 };
 
 function cleanText(value, fallback = "") {
