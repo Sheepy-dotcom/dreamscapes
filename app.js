@@ -73,6 +73,20 @@ const VOICE_PREVIEW_FILES = {
   "female calm": "./assets/voice-preview-female-british-calm.mp3",
   "male calm": "./assets/voice-preview-male-british-calm.mp3",
 };
+const AI_VOICE_PROFILES = {
+  "female calm": {
+    voice: "nova",
+    label: "a calm British English woman reading softly at bedtime",
+    direction:
+      "Use the same consistent voice every time: a soft southern British bedtime storyteller, gentle, cosy, natural, clear, and reassuring. Keep a steady human pace. Do not sound robotic, theatrical, American, or like an announcer. Do not drag or stretch words.",
+  },
+  "male calm": {
+    voice: "fable",
+    label: "a calm British English man reading softly at bedtime",
+    direction:
+      "Use the same consistent voice every time: a gentle British storybook narrator, warm, steady, natural, low-energy, clear, and reassuring. Keep a steady human pace. Do not sound robotic, theatrical, American, or like an announcer. Do not drag or stretch words.",
+  },
+};
 const MAX_LOCAL_SAVED_STORIES = 30;
 const MAX_LIBRARY_RENDER_ITEMS = 30;
 
@@ -954,58 +968,23 @@ async function uploadAudioTracksToCloud(story, tracks) {
 }
 
 function getAiNarrationVoice(style) {
-  const voices = {
-    "female calm": "nova",
-    "female default": "nova",
-    "female cheerful": "nova",
-    "male calm": "fable",
-    "male default": "fable",
-    "male cheerful": "fable",
-  };
-
-  return voices[style] || "shimmer";
+  return AI_VOICE_PROFILES[style]?.voice || AI_VOICE_PROFILES["female calm"].voice;
 }
 
 function getAiNarrationInstructions(story) {
-  const mood = getSelectedMoods(story.moods).join(", ") || "gentle";
-  const voiceLabel = {
-    "female calm": "a calm British English woman reading softly at bedtime",
-    "female default": "a calm British English woman reading softly at bedtime",
-    "female cheerful": "a calm British English woman reading softly at bedtime",
-    "male calm": "a calm British English man reading softly at bedtime",
-    "male default": "a calm British English man reading softly at bedtime",
-    "male cheerful": "a calm British English man reading softly at bedtime",
-  }[story.voiceStyle] || "a warm British English adult reading to a child";
+  const profile = AI_VOICE_PROFILES[story.voiceStyle] || AI_VOICE_PROFILES["female calm"];
   const bedtimeDirection =
     story.storyType === "bedtime"
-      ? "Use a cosy bedtime pace with natural breathing room, gentle pauses, soft phrasing, and a sleepy final line."
-      : "Use a calm, unhurried storytelling pace with relaxed energy and natural pauses between ideas.";
-  const styleDirection = {
-    "female calm":
-      "For this female calm voice, use a soft southern British bedtime storyteller style: gentle, cosy, unhurried, and soothing, like a calm UK parent reading before sleep.",
-    "female default":
-      "For this female calm voice, use a soft southern British bedtime storyteller style: gentle, cosy, unhurried, and soothing, like a calm UK parent reading before sleep.",
-    "female cheerful":
-      "For this female calm voice, use a soft southern British bedtime storyteller style: gentle, cosy, unhurried, and soothing, like a calm UK parent reading before sleep.",
-    "male calm":
-      "For this male calm voice, use a gentle British storybook narrator style: steady, warm, low-energy, and peaceful.",
-    "male default":
-      "For this male calm voice, use a gentle British storybook narrator style: steady, warm, low-energy, and peaceful.",
-    "male cheerful":
-      "For this male calm voice, use a gentle British storybook narrator style: steady, warm, low-energy, and peaceful.",
-  }[story.voiceStyle];
+      ? "For bedtime stories, add gentle natural pauses at sentence endings and let the final line settle peacefully."
+      : "For anytime stories, keep the same voice but use a little more brightness while staying calm and natural.";
 
   return [
-    `Read this children's story as ${voiceLabel}.`,
-    "Use a natural UK/British accent and British English pronunciation throughout.",
-    "Avoid American pronunciation, American intonation, or American-style announcer delivery. Do not sound American.",
-    styleDirection,
+    `Read this children's story as ${profile.label}.`,
+    profile.direction,
+    "Use natural UK/British accent and British English pronunciation throughout.",
     `Child age: ${getChildAgePrompt(story.childAge)}.`,
-    `Mood: ${mood}.`,
     bedtimeDirection,
     "Sound close, human, and reassuring, like a parent calmly reading beside the bed.",
-    "Do not stretch words or sound slowed down. Keep the voice natural and human, using pauses and phrasing to create a gentle pace.",
-    "Avoid announcer energy, theatrical exaggeration, sharp emphasis, or robotic cadence.",
     "Do not add extra words that are not in the story.",
   ].join(" ");
 }
