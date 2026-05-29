@@ -1,13 +1,13 @@
 const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
 
 const durationTargets = {
-  5: { words: 420, paragraphs: 6 },
-  10: { words: 850, paragraphs: 8 },
-  15: { words: 1300, paragraphs: 11 },
-  20: { words: 1700, paragraphs: 14 },
-  30: { words: 2400, paragraphs: 20 },
-  45: { words: 3300, paragraphs: 27 },
-  60: { words: 4200, paragraphs: 34 },
+  5: { words: 620, minWords: 560, maxWords: 700, paragraphs: 8 },
+  10: { words: 1250, minWords: 1150, maxWords: 1380, paragraphs: 14 },
+  15: { words: 1880, minWords: 1725, maxWords: 2070, paragraphs: 20 },
+  20: { words: 2500, minWords: 2300, maxWords: 2760, paragraphs: 26 },
+  30: { words: 3700, minWords: 3400, maxWords: 4050, paragraphs: 36 },
+  45: { words: 5400, minWords: 5000, maxWords: 5900, paragraphs: 52 },
+  60: { words: 7000, minWords: 6500, maxWords: 7600, paragraphs: 68 },
 };
 
 function cleanText(value, fallback = "") {
@@ -22,6 +22,10 @@ function cleanList(values) {
 
 function getTarget(duration) {
   return durationTargets[Number(duration)] || durationTargets[5];
+}
+
+function getMaxOutputTokens(duration) {
+  return Math.min(Math.ceil(getTarget(duration).maxWords * 2.2), 18000);
 }
 
 function extractResponseText(data) {
@@ -50,8 +54,9 @@ function buildPrompt(data) {
     `Write a polished, imaginative children's ${storyType}.`,
     `Child name: ${cleanText(data.childName, "the child")}.`,
     `Child age: ${cleanText(data.childAge, "5")}.`,
-    `Target duration: ${cleanText(data.duration, "5")} minutes, about ${target.words} words.`,
-    `Paragraph target: ${target.paragraphs} short, readable paragraphs.`,
+    `Target duration: ${cleanText(data.duration, "5")} minutes of calm narrated audio.`,
+    `Word count target: ${target.words} words. Acceptable range: ${target.minWords}-${target.maxWords} words.`,
+    `Paragraph target: about ${target.paragraphs} short, readable paragraphs.`,
     `Mood blend: ${moods.length ? moods.join(", ") : "relaxing"}.`,
     `Story idea from parent: ${cleanText(data.storyIdea, "a gentle adventure with a kind positive ending")}.`,
     `Child interests: ${cleanText(data.interests, "not specified")}.`,
@@ -65,6 +70,7 @@ function buildPrompt(data) {
     "- Keep it age-appropriate, safe, non-frightening, and parent-friendly.",
     "- Give the child small choices, feelings, and discoveries.",
     "- Use short, gentle sentences with frequent natural pauses between phrases for bedtime narration.",
+    "- Do not finish early. The story should feel complete and should land inside the requested word range.",
     "- Include a positive ending and a gentle lesson without sounding preachy.",
     "- For bedtime, slow the ending down and make the final paragraph peaceful.",
     "- Do not mention AI, prompts, packages, subscriptions, or app settings.",
@@ -84,11 +90,11 @@ const storySchema = {
     paragraphs: {
       type: "array",
       minItems: 4,
-      maxItems: 45,
+      maxItems: 80,
       items: {
         type: "string",
         minLength: 20,
-        maxLength: 900,
+        maxLength: 1200,
       },
     },
   },
@@ -114,7 +120,7 @@ async function createStory(data) {
           content: buildPrompt(data),
         },
       ],
-      max_output_tokens: Math.min(getTarget(data.duration).words * 3, 12000),
+      max_output_tokens: getMaxOutputTokens(data.duration),
       text: {
         format: {
           type: "json_schema",

@@ -1,6 +1,6 @@
 const OPENAI_SPEECH_URL = "https://api.openai.com/v1/audio/speech";
 const MAX_CHUNK_LENGTH = 3800;
-const MAX_CHUNKS = 12;
+const MAX_CHUNKS = 20;
 const SUPPORTED_VOICES = new Set([
   "alloy",
   "ash",
