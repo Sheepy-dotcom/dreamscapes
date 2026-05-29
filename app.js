@@ -442,10 +442,7 @@ function updatePlanFeatures() {
   currentPlanName.textContent = plan.label;
   currentPlanSummary.textContent = plan.summary;
   planNote.textContent = `${plan.note} ${remaining} of ${plan.monthlyStories} story creations left this month.`;
-  audioToggle.disabled = !plan.canUseAudio;
   audioToggle.closest(".feature-toggle").classList.toggle("locked", !plan.canUseAudio);
-
-  if (!plan.canUseAudio) audioToggle.checked = false;
 }
 
 function requestPlusForAudio() {
