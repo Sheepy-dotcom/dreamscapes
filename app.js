@@ -37,6 +37,9 @@ const authSignedOut = document.querySelector("#auth-signed-out");
 const authSignedIn = document.querySelector("#auth-signed-in");
 const accountEmail = document.querySelector("#account-email");
 const accountCloudStatus = document.querySelector("#account-cloud-status");
+const accountPlan = document.querySelector("#account-plan");
+const accountStories = document.querySelector("#account-stories");
+const accountAudio = document.querySelector("#account-audio");
 let currentStory = null;
 let currentUser = null;
 let supabaseClient = null;
@@ -274,6 +277,7 @@ function showScreen(name) {
     button.classList.toggle("active", button.dataset.screenTarget === name);
   });
   if (name === "library") renderLibrary();
+  if (name === "account") refreshAccountSummary();
   trackEvent("screen_view", { screen: name });
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -286,15 +290,40 @@ function setAuthStatus(message, isError = false) {
 
 function updateAccountUI() {
   const signedIn = Boolean(currentUser);
+  const stories = signedIn ? cloudStories : [];
+  const totalAudioSeconds = stories.reduce(
+    (total, story) => total + (Number(story.aiAudioDurationSeconds) || 0),
+    0
+  );
 
   if (authSignedOut) authSignedOut.hidden = signedIn;
   if (authSignedIn) authSignedIn.hidden = !signedIn;
   if (accountEmail) accountEmail.textContent = currentUser?.email || "";
+  if (accountPlan) accountPlan.textContent = getPlan(getCurrentPlanKey()).label;
+  if (accountStories) accountStories.textContent = String(stories.length);
+  if (accountAudio) accountAudio.textContent = formatAudioTime(totalAudioSeconds);
   if (accountCloudStatus) {
     accountCloudStatus.textContent = signedIn
-      ? "Account connected. Cloud story saving is the next setup step."
+      ? cloudStoriesLoaded
+        ? "Cloud library connected."
+        : "Account connected. Library totals load when your cloud stories sync."
       : "Sign in to prepare cloud saving across devices.";
   }
+}
+
+async function refreshAccountSummary() {
+  if (!canUseCloudLibrary()) {
+    updateAccountUI();
+    return;
+  }
+
+  try {
+    await loadCloudStories();
+  } catch {
+    setAuthStatus("Could not refresh account totals yet.", true);
+  }
+
+  updateAccountUI();
 }
 
 function setCurrentUser(user) {
@@ -977,6 +1006,7 @@ async function deleteCloudStory(story) {
   if (error) throw error;
 
   cloudStories = cloudStories.filter((savedStory) => savedStory.cloudId !== story.cloudId);
+  updateAccountUI();
   return true;
 }
 
@@ -998,6 +1028,7 @@ function saveStoryToLibrary(story, { silent = false } = {}) {
     saveStoryToCloud(storyToSave)
       .then((savedStory) => {
         currentStory = savedStory;
+        updateAccountUI();
         if (!silent) statusNote.textContent = "Story saved to your cloud library.";
         if (screens.library.classList.contains("active")) renderLibrary();
         trackEvent("story_saved", {

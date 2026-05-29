@@ -840,6 +840,31 @@ textarea:focus-visible {
   justify-content: flex-end;
 }
 
+.account-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.account-summary span {
+  display: grid;
+  gap: 2px;
+  border: 1px solid rgba(123, 78, 216, 0.16);
+  border-radius: 8px;
+  padding: 12px;
+  color: #5e5f80;
+  background: rgba(255, 248, 220, 0.58);
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.account-summary strong {
+  color: var(--ink);
+  font-size: 1.18rem;
+  line-height: 1.1;
+}
+
 .account-status.error {
   color: #7f1d45;
 }

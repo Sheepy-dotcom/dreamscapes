@@ -16,7 +16,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026052810" />
+    <link rel="stylesheet" href="./styles.css?v=2026052816" />
   </head>
   <body class="home-active">
     <div class="stars" aria-hidden="true"></div>
@@ -450,8 +450,25 @@
           <article class="auth-card" id="auth-signed-in" hidden>
             <h3>You are signed in</h3>
             <p id="account-email"></p>
-            <p id="account-cloud-status">Account connected. Cloud story saving is the next setup step.</p>
-            <button class="button secondary-button" id="sign-out-button" type="button">Sign Out</button>
+            <div class="account-summary" aria-label="Account summary">
+              <span>
+                <strong id="account-plan">Free</strong>
+                Plan
+              </span>
+              <span>
+                <strong id="account-stories">0</strong>
+                Saved stories
+              </span>
+              <span>
+                <strong id="account-audio">0:00</strong>
+                Saved audio
+              </span>
+            </div>
+            <p id="account-cloud-status">Account connected. Cloud story saving is active.</p>
+            <div class="auth-actions">
+              <button class="button primary-button" data-screen-target="library" type="button">Open Library</button>
+              <button class="button secondary-button" id="sign-out-button" type="button">Sign Out</button>
+            </div>
           </article>
         </div>
 
@@ -563,6 +580,6 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./app.js?v=2026052815"></script>
+    <script src="./app.js?v=2026052816"></script>
   </body>
 </html>
