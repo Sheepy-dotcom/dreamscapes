@@ -107,6 +107,14 @@ module.exports = async function handler(request, response) {
       return response.status(400).json({ error: "RevenueCat event missing app_user_id" });
     }
 
+    if (event.type === "TEST") {
+      return response.status(200).json({
+        received: true,
+        ignored: true,
+        reason: "RevenueCat test events do not update DreamScapes plans.",
+      });
+    }
+
     if (!isUuid(userId)) {
       return response.status(202).json({
         received: true,
