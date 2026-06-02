@@ -25,6 +25,7 @@ const narrationNote = document.querySelector("#narration-note");
 const audioProgressWrap = document.querySelector("#audio-progress-wrap");
 const audioProgress = document.querySelector("#audio-progress");
 const audioProgressLabel = document.querySelector("#audio-progress-label");
+const sleepTimerNote = document.querySelector("#sleep-timer-note");
 const voiceStyle = document.querySelector("#voice-style");
 const voicePreviewButton = document.querySelector("#voice-preview-button");
 const storyIdea = document.querySelector("#story-idea");
@@ -63,6 +64,9 @@ let currentAudioTrackDurations = [];
 let aiAudioPausedBetweenTracks = false;
 let narrationRequestInFlight = false;
 let pendingAudioSeekPercent = null;
+let sleepTimerId = null;
+let sleepTimerCountdownId = null;
+let sleepTimerEndsAt = null;
 const AI_ENDPOINT = window.DREAMSCAPES_AI_ENDPOINT || "/api/story";
 const NARRATION_ENDPOINT = window.DREAMSCAPES_NARRATION_ENDPOINT || "/api/narrate";
 const SUPABASE_URL = "https://khgzzrixhetaontmdhez.supabase.co";
@@ -1595,6 +1599,17 @@ document.querySelector("#view-library-button").addEventListener("click", () => {
   showScreen("library");
 });
 
+document.querySelectorAll("[data-sleep-minutes]").forEach((button) => {
+  button.addEventListener("click", () => {
+    setSleepTimer(button.dataset.sleepMinutes);
+  });
+});
+
+document.querySelector("#sleep-timer-off")?.addEventListener("click", () => {
+  clearSleepTimer();
+  trackEvent("sleep_timer_cleared");
+});
+
 document.querySelectorAll("[data-plan-preview]").forEach((button) => {
   button.addEventListener("click", () => {
     const planKey = button.dataset.planPreview;
@@ -1698,24 +1713,9 @@ form.addEventListener("submit", async (event) => {
   }, 900);
 });
 
-document.querySelector("#save-story-button").addEventListener("click", () => {
+document.querySelector("#save-story-button")?.addEventListener("click", () => {
   if (!currentStory) return;
   saveStoryToLibrary(currentStory);
-});
-
-document.querySelectorAll("[data-premium-extra]").forEach((button) => {
-  button.addEventListener("click", () => {
-    if (!currentStory) return;
-    const plan = getPlan(currentStory.plan);
-    const feature = button.dataset.premiumExtra;
-
-    if (plan !== plans.plus) {
-      statusNote.textContent = `${sentenceCase(feature)} will be a DreamScapes Plus feature.`;
-      return;
-    }
-
-    statusNote.textContent = `${sentenceCase(feature)} is ready for the next backend build.`;
-  });
 });
 
 async function renderLibrary() {
@@ -1959,7 +1959,54 @@ function seekDeviceNarration(percent) {
   return true;
 }
 
-function stopNarration() {
+function updateSleepTimerNote() {
+  if (!sleepTimerNote) return;
+
+  if (!sleepTimerEndsAt) {
+    sleepTimerNote.textContent = "Off";
+    return;
+  }
+
+  const remainingMs = Math.max(0, sleepTimerEndsAt - Date.now());
+  const remainingMinutes = Math.ceil(remainingMs / 60000);
+  sleepTimerNote.textContent = remainingMinutes > 1 ? `${remainingMinutes} minutes left` : "Less than 1 minute left";
+}
+
+function clearSleepTimer({ silent = false } = {}) {
+  window.clearTimeout(sleepTimerId);
+  window.clearInterval(sleepTimerCountdownId);
+  sleepTimerId = null;
+  sleepTimerCountdownId = null;
+  sleepTimerEndsAt = null;
+  updateSleepTimerNote();
+  document.querySelectorAll("[data-sleep-minutes]").forEach((button) => button.classList.remove("active"));
+  if (!silent) statusNote.textContent = "Sleep timer turned off.";
+}
+
+function finishSleepTimer() {
+  clearSleepTimer({ silent: true });
+  stopNarration();
+  statusNote.textContent = "Sleep timer finished. Narration stopped.";
+}
+
+function setSleepTimer(minutes) {
+  const safeMinutes = Number(minutes);
+  if (!Number.isFinite(safeMinutes) || safeMinutes <= 0) return;
+
+  clearSleepTimer({ silent: true });
+  sleepTimerEndsAt = Date.now() + safeMinutes * 60000;
+  sleepTimerId = window.setTimeout(finishSleepTimer, safeMinutes * 60000);
+  sleepTimerCountdownId = window.setInterval(updateSleepTimerNote, 15000);
+  updateSleepTimerNote();
+  document.querySelectorAll("[data-sleep-minutes]").forEach((button) => {
+    button.classList.toggle("active", Number(button.dataset.sleepMinutes) === safeMinutes);
+  });
+  statusNote.textContent = `Sleep timer set for ${safeMinutes} minutes.`;
+  trackEvent("sleep_timer_set", { minutes: safeMinutes });
+}
+
+function stopNarration({ clearTimer = true } = {}) {
+  if (clearTimer) clearSleepTimer({ silent: true });
   window.clearTimeout(currentNarrationTimer);
   currentNarrationTimer = null;
   if ("speechSynthesis" in window) window.speechSynthesis.cancel();
@@ -1994,6 +2041,7 @@ function speakNarrationSegment() {
   if (narrationPausedBetweenSegments) return;
 
   if (!currentStory || currentNarrationIndex >= currentNarrationSegments.length) {
+    clearSleepTimer({ silent: true });
     currentNarration = null;
     currentNarrationSegments = [];
     currentNarrationIndex = 0;
@@ -2022,6 +2070,7 @@ function playAiAudioTrack() {
   if (aiAudioPausedBetweenTracks) return;
 
   if (currentAudioIndex >= currentAudioTracks.length) {
+    clearSleepTimer({ silent: true });
     currentAudio = null;
     currentAudioTracks = [];
     currentAudioIndex = 0;
@@ -2216,7 +2265,7 @@ audioPlayButton.addEventListener("click", async () => {
     return;
   }
 
-  stopNarration();
+  stopNarration({ clearTimer: false });
   statusNote.textContent = "Creating audio. This can take a moment...";
   narrationNote.textContent = "Creating audio";
   narrationRequestInFlight = true;

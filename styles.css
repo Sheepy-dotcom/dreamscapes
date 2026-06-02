@@ -548,16 +548,53 @@ textarea:focus-visible {
 }
 
 .builder-actions,
-.result-actions,
-.premium-extras {
+.result-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
   justify-content: flex-end;
 }
 
-.premium-extras {
+.sleep-timer-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   margin-top: 12px;
+  border: 1px solid rgba(123, 78, 216, 0.16);
+  border-radius: 8px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.sleep-timer-panel strong,
+.sleep-timer-panel span {
+  display: block;
+}
+
+.sleep-timer-panel span {
+  margin-top: 2px;
+  color: #5e5f80;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.sleep-timer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.sleep-timer-actions .button {
+  min-height: 38px;
+  padding: 8px 12px;
+}
+
+.sleep-timer-actions .button.active {
+  border-color: rgba(255, 208, 87, 0.95);
+  background: #fff1b8;
+  color: #34245f;
 }
 
 .app-tabbar {
@@ -995,9 +1032,18 @@ textarea:focus-visible {
   }
 
   .builder-actions,
-  .result-actions,
-  .premium-extras {
+  .result-actions {
     justify-content: stretch;
+  }
+
+  .sleep-timer-panel {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .sleep-timer-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .audio-controls {

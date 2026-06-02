@@ -16,7 +16,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026052908" />
+    <link rel="stylesheet" href="./styles.css?v=2026060209" />
   </head>
   <body class="home-active">
     <div class="stars" aria-hidden="true"></div>
@@ -298,13 +298,17 @@
           </button>
         </div>
 
-        <div class="premium-extras" aria-label="Premium future features">
-          <button class="button secondary-button" data-premium-extra="pdf" type="button">
-            Printable PDF
-          </button>
-          <button class="button secondary-button" data-premium-extra="sleep timer" type="button">
-            Sleep Timer
-          </button>
+        <div class="sleep-timer-panel" aria-label="Sleep timer">
+          <div>
+            <strong>Sleep Timer</strong>
+            <span id="sleep-timer-note">Off</span>
+          </div>
+          <div class="sleep-timer-actions">
+            <button class="button secondary-button" data-sleep-minutes="10" type="button">10 min</button>
+            <button class="button secondary-button" data-sleep-minutes="20" type="button">20 min</button>
+            <button class="button secondary-button" data-sleep-minutes="30" type="button">30 min</button>
+            <button class="button secondary-button" id="sleep-timer-off" type="button">Off</button>
+          </div>
         </div>
 
         <p class="status-note" id="status-note" role="status"></p>
@@ -585,6 +589,6 @@
     </main>
 
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026060208"></script>
+    <script src="./app.js?v=2026060209"></script>
   </body>
 </html>
