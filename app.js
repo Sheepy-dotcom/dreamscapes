@@ -859,6 +859,10 @@ async function createStory(data) {
       createdAt: new Date().toISOString(),
     };
   } catch (error) {
+    if (String(error.message || "").toLowerCase().includes("failed to fetch")) {
+      throw new Error("DreamScapes could not connect to the story service. Check your connection and try again.");
+    }
+
     throw error;
   }
 }
@@ -1099,6 +1103,39 @@ function getStoryStorageSize(story) {
   return JSON.stringify(story).length;
 }
 
+function saveStoryLocally(story, plan, { silent = false } = {}) {
+  const storyToSave = {
+    ...story,
+    id: story.id || createStoryId(),
+    savedAt: story.savedAt || new Date().toISOString(),
+  };
+  const savedStories = getSavedStories().filter((savedStory) => savedStory.id !== storyToSave.id);
+  savedStories.unshift(storyToSave);
+
+  try {
+    setSavedStories(savedStories.slice(0, Math.min(plan.savedLimit, MAX_LOCAL_SAVED_STORIES)));
+  } catch {
+    const withoutAudio = {
+      ...storyToSave,
+      aiAudioTracks: [],
+      aiAudioGeneratedAt: "",
+    };
+    const smallerStories = [withoutAudio, ...savedStories.slice(1)];
+    try {
+      setSavedStories(smallerStories.slice(0, Math.min(plan.savedLimit, MAX_LOCAL_SAVED_STORIES)));
+    } catch {
+      if (!silent) {
+        statusNote.textContent = "This device storage is full, so the story could not be saved here.";
+      }
+      return false;
+    }
+  }
+
+  currentStory = storyToSave;
+  if (screens.library.classList.contains("active")) renderLibrary();
+  return true;
+}
+
 function canUseCloudLibrary() {
   return Boolean(currentUser && supabaseClient);
 }
@@ -1214,7 +1251,14 @@ async function saveGeneratedStoryToLibrary(story) {
     statusNote.textContent = "Saved to your library.";
     return true;
   } catch (error) {
-    statusNote.textContent = `Cloud save failed: ${error.message || "try again from your library."}`;
+    const backedUp = saveStoryLocally(story, plan, { silent: true });
+    statusNote.textContent = backedUp
+      ? "Story created. Cloud saving could not connect, so it has been saved on this device for now."
+      : "Story created, but cloud saving could not connect. Try refreshing and saving again.";
+    trackEvent("cloud_story_save_failed", {
+      reason: error.message || "unknown",
+      localBackup: backedUp,
+    });
     return false;
   }
 }
@@ -1279,29 +1323,8 @@ function saveStoryToLibrary(story, { silent = false } = {}) {
     return true;
   }
 
-  const savedStories = getSavedStories().filter((savedStory) => savedStory.id !== storyToSave.id);
-  savedStories.unshift(storyToSave);
-
-  try {
-    setSavedStories(savedStories.slice(0, Math.min(plan.savedLimit, MAX_LOCAL_SAVED_STORIES)));
-  } catch {
-    const withoutAudio = {
-      ...storyToSave,
-      aiAudioTracks: [],
-      aiAudioGeneratedAt: "",
-    };
-    const smallerStories = [withoutAudio, ...savedStories.slice(1)];
-    try {
-      setSavedStories(smallerStories.slice(0, Math.min(plan.savedLimit, MAX_LOCAL_SAVED_STORIES)));
-    } catch {
-      if (!silent) {
-        statusNote.textContent = "This device storage is full, so the story could not be saved here.";
-      }
-      return false;
-    }
-  }
-
-  currentStory = storyToSave;
+  const saved = saveStoryLocally(storyToSave, plan, { silent });
+  if (!saved) return false;
 
   if (!silent) {
     statusNote.textContent = `Story saved to this device. ${plan.label} keeps up to ${plan.savedLimit} saved stories here.`;
@@ -1738,7 +1761,21 @@ async function renderLibrary() {
   }
 
   const usingCloudLibrary = canUseCloudLibrary();
-  const savedStories = usingCloudLibrary ? cloudStories : getSavedStories();
+  const localStories = getSavedStories();
+  const savedStories = usingCloudLibrary
+    ? [
+        ...cloudStories,
+        ...localStories.filter(
+          (localStory) =>
+            !cloudStories.some(
+              (cloudStory) =>
+                cloudStory.id === localStory.id ||
+                cloudStory.cloudId === localStory.cloudId ||
+                cloudStory.cloudId === localStory.id
+            )
+        ),
+      ]
+    : localStories;
   const visibleStories = savedStories.slice(0, MAX_LIBRARY_RENDER_ITEMS);
 
   if (savedStories.length === 0) {
@@ -1790,7 +1827,7 @@ async function renderLibrary() {
     button.addEventListener("click", async () => {
       const index = Number(button.dataset.deleteIndex);
 
-      if (usingCloudLibrary) {
+      if (usingCloudLibrary && savedStories[index]?.cloudId) {
         try {
           await deleteCloudStory(savedStories[index]);
         } catch {
@@ -1802,7 +1839,9 @@ async function renderLibrary() {
         }
       } else {
         const nextStories = getSavedStories();
-        nextStories.splice(index, 1);
+        const storyToDelete = savedStories[index];
+        const localIndex = nextStories.findIndex((story) => story.id === storyToDelete?.id);
+        if (localIndex >= 0) nextStories.splice(localIndex, 1);
         setSavedStories(nextStories);
       }
 
