@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">DreamScapes</string>
+    <string name="title_activity_main">DreamScapes</string>
+    <string name="package_name">cloud.dreamscapes.app</string>
+    <string name="custom_url_scheme">cloud.dreamscapes.app</string>
+</resources>

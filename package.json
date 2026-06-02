@@ -1,0 +1,29 @@
+{
+  "name": "dreamscapes",
+  "version": "1.0.0",
+  "description": "DreamScapes is a personalised children's story app prototype for parents to create timed bedtime and anytime stories.",
+  "scripts": {
+    "mobile:build": "node scripts/build-mobile.js",
+    "mobile:sync": "npm run mobile:build && npx cap sync",
+    "mobile:ios": "npm run mobile:sync && npx cap open ios",
+    "mobile:android": "npm run mobile:sync && npx cap open android"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sheepy-dotcom/dreamscapes.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Sheepy-dotcom/dreamscapes/issues"
+  },
+  "homepage": "https://github.com/Sheepy-dotcom/dreamscapes#readme",
+  "dependencies": {
+    "@capacitor/android": "^8.3.4",
+    "@capacitor/cli": "^8.3.4",
+    "@capacitor/core": "^8.3.4",
+    "@capacitor/ios": "^8.3.4"
+  }
+}
