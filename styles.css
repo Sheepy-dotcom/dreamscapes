@@ -827,7 +827,7 @@ textarea:focus-visible {
 
 .story-text .sentence-break {
   display: block;
-  height: 0.95em;
+  height: 1.15em;
 }
 
 .status-note {

@@ -726,12 +726,12 @@ function formatParagraphForDisplay(paragraph) {
 function addNarrationSentenceBreaks(text) {
   const sentences = splitIntoSentences(text);
   if (sentences.length <= 1) return addNarrationWordBreathing(text);
-  return sentences.map(addNarrationWordBreathing).join("\n\n");
+  return sentences.map(addNarrationWordBreathing).join("\n\n\n");
 }
 
 function addNarrationWordBreathing(text) {
   const words = String(text || "").split(/\s+/).filter(Boolean);
-  const phraseLength = 5;
+  const phraseLength = 4;
   if (words.length <= phraseLength) return String(text || "");
 
   const groups = [];
@@ -898,7 +898,7 @@ function renderStory(story) {
 }
 
 function storyAsText(story) {
-  return `${story.title}\n\n${story.text.map(addNarrationSentenceBreaks).join("\n\n\n")}`;
+  return `${story.title}\n\n\n${story.text.map(addNarrationSentenceBreaks).join("\n\n\n\n")}`;
 }
 
 function cleanNarrationText(text) {
