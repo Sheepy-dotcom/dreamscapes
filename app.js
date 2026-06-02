@@ -1763,15 +1763,16 @@ async function renderLibrary() {
 
 function canUseNarration() {
   if (!currentStory) return;
-  const plan = getPlan(currentStory.plan);
+  const accountPlan = getPlan(getCurrentPlanKey());
 
-  if (!plan.canUseAudio) {
+  if (!accountPlan.canUseAudio) {
     statusNote.textContent = "Audio narration is included with DreamScapes Plus.";
     return false;
   }
 
   if (!currentStory.audioNarration) {
-    statusNote.textContent = "Audio was not requested for this story. Turn it on in the builder before generating.";
+    statusNote.textContent =
+      "This story was created without audio selected. Turn audio on in the builder before generating a story.";
     return false;
   }
 
@@ -2059,11 +2060,15 @@ async function startAiNarration() {
       const error = await response.json().catch(() => ({}));
       statusNote.textContent = error.detail || error.error || "Audio could not be created.";
       narrationNote.textContent = "Audio not created";
-      return response.status === 401 || response.status === 403 || response.status === 429 ? "blocked" : false;
+      return "blocked";
     }
 
     const data = await response.json();
-    if (!Array.isArray(data.audio) || data.audio.length === 0) return false;
+    if (!Array.isArray(data.audio) || data.audio.length === 0) {
+      statusNote.textContent = "Audio could not be created. No narration was returned.";
+      narrationNote.textContent = "Audio not created";
+      return "blocked";
+    }
     if (data.usage) {
       currentUsage = data.usage;
       updateAccountUI();
@@ -2101,8 +2106,10 @@ async function startAiNarration() {
       chunks: data.audio.length,
     });
     return true;
-  } catch {
-    return false;
+  } catch (error) {
+    statusNote.textContent = error.message || "Audio could not be created. Try again in a moment.";
+    narrationNote.textContent = "Audio not created";
+    return "blocked";
   }
 }
 
