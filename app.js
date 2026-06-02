@@ -596,12 +596,10 @@ async function addCloudUsage({ stories = 0, audioSeconds = 0 } = {}) {
 function updatePlanFeatures() {
   const planKey = getCurrentPlanKey();
   const plan = getPlan(planKey);
-  const used = getStoriesUsed(planKey);
-  const remaining = Math.max(plan.monthlyStories - used, 0);
 
-  currentPlanName.textContent = plan.label;
-  currentPlanSummary.textContent = plan.summary;
-  planNote.textContent = `${plan.note} ${remaining} of ${plan.monthlyStories} story creations left this month.`;
+  if (currentPlanName) currentPlanName.textContent = plan.label;
+  if (currentPlanSummary) currentPlanSummary.textContent = plan.summary;
+  if (planNote) planNote.textContent = "";
   audioToggle.closest(".feature-toggle").classList.toggle("locked", !plan.canUseAudio);
   updateDurationLocks(plan);
   keepDurationWithinPlan(plan);

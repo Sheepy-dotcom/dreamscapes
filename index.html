@@ -55,23 +55,6 @@
           </div>
         </header>
 
-        <section class="package-panel" aria-labelledby="package-title">
-          <div>
-            <p class="eyebrow">Subscription</p>
-            <h3 id="package-title">Current Plan</h3>
-          </div>
-          <div class="subscription-card">
-            <strong id="current-plan-name">Free</strong>
-            <span id="current-plan-summary">£0, 3 stories/month, up to 10 min</span>
-          </div>
-          <p class="plan-note" id="plan-note">
-            Free package: 3 stories this month, no saved library or audio narration.
-          </p>
-          <button class="button secondary-button compact-button" data-screen-target="upgrade" type="button">
-            View Plans
-          </button>
-        </section>
-
         <form class="story-form" id="story-form">
 
           <div class="form-grid">
@@ -239,6 +222,7 @@
             </button>
             <button class="button primary-button" type="submit">Generate Story</button>
           </div>
+          <p class="plan-note" id="plan-note" role="status"></p>
         </form>
       </section>
 
@@ -349,6 +333,16 @@
             <h2 id="upgrade-title">Choose a Plan</h2>
           </div>
         </header>
+        <section class="package-panel" aria-labelledby="package-title">
+          <div>
+            <p class="eyebrow">Current Subscription</p>
+            <h3 id="package-title">Your Plan</h3>
+          </div>
+          <div class="subscription-card">
+            <strong id="current-plan-name">Free</strong>
+            <span id="current-plan-summary">£0, 3 stories/month, up to 10 min</span>
+          </div>
+        </section>
         <div class="upgrade-grid">
           <article>
             <h3>Free</h3>
@@ -591,6 +585,6 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="./app.js?v=2026060201"></script>
+    <script src="./app.js?v=2026060202"></script>
   </body>
 </html>
