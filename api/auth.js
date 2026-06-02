@@ -8,6 +8,7 @@ const plans = {
     label: "Free",
     monthlyStories: 3,
     maxDuration: 10,
+    canSave: false,
     canUseAudio: false,
     audioMinutes: 0,
   },
@@ -15,6 +16,7 @@ const plans = {
     label: "Premier",
     monthlyStories: 15,
     maxDuration: 20,
+    canSave: true,
     canUseAudio: false,
     audioMinutes: 0,
   },
@@ -22,6 +24,7 @@ const plans = {
     label: "DreamScapes Plus",
     monthlyStories: 30,
     maxDuration: 30,
+    canSave: true,
     canUseAudio: true,
     audioMinutes: 150,
   },
@@ -199,7 +202,9 @@ function sendApiError(response, error, fallback = "Request failed") {
 module.exports = {
   enforceNarrationAccess,
   enforceStoryAccess,
+  getPlan,
   getNarrationChargeSeconds,
   incrementUsage,
   sendApiError,
+  supabaseRequest,
 };

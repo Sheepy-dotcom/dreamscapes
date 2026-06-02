@@ -856,6 +856,9 @@ async function createStory(data) {
       text: aiStory.paragraphs,
       wordCount: aiStory.wordCount || 0,
       durationTarget: aiStory.durationTarget || null,
+      cloudId: aiStory.cloudId || "",
+      savedAt: aiStory.savedAt || "",
+      saveError: aiStory.saveError || "",
       createdAt: new Date().toISOString(),
     };
   } catch (error) {
@@ -1239,6 +1242,18 @@ async function saveGeneratedStoryToLibrary(story) {
       ? "Saved to your library."
       : "This story could not be saved.";
     return saved;
+  }
+
+  if (story.cloudId) {
+    currentStory = {
+      ...story,
+      id: story.cloudId,
+      savedAt: story.savedAt || story.createdAt || new Date().toISOString(),
+    };
+    cloudStories = [currentStory, ...cloudStories.filter((savedStory) => savedStory.cloudId !== story.cloudId)];
+    cloudStoriesLoaded = true;
+    statusNote.textContent = "Saved to your library.";
+    return true;
   }
 
   try {
@@ -1710,11 +1725,11 @@ form.addEventListener("submit", async (event) => {
     try {
       currentStory = {
         ...(await createStory(storyData)),
-        id: createStoryId(),
         aiAudioTracks: [],
         aiAudioPaths: [],
         aiAudioGeneratedAt: "",
       };
+      currentStory.id = currentStory.cloudId || currentStory.id || createStoryId();
       if (!canUseCloudLibrary()) incrementStoriesUsed(selectedPlanKey);
       renderStory(currentStory);
       await saveGeneratedStoryToLibrary(currentStory);

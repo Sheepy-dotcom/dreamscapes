@@ -1,5 +1,5 @@
 const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
-const { enforceStoryAccess, incrementUsage, sendApiError } = require("./auth");
+const { enforceStoryAccess, incrementUsage, sendApiError, supabaseRequest } = require("./auth");
 
 const durationTargets = {
   5: { words: 620, minWords: 560, maxWords: 700, paragraphs: 8 },
@@ -91,6 +91,61 @@ function countWords(paragraphs) {
     .join(" ")
     .split(/\s+/)
     .filter(Boolean).length;
+}
+
+function normaliseStoryType(value) {
+  return value === "anytime" ? "anytime" : "bedtime";
+}
+
+function normalisePlan(value) {
+  return ["free", "premier", "plus"].includes(value) ? value : "free";
+}
+
+function storyToRow({ account, body, story }) {
+  return {
+    user_id: account.user.id,
+    title: story.title,
+    child_name: cleanText(body.childName, "the child"),
+    child_age: cleanText(body.childAge) || null,
+    story_type: normaliseStoryType(body.storyType),
+    duration_minutes: Number(body.duration) || 5,
+    moods: cleanList(body.moods),
+    story_idea: cleanText(body.storyIdea) || null,
+    paragraphs: story.paragraphs || [],
+    word_count: story.wordCount || null,
+    plan: normalisePlan(account.profile?.plan || body.plan),
+    voice_style: cleanText(body.voiceStyle) || null,
+    audio_requested: Boolean(body.audioNarration),
+    audio_paths: [],
+    audio_track_durations: [],
+    audio_duration_seconds: null,
+    audio_generated_at: null,
+    created_at: new Date().toISOString(),
+  };
+}
+
+async function saveGeneratedStory(account, body, story) {
+  if (!account.plan?.canSave) return null;
+
+  const row = storyToRow({ account, body, story });
+  const insert = async (payload) =>
+    supabaseRequest("/rest/v1/stories?select=*", {
+      token: account.token,
+      method: "POST",
+      prefer: "return=representation",
+      body: payload,
+    });
+
+  try {
+    const saved = await insert(row);
+    return saved?.[0] || null;
+  } catch (error) {
+    if (!String(error.message || "").includes("word_count")) throw error;
+    const fallbackRow = { ...row };
+    delete fallbackRow.word_count;
+    const saved = await insert(fallbackRow);
+    return saved?.[0] || null;
+  }
 }
 
 const storySchema = {
@@ -202,9 +257,22 @@ module.exports = async function handler(request, response) {
       return response.status(501).json({ error: "OPENAI_API_KEY is not configured" });
     }
     const story = await createStory(body);
+    let savedStory = null;
+    let saveError = "";
+    try {
+      savedStory = await saveGeneratedStory(account, body, story);
+    } catch (error) {
+      saveError = error.message || "Story save failed";
+    }
     const usage = await incrementUsage(account, { stories: 1 });
 
-    return response.status(200).json({ ...story, usage });
+    return response.status(200).json({
+      ...story,
+      cloudId: savedStory?.id || null,
+      savedAt: savedStory?.updated_at || savedStory?.created_at || null,
+      saveError,
+      usage,
+    });
   } catch (error) {
     return sendApiError(response, error, "Could not create story");
   }
