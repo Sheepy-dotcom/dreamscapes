@@ -6,10 +6,7 @@ const screens = {
   library: document.querySelector("#library-screen"),
   upgrade: document.querySelector("#upgrade-screen"),
   account: document.querySelector("#account-screen"),
-  safety: document.querySelector("#safety-screen"),
-  privacy: document.querySelector("#privacy-screen"),
-  terms: document.querySelector("#terms-screen"),
-  contact: document.querySelector("#contact-screen"),
+  legal: document.querySelector("#legal-screen"),
 };
 
 const form = document.querySelector("#story-form");

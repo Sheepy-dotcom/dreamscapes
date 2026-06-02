@@ -16,7 +16,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026060211" />
+    <link rel="stylesheet" href="./styles.css?v=2026060212" />
   </head>
   <body class="home-active">
     <div class="stars" aria-hidden="true"></div>
@@ -390,17 +390,8 @@
           </article>
         </div>
         <div class="trust-links" aria-label="Trust and support">
-          <button class="button secondary-button" data-screen-target="safety" type="button">
-            Child Safety
-          </button>
-          <button class="button secondary-button" data-screen-target="privacy" type="button">
-            Privacy
-          </button>
-          <button class="button secondary-button" data-screen-target="terms" type="button">
-            Terms
-          </button>
-          <button class="button secondary-button" data-screen-target="contact" type="button">
-            Contact
+          <button class="button secondary-button" data-screen-target="legal" type="button">
+            Legal & Support
           </button>
         </div>
         <p class="status-note" id="upgrade-note" role="status"></p>
@@ -484,108 +475,58 @@
         <p class="status-note account-status" id="auth-status" role="status"></p>
       </section>
 
-      <section class="screen info-screen" id="safety-screen" aria-labelledby="safety-title">
+      <section class="screen info-screen" id="legal-screen" aria-labelledby="legal-title">
         <header class="top-bar">
           <button class="logo-button" data-screen-target="welcome" type="button" aria-label="Go to home">
             <img class="mini-logo" src="./assets/dreamscapes-logo.png" alt="DreamScapes" />
           </button>
           <div>
-            <p class="eyebrow">Trust</p>
-            <h2 id="safety-title">Child Safety</h2>
+            <p class="eyebrow">Legal & Support</p>
+            <h2 id="legal-title">DreamScapes Policies</h2>
           </div>
         </header>
         <article class="info-card">
-          <p>DreamScapes is designed for parent-led story creation. Stories should be warm, age-aware, non-frightening, and suitable for children.</p>
-          <ul>
-            <li>Parents can add topics to avoid before generating.</li>
-            <li>Bedtime calm mode softens exciting moments.</li>
-            <li>Generated stories should end positively and avoid unsafe instructions.</li>
-            <li>Production AI will need server-side safety checks before launch.</li>
-          </ul>
-        </article>
-      </section>
-
-      <section class="screen info-screen" id="privacy-screen" aria-labelledby="privacy-title">
-        <header class="top-bar">
-          <button class="logo-button" data-screen-target="welcome" type="button" aria-label="Go to home">
-            <img class="mini-logo" src="./assets/dreamscapes-logo.png" alt="DreamScapes" />
-          </button>
-          <div>
-            <p class="eyebrow">Trust</p>
-            <h2 id="privacy-title">Privacy</h2>
-          </div>
-        </header>
-        <article class="info-card">
-          <p>This prototype supports parent accounts, cloud story saving, and account-based plan state.</p>
-          <ul>
-            <li>Do not collect more child information than needed.</li>
-            <li>Explain how story prompts and audio are processed.</li>
-            <li>Let parents delete stories and account data.</li>
-            <li>Add a formal privacy policy before accepting payments.</li>
-          </ul>
-        </article>
-      </section>
-
-      <section class="screen info-screen" id="terms-screen" aria-labelledby="terms-title">
-        <header class="top-bar">
-          <button class="logo-button" data-screen-target="welcome" type="button" aria-label="Go to home">
-            <img class="mini-logo" src="./assets/dreamscapes-logo.png" alt="DreamScapes" />
-          </button>
-          <div>
-            <p class="eyebrow">Legal</p>
-            <h2 id="terms-title">Terms</h2>
-          </div>
-        </header>
-        <article class="info-card">
-          <p>DreamScapes helps parents and carers create personalised children's stories using AI. By using the app, you agree to use it responsibly and to review generated stories before sharing them with a child.</p>
-          <h3>Using DreamScapes</h3>
+          <p>DreamScapes is a parent-led children's story app. This page brings the main terms, privacy, subscription, safety, deletion, and contact information together in one place.</p>
+          <h3>Terms of Use</h3>
           <ul>
             <li>DreamScapes is designed for parent-led story creation, not unsupervised child use.</li>
             <li>Stories are generated from the details you provide, such as name, mood, duration, and story idea.</li>
             <li>AI-generated text and audio can vary, so parents should check every story for suitability.</li>
             <li>Do not enter private, sensitive, or unnecessary personal information about a child.</li>
           </ul>
-          <h3>Accounts and Plans</h3>
+          <h3>Privacy</h3>
+          <ul>
+            <li>DreamScapes uses account details to sign you in, save stories, and manage your plan and usage.</li>
+            <li>Story prompts, generated stories, saved stories, and audio may be processed by trusted services used to run the app.</li>
+            <li>We aim to collect only what is needed to create and save stories for parents and carers.</li>
+            <li>You can ask for account or story data deletion by contacting support.</li>
+          </ul>
+          <h3>Subscriptions</h3>
           <ul>
             <li>Free, Premier, and DreamScapes Plus plans may include different story, saving, duration, and audio limits.</li>
-            <li>Paid subscriptions for the mobile app are planned to be handled through the Apple App Store and Google Play.</li>
-            <li>Subscription changes, cancellations, and refunds will follow the rules of the app store used to purchase the plan.</li>
-          </ul>
-          <h3>Content and Availability</h3>
-          <ul>
-            <li>DreamScapes aims to create warm, child-friendly stories with positive endings.</li>
-            <li>The app may refuse, shorten, or adjust requests that are unsafe or unsuitable for children.</li>
+            <li>Mobile app subscriptions are planned to be handled through the Apple App Store and Google Play.</li>
+            <li>Renewals, cancellations, refunds, and payment management will follow the app store used to purchase the subscription.</li>
             <li>Audio narration, saved stories, and other features may depend on account status, usage limits, and service availability.</li>
-            <li>These terms are a product draft and should be reviewed professionally before full commercial launch.</li>
           </ul>
-        </article>
-      </section>
-
-      <section class="screen info-screen" id="contact-screen" aria-labelledby="contact-title">
-        <header class="top-bar">
-          <button class="logo-button" data-screen-target="welcome" type="button" aria-label="Go to home">
-            <img class="mini-logo" src="./assets/dreamscapes-logo.png" alt="DreamScapes" />
-          </button>
-          <div>
-            <p class="eyebrow">Support</p>
-            <h2 id="contact-title">Contact</h2>
-          </div>
-        </header>
-        <article class="info-card">
-          <p>Need help with DreamScapes? Contact support and include the email address used for your account, plus a short description of the issue.</p>
+          <h3>Child Safety</h3>
+          <ul>
+            <li>Parents can add topics to avoid before generating a story.</li>
+            <li>Bedtime and calm options are intended to soften exciting moments.</li>
+            <li>DreamScapes aims for warm, child-friendly stories with positive endings.</li>
+            <li>The app may refuse, shorten, or adjust requests that are unsafe or unsuitable for children.</li>
+          </ul>
+          <h3>Account and Data Deletion</h3>
+          <ul>
+            <li>Parents can delete saved stories from the library where deletion is available.</li>
+            <li>To request full account deletion, email support from the address linked to your DreamScapes account.</li>
+            <li>We may need to retain limited records where required for security, billing, or legal reasons.</li>
+          </ul>
+          <h3>Contact</h3>
           <p><strong>support@dreamscapes.cloud</strong></p>
-          <h3>What We Can Help With</h3>
           <ul>
-            <li>Account sign-in, password reset, and email confirmation issues.</li>
-            <li>Saved stories, missing audio, or story generation problems.</li>
-            <li>Questions about plans, usage limits, and upcoming app subscriptions.</li>
-            <li>Safety concerns, unsuitable story output, or account deletion requests.</li>
-          </ul>
-          <h3>Before You Contact Us</h3>
-          <ul>
-            <li>Try refreshing the app and signing in again.</li>
-            <li>Check that your story was created with audio turned on if you are asking about narration.</li>
-            <li>For future paid mobile subscriptions, billing and refunds will usually be managed through Apple or Google.</li>
+            <li>Contact support for account access, saved stories, missing audio, safety concerns, subscription questions, or deletion requests.</li>
+            <li>Include the email address used for your account and a short description of the issue.</li>
+            <li>This is a product draft and should be professionally reviewed before full commercial launch.</li>
           </ul>
         </article>
       </section>
@@ -615,6 +556,6 @@
     </main>
 
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026060210"></script>
+    <script src="./app.js?v=2026060212"></script>
   </body>
 </html>
