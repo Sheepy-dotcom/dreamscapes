@@ -48,6 +48,15 @@ function buildPrompt(data) {
   const target = getTarget(data.duration);
   const storyType = data.storyType === "bedtime" ? "bedtime story" : "anytime story";
   const moods = cleanList(data.moods);
+  const retryNote = data.enforceWordCount
+    ? [
+        "",
+        "Length correction:",
+        `- The previous draft was too short for ${cleanText(data.duration, "5")} minutes.`,
+        `- This rewrite must be at least ${target.minWords} words and should aim for ${target.words} words.`,
+        "- Add more warm scene detail, character moments, and gentle story beats while keeping the ending positive.",
+      ]
+    : [];
 
   return [
     `Write a polished, imaginative children's ${storyType}.`,
@@ -73,7 +82,15 @@ function buildPrompt(data) {
     "- Include a positive ending and a gentle lesson without sounding preachy.",
     "- For bedtime, slow the ending down and make the final paragraph peaceful.",
     "- Do not mention AI, prompts, packages, subscriptions, or app settings.",
+    ...retryNote,
   ].join("\n");
+}
+
+function countWords(paragraphs) {
+  return paragraphs
+    .join(" ")
+    .split(/\s+/)
+    .filter(Boolean).length;
 }
 
 const storySchema = {
@@ -99,7 +116,7 @@ const storySchema = {
   },
 };
 
-async function createStory(data) {
+async function requestStory(data) {
   const response = await fetch(OPENAI_RESPONSES_URL, {
     method: "POST",
     headers: {
@@ -144,10 +161,31 @@ async function createStory(data) {
   }
 
   const story = JSON.parse(text);
+  const paragraphs = story.paragraphs.map((paragraph) => cleanText(paragraph)).filter(Boolean);
 
   return {
     title: cleanText(story.title, "A DreamScapes Story"),
-    paragraphs: story.paragraphs.map((paragraph) => cleanText(paragraph)).filter(Boolean),
+    paragraphs,
+    wordCount: countWords(paragraphs),
+  };
+}
+
+async function createStory(data) {
+  const target = getTarget(data.duration);
+  let story = await requestStory(data);
+
+  if (story.wordCount < target.minWords) {
+    story = await requestStory({ ...data, enforceWordCount: true });
+  }
+
+  return {
+    ...story,
+    durationTarget: {
+      minutes: Number(data.duration) || 5,
+      words: target.words,
+      minWords: target.minWords,
+      maxWords: target.maxWords,
+    },
   };
 }
 

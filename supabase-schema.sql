@@ -22,6 +22,7 @@ create table if not exists public.stories (
   moods text[] not null default '{}',
   story_idea text,
   paragraphs jsonb not null,
+  word_count integer,
   plan text not null default 'free' check (plan in ('free', 'premier', 'plus')),
   voice_style text,
   audio_requested boolean not null default false,

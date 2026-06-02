@@ -806,6 +806,8 @@ async function createStory(data) {
       ...data,
       title: aiStory.title,
       text: aiStory.paragraphs,
+      wordCount: aiStory.wordCount || 0,
+      durationTarget: aiStory.durationTarget || null,
       createdAt: new Date().toISOString(),
     };
   } catch (error) {
@@ -1059,6 +1061,7 @@ function storyToCloudRow(story) {
     moods: getSelectedMoods(story.moods),
     story_idea: story.storyIdea || null,
     paragraphs: story.text || [],
+    word_count: story.wordCount || null,
     plan: story.plan || "free",
     voice_style: story.voiceStyle || null,
     audio_requested: Boolean(story.audioNarration),
@@ -1083,6 +1086,7 @@ function cloudRowToStory(row) {
     storyIdea: row.story_idea || "",
     title: row.title,
     text: Array.isArray(row.paragraphs) ? row.paragraphs : [],
+    wordCount: row.word_count || 0,
     voiceStyle: row.voice_style || "female calm",
     audioNarration: Boolean(
       row.audio_requested || row.audio_generated_at || row.audio_duration_seconds || row.audio_paths?.length
@@ -1591,6 +1595,8 @@ form.addEventListener("submit", async (event) => {
         plan: selectedPlanKey,
         duration: storyData.duration,
         audio: storyData.audioNarration,
+        wordCount: currentStory.wordCount || 0,
+        targetWords: currentStory.durationTarget?.words || 0,
       });
       showScreen("result");
     } catch (error) {
