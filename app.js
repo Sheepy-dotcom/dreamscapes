@@ -832,12 +832,17 @@ function renderStory(story) {
     .map((paragraph) => `<p>${formatParagraphForDisplay(paragraph)}</p>`)
     .join("");
   narrationNote.textContent = story.audioNarration
-    ? story.aiAudioTracks?.length
+    ? savedAudioDuration || story.aiAudioTracks?.length || story.aiAudioPaths?.length
       ? savedAudioDuration
-        ? `Saved audio length: ${formatAudioTime(savedAudioDuration)}`
-        : "Premium audio saved with this story"
-      : "First play creates and saves premium audio"
+        ? `Saved audio ready: ${formatAudioTime(savedAudioDuration)}`
+        : "Saved audio ready"
+      : "Audio not created yet. First play creates and saves narration."
     : "Turn on audio before generating a story";
+  audioPlayButton.title =
+    story.audioNarration && !savedAudioDuration && !story.aiAudioTracks?.length && !story.aiAudioPaths?.length
+      ? "Create narration"
+      : "Play narration";
+  audioPlayButton.setAttribute("aria-label", audioPlayButton.title);
   resetAudioProgress();
   setAudioProgressVisible(Boolean(story.audioNarration));
 }
@@ -1699,17 +1704,25 @@ async function renderLibrary() {
 
   libraryList.innerHTML = visibleStories
     .map(
-      (story, index) => `
+      (story, index) => {
+        const savedAudioDuration = getSavedAudioDurationSeconds(story);
+        const audioLabel = story.audioNarration
+          ? savedAudioDuration
+            ? `Audio saved ${formatAudioTime(savedAudioDuration)}`
+            : "Audio will be created on first play"
+          : "Text only";
+        return `
         <article class="library-item">
           <h3>${escapeHtml(story.title)}</h3>
-          <p>${escapeHtml(getPlan(story.plan).label)} · ${escapeHtml(getDuration(story.duration).label)} · ${new Date(story.createdAt).toLocaleDateString()}</p>
+          <p>${escapeHtml(getPlan(story.plan).label)} · ${escapeHtml(getDuration(story.duration).label)} · ${escapeHtml(audioLabel)} · ${new Date(story.createdAt).toLocaleDateString()}</p>
           <p>${escapeHtml(story.text?.[0]?.slice(0, 120) || "Saved story")}...</p>
           <div class="library-actions">
             <button class="button secondary-button" data-library-index="${index}" type="button">Open</button>
             <button class="button secondary-button delete-button" data-delete-index="${index}" type="button">Delete</button>
           </div>
         </article>
-      `
+      `;
+      }
     )
     .join("");
 
@@ -2029,7 +2042,7 @@ async function startAiNarration() {
 
   try {
     statusNote.textContent = "Creating audio. This can take a moment...";
-    narrationNote.textContent = "Creating audio";
+    narrationNote.textContent = "Creating and saving audio";
     const response = await fetch(NARRATION_ENDPOINT, {
       method: "POST",
       headers: await getApiHeaders(),
