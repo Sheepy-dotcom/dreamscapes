@@ -2,11 +2,11 @@ const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
 const { enforceStoryAccess, incrementUsage, sendApiError, supabaseRequest } = require("./auth");
 
 const durationTargets = {
-  5: { words: 620, minWords: 560, maxWords: 700, paragraphs: 8 },
-  10: { words: 1250, minWords: 1150, maxWords: 1380, paragraphs: 14 },
-  15: { words: 1880, minWords: 1725, maxWords: 2070, paragraphs: 20 },
-  20: { words: 2500, minWords: 2300, maxWords: 2760, paragraphs: 26 },
-  30: { words: 3700, minWords: 3400, maxWords: 4050, paragraphs: 36 },
+  5: { words: 850, minWords: 760, maxWords: 980, paragraphs: 10 },
+  10: { words: 1700, minWords: 1520, maxWords: 1950, paragraphs: 18 },
+  15: { words: 2600, minWords: 2350, maxWords: 2950, paragraphs: 28 },
+  20: { words: 3600, minWords: 3250, maxWords: 4100, paragraphs: 38 },
+  30: { words: 5400, minWords: 4900, maxWords: 6100, paragraphs: 56 },
 };
 
 function cleanText(value, fallback = "") {
@@ -24,7 +24,7 @@ function getTarget(duration) {
 }
 
 function getMaxOutputTokens(duration) {
-  return Math.min(Math.ceil(getTarget(duration).maxWords * 2.2), 18000);
+  return Math.min(Math.ceil(getTarget(duration).maxWords * 2.6), 24000);
 }
 
 function extractResponseText(data) {
@@ -54,7 +54,8 @@ function buildPrompt(data) {
         "Length correction:",
         `- The previous draft was too short for ${cleanText(data.duration, "5")} minutes.`,
         `- This rewrite must be at least ${target.minWords} words and should aim for ${target.words} words.`,
-        "- Add more warm scene detail, character moments, and gentle story beats while keeping the ending positive.",
+        "- Add more warm scene detail, character moments, dialogue, gentle discoveries, and cosy transitions while keeping the ending positive.",
+        "- Do not summarise scenes. Let each scene play out with enough detail for calm audio narration.",
       ]
     : [];
 
@@ -65,6 +66,7 @@ function buildPrompt(data) {
     `Target duration: ${cleanText(data.duration, "5")} minutes of calm narrated audio.`,
     `Word count target: ${target.words} words. Acceptable range: ${target.minWords}-${target.maxWords} words.`,
     `Paragraph target: about ${target.paragraphs} short, readable paragraphs.`,
+    "Timing rule: the selected duration is for narrated audio, so the story must be long enough when read aloud slowly.",
     `Mood blend: ${moods.length ? moods.join(", ") : "relaxing"}.`,
     `Story idea from parent: ${cleanText(data.storyIdea, "a gentle adventure with a kind positive ending")}.`,
     `Child interests: ${cleanText(data.interests, "not specified")}.`,
@@ -79,6 +81,7 @@ function buildPrompt(data) {
     "- Give the child small choices, feelings, and discoveries.",
     "- Use short, gentle sentences with frequent natural pauses between phrases for bedtime narration.",
     "- Do not finish early. The story should feel complete and should land inside the requested word range.",
+    "- Longer durations must include more complete scenes, not just longer sentences.",
     "- Include a positive ending and a gentle lesson without sounding preachy.",
     "- For bedtime, slow the ending down and make the final paragraph peaceful.",
     "- Do not mention AI, prompts, packages, subscriptions, or app settings.",
@@ -229,8 +232,9 @@ async function createStory(data) {
   const target = getTarget(data.duration);
   let story = await requestStory(data);
 
-  if (story.wordCount < target.minWords) {
-    story = await requestStory({ ...data, enforceWordCount: true });
+  for (let attempt = 0; attempt < 2 && story.wordCount < target.minWords; attempt += 1) {
+    const retry = await requestStory({ ...data, enforceWordCount: true });
+    story = retry.wordCount > story.wordCount ? retry : story;
   }
 
   return {
