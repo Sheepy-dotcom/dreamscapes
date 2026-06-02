@@ -838,6 +838,19 @@ textarea:focus-visible {
   text-align: right;
 }
 
+.status-note:empty {
+  display: none;
+}
+
+.result-screen > .status-note {
+  margin: 0 0 12px;
+  border: 1px solid rgba(123, 78, 216, 0.16);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: rgba(255, 241, 184, 0.72);
+  text-align: left;
+}
+
 .library-list,
 .upgrade-grid,
 .auth-grid,
