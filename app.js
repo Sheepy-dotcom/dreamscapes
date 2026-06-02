@@ -68,6 +68,11 @@ const NARRATION_ENDPOINT = window.DREAMSCAPES_NARRATION_ENDPOINT || "/api/narrat
 const SUPABASE_URL = "https://khgzzrixhetaontmdhez.supabase.co";
 const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtoZ3p6cml4aGV0YW9udG1kaGV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5OTkwMjMsImV4cCI6MjA5NTU3NTAyM30.Zij8eBhzxNecuPRsMliWChxYmogLBFbd1GScpKPM_5g";
+const SUPABASE_SCRIPT_URLS = [
+  "./assets/supabase.js",
+  "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2",
+  "https://unpkg.com/@supabase/supabase-js@2",
+];
 const AUDIO_BUCKET = "story-audio";
 const VOICE_PREVIEW_TEXT = "Hello from DreamScapes. Settle in, take a gentle breath, and let the story begin.";
 const VOICE_PREVIEW_FILES = {
@@ -381,14 +386,56 @@ async function getApiHeaders() {
   return headers;
 }
 
-function initSupabase() {
-  if (!window.supabase?.createClient) {
-    setAuthStatus("Account login could not load. Check the Supabase script connection.", true);
-    updateAccountUI();
-    return;
+function loadExternalScript(src) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = src;
+    script.async = true;
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+}
+
+let supabaseInitPromise = null;
+
+async function ensureSupabaseScript() {
+  if (globalThis.supabase?.createClient) return true;
+
+  for (const src of SUPABASE_SCRIPT_URLS) {
+    try {
+      await loadExternalScript(src);
+      if (globalThis.supabase?.createClient) return true;
+    } catch {
+      // Try the next script source.
+    }
   }
 
-  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  return false;
+}
+
+async function ensureSupabaseClient() {
+  if (supabaseClient) return supabaseClient;
+  if (supabaseInitPromise) return supabaseInitPromise;
+
+  supabaseInitPromise = initSupabase().finally(() => {
+    supabaseInitPromise = null;
+  });
+
+  return supabaseInitPromise;
+}
+
+async function initSupabase() {
+  const scriptReady = await ensureSupabaseScript();
+  const supabaseBrowser = globalThis.supabase;
+
+  if (!scriptReady || !supabaseBrowser?.createClient) {
+    setAuthStatus("Account login could not load. Check your connection and refresh DreamScapes.", true);
+    updateAccountUI();
+    return null;
+  }
+
+  supabaseClient = supabaseBrowser.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
@@ -417,6 +464,8 @@ function initSupabase() {
     if (session?.user) refreshAccountSummary();
     if (screens.library.classList.contains("active")) renderLibrary();
   });
+
+  return supabaseClient;
 }
 
 function trackEvent(name, details = {}) {
@@ -1325,8 +1374,8 @@ authForm?.addEventListener("submit", (event) => {
 });
 
 document.querySelector("#sign-in-button")?.addEventListener("click", async () => {
-  if (!supabaseClient) {
-    setAuthStatus("Account login is not ready yet. Try refreshing the page.", true);
+  if (!(await ensureSupabaseClient())) {
+    setAuthStatus("Account login could not load. Check your connection and refresh DreamScapes.", true);
     return;
   }
 
@@ -1351,8 +1400,8 @@ document.querySelector("#sign-in-button")?.addEventListener("click", async () =>
 });
 
 document.querySelector("#sign-up-button")?.addEventListener("click", async () => {
-  if (!supabaseClient) {
-    setAuthStatus("Account signup is not ready yet. Try refreshing the page.", true);
+  if (!(await ensureSupabaseClient())) {
+    setAuthStatus("Account signup could not load. Check your connection and refresh DreamScapes.", true);
     return;
   }
 
@@ -1377,8 +1426,8 @@ document.querySelector("#sign-up-button")?.addEventListener("click", async () =>
 });
 
 document.querySelector("#forgot-password-button")?.addEventListener("click", async () => {
-  if (!supabaseClient) {
-    setAuthStatus("Password reset is not ready yet. Try refreshing the page.", true);
+  if (!(await ensureSupabaseClient())) {
+    setAuthStatus("Password reset could not load. Check your connection and refresh DreamScapes.", true);
     return;
   }
 
@@ -1404,8 +1453,8 @@ document.querySelector("#forgot-password-button")?.addEventListener("click", asy
 });
 
 document.querySelector("#update-password-button")?.addEventListener("click", async () => {
-  if (!supabaseClient) {
-    setAuthStatus("Password reset is not ready yet. Try refreshing the page.", true);
+  if (!(await ensureSupabaseClient())) {
+    setAuthStatus("Password reset could not load. Check your connection and refresh DreamScapes.", true);
     return;
   }
 
@@ -1434,7 +1483,7 @@ document.querySelector("#update-password-button")?.addEventListener("click", asy
 });
 
 document.querySelector("#sign-out-button")?.addEventListener("click", async () => {
-  if (!supabaseClient) return;
+  if (!(await ensureSupabaseClient())) return;
 
   setAuthStatus("Signing out...");
   const { error } = await supabaseClient.auth.signOut();
@@ -2243,4 +2292,4 @@ audioProgress.addEventListener("change", () => {
 
 updatePlanFeatures();
 updateAccountUI();
-initSupabase();
+ensureSupabaseClient();
