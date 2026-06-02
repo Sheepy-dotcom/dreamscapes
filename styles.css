@@ -984,6 +984,16 @@ textarea:focus-visible {
   padding-left: 20px;
 }
 
+.info-card h3 {
+  margin: 18px 0 8px;
+  color: #34245f;
+  font-size: 1.05rem;
+}
+
+.info-card p + h3 {
+  margin-top: 20px;
+}
+
 @keyframes floatMoon {
   from {
     transform: translateY(0);
