@@ -1103,10 +1103,19 @@ async function saveStoryToCloud(story) {
   if (!canUseCloudLibrary()) return false;
 
   const row = storyToCloudRow(story);
-  const query = story.cloudId
+  let query = story.cloudId
     ? supabaseClient.from("stories").update(row).eq("id", story.cloudId || story.id).select().single()
     : supabaseClient.from("stories").insert(row).select().single();
-  const { data, error } = await query;
+  let { data, error } = await query;
+
+  if (error && String(error.message || "").includes("word_count")) {
+    const fallbackRow = { ...row };
+    delete fallbackRow.word_count;
+    query = story.cloudId
+      ? supabaseClient.from("stories").update(fallbackRow).eq("id", story.cloudId || story.id).select().single()
+      : supabaseClient.from("stories").insert(fallbackRow).select().single();
+    ({ data, error } = await query);
+  }
 
   if (error) throw error;
 
@@ -1122,6 +1131,37 @@ async function saveStoryToCloud(story) {
   cloudStories = [currentStory, ...cloudStories.filter((savedStory) => savedStory.id !== currentStory.id)];
   cloudStoriesLoaded = true;
   return currentStory;
+}
+
+async function saveGeneratedStoryToLibrary(story) {
+  const plan = getPlan(story.plan);
+
+  if (!plan.canSave) {
+    statusNote.textContent = "Free stories are not saved. Saved libraries are included with Premier and DreamScapes Plus.";
+    return false;
+  }
+
+  if (!canUseCloudLibrary()) {
+    const saved = saveStoryToLibrary(story, { silent: true });
+    statusNote.textContent = saved
+      ? "Story saved automatically to your library."
+      : "This story could not be saved.";
+    return saved;
+  }
+
+  try {
+    currentStory = await saveStoryToCloud({
+      ...story,
+      id: story.id || createStoryId(),
+      savedAt: new Date().toISOString(),
+    });
+    updateAccountUI();
+    statusNote.textContent = "Story saved automatically to your cloud library.";
+    return true;
+  } catch (error) {
+    statusNote.textContent = `Cloud save failed: ${error.message || "try again from the Save Story button."}`;
+    return false;
+  }
 }
 
 async function loadCloudStories() {
@@ -1583,12 +1623,7 @@ form.addEventListener("submit", async (event) => {
       };
       if (!canUseCloudLibrary()) incrementStoriesUsed(selectedPlanKey);
       renderStory(currentStory);
-      if (selectedPlan.canSave) {
-        saveStoryToLibrary(currentStory, { silent: true });
-        statusNote.textContent = "Story saved automatically to your library.";
-      } else {
-        statusNote.textContent = "";
-      }
+      await saveGeneratedStoryToLibrary(currentStory);
       trackEvent("story_generated", {
         plan: selectedPlanKey,
         duration: storyData.duration,
