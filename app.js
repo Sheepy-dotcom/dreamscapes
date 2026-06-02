@@ -1142,14 +1142,14 @@ async function saveGeneratedStoryToLibrary(story) {
   const plan = getPlan(story.plan);
 
   if (!plan.canSave) {
-    statusNote.textContent = "Free stories are not saved. Saved libraries are included with Premier and DreamScapes Plus.";
+    statusNote.textContent = "Story ready. Saved libraries are included with Premier and DreamScapes Plus.";
     return false;
   }
 
   if (!canUseCloudLibrary()) {
     const saved = saveStoryToLibrary(story, { silent: true });
     statusNote.textContent = saved
-      ? "Story saved automatically to your library."
+      ? "Saved to your library."
       : "This story could not be saved.";
     return saved;
   }
@@ -1161,10 +1161,10 @@ async function saveGeneratedStoryToLibrary(story) {
       savedAt: new Date().toISOString(),
     });
     updateAccountUI();
-    statusNote.textContent = "Story saved automatically to your cloud library.";
+    statusNote.textContent = "Saved to your library.";
     return true;
   } catch (error) {
-    statusNote.textContent = `Cloud save failed: ${error.message || "try again from the Save Story button."}`;
+    statusNote.textContent = `Cloud save failed: ${error.message || "try again from your library."}`;
     return false;
   }
 }
@@ -1539,6 +1539,11 @@ document.querySelector("#create-another-button").addEventListener("click", () =>
   stopNarration();
   updatePlanFeatures();
   showScreen("builder");
+});
+
+document.querySelector("#view-library-button").addEventListener("click", () => {
+  stopNarration();
+  showScreen("library");
 });
 
 document.querySelectorAll("[data-plan-preview]").forEach((button) => {
