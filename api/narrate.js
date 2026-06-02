@@ -48,7 +48,19 @@ function splitText(text) {
   return chunks.slice(0, MAX_CHUNKS);
 }
 
-async function createSpeech({ input, voice, instructions }) {
+function getChunkInstructions(instructions, index, total) {
+  if (total <= 1) return instructions;
+
+  return [
+    instructions,
+    `This is narration part ${index + 1} of ${total}.`,
+    "Keep exactly the same narrator identity, accent, age, pitch, pace, warmth, and microphone feel across every part.",
+    "Continue as one continuous reading. Do not restart with a different character voice or change delivery between parts.",
+  ].join(" ");
+}
+
+async function createSpeech({ input, voice, instructions, index = 0, total = 1 }) {
+  const chunkInstructions = getChunkInstructions(instructions, index, total);
   const response = await fetch(OPENAI_SPEECH_URL, {
     method: "POST",
     headers: {
@@ -59,7 +71,7 @@ async function createSpeech({ input, voice, instructions }) {
       model: "gpt-4o-mini-tts",
       voice,
       input,
-      instructions,
+      instructions: chunkInstructions,
       response_format: "mp3",
     }),
   });
@@ -94,8 +106,8 @@ module.exports = async function handler(request, response) {
     const chunks = splitText(text);
     const audio = [];
 
-    for (const chunk of chunks) {
-      audio.push(await createSpeech({ input: chunk, voice, instructions }));
+    for (let index = 0; index < chunks.length; index += 1) {
+      audio.push(await createSpeech({ input: chunks[index], voice, instructions, index, total: chunks.length }));
     }
 
     const usage = await incrementUsage(account, { audioSeconds: account.requestedAudioSeconds });
