@@ -75,7 +75,7 @@ const SUPABASE_SCRIPT_URLS = [
   "https://unpkg.com/@supabase/supabase-js@2",
 ];
 const AUDIO_BUCKET = "story-audio";
-const AI_NARRATION_REQUEST_MAX_LENGTH = 2800;
+const AI_NARRATION_REQUEST_MAX_LENGTH = 3400;
 const VOICE_PREVIEW_TEXT = "Hello from DreamScapes. Settle in, take a gentle breath, and let the story begin.";
 const VOICE_PREVIEW_FILES = {
   "female calm": "./assets/voice-preview-female-british-calm.mp3",
