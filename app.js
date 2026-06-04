@@ -1967,11 +1967,6 @@ async function renderLibrary() {
           <p>${escapeHtml(story.text?.[0]?.slice(0, 120) || "Saved story")}...</p>
           <div class="library-actions">
             <button class="button secondary-button" data-library-index="${index}" type="button">Open</button>
-            ${
-              story.audioNarration
-                ? `<button class="button secondary-button" data-report-index="${index}" type="button">Report Audio</button>`
-                : ""
-            }
             <button class="button secondary-button delete-button" data-delete-index="${index}" type="button">Delete</button>
           </div>
         </article>
@@ -2013,14 +2008,6 @@ async function renderLibrary() {
 
       trackEvent("story_deleted", { index, source: usingCloudLibrary ? "cloud" : "local" });
       renderLibrary();
-    });
-  });
-
-  libraryList.querySelectorAll("[data-report-index]").forEach((button) => {
-    button.addEventListener("click", async () => {
-      const story = savedStories[Number(button.dataset.reportIndex)];
-      currentStory = story;
-      await reportAudioIssue(story, "library");
     });
   });
 }
