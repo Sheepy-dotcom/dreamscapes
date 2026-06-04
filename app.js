@@ -75,6 +75,7 @@ const SUPABASE_SCRIPT_URLS = [
   "https://unpkg.com/@supabase/supabase-js@2",
 ];
 const AUDIO_BUCKET = "story-audio";
+const AI_NARRATION_REQUEST_MAX_LENGTH = 2800;
 const VOICE_PREVIEW_TEXT = "Hello from DreamScapes. Settle in, take a gentle breath, and let the story begin.";
 const VOICE_PREVIEW_FILES = {
   "female calm": "./assets/voice-preview-female-british-calm.mp3",
@@ -906,6 +907,54 @@ function renderStory(story) {
 
 function storyAsText(story) {
   return `${story.title}\n\n\n${story.text.map(addNarrationSentenceBreaks).join("\n\n\n\n")}`;
+}
+
+function splitAiNarrationRequestText(text) {
+  const cleanText = cleanNarrationText(text);
+  if (cleanText.length <= AI_NARRATION_REQUEST_MAX_LENGTH) return [cleanText];
+
+  const sentences = cleanText.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [cleanText];
+  const chunks = [];
+  let chunk = "";
+
+  sentences.forEach((sentence) => {
+    const nextChunk = `${chunk} ${sentence}`.trim();
+    if (nextChunk.length > AI_NARRATION_REQUEST_MAX_LENGTH && chunk) {
+      chunks.push(chunk);
+      chunk = sentence.trim();
+      return;
+    }
+
+    chunk = nextChunk;
+  });
+
+  if (chunk) chunks.push(chunk);
+  return chunks;
+}
+
+async function requestAiNarrationPart({ text, duration, voice, instructions }) {
+  const response = await fetch(NARRATION_ENDPOINT, {
+    method: "POST",
+    headers: await getApiHeaders(),
+    body: JSON.stringify({
+      text,
+      duration,
+      voice,
+      instructions,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail || error.error || "Audio could not be created.");
+  }
+
+  const data = await response.json();
+  if (!Array.isArray(data.audio) || data.audio.length === 0) {
+    throw new Error("Audio could not be created. No narration was returned.");
+  }
+
+  return data;
 }
 
 function cleanNarrationText(text) {
@@ -2198,44 +2247,36 @@ async function startAiNarration() {
   try {
     statusNote.textContent = "Creating audio. This can take a moment...";
     narrationNote.textContent = "Creating and saving audio";
-    const response = await fetch(NARRATION_ENDPOINT, {
-      method: "POST",
-      headers: await getApiHeaders(),
-      body: JSON.stringify({
-        title: currentStory.title,
-        text: storyAsText(currentStory),
-        duration: currentStory.duration,
+    const narrationParts = splitAiNarrationRequestText(storyAsText(currentStory));
+    const partDuration = Math.max(0.1, (Number(currentStory.duration) || 5) / narrationParts.length);
+    const audioTracks = [];
+
+    for (let index = 0; index < narrationParts.length; index += 1) {
+      const totalParts = narrationParts.length;
+      statusNote.textContent = `Creating audio part ${index + 1} of ${totalParts}. This can take a moment...`;
+      narrationNote.textContent = `Creating audio ${index + 1}/${totalParts}`;
+      const data = await requestAiNarrationPart({
+        text: narrationParts[index],
+        duration: partDuration,
         voice: getAiNarrationVoice(currentStory.voiceStyle),
         instructions: getAiNarrationInstructions(currentStory),
-      }),
-    });
+      });
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      statusNote.textContent = error.detail || error.error || "Audio could not be created.";
-      narrationNote.textContent = "Audio not created";
-      return "blocked";
+      audioTracks.push(...data.audio);
+      if (data.usage) {
+        currentUsage = data.usage;
+        updateAccountUI();
+        updatePlanFeatures();
+      }
     }
 
-    const data = await response.json();
-    if (!Array.isArray(data.audio) || data.audio.length === 0) {
-      statusNote.textContent = "Audio could not be created. No narration was returned.";
-      narrationNote.textContent = "Audio not created";
-      return "blocked";
-    }
-    if (data.usage) {
-      currentUsage = data.usage;
-      updateAccountUI();
-      updatePlanFeatures();
-    }
-
-    currentAudioTracks = data.audio;
-    currentAudioTrackDurations = await measureAudioTrackDurations(data.audio);
+    currentAudioTracks = audioTracks;
+    currentAudioTrackDurations = await measureAudioTrackDurations(audioTracks);
     const aiAudioDurationSeconds = getPlaybackDurationSeconds(currentAudioTrackDurations, currentStory);
     let aiAudioPaths = currentStory.aiAudioPaths || [];
     if (canUseCloudLibrary()) {
       try {
-        aiAudioPaths = await uploadAudioTracksToCloud(currentStory, data.audio);
+        aiAudioPaths = await uploadAudioTracksToCloud(currentStory, audioTracks);
       } catch {
         aiAudioPaths = [];
       }
@@ -2243,7 +2284,7 @@ async function startAiNarration() {
     currentAudioIndex = 0;
     currentStory = {
       ...currentStory,
-      aiAudioTracks: aiAudioPaths.length ? [] : data.audio,
+      aiAudioTracks: aiAudioPaths.length ? [] : audioTracks,
       aiAudioPaths,
       aiAudioTrackDurations: currentAudioTrackDurations,
       aiAudioDurationSeconds,
@@ -2257,11 +2298,14 @@ async function startAiNarration() {
       : "Audio complete and saved";
     trackEvent("ai_audio_played", {
       voiceStyle: currentStory.voiceStyle,
-      chunks: data.audio.length,
+      chunks: audioTracks.length,
     });
     return true;
   } catch (error) {
-    statusNote.textContent = error.message || "Audio could not be created. Try again in a moment.";
+    const message = /failed to fetch/i.test(error.message || "")
+      ? "Audio could not be reached. Please try again, and contact support if audio minutes were used."
+      : error.message || "Audio could not be created. Try again in a moment.";
+    statusNote.textContent = message;
     narrationNote.textContent = "Audio not created";
     return "blocked";
   }
