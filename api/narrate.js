@@ -110,13 +110,17 @@ module.exports = async function handler(request, response) {
       audio.push(await createSpeech({ input: chunks[index], voice, instructions, index, total: chunks.length }));
     }
 
-    const usage = await incrementUsage(account, { audioSeconds: account.requestedAudioSeconds });
+    const shouldChargeAudio = body.chargeAudio !== false;
+    const usage = shouldChargeAudio
+      ? await incrementUsage(account, { audioSeconds: account.requestedAudioSeconds })
+      : account.usage;
 
     return response.status(200).json({
       audio,
       chunks: audio.length,
       voice,
       usage,
+      charged: shouldChargeAudio,
       disclosure: "AI-generated narration",
     });
   } catch (error) {

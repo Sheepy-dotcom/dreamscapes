@@ -22,6 +22,7 @@ const narrationNote = document.querySelector("#narration-note");
 const audioProgressWrap = document.querySelector("#audio-progress-wrap");
 const audioProgress = document.querySelector("#audio-progress");
 const audioProgressLabel = document.querySelector("#audio-progress-label");
+const reportAudioButton = document.querySelector("#report-audio-button");
 const sleepTimerNote = document.querySelector("#sleep-timer-note");
 const voiceStyle = document.querySelector("#voice-style");
 const voicePreviewButton = document.querySelector("#voice-preview-button");
@@ -66,6 +67,7 @@ let sleepTimerCountdownId = null;
 let sleepTimerEndsAt = null;
 const AI_ENDPOINT = window.DREAMSCAPES_AI_ENDPOINT || "/api/story";
 const NARRATION_ENDPOINT = window.DREAMSCAPES_NARRATION_ENDPOINT || "/api/narrate";
+const AUDIO_USAGE_ENDPOINT = window.DREAMSCAPES_AUDIO_USAGE_ENDPOINT || "/api/audio-usage";
 const SUPABASE_URL = "https://khgzzrixhetaontmdhez.supabase.co";
 const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtoZ3p6cml4aGV0YW9udG1kaGV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5OTkwMjMsImV4cCI6MjA5NTU3NTAyM30.Zij8eBhzxNecuPRsMliWChxYmogLBFbd1GScpKPM_5g";
@@ -901,6 +903,7 @@ function renderStory(story) {
       ? "Create narration"
       : "Play narration";
   audioPlayButton.setAttribute("aria-label", audioPlayButton.title);
+  if (reportAudioButton) reportAudioButton.hidden = !story.audioNarration;
   resetAudioProgress();
   setAudioProgressVisible(Boolean(story.audioNarration));
 }
@@ -941,6 +944,7 @@ async function requestAiNarrationPart({ text, duration, voice, instructions }) {
       duration,
       voice,
       instructions,
+      chargeAudio: false,
     }),
   });
 
@@ -952,6 +956,31 @@ async function requestAiNarrationPart({ text, duration, voice, instructions }) {
   const data = await response.json();
   if (!Array.isArray(data.audio) || data.audio.length === 0) {
     throw new Error("Audio could not be created. No narration was returned.");
+  }
+
+  return data;
+}
+
+async function updateAudioUsage(action, audioSeconds) {
+  const response = await fetch(AUDIO_USAGE_ENDPOINT, {
+    method: "POST",
+    headers: await getApiHeaders(),
+    body: JSON.stringify({
+      action,
+      audioSeconds,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail || error.error || "Audio usage could not be updated.");
+  }
+
+  const data = await response.json();
+  if (data.usage) {
+    currentUsage = data.usage;
+    updateAccountUI();
+    updatePlanFeatures();
   }
 
   return data;
@@ -1354,6 +1383,69 @@ async function deleteCloudStory(story) {
   return true;
 }
 
+function getAudioIssueReports() {
+  try {
+    const reports = JSON.parse(localStorage.getItem("dreamscapesAudioIssueReports") || "[]");
+    return Array.isArray(reports) ? reports : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveAudioIssueReportLocally(report) {
+  const reports = getAudioIssueReports();
+  reports.unshift({ ...report, localId: createStoryId(), createdAt: new Date().toISOString() });
+  localStorage.setItem("dreamscapesAudioIssueReports", JSON.stringify(reports.slice(0, 20)));
+}
+
+async function reportAudioIssue(story, source = "result") {
+  if (!story?.audioNarration) {
+    statusNote.textContent = "This story does not have audio to report.";
+    return false;
+  }
+
+  const message =
+    window.prompt(
+      "Tell us what happened with the audio. For example: failed to generate, wrong voice, too short, or sounded uneven."
+    ) || "";
+  const cleanMessage = message.trim();
+
+  if (!cleanMessage) {
+    statusNote.textContent = "Audio report cancelled.";
+    return false;
+  }
+
+  const report = {
+    user_id: currentUser?.id || null,
+    story_id: story.cloudId || null,
+    story_title: story.title || "Untitled story",
+    voice_style: story.voiceStyle || null,
+    duration_minutes: Number(story.duration) || null,
+    audio_duration_seconds: getSavedAudioDurationSeconds(story) || null,
+    source,
+    message: cleanMessage,
+    status: "open",
+  };
+
+  if (!canUseCloudLibrary()) {
+    saveAudioIssueReportLocally(report);
+    statusNote.textContent = "Audio issue noted. Please contact support@dreamscapes.cloud so we can help with credits.";
+    return true;
+  }
+
+  try {
+    const { error } = await supabaseClient.from("audio_issue_reports").insert(report);
+    if (error) throw error;
+    statusNote.textContent = "Audio issue sent. Support can review this and help with credits where appropriate.";
+    return true;
+  } catch {
+    saveAudioIssueReportLocally(report);
+    statusNote.textContent =
+      "Audio issue saved on this device. Please contact support@dreamscapes.cloud so we can help with credits.";
+    return false;
+  }
+}
+
 function saveStoryToLibrary(story, { silent = false } = {}) {
   const plan = getPlan(story.plan);
 
@@ -1683,6 +1775,11 @@ document.querySelector("#view-library-button").addEventListener("click", () => {
   showScreen("library");
 });
 
+reportAudioButton?.addEventListener("click", async () => {
+  if (!currentStory) return;
+  await reportAudioIssue(currentStory, "result");
+});
+
 document.querySelectorAll("[data-sleep-minutes]").forEach((button) => {
   button.addEventListener("click", () => {
     setSleepTimer(button.dataset.sleepMinutes);
@@ -1870,6 +1967,11 @@ async function renderLibrary() {
           <p>${escapeHtml(story.text?.[0]?.slice(0, 120) || "Saved story")}...</p>
           <div class="library-actions">
             <button class="button secondary-button" data-library-index="${index}" type="button">Open</button>
+            ${
+              story.audioNarration
+                ? `<button class="button secondary-button" data-report-index="${index}" type="button">Report Audio</button>`
+                : ""
+            }
             <button class="button secondary-button delete-button" data-delete-index="${index}" type="button">Delete</button>
           </div>
         </article>
@@ -1911,6 +2013,14 @@ async function renderLibrary() {
 
       trackEvent("story_deleted", { index, source: usingCloudLibrary ? "cloud" : "local" });
       renderLibrary();
+    });
+  });
+
+  libraryList.querySelectorAll("[data-report-index]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const story = savedStories[Number(button.dataset.reportIndex)];
+      currentStory = story;
+      await reportAudioIssue(story, "library");
     });
   });
 }
@@ -2249,6 +2359,8 @@ async function startAiNarration() {
     narrationNote.textContent = "Creating and saving audio";
     const narrationParts = splitAiNarrationRequestText(storyAsText(currentStory));
     const partDuration = Math.max(0.1, (Number(currentStory.duration) || 5) / narrationParts.length);
+    const chargeAudioSeconds = (Number(currentStory.duration) || 5) * 60;
+    await updateAudioUsage("check", chargeAudioSeconds);
     const audioTracks = [];
 
     for (let index = 0; index < narrationParts.length; index += 1) {
@@ -2263,16 +2375,12 @@ async function startAiNarration() {
       });
 
       audioTracks.push(...data.audio);
-      if (data.usage) {
-        currentUsage = data.usage;
-        updateAccountUI();
-        updatePlanFeatures();
-      }
     }
 
     currentAudioTracks = audioTracks;
     currentAudioTrackDurations = await measureAudioTrackDurations(audioTracks);
     const aiAudioDurationSeconds = getPlaybackDurationSeconds(currentAudioTrackDurations, currentStory);
+    await updateAudioUsage("complete", chargeAudioSeconds);
     let aiAudioPaths = currentStory.aiAudioPaths || [];
     if (canUseCloudLibrary()) {
       try {
