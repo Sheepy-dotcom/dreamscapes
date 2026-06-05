@@ -274,6 +274,27 @@ textarea:focus-visible {
   margin-bottom: 28px;
 }
 
+.account-screen.active {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  align-content: stretch;
+  min-height: calc(100vh - 150px);
+}
+
+.account-screen .top-bar {
+  margin-bottom: 14px;
+}
+
+.account-screen .auth-grid {
+  align-self: center;
+  width: min(680px, 100%);
+  margin: 0 auto;
+}
+
+.account-screen .account-status {
+  margin-top: 14px;
+}
+
 .mini-logo {
   width: 88px;
   height: 88px;
@@ -1056,6 +1077,15 @@ textarea:focus-visible {
   .top-bar,
   .result-header {
     align-items: center;
+  }
+
+  .account-screen.active {
+    min-height: calc(100vh - 132px);
+  }
+
+  .account-screen .auth-grid {
+    align-self: start;
+    padding-top: 8px;
   }
 
   .narration-panel {
