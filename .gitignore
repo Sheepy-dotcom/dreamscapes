@@ -1,5 +1,6 @@
 .DS_Store
 .vercel/
+android/.idea/
 node_modules/
 dist/
 www/

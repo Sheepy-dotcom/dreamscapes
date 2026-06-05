@@ -912,27 +912,39 @@ textarea:focus-visible {
 
 .account-summary {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 10px;
   margin: 14px 0;
 }
 
 .account-summary span {
   display: grid;
-  gap: 2px;
+  align-content: start;
+  gap: 5px;
+  min-height: 86px;
+  min-width: 0;
   border: 1px solid rgba(123, 78, 216, 0.16);
   border-radius: 8px;
-  padding: 12px;
+  padding: 12px 14px;
   color: #5e5f80;
   background: rgba(255, 248, 220, 0.58);
-  font-size: 0.8rem;
   font-weight: 900;
 }
 
+.account-summary small {
+  color: #715c9b;
+  font-size: 0.72rem;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
 .account-summary strong {
+  display: block;
+  max-width: 100%;
   color: var(--ink);
-  font-size: 1.18rem;
-  line-height: 1.1;
+  font-size: clamp(1rem, 2.5vw, 1.18rem);
+  line-height: 1.16;
+  overflow-wrap: anywhere;
 }
 
 .account-status.error {
