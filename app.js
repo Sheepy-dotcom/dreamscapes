@@ -309,7 +309,16 @@ function showScreen(name) {
   document.querySelectorAll("[data-screen-target]").forEach((button) => {
     button.classList.toggle("active", button.dataset.screenTarget === name);
   });
-  if (name === "library") renderLibrary();
+  if (name === "library") {
+    renderLibrary().catch(() => {
+      libraryList.innerHTML = `
+        <article class="library-item">
+          <h3>Library needs a refresh</h3>
+          <p>DreamScapes could not load your saved stories just now. Try opening the library again.</p>
+        </article>
+      `;
+    });
+  }
   if (name === "account") refreshAccountSummary();
   if (name === "loading") startLoadingMessages();
   else stopLoadingMessages();
@@ -1334,6 +1343,36 @@ function createStoryId() {
   return `story-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
+function getStoryIdentity(story) {
+  return story?.cloudId || story?.id || "";
+}
+
+function storiesMatch(left, right) {
+  const leftId = getStoryIdentity(left);
+  const rightId = getStoryIdentity(right);
+  return Boolean(leftId && rightId && leftId === rightId);
+}
+
+function isHighlightedStory(story) {
+  return Boolean(
+    highlightedStoryId && (story?.cloudId === highlightedStoryId || story?.id === highlightedStoryId)
+  );
+}
+
+function upsertCloudStory(story) {
+  const storyId = getStoryIdentity(story);
+  if (!storyId) return;
+
+  cloudStories = [story, ...cloudStories.filter((savedStory) => !storiesMatch(savedStory, story))];
+  cloudStoriesLoaded = true;
+}
+
+function prepareLibraryHandoff(story, message) {
+  highlightedStoryId = getStoryIdentity(story);
+  libraryNotice = message;
+  if (canUseCloudLibrary() && story) upsertCloudStory(story);
+}
+
 function getStoryStorageSize(story) {
   return JSON.stringify(story).length;
 }
@@ -1455,8 +1494,7 @@ async function saveStoryToCloud(story) {
     aiAudioPaths: story.aiAudioPaths || savedStory.aiAudioPaths || [],
     aiAudioTrackDurations: story.aiAudioTrackDurations || [],
   };
-  cloudStories = [currentStory, ...cloudStories.filter((savedStory) => savedStory.id !== currentStory.id)];
-  cloudStoriesLoaded = true;
+  upsertCloudStory(currentStory);
   return currentStory;
 }
 
@@ -1482,8 +1520,7 @@ async function saveGeneratedStoryToLibrary(story) {
       id: story.cloudId,
       savedAt: story.savedAt || story.createdAt || new Date().toISOString(),
     };
-    cloudStories = [currentStory, ...cloudStories.filter((savedStory) => savedStory.cloudId !== story.cloudId)];
-    cloudStoriesLoaded = true;
+    upsertCloudStory(currentStory);
     statusNote.textContent = "Saved to your library.";
     return true;
   }
@@ -2078,10 +2115,12 @@ form.addEventListener("submit", async (event) => {
         targetWords: currentStory.durationTarget?.words || 0,
       });
       if (savedToLibrary) {
-        highlightedStoryId = currentStory.cloudId || currentStory.id;
-        libraryNotice = currentStory.aiAudioPaths?.length || currentStory.aiAudioTracks?.length
-          ? "Story and audio saved to your library."
-          : "Story saved to your library. Open it when you are ready to read or create audio.";
+        prepareLibraryHandoff(
+          currentStory,
+          currentStory.aiAudioPaths?.length || currentStory.aiAudioTracks?.length
+            ? "Story and audio saved to your library."
+            : "Story saved to your library. Open it when you are ready to read or create audio."
+        );
         showScreen("library");
       } else {
         libraryNotice = "";
@@ -2144,7 +2183,13 @@ async function renderLibrary() {
         ),
       ]
     : localStories;
-  const visibleStories = savedStories.slice(0, MAX_LIBRARY_RENDER_ITEMS);
+  const orderedStories = highlightedStoryId
+    ? [...savedStories].sort(
+        (firstStory, secondStory) =>
+          Number(isHighlightedStory(secondStory)) - Number(isHighlightedStory(firstStory))
+      )
+    : savedStories;
+  const visibleStories = orderedStories.slice(0, MAX_LIBRARY_RENDER_ITEMS);
 
   if (savedStories.length === 0) {
     libraryList.innerHTML = `
@@ -2168,7 +2213,7 @@ async function renderLibrary() {
             : "Audio will be created on first play"
           : "Text only";
         return `
-        <article class="library-item ${highlightedStoryId && (story.cloudId === highlightedStoryId || story.id === highlightedStoryId) ? "new-story" : ""}">
+        <article class="library-item ${isHighlightedStory(story) ? "new-story" : ""}">
           <h3>${escapeHtml(story.title)}</h3>
           <p>${escapeHtml(getPlan(story.plan).label)} · ${escapeHtml(getDuration(story.duration).label)} · ${escapeHtml(audioLabel)} · ${new Date(story.createdAt).toLocaleDateString()}</p>
           <p>${escapeHtml(story.text?.[0]?.slice(0, 120) || "Saved story")}...</p>
@@ -2184,7 +2229,7 @@ async function renderLibrary() {
 
   libraryList.querySelectorAll("[data-library-index]").forEach((button) => {
     button.addEventListener("click", () => {
-      currentStory = savedStories[Number(button.dataset.libraryIndex)];
+      currentStory = visibleStories[Number(button.dataset.libraryIndex)];
       renderStory(currentStory);
       statusNote.textContent = "";
       showScreen("result");
@@ -2194,10 +2239,11 @@ async function renderLibrary() {
   libraryList.querySelectorAll("[data-delete-index]").forEach((button) => {
     button.addEventListener("click", async () => {
       const index = Number(button.dataset.deleteIndex);
+      const storyToDelete = visibleStories[index];
 
-      if (usingCloudLibrary && savedStories[index]?.cloudId) {
+      if (usingCloudLibrary && storyToDelete?.cloudId) {
         try {
-          await deleteCloudStory(savedStories[index]);
+          await deleteCloudStory(storyToDelete);
         } catch {
           libraryList.insertAdjacentHTML(
             "afterbegin",
@@ -2207,7 +2253,6 @@ async function renderLibrary() {
         }
       } else {
         const nextStories = getSavedStories();
-        const storyToDelete = savedStories[index];
         const localIndex = nextStories.findIndex((story) => story.id === storyToDelete?.id);
         if (localIndex >= 0) nextStories.splice(localIndex, 1);
         setSavedStories(nextStories);
