@@ -375,8 +375,8 @@
               <li>Stories up to 20 minutes</li>
               <li>Saved story library</li>
             </ul>
-            <button class="button primary-button" data-plan-preview="premier" type="button">
-              Coming Soon
+            <button class="button primary-button" data-purchase-plan="premier" type="button">
+              Start Premier
             </button>
           </article>
           <article>
@@ -389,14 +389,17 @@
               <li>150 audio minutes per month</li>
               <li>Audio narration and future PDFs</li>
             </ul>
-            <button class="button primary-button" data-plan-preview="plus" type="button">
-              Coming Soon
+            <button class="button primary-button" data-purchase-plan="plus" type="button">
+              Start Plus
             </button>
           </article>
         </div>
         <div class="trust-links" aria-label="Trust and support">
           <button class="button secondary-button" data-screen-target="legal" type="button">
             Legal & Support
+          </button>
+          <button class="button secondary-button" id="restore-purchases-button" type="button">
+            Restore Purchases
           </button>
         </div>
         <p class="status-note" id="upgrade-note" role="status"></p>
@@ -561,7 +564,11 @@
       </nav>
     </main>
 
+    <script>
+      window.DREAMSCAPES_REVENUECAT_IOS_KEY = "";
+      window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "";
+    </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026060404"></script>
+    <script src="./app.js?v=2026060501"></script>
   </body>
 </html>

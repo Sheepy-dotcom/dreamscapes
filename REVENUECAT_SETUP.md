@@ -74,3 +74,35 @@ RevenueCat app_user_id = Supabase auth user.id
 ```
 
 This is how the webhook knows which Supabase profile to update.
+
+## Mobile SDK Keys
+
+Copy the public RevenueCat SDK keys from RevenueCat and paste them into `index.html`:
+
+```html
+window.DREAMSCAPES_REVENUECAT_IOS_KEY = "appl_...";
+window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_...";
+```
+
+These are public mobile SDK keys, not secret webhook keys.
+
+## Supabase Plan Security
+
+Run this migration in Supabase SQL Editor:
+
+```text
+supabase-lock-profile-plan.sql
+```
+
+Copy and paste the SQL inside the file, not the filename. This removes the user update policy on `profiles` so only the RevenueCat webhook/service role can change `profiles.plan`.
+
+## Sandbox Purchase Test
+
+1. Sign in to DreamScapes in the iOS or Android app.
+2. Go to Packages.
+3. Tap Premier or Plus.
+4. Complete the sandbox purchase.
+5. RevenueCat sends `/api/revenuecat-webhook`.
+6. Supabase `profiles.plan` should update to `premier` or `plus`.
+7. Tap Restore Purchases to test restore.
+8. Cancel/expire the sandbox subscription and confirm the webhook returns the plan to `free`.

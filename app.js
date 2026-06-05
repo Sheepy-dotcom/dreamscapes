@@ -65,9 +65,22 @@ let pendingAudioSeekPercent = null;
 let sleepTimerId = null;
 let sleepTimerCountdownId = null;
 let sleepTimerEndsAt = null;
+let revenueCatConfiguredForUser = "";
 const AI_ENDPOINT = window.DREAMSCAPES_AI_ENDPOINT || "/api/story";
 const NARRATION_ENDPOINT = window.DREAMSCAPES_NARRATION_ENDPOINT || "/api/narrate";
 const AUDIO_USAGE_ENDPOINT = window.DREAMSCAPES_AUDIO_USAGE_ENDPOINT || "/api/audio-usage";
+const REVENUECAT_API_KEYS = {
+  ios: window.DREAMSCAPES_REVENUECAT_IOS_KEY || "",
+  android: window.DREAMSCAPES_REVENUECAT_ANDROID_KEY || "",
+};
+const REVENUECAT_PRODUCT_IDS = {
+  premier: "dreamscapes_premier_monthly",
+  plus: "dreamscapes_plus_monthly",
+};
+const REVENUECAT_ENTITLEMENTS = {
+  premier: ["dreamscapes_premier", "premier"],
+  plus: ["dreamscapes_plus", "plus"],
+};
 const SUPABASE_URL = "https://khgzzrixhetaontmdhez.supabase.co";
 const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtoZ3p6cml4aGV0YW9udG1kaGV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5OTkwMjMsImV4cCI6MjA5NTU3NTAyM30.Zij8eBhzxNecuPRsMliWChxYmogLBFbd1GScpKPM_5g";
@@ -360,6 +373,7 @@ async function refreshAccountSummary() {
 
 function setCurrentUser(user) {
   currentUser = user || null;
+  if (!currentUser) revenueCatConfiguredForUser = "";
   updateAccountUI();
 }
 
@@ -388,6 +402,115 @@ async function getApiHeaders() {
   const token = data.session?.access_token;
   if (token) headers.Authorization = `Bearer ${token}`;
   return headers;
+}
+
+function getCapacitorPlatform() {
+  return window.Capacitor?.getPlatform?.() || window.Capacitor?.platform || "web";
+}
+
+function isNativeMobileApp() {
+  return ["ios", "android"].includes(getCapacitorPlatform());
+}
+
+function getRevenueCatPlugin() {
+  return window.Capacitor?.Plugins?.Purchases || null;
+}
+
+function getRevenueCatApiKey() {
+  return REVENUECAT_API_KEYS[getCapacitorPlatform()] || "";
+}
+
+function getPlanFromCustomerInfo(customerInfo) {
+  const active = customerInfo?.entitlements?.active || {};
+  if (REVENUECAT_ENTITLEMENTS.plus.some((id) => active[id])) return "plus";
+  if (REVENUECAT_ENTITLEMENTS.premier.some((id) => active[id])) return "premier";
+  return "free";
+}
+
+async function configureRevenueCat() {
+  if (!currentUser) throw new Error("Sign in before choosing a paid package.");
+  if (!isNativeMobileApp()) {
+    throw new Error("Subscriptions will be available inside the iOS and Android app.");
+  }
+
+  const Purchases = getRevenueCatPlugin();
+  const apiKey = getRevenueCatApiKey();
+
+  if (!Purchases || !apiKey) {
+    throw new Error("RevenueCat is not configured for this app build yet.");
+  }
+
+  if (!revenueCatConfiguredForUser) {
+    await Purchases.configure({
+      apiKey,
+      appUserID: currentUser.id,
+    });
+    revenueCatConfiguredForUser = currentUser.id;
+  } else if (revenueCatConfiguredForUser !== currentUser.id) {
+    await Purchases.logIn({ appUserID: currentUser.id });
+    revenueCatConfiguredForUser = currentUser.id;
+  }
+
+  if (currentUser.email && Purchases.setEmail) {
+    await Purchases.setEmail({ email: currentUser.email }).catch(() => {});
+  }
+
+  return Purchases;
+}
+
+function findRevenueCatPackage(offerings, planKey) {
+  const productId = REVENUECAT_PRODUCT_IDS[planKey];
+  const packages = offerings?.current?.availablePackages || [];
+  return packages.find(
+    (availablePackage) =>
+      availablePackage?.product?.identifier === productId ||
+      availablePackage?.identifier === productId ||
+      availablePackage?.offeringIdentifier === productId
+  );
+}
+
+async function refreshProfileAfterPurchase() {
+  upgradeNote.textContent = "Purchase complete. Updating your DreamScapes plan...";
+  await new Promise((resolve) => window.setTimeout(resolve, 2500));
+  await refreshAccountSummary();
+  updatePlanFeatures();
+}
+
+async function purchasePlan(planKey) {
+  const plan = getPlan(planKey);
+  upgradeNote.textContent = `Opening ${plan.label} checkout...`;
+
+  const Purchases = await configureRevenueCat();
+  const offerings = await Purchases.getOfferings();
+  const packageToBuy = findRevenueCatPackage(offerings, planKey);
+
+  if (!packageToBuy) {
+    throw new Error(`${plan.label} is not available in RevenueCat offerings yet.`);
+  }
+
+  const result = await Purchases.purchasePackage({ aPackage: packageToBuy });
+  const purchasedPlan = getPlanFromCustomerInfo(result.customerInfo);
+
+  if (purchasedPlan === "free") {
+    throw new Error("Purchase finished, but no DreamScapes entitlement was returned yet.");
+  }
+
+  await refreshProfileAfterPurchase();
+  upgradeNote.textContent = `${getPlan(purchasedPlan).label} is active.`;
+  trackEvent("revenuecat_purchase_completed", { plan: purchasedPlan });
+}
+
+async function restorePurchases() {
+  upgradeNote.textContent = "Restoring purchases...";
+  const Purchases = await configureRevenueCat();
+  const result = await Purchases.restorePurchases();
+  const restoredPlan = getPlanFromCustomerInfo(result.customerInfo);
+  await refreshProfileAfterPurchase();
+  upgradeNote.textContent =
+    restoredPlan === "free"
+      ? "No active DreamScapes subscription was found."
+      : `${getPlan(restoredPlan).label} restored.`;
+  trackEvent("revenuecat_restore_completed", { plan: restoredPlan });
 }
 
 function loadExternalScript(src) {
@@ -1794,12 +1917,29 @@ document.querySelector("#sleep-timer-off")?.addEventListener("click", () => {
 document.querySelectorAll("[data-plan-preview]").forEach((button) => {
   button.addEventListener("click", () => {
     const planKey = button.dataset.planPreview;
-    const plan = getPlan(planKey);
     upgradeNote.textContent =
       planKey === "free"
         ? "Free is the active starter plan."
-        : `${plan.label} subscriptions will be available through the App Store and Google Play.`;
+        : "Choose Premier or Plus inside the iOS and Android app.";
   });
+});
+
+document.querySelectorAll("[data-purchase-plan]").forEach((button) => {
+  button.addEventListener("click", async () => {
+    try {
+      await purchasePlan(button.dataset.purchasePlan);
+    } catch (error) {
+      upgradeNote.textContent = error.message || "Purchase could not be started.";
+    }
+  });
+});
+
+document.querySelector("#restore-purchases-button")?.addEventListener("click", async () => {
+  try {
+    await restorePurchases();
+  } catch (error) {
+    upgradeNote.textContent = error.message || "Purchases could not be restored.";
+  }
 });
 
 form.addEventListener("submit", async (event) => {
