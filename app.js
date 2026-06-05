@@ -2041,13 +2041,31 @@ form.addEventListener("submit", async (event) => {
   };
 
   window.setTimeout(async () => {
+    let generatedStory = null;
     try {
-      currentStory = {
+      generatedStory = {
         ...(await createStory(storyData)),
         aiAudioTracks: [],
         aiAudioPaths: [],
         aiAudioGeneratedAt: "",
       };
+    } catch (error) {
+      if (canUseCloudLibrary() && /failed to fetch|could not connect|story service/i.test(error.message || "")) {
+        cloudStoriesLoaded = false;
+        highlightedStoryId = "";
+        libraryNotice =
+          "DreamScapes could not confirm the final response. Checking your library in case the story saved successfully.";
+        showScreen("library");
+        return;
+      }
+
+      showScreen("builder");
+      planNote.textContent = error.message || "Could not create that story. Try again.";
+      return;
+    }
+
+    try {
+      currentStory = generatedStory;
       currentStory.id = currentStory.cloudId || currentStory.id || createStoryId();
       if (!canUseCloudLibrary()) incrementStoriesUsed(selectedPlanKey);
       renderStory(currentStory);
@@ -2070,8 +2088,11 @@ form.addEventListener("submit", async (event) => {
         showScreen("result");
       }
     } catch (error) {
-      showScreen("builder");
-      planNote.textContent = error.message || "Could not create that story. Try again.";
+      libraryNotice = "";
+      renderStory(currentStory || generatedStory);
+      statusNote.textContent =
+        "Story created. It could not be moved to the library automatically, so it is shown here.";
+      showScreen("result");
     }
   }, 900);
 });
