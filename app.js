@@ -2207,13 +2207,15 @@ async function renderLibrary() {
     .map(
       (story, index) => {
         const savedAudioDuration = getSavedAudioDurationSeconds(story);
+        const isNewStory = isHighlightedStory(story);
         const audioLabel = story.audioNarration
           ? savedAudioDuration
             ? `Audio saved ${formatAudioTime(savedAudioDuration)}`
             : "Audio will be created on first play"
           : "Text only";
         return `
-        <article class="library-item ${isHighlightedStory(story) ? "new-story" : ""}">
+        <article class="library-item ${isNewStory ? "new-story" : ""}">
+          ${isNewStory ? '<span class="new-story-badge">New story</span>' : ""}
           <h3>${escapeHtml(story.title)}</h3>
           <p>${escapeHtml(getPlan(story.plan).label)} · ${escapeHtml(getDuration(story.duration).label)} · ${escapeHtml(audioLabel)} · ${new Date(story.createdAt).toLocaleDateString()}</p>
           <p>${escapeHtml(story.text?.[0]?.slice(0, 120) || "Saved story")}...</p>
