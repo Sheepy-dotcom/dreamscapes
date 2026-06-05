@@ -27,6 +27,7 @@ const sleepTimerNote = document.querySelector("#sleep-timer-note");
 const voiceStyle = document.querySelector("#voice-style");
 const voicePreviewButton = document.querySelector("#voice-preview-button");
 const storyIdea = document.querySelector("#story-idea");
+const libraryStatus = document.querySelector("#library-status");
 const libraryList = document.querySelector("#library-list");
 const durationInputs = Array.from(document.querySelectorAll('input[name="durationChoice"]'));
 const authForm = document.querySelector("#auth-form");
@@ -66,6 +67,8 @@ let sleepTimerId = null;
 let sleepTimerCountdownId = null;
 let sleepTimerEndsAt = null;
 let revenueCatConfiguredForUser = "";
+let libraryNotice = "";
+let highlightedStoryId = "";
 const AI_ENDPOINT = window.DREAMSCAPES_AI_ENDPOINT || "/api/story";
 const NARRATION_ENDPOINT = window.DREAMSCAPES_NARRATION_ENDPOINT || "/api/narrate";
 const AUDIO_USAGE_ENDPOINT = window.DREAMSCAPES_AUDIO_USAGE_ENDPOINT || "/api/audio-usage";
@@ -1475,7 +1478,7 @@ async function saveGeneratedStoryToLibrary(story) {
       reason: error.message || "unknown",
       localBackup: backedUp,
     });
-    return false;
+    return backedUp;
   }
 }
 
@@ -1888,6 +1891,8 @@ voicePreviewButton.addEventListener("click", async () => {
 
 document.querySelector("#create-another-button").addEventListener("click", () => {
   statusNote.textContent = "";
+  libraryNotice = "";
+  highlightedStoryId = "";
   stopNarration();
   updatePlanFeatures();
   showScreen("builder");
@@ -2018,7 +2023,7 @@ form.addEventListener("submit", async (event) => {
       currentStory.id = currentStory.cloudId || currentStory.id || createStoryId();
       if (!canUseCloudLibrary()) incrementStoriesUsed(selectedPlanKey);
       renderStory(currentStory);
-      await saveGeneratedStoryToLibrary(currentStory);
+      const savedToLibrary = await saveGeneratedStoryToLibrary(currentStory);
       trackEvent("story_generated", {
         plan: selectedPlanKey,
         duration: storyData.duration,
@@ -2026,7 +2031,16 @@ form.addEventListener("submit", async (event) => {
         wordCount: currentStory.wordCount || 0,
         targetWords: currentStory.durationTarget?.words || 0,
       });
-      showScreen("result");
+      if (savedToLibrary) {
+        highlightedStoryId = currentStory.cloudId || currentStory.id;
+        libraryNotice = currentStory.aiAudioPaths?.length || currentStory.aiAudioTracks?.length
+          ? "Story and audio saved to your library."
+          : "Story saved to your library. Open it when you are ready to read or create audio.";
+        showScreen("library");
+      } else {
+        libraryNotice = "";
+        showScreen("result");
+      }
     } catch (error) {
       showScreen("builder");
       planNote.textContent = error.message || "Could not create that story. Try again.";
@@ -2040,6 +2054,10 @@ document.querySelector("#save-story-button")?.addEventListener("click", () => {
 });
 
 async function renderLibrary() {
+  if (libraryStatus) {
+    libraryStatus.textContent = libraryNotice;
+  }
+
   if (canUseCloudLibrary() && !cloudStoriesLoaded) {
     libraryList.innerHTML = `
       <article class="library-item">
@@ -2101,7 +2119,7 @@ async function renderLibrary() {
             : "Audio will be created on first play"
           : "Text only";
         return `
-        <article class="library-item">
+        <article class="library-item ${highlightedStoryId && (story.cloudId === highlightedStoryId || story.id === highlightedStoryId) ? "new-story" : ""}">
           <h3>${escapeHtml(story.title)}</h3>
           <p>${escapeHtml(getPlan(story.plan).label)} · ${escapeHtml(getDuration(story.duration).label)} · ${escapeHtml(audioLabel)} · ${new Date(story.createdAt).toLocaleDateString()}</p>
           <p>${escapeHtml(story.text?.[0]?.slice(0, 120) || "Saved story")}...</p>

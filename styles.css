@@ -895,6 +895,24 @@ textarea:focus-visible {
   background: rgba(255, 255, 255, 0.72);
 }
 
+.library-status {
+  margin: 0 0 14px;
+  border: 1px solid rgba(138, 215, 189, 0.42);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: rgba(232, 255, 247, 0.82);
+  color: #244f48;
+  text-align: left;
+}
+
+.library-item.new-story {
+  border-color: rgba(255, 208, 87, 0.86);
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.82)),
+    linear-gradient(135deg, rgba(255, 241, 184, 0.74), rgba(216, 198, 255, 0.46));
+  box-shadow: 0 14px 30px rgba(123, 78, 216, 0.16);
+}
+
 .library-item h3,
 .upgrade-grid h3,
 .auth-card h3 {
