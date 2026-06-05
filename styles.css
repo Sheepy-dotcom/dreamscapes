@@ -747,16 +747,27 @@ textarea:focus-visible {
 }
 
 .loading-screen {
-  max-width: 620px;
-  padding: 56px 24px;
+  min-height: calc(100vh - 150px);
+  padding: clamp(24px, 5vw, 56px);
+  display: grid;
+  place-items: center;
   text-align: center;
+}
+
+.loading-scene {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  width: min(520px, 100%);
+  padding: clamp(18px, 4vw, 30px);
 }
 
 .moon-loader {
   position: relative;
   width: 122px;
   height: 122px;
-  margin: 0 auto 24px;
+  margin: 0 auto 8px;
   border-radius: 50%;
   background: linear-gradient(135deg, #ffe783, #ffd36b);
   box-shadow: 0 0 44px rgba(255, 217, 106, 0.64);
@@ -800,6 +811,71 @@ textarea:focus-visible {
   left: 34px;
   bottom: -24px;
   animation-delay: 320ms;
+}
+
+.story-sparkles {
+  position: absolute;
+  inset: 22px 0 auto;
+  height: 160px;
+  pointer-events: none;
+}
+
+.story-sparkles i {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 18px rgba(255, 217, 106, 0.9);
+  animation: driftSparkle 3.2s ease-in-out infinite;
+}
+
+.story-sparkles i:nth-child(1) {
+  left: 16%;
+  top: 18px;
+}
+
+.story-sparkles i:nth-child(2) {
+  right: 17%;
+  top: 42px;
+  animation-delay: 500ms;
+}
+
+.story-sparkles i:nth-child(3) {
+  left: 27%;
+  bottom: 18px;
+  animation-delay: 900ms;
+}
+
+.story-sparkles i:nth-child(4) {
+  right: 28%;
+  bottom: 4px;
+  animation-delay: 1.3s;
+}
+
+.loading-message {
+  min-height: 24px;
+  margin: 0;
+  color: #5e4d8f;
+  font-weight: 900;
+}
+
+.loading-steps {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.loading-steps span {
+  border: 1px solid rgba(123, 78, 216, 0.16);
+  border-radius: 999px;
+  padding: 7px 10px;
+  background: rgba(255, 255, 255, 0.62);
+  color: #34245f;
+  font-size: 0.78rem;
+  font-weight: 900;
 }
 
 .result-header {
@@ -1067,6 +1143,18 @@ textarea:focus-visible {
   }
 }
 
+@keyframes driftSparkle {
+  0%,
+  100% {
+    transform: translateY(0) scale(0.8);
+    opacity: 0.45;
+  }
+  50% {
+    transform: translateY(-14px) scale(1.12);
+    opacity: 1;
+  }
+}
+
 @media (max-width: 760px) {
   .app-shell {
     width: min(100% - 20px, 1120px);
@@ -1075,6 +1163,10 @@ textarea:focus-visible {
 
   .welcome-screen {
     min-height: calc(100vh - 118px);
+  }
+
+  .loading-screen {
+    min-height: calc(100vh - 132px);
   }
 
   .form-grid,

@@ -12,6 +12,7 @@ const screens = {
 const form = document.querySelector("#story-form");
 const statusNote = document.querySelector("#status-note");
 const planNote = document.querySelector("#plan-note");
+const loadingMessage = document.querySelector("#loading-message");
 const currentPlanName = document.querySelector("#current-plan-name");
 const currentPlanSummary = document.querySelector("#current-plan-summary");
 const upgradeNote = document.querySelector("#upgrade-note");
@@ -66,6 +67,7 @@ let pendingAudioSeekPercent = null;
 let sleepTimerId = null;
 let sleepTimerCountdownId = null;
 let sleepTimerEndsAt = null;
+let loadingMessageTimer = null;
 let revenueCatConfiguredForUser = "";
 let libraryNotice = "";
 let highlightedStoryId = "";
@@ -276,6 +278,30 @@ const britishVoiceHints = {
   male: ["daniel", "arthur", "oliver", "george", "tom"],
 };
 
+const loadingMessages = [
+  "Gathering moonlight and story dust",
+  "Choosing kind characters",
+  "Finding a gentle adventure",
+  "Adding cosy details",
+  "Tucking in a happy ending",
+];
+
+function startLoadingMessages() {
+  if (!loadingMessage) return;
+  let index = 0;
+  loadingMessage.textContent = loadingMessages[index];
+  window.clearInterval(loadingMessageTimer);
+  loadingMessageTimer = window.setInterval(() => {
+    index = (index + 1) % loadingMessages.length;
+    loadingMessage.textContent = loadingMessages[index];
+  }, 2200);
+}
+
+function stopLoadingMessages() {
+  window.clearInterval(loadingMessageTimer);
+  loadingMessageTimer = null;
+}
+
 function showScreen(name) {
   Object.values(screens).forEach((screen) => screen.classList.remove("active"));
   screens[name].classList.add("active");
@@ -285,6 +311,8 @@ function showScreen(name) {
   });
   if (name === "library") renderLibrary();
   if (name === "account") refreshAccountSummary();
+  if (name === "loading") startLoadingMessages();
+  else stopLoadingMessages();
   trackEvent("screen_view", { screen: name });
   window.scrollTo({ top: 0, behavior: "smooth" });
 }

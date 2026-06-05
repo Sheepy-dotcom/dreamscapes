@@ -16,7 +16,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026060504" />
+    <link rel="stylesheet" href="./styles.css?v=2026060505" />
   </head>
   <body class="home-active">
     <div class="stars" aria-hidden="true"></div>
@@ -229,12 +229,26 @@
       </section>
 
       <section class="screen loading-screen" id="loading-screen" aria-live="polite">
-        <div class="moon-loader" aria-hidden="true">
-          <span></span>
-          <span></span>
-          <span></span>
+        <div class="loading-scene">
+          <div class="moon-loader" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <div class="story-sparkles" aria-hidden="true">
+            <i></i>
+            <i></i>
+            <i></i>
+            <i></i>
+          </div>
+          <h2>Creating your magical story...</h2>
+          <p class="loading-message" id="loading-message">Gathering moonlight and story dust</p>
+          <div class="loading-steps" aria-hidden="true">
+            <span>Characters</span>
+            <span>Adventure</span>
+            <span>Gentle ending</span>
+          </div>
         </div>
-        <h2>Creating your magical story...</h2>
       </section>
 
       <section class="screen result-screen" id="result-screen" aria-labelledby="story-title">
@@ -570,6 +584,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026060502"></script>
+    <script src="./app.js?v=2026060503"></script>
   </body>
 </html>
