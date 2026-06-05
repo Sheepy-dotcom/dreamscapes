@@ -749,9 +749,12 @@ textarea:focus-visible {
 .loading-screen {
   min-height: calc(100vh - 150px);
   padding: clamp(24px, 5vw, 56px);
-  display: grid;
   place-items: center;
   text-align: center;
+}
+
+.loading-screen.active {
+  display: grid;
 }
 
 .loading-scene {
