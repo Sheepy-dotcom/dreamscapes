@@ -1,6 +1,9 @@
 .DS_Store
 .vercel/
 android/.idea/
+android/keystore.properties
+android/app/*.jks
+android/app/*.keystore
 node_modules/
 dist/
 www/
