@@ -1389,49 +1389,56 @@ textarea:focus-visible {
   }
 
   .plan-table-wrap {
-    margin-inline: -4px;
-    -webkit-overflow-scrolling: touch;
+    overflow-x: hidden;
+    margin-inline: 0;
   }
 
   .plan-comparison-table {
-    min-width: 560px;
-    font-size: 0.82rem;
+    min-width: 0;
+    table-layout: fixed;
+    font-size: 0.68rem;
   }
 
   .plan-comparison-table th,
   .plan-comparison-table td {
-    padding: 10px 8px;
+    padding: 8px 4px;
+    overflow-wrap: anywhere;
   }
 
   .plan-comparison-table th:first-child,
   .plan-comparison-table td:first-child {
-    width: 34%;
+    width: 31%;
   }
 
   .plan-comparison-table thead th strong {
-    font-size: 0.9rem;
+    font-size: 0.72rem;
   }
 
   .plan-comparison-table thead th span {
-    font-size: 0.7rem;
+    font-size: 0.56rem;
+    line-height: 1.12;
   }
 
   .plan-comparison-table tbody th {
-    font-size: 0.78rem;
-    line-height: 1.22;
+    font-size: 0.66rem;
+    line-height: 1.16;
   }
 
   .plan-check {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
   }
 
   .plan-action-row .button {
-    min-height: 40px;
-    padding: 9px 6px;
-    font-size: 0.72rem;
+    min-height: 34px;
+    padding: 7px 3px;
+    font-size: 0.62rem;
     line-height: 1.12;
     white-space: normal;
+  }
+
+  .plan-miss {
+    font-size: 0.95rem;
   }
 
   .top-bar,
