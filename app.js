@@ -108,15 +108,14 @@ const AUDIO_BUCKET = "story-audio";
 const AI_NARRATION_REQUEST_MAX_LENGTH = 3400;
 const VOICE_PREVIEW_TEXT = "Hello from DreamScapes. Settle in, take a gentle breath, and let the story begin.";
 const VOICE_PREVIEW_FILES = {
-  "female calm": "./assets/voice-preview-female-british-calm.mp3",
   "male calm": "./assets/voice-preview-male-british-calm.mp3",
 };
 const AI_VOICE_PROFILES = {
   "female calm": {
-    voice: "nova",
+    voice: "sage",
     label: "a calm British English woman reading softly at bedtime",
     direction:
-      "Use the same consistent voice every time: a soft southern British bedtime storyteller, gentle, cosy, natural, clear, and reassuring. Keep a steady human pace. Do not sound robotic, theatrical, American, or like an announcer. Do not drag or stretch words.",
+      "Use the same consistent Sage voice every time: a soft British bedtime storyteller, gentle, cosy, natural, clear, and reassuring. Keep a steady human pace with warm expression. Do not sound robotic, theatrical, American, or like an announcer. Do not drag or stretch words.",
   },
   "male calm": {
     voice: "fable",
@@ -2281,6 +2280,7 @@ async function playAiVoicePreview() {
     body: JSON.stringify({
       text: VOICE_PREVIEW_TEXT,
       voice: getAiNarrationVoice(selectedVoiceStyle),
+      chargeAudio: false,
       instructions: getAiNarrationInstructions({
         childAge: "5",
         moods: ["relaxing"],
