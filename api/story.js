@@ -78,6 +78,7 @@ function buildPrompt(data) {
     "",
     "Quality requirements:",
     "- Make it feel like a real children's story, not a template.",
+    "- Write in British English throughout, using UK spelling and natural British wording. For example: mum, favourite, cosy, colour, realised.",
     "- Use warm, sensory, magical language with clear scenes and character moments.",
     "- Keep it age-appropriate, safe, non-frightening, and parent-friendly.",
     "- Give the child small choices, feelings, and discoveries.",
@@ -88,6 +89,7 @@ function buildPrompt(data) {
     "- Longer durations must include more complete scenes, not just longer sentences.",
     "- Include a positive ending and a gentle lesson without sounding preachy.",
     "- For bedtime, slow the ending down and make the final paragraph peaceful.",
+    "- Do not announce or explain that the story is written in British English.",
     "- Do not mention AI, prompts, packages, subscriptions, or app settings.",
     ...retryNote,
   ].join("\n");

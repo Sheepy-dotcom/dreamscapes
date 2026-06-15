@@ -1306,7 +1306,9 @@ function createPrompt(data) {
     `Moods: ${getSelectedMoods(data.moods).join(", ")}`,
     `Story idea: ${tidyIdea(data.storyIdea, data.childName)}`,
     "Use warm imaginative language, a positive ending, and a gentle lesson where appropriate.",
+    "Write in British English throughout, using UK spelling and natural British wording such as mum, favourite, cosy, colour, and realised.",
     "Use short, gentle sentences with frequent natural pauses between phrases, especially for bedtime narration.",
+    "Do not announce or explain that the story is written in British English.",
     "Return JSON with title and paragraphs fields.",
   ].join("\n");
 }
