@@ -2322,18 +2322,20 @@ function playDeviceVoicePreview() {
   return true;
 }
 
+function getSelectedVoiceLabel() {
+  return voiceStyle.options[voiceStyle.selectedIndex]?.textContent?.trim() || "selected voice";
+}
+
 voicePreviewButton.addEventListener("click", async () => {
+  const selectedVoiceLabel = getSelectedVoiceLabel();
   voicePreviewButton.disabled = true;
-  voicePreviewButton.textContent = "Playing...";
-  planNote.textContent = "Preparing voice preview...";
+  voicePreviewButton.textContent = `Playing ${selectedVoiceLabel}...`;
+  planNote.textContent = `Preparing ${selectedVoiceLabel} preview...`;
 
   try {
     const usedAiPreview = await playAiVoicePreview();
     if (usedAiPreview) {
-      planNote.textContent =
-        usedAiPreview === "fixed-file"
-          ? "Playing fixed premium AI voice preview."
-          : "Playing premium AI voice preview.";
+      planNote.textContent = `Playing ${selectedVoiceLabel} preview.`;
       trackEvent("voice_preview", { voiceStyle: voiceStyle.value, source: usedAiPreview });
       return;
     }
@@ -2345,7 +2347,7 @@ voicePreviewButton.addEventListener("click", async () => {
   }
 
   if (playDeviceVoicePreview()) {
-    planNote.textContent = "Playing device voice preview. Premium AI preview needs the OpenAI key and credits.";
+    planNote.textContent = `Playing ${selectedVoiceLabel} device preview. Premium AI preview needs the OpenAI key and credits.`;
     trackEvent("voice_preview", { voiceStyle: voiceStyle.value, source: "device" });
     return;
   }
