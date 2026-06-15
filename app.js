@@ -108,10 +108,17 @@ const AUDIO_BUCKET = "story-audio";
 const AI_NARRATION_REQUEST_MAX_LENGTH = 3400;
 const VOICE_PREVIEW_TEXT = "Hello from DreamScapes. Settle in, take a gentle breath, and let the story begin.";
 const VOICE_PREVIEW_FILES = {
+  "female calm": "./assets/voice-preview-female-british-calm.mp3",
   "male calm": "./assets/voice-preview-male-british-calm.mp3",
 };
 const AI_VOICE_PROFILES = {
   "female calm": {
+    voice: "nova",
+    label: "a calm British English woman reading softly at bedtime",
+    direction:
+      "Use the same consistent Nova voice every time: a soft British bedtime storyteller, gentle, cosy, natural, clear, and reassuring. Keep a steady human pace with warm expression. Do not sound robotic, theatrical, American, or like an announcer. Do not drag or stretch words.",
+  },
+  "female sage calm": {
     voice: "sage",
     label: "a calm British English woman reading softly at bedtime",
     direction:
@@ -275,6 +282,7 @@ const durationDetails = {
 
 const voiceStyles = {
   "female calm": { rate: 0.64, pitch: 1, volume: 0.86, pause: 1150 },
+  "female sage calm": { rate: 0.64, pitch: 1, volume: 0.86, pause: 1150 },
   "female default": { rate: 0.64, pitch: 1, volume: 0.86, pause: 1150 },
   "female cheerful": { rate: 0.64, pitch: 1, volume: 0.86, pause: 1150 },
   "male calm": { rate: 0.64, pitch: 0.88, volume: 0.86, pause: 1150 },
