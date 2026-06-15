@@ -16,7 +16,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026061502" />
+    <link rel="stylesheet" href="./styles.css?v=2026061503" />
   </head>
   <body class="home-active">
     <div class="stars" aria-hidden="true"></div>
@@ -375,47 +375,100 @@
             <span id="current-plan-summary">£0, 3 stories/month, up to 10 min</span>
           </div>
         </section>
-        <div class="upgrade-grid">
-          <article>
-            <h3>Free</h3>
-            <p class="plan-price">£0</p>
-            <p>Try DreamScapes with short text stories.</p>
-            <ul>
-              <li>3 stories per month</li>
-              <li>5 and 10 minute stories</li>
-              <li>Text only</li>
-            </ul>
-            <button class="button secondary-button" data-plan-preview="free" type="button">
-              Current Free Plan
-            </button>
-          </article>
-          <article>
-            <h3>Premier</h3>
-            <p class="plan-price">£4.99/month</p>
-            <p>For families who want more stories and a saved library.</p>
-            <ul>
-              <li>15 stories per month</li>
-              <li>Stories up to 20 minutes</li>
-              <li>Saved story library</li>
-            </ul>
-            <button class="button primary-button" data-purchase-plan="premier" type="button">
-              Start Premier
-            </button>
-          </article>
-          <article>
-            <h3>DreamScapes Plus</h3>
-            <p class="plan-price">£9.99/month</p>
-            <p>For the longest stories, bedtime narration, and premium extras.</p>
-            <ul>
-              <li>30 stories per month</li>
-              <li>Stories up to 30 minutes</li>
-              <li>150 audio minutes per month</li>
-              <li>Audio narration and future PDFs</li>
-            </ul>
-            <button class="button primary-button" data-purchase-plan="plus" type="button">
-              Start Plus
-            </button>
-          </article>
+        <div class="plan-table-wrap">
+          <table class="plan-comparison-table" aria-label="DreamScapes plan comparison">
+            <thead>
+              <tr>
+                <th scope="col">Benefits</th>
+                <th scope="col">
+                  <strong>Free</strong>
+                  <span>£0</span>
+                </th>
+                <th scope="col">
+                  <strong>Premier</strong>
+                  <span>£4.99/month</span>
+                </th>
+                <th scope="col">
+                  <strong>Plus</strong>
+                  <span>£9.99/month</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">Stories each month</th>
+                <td>3</td>
+                <td>15</td>
+                <td>30</td>
+              </tr>
+              <tr>
+                <th scope="row">Maximum story length</th>
+                <td>10 min</td>
+                <td>20 min</td>
+                <td>30 min</td>
+              </tr>
+              <tr>
+                <th scope="row">Personalised text stories</th>
+                <td><span class="plan-check" aria-label="Included">✓</span></td>
+                <td><span class="plan-check" aria-label="Included">✓</span></td>
+                <td><span class="plan-check" aria-label="Included">✓</span></td>
+              </tr>
+              <tr>
+                <th scope="row">Child profiles</th>
+                <td><span class="plan-check" aria-label="Included">✓</span></td>
+                <td><span class="plan-check" aria-label="Included">✓</span></td>
+                <td><span class="plan-check" aria-label="Included">✓</span></td>
+              </tr>
+              <tr>
+                <th scope="row">Use multiple child profiles in one story</th>
+                <td><span class="plan-check" aria-label="Included">✓</span></td>
+                <td><span class="plan-check" aria-label="Included">✓</span></td>
+                <td><span class="plan-check" aria-label="Included">✓</span></td>
+              </tr>
+              <tr>
+                <th scope="row">Saved story library</th>
+                <td><span class="plan-miss" aria-label="Not included">-</span></td>
+                <td><span class="plan-check" aria-label="Included">✓</span></td>
+                <td><span class="plan-check" aria-label="Included">✓</span></td>
+              </tr>
+              <tr>
+                <th scope="row">Saved stories</th>
+                <td>-</td>
+                <td>15</td>
+                <td>30</td>
+              </tr>
+              <tr>
+                <th scope="row">Audio narration</th>
+                <td><span class="plan-miss" aria-label="Not included">-</span></td>
+                <td><span class="plan-miss" aria-label="Not included">-</span></td>
+                <td><span class="plan-check" aria-label="Included">✓</span></td>
+              </tr>
+              <tr>
+                <th scope="row">Audio minutes each month</th>
+                <td>-</td>
+                <td>-</td>
+                <td>150 min</td>
+              </tr>
+              <tr class="plan-action-row">
+                <th scope="row">Choose plan</th>
+                <td>
+                  <button class="button secondary-button compact-button" data-plan-preview="free" type="button">
+                    Current
+                  </button>
+                </td>
+                <td>
+                  <button class="button primary-button compact-button" data-purchase-plan="premier" type="button">
+                    Start Premier
+                  </button>
+                </td>
+                <td>
+                  <button class="button primary-button compact-button" data-purchase-plan="plus" type="button">
+                    Start Plus
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
         <div class="trust-links" aria-label="Trust and support">
           <button class="button secondary-button" data-screen-target="legal" type="button">
@@ -648,6 +701,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026061502"></script>
+    <script src="./app.js?v=2026061503"></script>
   </body>
 </html>

@@ -1199,6 +1199,97 @@ textarea:focus-visible {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.plan-table-wrap {
+  overflow-x: auto;
+  border: 1px solid rgba(123, 78, 216, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 14px 30px rgba(30, 34, 91, 0.08);
+}
+
+.plan-comparison-table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+  color: #26345f;
+}
+
+.plan-comparison-table th,
+.plan-comparison-table td {
+  border-bottom: 1px solid rgba(123, 78, 216, 0.14);
+  padding: 13px 14px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.plan-comparison-table th:first-child,
+.plan-comparison-table td:first-child {
+  text-align: left;
+}
+
+.plan-comparison-table thead th {
+  background: linear-gradient(180deg, rgba(255, 248, 220, 0.96), rgba(245, 235, 255, 0.92));
+  color: var(--ink);
+  font-weight: 900;
+}
+
+.plan-comparison-table thead th strong {
+  display: block;
+  font-size: 1.05rem;
+  line-height: 1.1;
+}
+
+.plan-comparison-table thead th span {
+  display: block;
+  margin-top: 4px;
+  color: #715c9b;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.plan-comparison-table tbody th {
+  color: #34245f;
+  font-weight: 900;
+}
+
+.plan-comparison-table tbody tr:nth-child(even) {
+  background: rgba(255, 248, 220, 0.28);
+}
+
+.plan-comparison-table tbody tr:last-child th,
+.plan-comparison-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.plan-check {
+  display: inline-grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid rgba(84, 174, 144, 0.32);
+  border-radius: 999px;
+  background: rgba(138, 215, 189, 0.28);
+  color: #246b57;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.plan-miss {
+  color: #8b789b;
+  font-size: 1.1rem;
+  font-weight: 900;
+}
+
+.plan-action-row th,
+.plan-action-row td {
+  background: rgba(216, 198, 255, 0.2);
+}
+
+.plan-action-row .button {
+  width: 100%;
+  min-width: 0;
+}
+
 .trust-links {
   grid-template-columns: minmax(0, 1fr);
   margin-top: 16px;
@@ -1295,6 +1386,10 @@ textarea:focus-visible {
 
   .duration-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .plan-table-wrap {
+    margin-inline: -2px;
   }
 
   .top-bar,
