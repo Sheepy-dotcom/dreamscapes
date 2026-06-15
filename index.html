@@ -16,7 +16,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026061501" />
+    <link rel="stylesheet" href="./styles.css?v=2026061502" />
   </head>
   <body class="home-active">
     <div class="stars" aria-hidden="true"></div>
@@ -503,9 +503,16 @@
           </article>
 
           <article class="auth-card child-profiles-card" id="child-profiles-card" hidden>
-            <h3>Child profiles</h3>
-            <p>Add optional details DreamScapes can use when creating personalised stories.</p>
-            <form class="auth-form child-profile-form" id="child-profile-form">
+            <div class="profile-card-header">
+              <div>
+                <h3>Child profiles</h3>
+                <p>Add optional details for personalised stories.</p>
+              </div>
+              <button class="button secondary-button compact-button" id="toggle-profile-form" type="button">
+                Add Profile
+              </button>
+            </div>
+            <form class="auth-form child-profile-form" id="child-profile-form" hidden>
               <input id="child-profile-id" type="hidden" />
               <div class="form-grid">
                 <label class="field">
@@ -641,6 +648,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026061501"></script>
+    <script src="./app.js?v=2026061502"></script>
   </body>
 </html>

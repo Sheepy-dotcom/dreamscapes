@@ -1074,6 +1074,29 @@ textarea:focus-visible {
   grid-column: 1 / -1;
 }
 
+.profile-card-header {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.profile-card-header p {
+  margin-bottom: 0;
+}
+
+.child-profile-form {
+  margin-top: 14px;
+  border: 1px solid rgba(123, 78, 216, 0.14);
+  border-radius: 8px;
+  padding: 14px;
+  background: rgba(255, 248, 220, 0.42);
+}
+
+.child-profile-form[hidden] {
+  display: none;
+}
+
 .child-profile-form textarea {
   min-height: 92px;
 }
@@ -1295,6 +1318,10 @@ textarea:focus-visible {
   .profile-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
+  }
+
+  .profile-card-header {
+    display: grid;
   }
 
   .narration-panel {

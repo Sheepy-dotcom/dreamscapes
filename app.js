@@ -48,6 +48,7 @@ const childProfilesCard = document.querySelector("#child-profiles-card");
 const childProfileForm = document.querySelector("#child-profile-form");
 const childProfileList = document.querySelector("#child-profile-list");
 const childProfileId = document.querySelector("#child-profile-id");
+const toggleProfileFormButton = document.querySelector("#toggle-profile-form");
 const builderChildProfiles = document.querySelector("#builder-child-profiles");
 const builderProfileList = document.querySelector("#builder-profile-list");
 const clearProfileSelectionButton = document.querySelector("#clear-profile-selection");
@@ -631,6 +632,15 @@ function renderBuilderProfileChoices() {
       `
     )
     .join("");
+}
+
+function setChildProfileFormOpen(open) {
+  if (!childProfileForm) return;
+  childProfileForm.hidden = !open;
+  if (toggleProfileFormButton) {
+    toggleProfileFormButton.textContent = open ? "Close" : "Add Profile";
+    toggleProfileFormButton.setAttribute("aria-expanded", String(open));
+  }
 }
 
 function clearChildProfileForm() {
@@ -2201,12 +2211,20 @@ childProfileForm?.addEventListener("submit", async (event) => {
 
   await saveChildProfile(profile);
   clearChildProfileForm();
+  setChildProfileFormOpen(false);
   setAuthStatus("Child profile saved.");
   trackEvent("child_profile_saved");
 });
 
+toggleProfileFormButton?.addEventListener("click", () => {
+  const nextOpen = childProfileForm?.hidden !== false;
+  if (nextOpen) clearChildProfileForm();
+  setChildProfileFormOpen(nextOpen);
+});
+
 document.querySelector("#cancel-profile-edit")?.addEventListener("click", () => {
   clearChildProfileForm();
+  setChildProfileFormOpen(false);
   setAuthStatus("");
 });
 
@@ -2217,6 +2235,7 @@ childProfileList?.addEventListener("click", async (event) => {
   if (editButton) {
     const profile = childProfiles.find((savedProfile) => savedProfile.id === editButton.dataset.editProfile);
     fillChildProfileForm(profile);
+    setChildProfileFormOpen(true);
     setAuthStatus("Editing child profile.");
     return;
   }
