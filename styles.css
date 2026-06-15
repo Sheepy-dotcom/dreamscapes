@@ -1389,106 +1389,49 @@ textarea:focus-visible {
   }
 
   .plan-table-wrap {
-    overflow-x: visible;
-    margin-inline: -2px;
-    border: 0;
-    background: transparent;
-    box-shadow: none;
-  }
-
-  .plan-comparison-table,
-  .plan-comparison-table tbody,
-  .plan-comparison-table tr,
-  .plan-comparison-table th,
-  .plan-comparison-table td {
-    display: block;
-    width: 100%;
-    min-width: 0;
+    margin-inline: -4px;
+    -webkit-overflow-scrolling: touch;
   }
 
   .plan-comparison-table {
-    border-collapse: separate;
-    border-spacing: 0;
+    min-width: 560px;
+    font-size: 0.82rem;
   }
 
-  .plan-comparison-table thead {
-    display: none;
+  .plan-comparison-table th,
+  .plan-comparison-table td {
+    padding: 10px 8px;
   }
 
-  .plan-comparison-table tbody {
-    display: grid;
-    gap: 12px;
+  .plan-comparison-table th:first-child,
+  .plan-comparison-table td:first-child {
+    width: 34%;
   }
 
-  .plan-comparison-table tbody tr {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    overflow: hidden;
-    border: 1px solid rgba(123, 78, 216, 0.18);
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.78);
+  .plan-comparison-table thead th strong {
+    font-size: 0.9rem;
   }
 
-  .plan-comparison-table tbody tr:nth-child(even) {
-    background: rgba(255, 255, 255, 0.78);
+  .plan-comparison-table thead th span {
+    font-size: 0.7rem;
   }
 
   .plan-comparison-table tbody th {
-    grid-column: 1 / -1;
-    border-bottom: 1px solid rgba(123, 78, 216, 0.14);
-    padding: 12px 14px;
-    background: linear-gradient(180deg, rgba(255, 248, 220, 0.96), rgba(245, 235, 255, 0.92));
-    text-align: left;
+    font-size: 0.78rem;
+    line-height: 1.22;
   }
 
-  .plan-comparison-table tbody td {
-    display: grid;
-    gap: 7px;
-    align-content: start;
-    justify-items: center;
-    min-height: 74px;
-    border-bottom: 0;
-    border-right: 1px solid rgba(123, 78, 216, 0.12);
-    padding: 10px 6px 12px;
-    text-align: center;
-    font-size: 0.92rem;
-    font-weight: 900;
-  }
-
-  .plan-comparison-table tbody td:last-child {
-    border-right: 0;
-  }
-
-  .plan-comparison-table tbody td::before {
-    color: #715c9b;
-    font-size: 0.68rem;
-    font-weight: 900;
-    line-height: 1;
-    text-transform: uppercase;
-  }
-
-  .plan-comparison-table tbody td:nth-child(2)::before {
-    content: "Free";
-  }
-
-  .plan-comparison-table tbody td:nth-child(3)::before {
-    content: "Premier";
-  }
-
-  .plan-comparison-table tbody td:nth-child(4)::before {
-    content: "Plus";
+  .plan-check {
+    width: 24px;
+    height: 24px;
   }
 
   .plan-action-row .button {
-    min-height: 42px;
-    padding: 10px 6px;
-    font-size: 0.74rem;
+    min-height: 40px;
+    padding: 9px 6px;
+    font-size: 0.72rem;
+    line-height: 1.12;
     white-space: normal;
-  }
-
-  .plan-action-row th,
-  .plan-action-row td {
-    background: rgba(255, 255, 255, 0.78);
   }
 
   .top-bar,
