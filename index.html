@@ -16,7 +16,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026060508" />
+    <link rel="stylesheet" href="./styles.css?v=2026061501" />
   </head>
   <body class="home-active">
     <div class="stars" aria-hidden="true"></div>
@@ -56,11 +56,19 @@
         </header>
 
         <form class="story-form" id="story-form">
+          <fieldset class="choice-group child-profile-picker" id="builder-child-profiles" hidden>
+            <legend>Child profiles <small>optional</small></legend>
+            <p class="helper-text">Choose one or more saved profiles to personalise the story.</p>
+            <div class="profile-choice-list" id="builder-profile-list"></div>
+            <button class="button secondary-button compact-button" id="clear-profile-selection" type="button">
+              Clear Profiles
+            </button>
+          </fieldset>
 
           <div class="form-grid">
             <label class="field">
-              <span>Child name</span>
-              <input id="child-name" name="childName" type="text" placeholder="Rosie" required />
+              <span>Child name <small>or pick a profile</small></span>
+              <input id="child-name" name="childName" type="text" placeholder="Rosie" />
             </label>
 
             <label class="field">
@@ -493,6 +501,55 @@
               <button class="button secondary-button" id="sign-out-button" type="button">Sign Out</button>
             </div>
           </article>
+
+          <article class="auth-card child-profiles-card" id="child-profiles-card" hidden>
+            <h3>Child profiles</h3>
+            <p>Add optional details DreamScapes can use when creating personalised stories.</p>
+            <form class="auth-form child-profile-form" id="child-profile-form">
+              <input id="child-profile-id" type="hidden" />
+              <div class="form-grid">
+                <label class="field">
+                  <span>Child name</span>
+                  <input id="profile-child-name" name="profileChildName" type="text" placeholder="Rosie" />
+                </label>
+                <label class="field">
+                  <span>Age <small>optional</small></span>
+                  <input id="profile-child-age" name="profileChildAge" type="number" min="1" max="12" placeholder="5" />
+                </label>
+              </div>
+              <div class="form-grid">
+                <label class="field">
+                  <span>Eye colour</span>
+                  <input id="profile-eye-colour" name="profileEyeColour" type="text" placeholder="Blue" />
+                </label>
+                <label class="field">
+                  <span>Hair colour</span>
+                  <input id="profile-hair-colour" name="profileHairColour" type="text" placeholder="Brown curls" />
+                </label>
+              </div>
+              <label class="field">
+                <span>Parent names</span>
+                <input id="profile-parent-names" name="profileParentNames" type="text" placeholder="Mum Sophie, Dad Tom" />
+              </label>
+              <label class="field">
+                <span>Interests and favourite things</span>
+                <input id="profile-interests" name="profileInterests" type="text" placeholder="Unicorns, space, football" />
+              </label>
+              <label class="field">
+                <span>Things to avoid</span>
+                <input id="profile-avoid-topics" name="profileAvoidTopics" type="text" placeholder="Storms, spiders, getting lost" />
+              </label>
+              <label class="field">
+                <span>Other details</span>
+                <textarea id="profile-other-details" name="profileOtherDetails" rows="3" placeholder="Kind, curious, loves bedtime stories with gentle magic."></textarea>
+              </label>
+              <div class="auth-actions">
+                <button class="button primary-button" type="submit">Save Profile</button>
+                <button class="button secondary-button" id="cancel-profile-edit" type="button">Clear Form</button>
+              </div>
+            </form>
+            <div class="child-profile-list" id="child-profile-list"></div>
+          </article>
         </div>
 
         <p class="status-note account-status" id="auth-status" role="status"></p>
@@ -584,6 +641,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026060508"></script>
+    <script src="./app.js?v=2026061501"></script>
   </body>
 </html>

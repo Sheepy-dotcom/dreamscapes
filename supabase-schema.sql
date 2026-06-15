@@ -61,6 +61,21 @@ create table if not exists public.audio_issue_reports (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.child_profiles (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  child_name text not null,
+  child_age text,
+  eye_colour text,
+  hair_colour text,
+  parent_names text,
+  interests text,
+  avoid_topics text,
+  other_details text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
@@ -91,6 +106,11 @@ create trigger audio_issue_reports_set_updated_at
 before update on public.audio_issue_reports
 for each row execute function public.set_updated_at();
 
+drop trigger if exists child_profiles_set_updated_at on public.child_profiles;
+create trigger child_profiles_set_updated_at
+before update on public.child_profiles
+for each row execute function public.set_updated_at();
+
 create or replace function public.create_profile_for_new_user()
 returns trigger
 language plpgsql
@@ -115,6 +135,7 @@ alter table public.profiles enable row level security;
 alter table public.stories enable row level security;
 alter table public.usage_months enable row level security;
 alter table public.audio_issue_reports enable row level security;
+alter table public.child_profiles enable row level security;
 
 drop policy if exists "Users can read own profile" on public.profiles;
 create policy "Users can read own profile"
@@ -170,6 +191,27 @@ create policy "Users can create own audio issue reports"
 on public.audio_issue_reports for insert
 with check (auth.uid() = user_id);
 
+drop policy if exists "Users can read own child profiles" on public.child_profiles;
+create policy "Users can read own child profiles"
+on public.child_profiles for select
+using (auth.uid() = user_id);
+
+drop policy if exists "Users can create own child profiles" on public.child_profiles;
+create policy "Users can create own child profiles"
+on public.child_profiles for insert
+with check (auth.uid() = user_id);
+
+drop policy if exists "Users can update own child profiles" on public.child_profiles;
+create policy "Users can update own child profiles"
+on public.child_profiles for update
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);
+
+drop policy if exists "Users can delete own child profiles" on public.child_profiles;
+create policy "Users can delete own child profiles"
+on public.child_profiles for delete
+using (auth.uid() = user_id);
+
 create index if not exists stories_user_created_idx
 on public.stories (user_id, created_at desc);
 
@@ -181,6 +223,9 @@ on public.audio_issue_reports (user_id, created_at desc);
 
 create index if not exists audio_issue_reports_status_created_idx
 on public.audio_issue_reports (status, created_at desc);
+
+create index if not exists child_profiles_user_created_idx
+on public.child_profiles (user_id, created_at desc);
 
 alter table public.stories
 add column if not exists audio_requested boolean not null default false;

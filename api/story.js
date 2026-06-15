@@ -48,6 +48,7 @@ function buildPrompt(data) {
   const target = getTarget(data.duration);
   const storyType = data.storyType === "bedtime" ? "bedtime story" : "anytime story";
   const moods = cleanList(data.moods);
+  const childProfileSummary = cleanList(data.childProfileSummary);
   const retryNote = data.enforceWordCount
     ? [
         "",
@@ -69,6 +70,7 @@ function buildPrompt(data) {
     "Timing rule: the selected duration is for narrated audio, so the story must be long enough when read aloud slowly.",
     `Mood blend: ${moods.length ? moods.join(", ") : "relaxing"}.`,
     `Story idea from parent: ${cleanText(data.storyIdea, "a gentle adventure with a kind positive ending")}.`,
+    `Selected child profile details: ${childProfileSummary.length ? childProfileSummary.join(" | ") : "not selected"}.`,
     `Child interests: ${cleanText(data.interests, "not specified")}.`,
     `Topics to avoid: ${cleanText(data.avoidTopics, "none specified")}.`,
     `Preferred lesson: ${cleanText(data.preferredLesson, "a gentle moral that fits naturally")}.`,
@@ -79,6 +81,8 @@ function buildPrompt(data) {
     "- Use warm, sensory, magical language with clear scenes and character moments.",
     "- Keep it age-appropriate, safe, non-frightening, and parent-friendly.",
     "- Give the child small choices, feelings, and discoveries.",
+    "- Use selected profile details naturally where helpful, but do not list physical details awkwardly or make appearance the focus.",
+    "- If multiple child profiles are selected, include each child as an important character and give each a kind moment.",
     "- Use short, gentle sentences with frequent natural pauses between phrases for bedtime narration.",
     "- Do not finish early. The story should feel complete and should land inside the requested word range.",
     "- Longer durations must include more complete scenes, not just longer sentences.",

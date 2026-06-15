@@ -44,11 +44,20 @@ const accountCloudStatus = document.querySelector("#account-cloud-status");
 const accountPlan = document.querySelector("#account-plan");
 const accountStories = document.querySelector("#account-stories");
 const accountAudio = document.querySelector("#account-audio");
+const childProfilesCard = document.querySelector("#child-profiles-card");
+const childProfileForm = document.querySelector("#child-profile-form");
+const childProfileList = document.querySelector("#child-profile-list");
+const childProfileId = document.querySelector("#child-profile-id");
+const builderChildProfiles = document.querySelector("#builder-child-profiles");
+const builderProfileList = document.querySelector("#builder-profile-list");
+const clearProfileSelectionButton = document.querySelector("#clear-profile-selection");
 let currentStory = null;
 let currentUser = null;
 let supabaseClient = null;
 let cloudStories = [];
 let cloudStoriesLoaded = false;
+let childProfiles = [];
+let childProfilesLoaded = false;
 let currentUsage = null;
 let currentProfile = null;
 let passwordRecoveryActive = false;
@@ -370,6 +379,7 @@ function updateAccountUI() {
 
   if (authSignedOut) authSignedOut.hidden = signedIn;
   if (authSignedIn) authSignedIn.hidden = !signedIn;
+  if (childProfilesCard) childProfilesCard.hidden = !signedIn;
   if (passwordResetCard && !passwordRecoveryActive) {
     passwordResetCard.hidden = true;
   }
@@ -396,6 +406,7 @@ function showPasswordResetCard() {
 
 async function refreshAccountSummary() {
   if (!canUseCloudLibrary()) {
+    loadLocalChildProfiles();
     updateAccountUI();
     return;
   }
@@ -404,6 +415,7 @@ async function refreshAccountSummary() {
     await loadProfile();
     await loadCloudUsage();
     await loadCloudStories();
+    await loadChildProfiles();
   } catch {
     setAuthStatus("Could not refresh account totals yet.", true);
   }
@@ -414,7 +426,229 @@ async function refreshAccountSummary() {
 function setCurrentUser(user) {
   currentUser = user || null;
   if (!currentUser) revenueCatConfiguredForUser = "";
+  if (!currentUser) {
+    childProfiles = [];
+    childProfilesLoaded = false;
+  }
+  loadLocalChildProfiles();
   updateAccountUI();
+}
+
+function getChildProfileStorageKey() {
+  return `dreamscapesChildProfiles:${currentUser?.id || "local"}`;
+}
+
+function cleanProfileValue(value) {
+  return String(value || "").replace(/\s+/g, " ").trim();
+}
+
+function normaliseChildProfile(profile = {}) {
+  const id = profile.id || profile.localId || createStoryId();
+  return {
+    id,
+    localId: profile.localId || id,
+    childName: cleanProfileValue(profile.childName || profile.child_name),
+    childAge: cleanProfileValue(profile.childAge || profile.child_age),
+    eyeColour: cleanProfileValue(profile.eyeColour || profile.eye_colour),
+    hairColour: cleanProfileValue(profile.hairColour || profile.hair_colour),
+    parentNames: cleanProfileValue(profile.parentNames || profile.parent_names),
+    interests: cleanProfileValue(profile.interests),
+    avoidTopics: cleanProfileValue(profile.avoidTopics || profile.avoid_topics),
+    otherDetails: cleanProfileValue(profile.otherDetails || profile.other_details),
+    createdAt: profile.createdAt || profile.created_at || new Date().toISOString(),
+    updatedAt: profile.updatedAt || profile.updated_at || new Date().toISOString(),
+  };
+}
+
+function isUuid(value) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    String(value || "")
+  );
+}
+
+function loadLocalChildProfiles() {
+  try {
+    const profiles = JSON.parse(localStorage.getItem(getChildProfileStorageKey()) || "[]");
+    childProfiles = Array.isArray(profiles) ? profiles.map(normaliseChildProfile) : [];
+  } catch {
+    childProfiles = [];
+  }
+  renderChildProfiles();
+  renderBuilderProfileChoices();
+  return childProfiles;
+}
+
+function saveLocalChildProfiles(profiles = childProfiles) {
+  localStorage.setItem(getChildProfileStorageKey(), JSON.stringify(profiles.map(normaliseChildProfile)));
+}
+
+function profileToCloudRow(profile) {
+  return {
+    user_id: currentUser.id,
+    child_name: profile.childName,
+    child_age: profile.childAge || null,
+    eye_colour: profile.eyeColour || null,
+    hair_colour: profile.hairColour || null,
+    parent_names: profile.parentNames || null,
+    interests: profile.interests || null,
+    avoid_topics: profile.avoidTopics || null,
+    other_details: profile.otherDetails || null,
+  };
+}
+
+async function loadChildProfiles() {
+  if (!canUseCloudLibrary()) return loadLocalChildProfiles();
+
+  try {
+    const { data, error } = await supabaseClient
+      .from("child_profiles")
+      .select("*")
+      .order("created_at", { ascending: true });
+    if (error) throw error;
+    childProfiles = (data || []).map(normaliseChildProfile);
+    childProfilesLoaded = true;
+    saveLocalChildProfiles(childProfiles);
+  } catch {
+    childProfilesLoaded = false;
+    loadLocalChildProfiles();
+  }
+
+  renderChildProfiles();
+  renderBuilderProfileChoices();
+  return childProfiles;
+}
+
+async function saveChildProfile(profile) {
+  const savedAt = new Date().toISOString();
+  const profileToSave = normaliseChildProfile({ ...profile, updatedAt: savedAt });
+
+  if (canUseCloudLibrary()) {
+    try {
+      const isCloudProfile =
+        isUuid(profileToSave.id) && childProfiles.some((savedProfile) => savedProfile.id === profileToSave.id);
+      const query = isCloudProfile
+        ? supabaseClient
+            .from("child_profiles")
+            .update(profileToCloudRow(profileToSave))
+            .eq("id", profileToSave.id)
+            .select()
+            .single()
+        : supabaseClient
+            .from("child_profiles")
+            .insert(profileToCloudRow(profileToSave))
+            .select()
+            .single();
+      const { data, error } = await query;
+      if (error) throw error;
+      const cloudProfile = normaliseChildProfile(data);
+      childProfiles = [cloudProfile, ...childProfiles.filter((savedProfile) => savedProfile.id !== cloudProfile.id)];
+      childProfilesLoaded = true;
+      saveLocalChildProfiles(childProfiles);
+      renderChildProfiles();
+      renderBuilderProfileChoices();
+      return cloudProfile;
+    } catch {
+      setAuthStatus("Profile saved on this device. Cloud profile sync needs the child_profiles table.", true);
+    }
+  }
+
+  childProfiles = [profileToSave, ...childProfiles.filter((savedProfile) => savedProfile.id !== profileToSave.id)];
+  saveLocalChildProfiles(childProfiles);
+  renderChildProfiles();
+  renderBuilderProfileChoices();
+  return profileToSave;
+}
+
+async function deleteChildProfile(profileId) {
+  const profile = childProfiles.find((savedProfile) => savedProfile.id === profileId);
+
+  if (canUseCloudLibrary() && profile) {
+    await supabaseClient.from("child_profiles").delete().eq("id", profile.id).throwOnError();
+  }
+
+  childProfiles = childProfiles.filter((savedProfile) => savedProfile.id !== profileId);
+  saveLocalChildProfiles(childProfiles);
+  renderChildProfiles();
+  renderBuilderProfileChoices();
+}
+
+function getProfileSummary(profile) {
+  return [
+    profile.childAge ? `Age ${profile.childAge}` : "",
+    profile.eyeColour ? `${profile.eyeColour} eyes` : "",
+    profile.hairColour ? profile.hairColour : "",
+    profile.interests ? `Likes ${profile.interests}` : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+function renderChildProfiles() {
+  if (!childProfileList) return;
+
+  if (!currentUser) {
+    childProfileList.innerHTML = "";
+    return;
+  }
+
+  if (childProfiles.length === 0) {
+    childProfileList.innerHTML = '<p class="helper-text">No child profiles yet. Add one above when you are ready.</p>';
+    return;
+  }
+
+  childProfileList.innerHTML = childProfiles
+    .map(
+      (profile) => `
+        <article class="child-profile-item">
+          <div>
+            <h4>${escapeHtml(profile.childName || "Child profile")}</h4>
+            <p>${escapeHtml(getProfileSummary(profile) || "Optional story details saved.")}</p>
+          </div>
+          <div class="profile-actions">
+            <button class="button secondary-button compact-button" data-edit-profile="${escapeHtml(profile.id)}" type="button">Edit</button>
+            <button class="button secondary-button compact-button delete-button" data-delete-profile="${escapeHtml(profile.id)}" type="button">Delete</button>
+          </div>
+        </article>
+      `
+    )
+    .join("");
+}
+
+function renderBuilderProfileChoices() {
+  if (!builderChildProfiles || !builderProfileList) return;
+
+  builderChildProfiles.hidden = childProfiles.length === 0;
+  builderProfileList.innerHTML = childProfiles
+    .map(
+      (profile) => `
+        <label>
+          <input type="checkbox" name="childProfiles" value="${escapeHtml(profile.id)}" />
+          <span>
+            <strong>${escapeHtml(profile.childName || "Child profile")}</strong>
+            <small>${escapeHtml(getProfileSummary(profile) || "Use saved details")}</small>
+          </span>
+        </label>
+      `
+    )
+    .join("");
+}
+
+function clearChildProfileForm() {
+  childProfileForm?.reset();
+  if (childProfileId) childProfileId.value = "";
+}
+
+function fillChildProfileForm(profile) {
+  if (!childProfileForm || !profile) return;
+  childProfileId.value = profile.id;
+  childProfileForm.elements.profileChildName.value = profile.childName || "";
+  childProfileForm.elements.profileChildAge.value = profile.childAge || "";
+  childProfileForm.elements.profileEyeColour.value = profile.eyeColour || "";
+  childProfileForm.elements.profileHairColour.value = profile.hairColour || "";
+  childProfileForm.elements.profileParentNames.value = profile.parentNames || "";
+  childProfileForm.elements.profileInterests.value = profile.interests || "";
+  childProfileForm.elements.profileAvoidTopics.value = profile.avoidTopics || "";
+  childProfileForm.elements.profileOtherDetails.value = profile.otherDetails || "";
 }
 
 async function loadProfile() {
@@ -662,6 +896,74 @@ function getValues(name) {
   return new FormData(form).getAll(name).map((value) => value.toString().trim());
 }
 
+function getSelectedChildProfiles() {
+  const selectedIds = getValues("childProfiles");
+  return childProfiles.filter((profile) => selectedIds.includes(profile.id));
+}
+
+function joinProfileValues(profiles, key) {
+  return profiles
+    .map((profile) => profile[key])
+    .filter(Boolean)
+    .join(", ");
+}
+
+function describeChildProfiles(profiles) {
+  return profiles.map((profile) => {
+    const details = [
+      profile.childAge ? `age ${profile.childAge}` : "",
+      profile.eyeColour ? `${profile.eyeColour} eyes` : "",
+      profile.hairColour ? `${profile.hairColour} hair` : "",
+      profile.parentNames ? `parent names: ${profile.parentNames}` : "",
+      profile.interests ? `interests: ${profile.interests}` : "",
+      profile.avoidTopics ? `avoid: ${profile.avoidTopics}` : "",
+      profile.otherDetails ? `other details: ${profile.otherDetails}` : "",
+    ].filter(Boolean);
+    return `${profile.childName}${details.length ? ` (${details.join("; ")})` : ""}`;
+  });
+}
+
+function buildProfileAwareStoryData(selectedPlan, selectedPlanKey) {
+  const selectedProfiles = getSelectedChildProfiles();
+  const profileNames = joinProfileValues(selectedProfiles, "childName");
+  const manualName = getValue("childName");
+  const childName = manualName || profileNames;
+  const childAge = getValue("childAge") || (selectedProfiles.length === 1 ? selectedProfiles[0].childAge : "");
+  const interests = [getValue("interests"), joinProfileValues(selectedProfiles, "interests")]
+    .filter(Boolean)
+    .join(", ");
+  const avoidTopics = [getValue("avoidTopics"), joinProfileValues(selectedProfiles, "avoidTopics")]
+    .filter(Boolean)
+    .join(", ");
+
+  return {
+    plan: selectedPlanKey,
+    childName,
+    childAge,
+    interests,
+    duration: getValue("durationChoice"),
+    storyType: getValue("storyType"),
+    moods: getValues("moods"),
+    storyIdea: getValue("storyIdea"),
+    avoidTopics,
+    preferredLesson: getValue("preferredLesson"),
+    calmMode: new FormData(form).has("calmMode"),
+    audioNarration: selectedPlan.canUseAudio && audioToggle.checked,
+    voiceStyle: getValue("voiceStyle"),
+    childProfiles: selectedProfiles.map((profile) => ({
+      childName: profile.childName,
+      childAge: profile.childAge,
+      eyeColour: profile.eyeColour,
+      hairColour: profile.hairColour,
+      parentNames: profile.parentNames,
+      interests: profile.interests,
+      avoidTopics: profile.avoidTopics,
+      otherDetails: profile.otherDetails,
+    })),
+    childProfileSummary: describeChildProfiles(selectedProfiles),
+  };
+}
+
 function tidyIdea(idea, childName) {
   const fallback = `${childName} discovers a glowing storybook and helps a tiny star find its way home.`;
   const cleanIdea = idea.replace(/\s+/g, " ").trim();
@@ -862,7 +1164,7 @@ async function requestPlusForAudio() {
 }
 
 function escapeHtml(value) {
-  return value
+  return String(value || "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
@@ -929,6 +1231,9 @@ function generateStory(data) {
   const lessonLine = data.preferredLesson
     ? `The heart of the adventure quietly pointed toward ${data.preferredLesson}.`
     : "";
+  const profileLine = Array.isArray(data.childProfileSummary) && data.childProfileSummary.length
+    ? `The DreamScape remembered the little details that made this story feel personal: ${data.childProfileSummary.join(" ")}`
+    : "";
   const calmLine = data.calmMode
     ? "Every exciting moment softened before bedtime, like a bright lantern turned low."
     : "";
@@ -939,7 +1244,7 @@ function generateStory(data) {
     `Soon, ${data.childName} met a small problem that needed a gentle heart. Instead of rushing, ${data.childName} listened, noticed who needed help, and chose the kindest next step. Bit by bit, the story became warmer.`,
   ];
 
-  [interestLine, safetyLine, lessonLine, calmLine].filter(Boolean).forEach((line) => {
+  [profileLine, interestLine, safetyLine, lessonLine, calmLine].filter(Boolean).forEach((line) => {
     paragraphs.push(line);
   });
 
@@ -969,10 +1274,16 @@ function generateStory(data) {
 
 function createPrompt(data) {
   const plan = getPlan(data.plan);
+  const profileSummary = Array.isArray(data.childProfileSummary) && data.childProfileSummary.length
+    ? data.childProfileSummary.join(" | ")
+    : "not selected";
   return [
     "Write a safe, child-friendly personalised children's story.",
     `Child name: ${data.childName}`,
     `Child age: ${getChildAgePrompt(data.childAge)}`,
+    `Selected child profile details: ${profileSummary}`,
+    "Use profile details naturally where helpful, but do not list physical details awkwardly or make appearance the focus.",
+    "If multiple profiles are selected, include both children as important characters and give each a kind moment.",
     `Package: ${plan.label}`,
     `Interests: ${data.interests || "not specified"}`,
     `Avoid topics: ${data.avoidTopics || "none specified"}`,
@@ -1868,6 +2179,65 @@ document.querySelector("#sign-out-button")?.addEventListener("click", async () =
   trackEvent("account_signed_out");
 });
 
+childProfileForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const profile = {
+    id: childProfileId?.value || "",
+    childName: cleanProfileValue(childProfileForm.elements.profileChildName.value),
+    childAge: cleanProfileValue(childProfileForm.elements.profileChildAge.value),
+    eyeColour: cleanProfileValue(childProfileForm.elements.profileEyeColour.value),
+    hairColour: cleanProfileValue(childProfileForm.elements.profileHairColour.value),
+    parentNames: cleanProfileValue(childProfileForm.elements.profileParentNames.value),
+    interests: cleanProfileValue(childProfileForm.elements.profileInterests.value),
+    avoidTopics: cleanProfileValue(childProfileForm.elements.profileAvoidTopics.value),
+    otherDetails: cleanProfileValue(childProfileForm.elements.profileOtherDetails.value),
+  };
+
+  if (!profile.childName) {
+    setAuthStatus("Add a child name before saving a profile.", true);
+    return;
+  }
+
+  await saveChildProfile(profile);
+  clearChildProfileForm();
+  setAuthStatus("Child profile saved.");
+  trackEvent("child_profile_saved");
+});
+
+document.querySelector("#cancel-profile-edit")?.addEventListener("click", () => {
+  clearChildProfileForm();
+  setAuthStatus("");
+});
+
+childProfileList?.addEventListener("click", async (event) => {
+  const editButton = event.target.closest("[data-edit-profile]");
+  const deleteButton = event.target.closest("[data-delete-profile]");
+
+  if (editButton) {
+    const profile = childProfiles.find((savedProfile) => savedProfile.id === editButton.dataset.editProfile);
+    fillChildProfileForm(profile);
+    setAuthStatus("Editing child profile.");
+    return;
+  }
+
+  if (deleteButton) {
+    try {
+      await deleteChildProfile(deleteButton.dataset.deleteProfile);
+      setAuthStatus("Child profile deleted.");
+      trackEvent("child_profile_deleted");
+    } catch {
+      setAuthStatus("Could not delete that child profile. Try again.", true);
+    }
+  }
+});
+
+clearProfileSelectionButton?.addEventListener("click", () => {
+  document.querySelectorAll('input[name="childProfiles"]').forEach((input) => {
+    input.checked = false;
+  });
+});
+
 document.querySelectorAll("[data-idea]").forEach((button) => {
   button.addEventListener("click", () => {
     storyIdea.value = button.dataset.idea;
@@ -2059,23 +2429,14 @@ form.addEventListener("submit", async (event) => {
     return;
   }
 
-  showScreen("loading");
+  const storyData = buildProfileAwareStoryData(selectedPlan, selectedPlanKey);
 
-  const storyData = {
-    plan: selectedPlanKey,
-    childName: getValue("childName"),
-    childAge: getValue("childAge"),
-    interests: getValue("interests"),
-    duration: getValue("durationChoice"),
-    storyType: getValue("storyType"),
-    moods: getValues("moods"),
-    storyIdea: getValue("storyIdea"),
-    avoidTopics: getValue("avoidTopics"),
-    preferredLesson: getValue("preferredLesson"),
-    calmMode: new FormData(form).has("calmMode"),
-    audioNarration: selectedPlan.canUseAudio && audioToggle.checked,
-    voiceStyle: getValue("voiceStyle"),
-  };
+  if (!storyData.childName) {
+    planNote.textContent = "Add a child name or choose a saved child profile before creating a story.";
+    return;
+  }
+
+  showScreen("loading");
 
   window.setTimeout(async () => {
     let generatedStory = null;

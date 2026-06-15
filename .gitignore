@@ -4,6 +4,7 @@ android/.idea/
 android/keystore.properties
 android/app/*.jks
 android/app/*.keystore
+dreamscapes-testers.csv
 node_modules/
 dist/
 www/

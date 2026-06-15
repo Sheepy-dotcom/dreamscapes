@@ -388,7 +388,8 @@ textarea:focus-visible {
 
 .segmented-control,
 .duration-grid,
-.mood-grid {
+.mood-grid,
+.profile-choice-list {
   display: grid;
   gap: 10px;
 }
@@ -405,9 +406,15 @@ textarea:focus-visible {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.profile-choice-list {
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  margin-bottom: 10px;
+}
+
 .segmented-control label,
 .duration-grid label,
-.mood-grid label {
+.mood-grid label,
+.profile-choice-list label {
   position: relative;
   display: block;
   min-width: 0;
@@ -416,14 +423,16 @@ textarea:focus-visible {
 
 .segmented-control input,
 .duration-grid input,
-.mood-grid input {
+.mood-grid input,
+.profile-choice-list input {
   display: none;
   pointer-events: none;
 }
 
 .segmented-control span,
 .duration-grid span,
-.mood-grid span {
+.mood-grid span,
+.profile-choice-list span {
   display: grid;
   min-height: 48px;
   place-items: center;
@@ -434,6 +443,26 @@ textarea:focus-visible {
   background: rgba(255, 255, 255, 0.7);
   font-weight: 900;
   text-align: center;
+}
+
+.profile-choice-list span {
+  min-height: 78px;
+  place-items: start;
+  align-content: center;
+  text-align: left;
+}
+
+.profile-choice-list small,
+.choice-group .helper-text {
+  color: #715c9b;
+  font-size: 0.82rem;
+  line-height: 1.25;
+}
+
+.profile-choice-list input:checked + span {
+  border-color: rgba(123, 78, 216, 0.82);
+  background: linear-gradient(135deg, rgba(255, 248, 220, 0.96), rgba(216, 198, 255, 0.68));
+  box-shadow: 0 0 0 3px rgba(123, 78, 216, 0.12);
 }
 
 .subscription-card {
@@ -1041,6 +1070,45 @@ textarea:focus-visible {
   gap: 14px;
 }
 
+.child-profiles-card {
+  grid-column: 1 / -1;
+}
+
+.child-profile-form textarea {
+  min-height: 92px;
+}
+
+.child-profile-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.child-profile-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid rgba(123, 78, 216, 0.16);
+  border-radius: 8px;
+  padding: 12px;
+  background: rgba(255, 248, 220, 0.5);
+}
+
+.child-profile-item h4 {
+  margin: 0 0 4px;
+  color: var(--ink);
+}
+
+.child-profile-item p {
+  margin: 0;
+}
+
+.profile-actions {
+  display: flex;
+  gap: 8px;
+}
+
 .auth-actions {
   display: flex;
   flex-wrap: wrap;
@@ -1197,7 +1265,8 @@ textarea:focus-visible {
   .trust-links,
   .audio-settings,
   .segmented-control,
-  .mood-grid {
+  .mood-grid,
+  .profile-choice-list {
     grid-template-columns: 1fr;
   }
 
@@ -1217,6 +1286,15 @@ textarea:focus-visible {
   .account-screen .auth-grid {
     align-self: start;
     padding-top: 8px;
+  }
+
+  .child-profile-item {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
   }
 
   .narration-panel {
