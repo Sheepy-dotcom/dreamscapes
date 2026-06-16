@@ -115,21 +115,21 @@ const VOICE_PREVIEW_FILES = {
 const AI_VOICE_PROFILES = {
   "female calm": {
     voice: "nova",
-    label: "a calm British English woman reading softly at bedtime",
+    label: "a British English female storyteller",
     direction:
-      "Use the same consistent Nova voice every time: a soft British bedtime storyteller, gentle, cosy, natural, clear, and reassuring. Keep a steady human pace with warm expression. Do not sound robotic, theatrical, American, or like an announcer. Do not drag or stretch words.",
+      "Use the same consistent Nova voice every time: a warm British female storyteller, natural, expressive, clear, and reassuring. Keep a steady storybook pace with gentle emotion and a friendly bedtime feel. Do not sound robotic, theatrical, American, sales-like, or like an announcer. Do not drag words.",
   },
   "female sage calm": {
     voice: "sage",
-    label: "a very calm British English woman reading softly at bedtime",
+    label: "a calm British English woman reading softly at bedtime",
     direction:
       "Use the same consistent Sage voice every time: a very calm British bedtime storyteller with a soft, close, reassuring tone. Sound gentle, cosy, natural, warm, and quietly expressive, like a parent reading slowly beside the bed. Keep the pace unhurried with light pauses at commas and longer pauses at full stops. Do not sound robotic, theatrical, American, bright, sales-like, or like an announcer. Do not overact character voices, drag words, or change voice style between paragraphs.",
   },
   "male calm": {
     voice: "fable",
-    label: "a calm British English man reading softly at bedtime",
+    label: "a British English male storyteller",
     direction:
-      "Use the same consistent voice every time: a gentle British storybook narrator, warm, steady, natural, low-energy, clear, and reassuring. Keep a steady human pace. Do not sound robotic, theatrical, American, or like an announcer. Do not drag or stretch words.",
+      "Use the same consistent Fable voice every time: a warm British male storyteller, steady, natural, clear, and reassuring. Keep a gentle storybook pace with enough character to feel engaging without overacting. Do not sound robotic, theatrical, American, sales-like, or like an announcer. Do not drag words.",
   },
 };
 const MAX_LOCAL_SAVED_STORIES = 30;
