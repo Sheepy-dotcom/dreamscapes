@@ -120,9 +120,9 @@ const AI_VOICE_PROFILES = {
   },
   "female sage calm": {
     voice: "sage",
-    label: "a calm British English woman reading softly at bedtime",
+    label: "a very calm British English woman reading softly at bedtime",
     direction:
-      "Use the same consistent Sage voice every time: a soft British bedtime storyteller, gentle, cosy, natural, clear, and reassuring. Keep a steady human pace with warm expression. Do not sound robotic, theatrical, American, or like an announcer. Do not drag or stretch words.",
+      "Use the same consistent Sage voice every time: a very calm British bedtime storyteller with a soft, close, reassuring tone. Sound gentle, cosy, natural, warm, and quietly expressive, like a parent reading slowly beside the bed. Keep the pace unhurried with light pauses at commas and longer pauses at full stops. Do not sound robotic, theatrical, American, bright, sales-like, or like an announcer. Do not overact character voices, drag words, or change voice style between paragraphs.",
   },
   "male calm": {
     voice: "fable",
