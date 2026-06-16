@@ -118,25 +118,25 @@ const AI_VOICE_PROFILES = {
     voice: "nova",
     label: "a British English female storyteller",
     direction:
-      "Use the same consistent Nova voice every time: a warm British female storyteller, natural, expressive, clear, and reassuring. Keep a steady storybook pace with gentle emotion and a friendly bedtime feel. Do not sound robotic, theatrical, American, sales-like, or like an announcer. Do not drag words.",
+      "Use the same consistent voice every time: a warm British female storyteller, natural, expressive, clear, and reassuring. Keep a steady storybook pace with gentle emotion and a friendly bedtime feel. Do not sound robotic, theatrical, American, sales-like, or like an announcer. Do not drag words.",
   },
   "female sage calm": {
     voice: "sage",
     label: "a calm British English woman reading softly at bedtime",
     direction:
-      "Use the same consistent Sage voice every time: a very calm British bedtime storyteller with a soft, close, reassuring tone. Sound gentle, cosy, natural, warm, and quietly expressive, like a parent reading slowly beside the bed. Keep the pace unhurried with light pauses at commas and longer pauses at full stops. Do not sound robotic, theatrical, American, bright, sales-like, or like an announcer. Do not overact character voices, drag words, or change voice style between paragraphs.",
+      "Use the same consistent voice every time: a very calm British bedtime storyteller with a soft, close, reassuring tone. Sound gentle, cosy, natural, warm, and quietly expressive, like a parent reading slowly beside the bed. Keep the pace unhurried with light pauses at commas and longer pauses at full stops. Do not sound robotic, theatrical, American, bright, sales-like, or like an announcer. Do not overact character voices, drag words, or change voice style between paragraphs.",
   },
   "male calm": {
     voice: "fable",
     label: "a British English male storyteller",
     direction:
-      "Use the same consistent Fable voice every time: a warm British male storyteller, steady, natural, clear, and reassuring. Keep a gentle storybook pace with enough character to feel engaging without overacting. Do not sound robotic, theatrical, American, sales-like, or like an announcer. Do not drag words.",
+      "Use the same consistent voice every time: a warm British male storyteller, steady, natural, clear, and reassuring. Keep a gentle storybook pace with enough character to feel engaging without overacting. Do not sound robotic, theatrical, American, sales-like, or like an announcer. Do not drag words.",
   },
   "ash storyteller": {
     voice: "ash",
-    label: "a British English storybook narrator",
+    label: "a calm British English male storyteller",
     direction:
-      "Use the same consistent Ash voice every time: a warm British storybook narrator, clear, gentle, expressive, and reassuring. Keep a natural bedtime story pace with soft warmth and calm character. Do not sound robotic, theatrical, American, sales-like, or like an announcer. Do not drag words or change voice style between paragraphs.",
+      "Use the same consistent voice every time: a calm British male storyteller, clear, gentle, expressive, and reassuring. Keep a natural bedtime story pace with soft warmth and calm character. Do not sound robotic, theatrical, American, sales-like, or like an announcer. Do not drag words or change voice style between paragraphs.",
   },
 };
 const MAX_LOCAL_SAVED_STORIES = 30;
