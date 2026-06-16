@@ -111,6 +111,7 @@ const VOICE_PREVIEW_FILES = {
   "female calm": "./assets/voice-preview-female-british-calm.mp3",
   "female sage calm": "./assets/voice-preview-female-sage-calm.mp3",
   "male calm": "./assets/voice-preview-male-british-calm.mp3",
+  "ash storyteller": "./assets/voice-preview-ash-storyteller.mp3",
 };
 const AI_VOICE_PROFILES = {
   "female calm": {
@@ -130,6 +131,12 @@ const AI_VOICE_PROFILES = {
     label: "a British English male storyteller",
     direction:
       "Use the same consistent Fable voice every time: a warm British male storyteller, steady, natural, clear, and reassuring. Keep a gentle storybook pace with enough character to feel engaging without overacting. Do not sound robotic, theatrical, American, sales-like, or like an announcer. Do not drag words.",
+  },
+  "ash storyteller": {
+    voice: "ash",
+    label: "a British English storybook narrator",
+    direction:
+      "Use the same consistent Ash voice every time: a warm British storybook narrator, clear, gentle, expressive, and reassuring. Keep a natural bedtime story pace with soft warmth and calm character. Do not sound robotic, theatrical, American, sales-like, or like an announcer. Do not drag words or change voice style between paragraphs.",
   },
 };
 const MAX_LOCAL_SAVED_STORIES = 30;
@@ -287,6 +294,7 @@ const voiceStyles = {
   "female default": { rate: 0.64, pitch: 1, volume: 0.86, pause: 1150 },
   "female cheerful": { rate: 0.64, pitch: 1, volume: 0.86, pause: 1150 },
   "male calm": { rate: 0.64, pitch: 0.88, volume: 0.86, pause: 1150 },
+  "ash storyteller": { rate: 0.64, pitch: 0.94, volume: 0.86, pause: 1150 },
   "male default": { rate: 0.64, pitch: 0.88, volume: 0.86, pause: 1150 },
   "male cheerful": { rate: 0.64, pitch: 0.88, volume: 0.86, pause: 1150 },
 };
