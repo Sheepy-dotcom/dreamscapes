@@ -1647,6 +1647,7 @@ function getAiNarrationInstructions(story) {
     bedtimeDirection,
     "Sound close, human, and reassuring, like a parent calmly reading beside the bed.",
     "Do not add extra words that are not in the story.",
+    "Do not add farewell sign-offs such as ta-ta, ta ta for now, bye, or goodbye.",
   ].join(" ");
 }
 

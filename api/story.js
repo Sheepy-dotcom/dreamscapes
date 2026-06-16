@@ -90,6 +90,7 @@ function buildPrompt(data) {
     "- Include a positive ending and a gentle lesson without sounding preachy.",
     "- For bedtime, slow the ending down and make the final paragraph peaceful.",
     "- Do not announce or explain that the story is written in British English.",
+    "- Do not end with farewell phrases such as ta-ta, ta ta for now, bye, or goodbye.",
     "- Do not mention AI, prompts, packages, subscriptions, or app settings.",
     ...retryNote,
   ].join("\n");
