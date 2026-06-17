@@ -115,7 +115,7 @@ const AI_NARRATION_REQUEST_MAX_LENGTH = 3400;
 const VOICE_PREVIEW_TEXT = "Hello from DreamScapes. Settle in, take a gentle breath, and let the story begin.";
 const VOICE_PREVIEW_FILES = {
   "female calm": "./assets/voice-preview-female-british-calm.mp3",
-  "female sage calm": "./assets/voice-preview-female-sage-calm.mp3",
+  "female sage calm": "./assets/voice-preview-female-sage-calm-v2.mp3",
   "male calm": "./assets/voice-preview-male-british-calm.mp3",
   "ash storyteller": "./assets/voice-preview-ash-storyteller.mp3",
 };
