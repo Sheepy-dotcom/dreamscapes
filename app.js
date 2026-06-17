@@ -113,9 +113,10 @@ const SUPABASE_SCRIPT_URLS = [
 const AUDIO_BUCKET = "story-audio";
 const AI_NARRATION_REQUEST_MAX_LENGTH = 3400;
 const VOICE_PREVIEW_TEXT = "Hello from DreamScapes. Settle in, take a gentle breath, and let the story begin.";
+const VOICE_PREVIEW_CACHE_VERSION = "2026061527";
 const VOICE_PREVIEW_GAIN = 0.82;
 const VOICE_PREVIEW_GAINS = {
-  "female sage calm": 1.8,
+  "female sage calm": 3.4,
 };
 const VOICE_PREVIEW_FILES = {
   "female calm": "./assets/voice-preview-female-british-calm.mp3",
@@ -309,13 +310,19 @@ const voiceStyles = {
   "male cheerful": { rate: 0.64, pitch: 0.88, volume: 0.86, pause: 1150 },
 };
 
+function getPreviewAudioSource(source) {
+  if (!source || source.startsWith("data:")) return source;
+  return source.includes("?") ? `${source}&v=${VOICE_PREVIEW_CACHE_VERSION}` : `${source}?v=${VOICE_PREVIEW_CACHE_VERSION}`;
+}
+
 async function playPreviewAudio(source, gain = VOICE_PREVIEW_GAIN) {
+  const previewSource = getPreviewAudioSource(source);
   try {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
     if (!AudioContextClass) throw new Error("AudioContext unavailable");
 
     const audioContext = new AudioContextClass();
-    const response = await fetch(source);
+    const response = await fetch(previewSource);
     if (!response.ok) throw new Error("Preview audio could not load");
 
     const audioBuffer = await audioContext.decodeAudioData(await response.arrayBuffer());
@@ -327,12 +334,12 @@ async function playPreviewAudio(source, gain = VOICE_PREVIEW_GAIN) {
     bufferSource.connect(gainNode);
     gainNode.connect(audioContext.destination);
     bufferSource.start(0);
-    return true;
+    return "web-audio";
   } catch {
-    const previewAudio = new Audio(source);
+    const previewAudio = new Audio(previewSource);
     previewAudio.volume = Math.min(Math.max(gain, 0), 1);
     await previewAudio.play();
-    return true;
+    return "html-audio";
   }
 }
 
@@ -2366,8 +2373,7 @@ async function playAiVoicePreview() {
   const previewGain = VOICE_PREVIEW_GAINS[selectedVoiceStyle] || VOICE_PREVIEW_GAIN;
   const previewFile = VOICE_PREVIEW_FILES[selectedVoiceStyle];
   if (previewFile) {
-    await playPreviewAudio(previewFile, previewGain);
-    return "fixed-file";
+    return `fixed-file-${await playPreviewAudio(previewFile, previewGain)}`;
   }
 
   const response = await fetch(NARRATION_ENDPOINT, {
@@ -2393,8 +2399,7 @@ async function playAiVoicePreview() {
   const data = await response.json();
   if (!Array.isArray(data.audio) || !data.audio[0]) return false;
 
-  await playPreviewAudio(data.audio[0], previewGain);
-  return "new-ai";
+  return `new-ai-${await playPreviewAudio(data.audio[0], previewGain)}`;
 }
 
 function playDeviceVoicePreview() {
