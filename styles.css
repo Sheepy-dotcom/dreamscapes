@@ -262,6 +262,7 @@ textarea:focus-visible {
 .library-screen,
 .upgrade-screen,
 .account-screen,
+.signup-screen,
 .info-screen {
   padding: clamp(18px, 3vw, 32px);
 }
@@ -1068,6 +1069,24 @@ textarea:focus-visible {
 .auth-form {
   display: grid;
   gap: 14px;
+}
+
+.auth-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid rgba(123, 78, 216, 0.14);
+  border-radius: 8px;
+  padding: 12px;
+  background: rgba(245, 235, 255, 0.46);
+  color: #5e5f80;
+  font-weight: 900;
+}
+
+.signup-card {
+  padding: clamp(18px, 4vw, 24px);
 }
 
 .child-profiles-card {

@@ -6,6 +6,7 @@ const screens = {
   library: document.querySelector("#library-screen"),
   upgrade: document.querySelector("#upgrade-screen"),
   account: document.querySelector("#account-screen"),
+  signup: document.querySelector("#signup-screen"),
   legal: document.querySelector("#legal-screen"),
 };
 
@@ -35,6 +36,11 @@ const authForm = document.querySelector("#auth-form");
 const authEmail = document.querySelector("#auth-email");
 const authPassword = document.querySelector("#auth-password");
 const authStatus = document.querySelector("#auth-status");
+const signupForm = document.querySelector("#signup-form");
+const signupEmail = document.querySelector("#signup-email");
+const signupPassword = document.querySelector("#signup-password");
+const signupPasswordConfirm = document.querySelector("#signup-password-confirm");
+const signupStatus = document.querySelector("#signup-status");
 const authSignedOut = document.querySelector("#auth-signed-out");
 const authSignedIn = document.querySelector("#auth-signed-in");
 const passwordResetCard = document.querySelector("#password-reset-card");
@@ -358,10 +364,24 @@ function setAuthStatus(message, isError = false) {
   authStatus.classList.toggle("error", Boolean(isError));
 }
 
+function setSignupStatus(message, isError = false) {
+  if (!signupStatus) return;
+  signupStatus.textContent = message;
+  signupStatus.classList.toggle("error", Boolean(isError));
+}
+
 function getAuthCredentials() {
   return {
     email: authEmail?.value.trim() || "",
     password: authPassword?.value || "",
+  };
+}
+
+function getSignupCredentials() {
+  return {
+    email: signupEmail?.value.trim() || "",
+    password: signupPassword?.value || "",
+    passwordConfirm: signupPasswordConfirm?.value || "",
   };
 }
 
@@ -373,6 +393,14 @@ function validateAuthCredentials(email, password, mode = "sign-in") {
       : "Enter your password.";
   }
   if (password.length < 6) return "Use a password with at least 6 characters.";
+  return "";
+}
+
+function validateSignupCredentials(email, password, passwordConfirm) {
+  const validationMessage = validateAuthCredentials(email, password, "sign-up");
+  if (validationMessage) return validationMessage;
+  if (!passwordConfirm) return "Confirm your password.";
+  if (password !== passwordConfirm) return "Passwords do not match.";
   return "";
 }
 
@@ -2085,6 +2113,11 @@ authForm?.addEventListener("submit", (event) => {
   document.querySelector("#sign-in-button")?.click();
 });
 
+signupForm?.addEventListener("submit", (event) => {
+  event.preventDefault();
+  document.querySelector("#create-account-button")?.click();
+});
+
 document.querySelector("#sign-in-button")?.addEventListener("click", async () => {
   if (!(await ensureSupabaseClient())) {
     setAuthStatus("Account login could not load. Check your connection and refresh DreamScapes.", true);
@@ -2111,28 +2144,41 @@ document.querySelector("#sign-in-button")?.addEventListener("click", async () =>
   trackEvent("account_signed_in");
 });
 
-document.querySelector("#sign-up-button")?.addEventListener("click", async () => {
+document.querySelector("#open-sign-up-button")?.addEventListener("click", () => {
+  const { email } = getAuthCredentials();
+  if (signupEmail && email) signupEmail.value = email;
+  setAuthStatus("");
+  setSignupStatus("");
+  showScreen("signup");
+});
+
+document.querySelector("#create-account-button")?.addEventListener("click", async () => {
   if (!(await ensureSupabaseClient())) {
-    setAuthStatus("Account signup could not load. Check your connection and refresh DreamScapes.", true);
+    setSignupStatus("Account signup could not load. Check your connection and refresh DreamScapes.", true);
     return;
   }
 
-  const { email, password } = getAuthCredentials();
-  const validationMessage = validateAuthCredentials(email, password, "sign-up");
+  const { email, password, passwordConfirm } = getSignupCredentials();
+  const validationMessage = validateSignupCredentials(email, password, passwordConfirm);
 
   if (validationMessage) {
-    setAuthStatus(validationMessage, true);
+    setSignupStatus(validationMessage, true);
     return;
   }
 
-  setAuthStatus("Creating account...");
+  setSignupStatus("Creating account...");
   const { error } = await supabaseClient.auth.signUp({ email, password });
 
   if (error) {
-    setAuthStatus(error.message, true);
+    setSignupStatus(error.message, true);
     return;
   }
 
+  if (authEmail) authEmail.value = email;
+  if (authPassword) authPassword.value = "";
+  if (signupPassword) signupPassword.value = "";
+  if (signupPasswordConfirm) signupPasswordConfirm.value = "";
+  showScreen("account");
   setAuthStatus("Account created. Check your email to confirm your DreamScapes account.");
   trackEvent("account_signed_up");
 });

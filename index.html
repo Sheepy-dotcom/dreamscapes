@@ -16,7 +16,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026061518" />
+    <link rel="stylesheet" href="./styles.css?v=2026061519" />
   </head>
   <body class="home-active">
     <div class="stars" aria-hidden="true"></div>
@@ -496,8 +496,8 @@
 
         <div class="auth-grid">
           <article class="auth-card" id="auth-signed-out">
-            <h3>Sign in or create an account</h3>
-            <p>Accounts are the first step toward saving stories and audio across devices.</p>
+            <h3>Welcome back</h3>
+            <p>Sign in to save stories, audio, child profiles, and your plan across devices.</p>
             <form class="auth-form" id="auth-form">
               <label class="field">
                 <span>Email</span>
@@ -515,8 +515,13 @@
               </label>
               <div class="auth-actions">
                 <button class="button primary-button" id="sign-in-button" type="button">Sign In</button>
-                <button class="button secondary-button" id="sign-up-button" type="button">Create Account</button>
                 <button class="button secondary-button" id="forgot-password-button" type="button">Forgot Password</button>
+              </div>
+              <div class="auth-switch">
+                <span>New to DreamScapes?</span>
+                <button class="button secondary-button compact-button" id="open-sign-up-button" type="button">
+                  Create Account
+                </button>
               </div>
             </form>
           </article>
@@ -617,6 +622,56 @@
         <p class="status-note account-status" id="auth-status" role="status"></p>
       </section>
 
+      <section class="screen account-screen signup-screen" id="signup-screen" aria-labelledby="signup-title">
+        <header class="top-bar">
+          <button class="logo-button" data-screen-target="welcome" type="button" aria-label="Go to home">
+            <img class="mini-logo" src="./assets/dreamscapes-logo.png" alt="DreamScapes" />
+          </button>
+          <div>
+            <p class="eyebrow">Account</p>
+            <h2 id="signup-title">Create Account</h2>
+          </div>
+        </header>
+
+        <div class="auth-grid">
+          <article class="auth-card signup-card">
+            <h3>Start your DreamScapes account</h3>
+            <p>Save stories, child profiles, and audio across your devices.</p>
+            <form class="auth-form" id="signup-form">
+              <label class="field">
+                <span>Email</span>
+                <input id="signup-email" type="email" autocomplete="email" placeholder="you@example.com" />
+              </label>
+              <label class="field">
+                <span>Password</span>
+                <input
+                  id="signup-password"
+                  type="password"
+                  autocomplete="new-password"
+                  minlength="6"
+                  placeholder="6 characters or more"
+                />
+              </label>
+              <label class="field">
+                <span>Confirm password</span>
+                <input
+                  id="signup-password-confirm"
+                  type="password"
+                  autocomplete="new-password"
+                  minlength="6"
+                  placeholder="Repeat your password"
+                />
+              </label>
+              <div class="auth-actions">
+                <button class="button secondary-button" data-screen-target="account" type="button">Back to Sign In</button>
+                <button class="button primary-button" id="create-account-button" type="button">Create Account</button>
+              </div>
+            </form>
+          </article>
+        </div>
+        <p class="status-note account-status" id="signup-status" role="status"></p>
+      </section>
+
       <section class="screen info-screen" id="legal-screen" aria-labelledby="legal-title">
         <header class="top-bar">
           <button class="logo-button" data-screen-target="welcome" type="button" aria-label="Go to home">
@@ -703,6 +758,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026061518"></script>
+    <script src="./app.js?v=2026061519"></script>
   </body>
 </html>
