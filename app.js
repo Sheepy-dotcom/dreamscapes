@@ -119,7 +119,7 @@ const VOICE_PREVIEW_VOLUMES = {
 };
 const VOICE_PREVIEW_FILES = {
   "female calm": "./assets/voice-preview-female-british-calm.mp3",
-  "female sage calm": "./assets/voice-preview-female-sage-calm-v2.mp3",
+  "female sage calm": "./assets/voice-preview-female-sage-calm-v3.mp3",
   "male calm": "./assets/voice-preview-male-british-calm.mp3",
   "ash storyteller": "./assets/voice-preview-ash-storyteller.mp3",
 };
