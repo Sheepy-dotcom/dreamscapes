@@ -113,9 +113,9 @@ const SUPABASE_SCRIPT_URLS = [
 const AUDIO_BUCKET = "story-audio";
 const AI_NARRATION_REQUEST_MAX_LENGTH = 3400;
 const VOICE_PREVIEW_TEXT = "Hello from DreamScapes. Settle in, take a gentle breath, and let the story begin.";
-const VOICE_PREVIEW_VOLUME = 0.82;
-const VOICE_PREVIEW_VOLUMES = {
-  "female sage calm": 1,
+const VOICE_PREVIEW_GAIN = 0.82;
+const VOICE_PREVIEW_GAINS = {
+  "female sage calm": 1.8,
 };
 const VOICE_PREVIEW_FILES = {
   "female calm": "./assets/voice-preview-female-british-calm.mp3",
@@ -308,6 +308,33 @@ const voiceStyles = {
   "male default": { rate: 0.64, pitch: 0.88, volume: 0.86, pause: 1150 },
   "male cheerful": { rate: 0.64, pitch: 0.88, volume: 0.86, pause: 1150 },
 };
+
+async function playPreviewAudio(source, gain = VOICE_PREVIEW_GAIN) {
+  try {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) throw new Error("AudioContext unavailable");
+
+    const audioContext = new AudioContextClass();
+    const response = await fetch(source);
+    if (!response.ok) throw new Error("Preview audio could not load");
+
+    const audioBuffer = await audioContext.decodeAudioData(await response.arrayBuffer());
+    const bufferSource = audioContext.createBufferSource();
+    const gainNode = audioContext.createGain();
+
+    gainNode.gain.value = gain;
+    bufferSource.buffer = audioBuffer;
+    bufferSource.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    bufferSource.start(0);
+    return true;
+  } catch {
+    const previewAudio = new Audio(source);
+    previewAudio.volume = Math.min(Math.max(gain, 0), 1);
+    await previewAudio.play();
+    return true;
+  }
+}
 
 const britishVoiceHints = {
   female: ["serena", "susan", "kate", "karen", "moira", "tessa", "samantha"],
@@ -2336,12 +2363,10 @@ document.querySelectorAll("[data-idea]").forEach((button) => {
 
 async function playAiVoicePreview() {
   const selectedVoiceStyle = voiceStyle.value;
-  const previewVolume = VOICE_PREVIEW_VOLUMES[selectedVoiceStyle] || VOICE_PREVIEW_VOLUME;
+  const previewGain = VOICE_PREVIEW_GAINS[selectedVoiceStyle] || VOICE_PREVIEW_GAIN;
   const previewFile = VOICE_PREVIEW_FILES[selectedVoiceStyle];
   if (previewFile) {
-    const previewAudio = new Audio(previewFile);
-    previewAudio.volume = previewVolume;
-    await previewAudio.play();
+    await playPreviewAudio(previewFile, previewGain);
     return "fixed-file";
   }
 
@@ -2368,9 +2393,7 @@ async function playAiVoicePreview() {
   const data = await response.json();
   if (!Array.isArray(data.audio) || !data.audio[0]) return false;
 
-  const previewAudio = new Audio(data.audio[0]);
-  previewAudio.volume = previewVolume;
-  await previewAudio.play();
+  await playPreviewAudio(data.audio[0], previewGain);
   return "new-ai";
 }
 
