@@ -114,6 +114,9 @@ const AUDIO_BUCKET = "story-audio";
 const AI_NARRATION_REQUEST_MAX_LENGTH = 3400;
 const VOICE_PREVIEW_TEXT = "Hello from DreamScapes. Settle in, take a gentle breath, and let the story begin.";
 const VOICE_PREVIEW_VOLUME = 0.82;
+const VOICE_PREVIEW_VOLUMES = {
+  "female sage calm": 1,
+};
 const VOICE_PREVIEW_FILES = {
   "female calm": "./assets/voice-preview-female-british-calm.mp3",
   "female sage calm": "./assets/voice-preview-female-sage-calm-v2.mp3",
@@ -2333,10 +2336,11 @@ document.querySelectorAll("[data-idea]").forEach((button) => {
 
 async function playAiVoicePreview() {
   const selectedVoiceStyle = voiceStyle.value;
+  const previewVolume = VOICE_PREVIEW_VOLUMES[selectedVoiceStyle] || VOICE_PREVIEW_VOLUME;
   const previewFile = VOICE_PREVIEW_FILES[selectedVoiceStyle];
   if (previewFile) {
     const previewAudio = new Audio(previewFile);
-    previewAudio.volume = VOICE_PREVIEW_VOLUME;
+    previewAudio.volume = previewVolume;
     await previewAudio.play();
     return "fixed-file";
   }
@@ -2365,7 +2369,7 @@ async function playAiVoicePreview() {
   if (!Array.isArray(data.audio) || !data.audio[0]) return false;
 
   const previewAudio = new Audio(data.audio[0]);
-  previewAudio.volume = VOICE_PREVIEW_VOLUME;
+  previewAudio.volume = previewVolume;
   await previewAudio.play();
   return "new-ai";
 }
