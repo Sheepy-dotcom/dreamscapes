@@ -113,7 +113,7 @@ const SUPABASE_SCRIPT_URLS = [
 const AUDIO_BUCKET = "story-audio";
 const AI_NARRATION_REQUEST_MAX_LENGTH = 3400;
 const VOICE_PREVIEW_TEXT = "Hello from DreamScapes. Settle in, take a gentle breath, and let the story begin.";
-const VOICE_PREVIEW_CACHE_VERSION = "2026061527";
+const VOICE_PREVIEW_CACHE_VERSION = "2026061528";
 const VOICE_PREVIEW_GAIN = 0.82;
 const VOICE_PREVIEW_GAINS = {
   "female sage calm": 3.4,
@@ -1609,6 +1609,10 @@ function getAudioPauseSeconds(story = currentStory) {
   return getNarrationPause(story) / 1000;
 }
 
+function getAiAudioPauseSeconds() {
+  return 0;
+}
+
 function getPlaybackDurationSeconds(trackDurations, story = currentStory) {
   if (!Array.isArray(trackDurations) || trackDurations.length === 0) return 0;
 
@@ -1616,7 +1620,7 @@ function getPlaybackDurationSeconds(trackDurations, story = currentStory) {
     (total, duration) => total + (Number.isFinite(duration) ? duration : 0),
     0
   );
-  const pauseSeconds = Math.max(0, trackDurations.length - 1) * getAudioPauseSeconds(story);
+  const pauseSeconds = Math.max(0, trackDurations.length - 1) * getAiAudioPauseSeconds(story);
 
   return audioSeconds + pauseSeconds;
 }
@@ -2825,7 +2829,7 @@ function getAiAudioElapsedSeconds(percent = null) {
   const completedTrackSeconds = currentAudioTrackDurations
     .slice(0, currentAudioIndex)
     .reduce((total, duration) => total + (Number.isFinite(duration) ? duration : 0), 0);
-  const completedPauseSeconds = Math.min(currentAudioIndex, currentAudioTracks.length - 1) * getAudioPauseSeconds();
+  const completedPauseSeconds = Math.min(currentAudioIndex, currentAudioTracks.length - 1) * getAiAudioPauseSeconds();
   const currentTrackSeconds =
     currentAudio && Number.isFinite(currentAudio.currentTime) ? currentAudio.currentTime : 0;
 
@@ -2868,7 +2872,7 @@ function seekAiAudio(percent) {
         break;
       }
 
-      remainingSeconds -= trackSeconds + getAudioPauseSeconds();
+      remainingSeconds -= trackSeconds + getAiAudioPauseSeconds();
     }
   } else {
     const target = (percent / 100) * currentAudioTracks.length;
@@ -3032,7 +3036,8 @@ function playAiAudioTrack() {
   currentAudio.onended = () => {
     currentAudioIndex += 1;
     updateAiAudioProgress();
-    currentNarrationTimer = window.setTimeout(playAiAudioTrack, getNarrationPause());
+    currentAudio = null;
+    playAiAudioTrack();
   };
   currentAudio.onerror = () => {
     currentAudio = null;
