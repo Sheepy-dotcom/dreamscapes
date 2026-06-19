@@ -26,11 +26,12 @@ module.exports = async function handler(request, response) {
     }
 
     const account = await getAccountContext(request);
-    const encodedCode = encodeURIComponent(code);
     const codes = await supabaseServiceRequest(
-      `/rest/v1/redeem_codes?code=eq.${encodedCode}&active=eq.true&select=*`
+      "/rest/v1/redeem_codes?active=eq.true&select=*"
     );
-    const redeemCode = codes?.[0];
+    const redeemCode = Array.isArray(codes)
+      ? codes.find((candidate) => normaliseCode(candidate.code) === code)
+      : null;
 
     if (!redeemCode) {
       return response.status(404).json({ error: "That code is not valid." });
