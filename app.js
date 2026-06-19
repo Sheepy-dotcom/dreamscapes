@@ -44,12 +44,17 @@ const signupStatus = document.querySelector("#signup-status");
 const authSignedOut = document.querySelector("#auth-signed-out");
 const authSignedIn = document.querySelector("#auth-signed-in");
 const passwordResetCard = document.querySelector("#password-reset-card");
+const redeemCard = document.querySelector("#redeem-card");
+const redeemForm = document.querySelector("#redeem-form");
+const redeemCodeInput = document.querySelector("#redeem-code");
+const redeemStatus = document.querySelector("#redeem-status");
 const newPassword = document.querySelector("#new-password");
 const accountEmail = document.querySelector("#account-email");
 const accountCloudStatus = document.querySelector("#account-cloud-status");
 const accountPlan = document.querySelector("#account-plan");
 const accountStories = document.querySelector("#account-stories");
 const accountAudio = document.querySelector("#account-audio");
+const accountAudioCredits = document.querySelector("#account-audio-credits");
 const childProfilesCard = document.querySelector("#child-profiles-card");
 const childProfileForm = document.querySelector("#child-profile-form");
 const childProfileList = document.querySelector("#child-profile-list");
@@ -90,6 +95,7 @@ let highlightedStoryId = "";
 const AI_ENDPOINT = window.DREAMSCAPES_AI_ENDPOINT || "/api/story";
 const NARRATION_ENDPOINT = window.DREAMSCAPES_NARRATION_ENDPOINT || "/api/narrate";
 const AUDIO_USAGE_ENDPOINT = window.DREAMSCAPES_AUDIO_USAGE_ENDPOINT || "/api/audio-usage";
+const REDEEM_CODE_ENDPOINT = window.DREAMSCAPES_REDEEM_CODE_ENDPOINT || "/api/redeem-code";
 const REVENUECAT_API_KEYS = {
   ios: window.DREAMSCAPES_REVENUECAT_IOS_KEY || "",
   android: window.DREAMSCAPES_REVENUECAT_ANDROID_KEY || "",
@@ -113,7 +119,7 @@ const SUPABASE_SCRIPT_URLS = [
 const AUDIO_BUCKET = "story-audio";
 const AI_NARRATION_REQUEST_MAX_LENGTH = 3400;
 const VOICE_PREVIEW_TEXT = "Hello from DreamScapes. Settle in, take a gentle breath, and let the story begin.";
-const VOICE_PREVIEW_CACHE_VERSION = "2026061528";
+const VOICE_PREVIEW_CACHE_VERSION = "2026061529";
 const VOICE_PREVIEW_GAIN = 0.82;
 const VOICE_PREVIEW_GAINS = {
   "female sage calm": 3.4,
@@ -462,6 +468,7 @@ function updateAccountUI() {
 
   if (authSignedOut) authSignedOut.hidden = signedIn;
   if (authSignedIn) authSignedIn.hidden = !signedIn;
+  if (redeemCard) redeemCard.hidden = !signedIn;
   if (childProfilesCard) childProfilesCard.hidden = !signedIn;
   if (passwordResetCard && !passwordRecoveryActive) {
     passwordResetCard.hidden = true;
@@ -470,6 +477,7 @@ function updateAccountUI() {
   if (accountPlan) accountPlan.textContent = plan.label;
   if (accountStories) accountStories.textContent = `${storiesUsed}/${plan.monthlyStories}`;
   if (accountAudio) accountAudio.textContent = `${formatAudioTime(audioUsed)} / ${formatAudioTime(plan.audioMinutes * 60)}`;
+  if (accountAudioCredits) accountAudioCredits.textContent = String(signedIn ? getAudioStoryCredits() : 0);
   if (accountCloudStatus) {
     accountCloudStatus.textContent = signedIn
       ? cloudStoriesLoaded
@@ -1040,7 +1048,7 @@ function buildProfileAwareStoryData(selectedPlan, selectedPlanKey) {
     avoidTopics,
     preferredLesson: getValue("preferredLesson"),
     calmMode: new FormData(form).has("calmMode"),
-    audioNarration: selectedPlan.canUseAudio && audioToggle.checked,
+    audioNarration: canUseAudioNarration() && audioToggle.checked,
     voiceStyle: getValue("voiceStyle"),
     childProfiles: selectedProfiles.map((profile) => ({
       childName: profile.childName,
@@ -1145,6 +1153,14 @@ function getAudioSecondsUsed() {
   return canUseCloudLibrary() && currentUsage ? Number(currentUsage.audio_seconds_used || 0) : 0;
 }
 
+function getAudioStoryCredits() {
+  return canUseCloudLibrary() && currentProfile ? Number(currentProfile.audio_story_credits || 0) : 0;
+}
+
+function canUseAudioNarration() {
+  return getPlan(getCurrentPlanKey()).canUseAudio || getAudioStoryCredits() > 0;
+}
+
 async function loadCloudUsage() {
   if (!canUseCloudLibrary()) return null;
 
@@ -1206,11 +1222,12 @@ async function addCloudUsage({ stories = 0, audioSeconds = 0 } = {}) {
 function updatePlanFeatures() {
   const planKey = getCurrentPlanKey();
   const plan = getPlan(planKey);
+  const audioAllowed = canUseAudioNarration();
 
   if (currentPlanName) currentPlanName.textContent = plan.label;
   if (currentPlanSummary) currentPlanSummary.textContent = plan.summary;
   if (planNote) planNote.textContent = "";
-  audioToggle.closest(".feature-toggle").classList.toggle("locked", !plan.canUseAudio);
+  audioToggle.closest(".feature-toggle").classList.toggle("locked", !audioAllowed);
   updateDurationLocks(plan);
   keepDurationWithinPlan(plan);
 }
@@ -1248,11 +1265,11 @@ function keepDurationWithinPlan(plan = getPlan(getCurrentPlanKey())) {
 }
 
 async function requestPlusForAudio() {
-  if (getCurrentPlanKey() === "plus") return;
+  if (canUseAudioNarration()) return;
 
   audioToggle.checked = false;
-  planNote.textContent = "Audio narration is included with DreamScapes Plus. App Store and Google Play subscriptions are coming soon.";
-  throw new Error("DreamScapes Plus is required for audio.");
+  planNote.textContent = "Audio narration is included with DreamScapes Plus, or with a redeemed audio credit.";
+  throw new Error("DreamScapes Plus or an audio credit is required for audio.");
 }
 
 function escapeHtml(value) {
@@ -1547,9 +1564,12 @@ async function updateAudioUsage(action, audioSeconds) {
   const data = await response.json();
   if (data.usage) {
     currentUsage = data.usage;
-    updateAccountUI();
-    updatePlanFeatures();
   }
+  if (data.profile) {
+    currentProfile = data.profile;
+  }
+  updateAccountUI();
+  updatePlanFeatures();
 
   return data;
 }
@@ -2133,7 +2153,7 @@ audioToggle.addEventListener("change", () => {
   if (audioToggle.checked) {
     requestPlusForAudio().catch(() => {
       audioToggle.checked = false;
-      planNote.textContent = "Audio narration is included with DreamScapes Plus.";
+      planNote.textContent = "Audio narration is included with DreamScapes Plus, or with a redeemed audio credit.";
     });
   }
 });
@@ -2158,6 +2178,46 @@ authForm?.addEventListener("submit", (event) => {
 signupForm?.addEventListener("submit", (event) => {
   event.preventDefault();
   document.querySelector("#create-account-button")?.click();
+});
+
+redeemForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  if (!currentUser) {
+    if (redeemStatus) redeemStatus.textContent = "Sign in before redeeming a code.";
+    return;
+  }
+
+  const code = redeemCodeInput?.value.trim() || "";
+  if (!code) {
+    if (redeemStatus) redeemStatus.textContent = "Enter a redeem code.";
+    return;
+  }
+
+  if (redeemStatus) redeemStatus.textContent = "Checking code...";
+
+  try {
+    const response = await fetch(REDEEM_CODE_ENDPOINT, {
+      method: "POST",
+      headers: await getApiHeaders(),
+      body: JSON.stringify({ code }),
+    });
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(data.error || data.detail || "Code could not be redeemed.");
+    }
+
+    if (data.profile) currentProfile = data.profile;
+    if (redeemCodeInput) redeemCodeInput.value = "";
+    if (redeemStatus) redeemStatus.textContent = data.message || "Code redeemed.";
+    updateAccountUI();
+    updatePlanFeatures();
+    trackEvent("redeem_code_success", { audioStoryCreditsAdded: data.audioStoryCreditsAdded || 0 });
+  } catch (error) {
+    if (redeemStatus) redeemStatus.textContent = error.message || "Code could not be redeemed.";
+    trackEvent("redeem_code_failed");
+  }
 });
 
 document.querySelector("#sign-in-button")?.addEventListener("click", async () => {
@@ -2520,7 +2580,7 @@ form.addEventListener("submit", async (event) => {
     return;
   }
 
-  if (audioToggle.checked && getCurrentPlanKey() !== "plus") {
+  if (audioToggle.checked && !canUseAudioNarration()) {
     try {
       await requestPlusForAudio();
     } catch {
@@ -2547,7 +2607,12 @@ form.addEventListener("submit", async (event) => {
     return;
   }
 
-  if (audioToggle.checked && selectedPlan.audioMinutes > 0 && audioSecondsUsed >= selectedPlan.audioMinutes * 60) {
+  if (
+    audioToggle.checked &&
+    getAudioStoryCredits() <= 0 &&
+    selectedPlan.audioMinutes > 0 &&
+    audioSecondsUsed >= selectedPlan.audioMinutes * 60
+  ) {
     planNote.textContent = `${selectedPlan.label} has reached its ${selectedPlan.audioMinutes} audio minute monthly limit.`;
     return;
   }
@@ -2760,8 +2825,8 @@ function canUseNarration() {
   if (!currentStory) return;
   const accountPlan = getPlan(getCurrentPlanKey());
 
-  if (!accountPlan.canUseAudio) {
-    statusNote.textContent = "Audio narration is included with DreamScapes Plus.";
+  if (!accountPlan.canUseAudio && getAudioStoryCredits() <= 0) {
+    statusNote.textContent = "Audio narration is included with DreamScapes Plus, or with a redeemed audio credit.";
     return false;
   }
 

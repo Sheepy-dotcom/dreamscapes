@@ -2,6 +2,7 @@ const SUPABASE_URL = process.env.SUPABASE_URL || "https://khgzzrixhetaontmdhez.s
 const SUPABASE_ANON_KEY =
   process.env.SUPABASE_ANON_KEY ||
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtoZ3p6cml4aGV0YW9udG1kaGV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5OTkwMjMsImV4cCI6MjA5NTU3NTAyM30.Zij8eBhzxNecuPRsMliWChxYmogLBFbd1GScpKPM_5g";
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 
 const plans = {
   free: {
@@ -52,9 +53,9 @@ function getCurrentMonthKey() {
   return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
 }
 
-async function supabaseRequest(path, { token, method = "GET", body, prefer } = {}) {
+async function supabaseRequest(path, { token, method = "GET", body, prefer, apiKey = SUPABASE_ANON_KEY } = {}) {
   const headers = {
-    apikey: SUPABASE_ANON_KEY,
+    apikey: apiKey,
     Authorization: `Bearer ${token}`,
   };
 
@@ -76,6 +77,20 @@ async function supabaseRequest(path, { token, method = "GET", body, prefer } = {
   return response.json();
 }
 
+async function supabaseServiceRequest(path, { method = "GET", body, prefer } = {}) {
+  if (!SUPABASE_SERVICE_ROLE_KEY) {
+    throw new ApiError(501, "SUPABASE_SERVICE_ROLE_KEY is not configured.");
+  }
+
+  return supabaseRequest(path, {
+    token: SUPABASE_SERVICE_ROLE_KEY,
+    apiKey: SUPABASE_SERVICE_ROLE_KEY,
+    method,
+    body,
+    prefer,
+  });
+}
+
 async function getAccountContext(request) {
   const token = getBearerToken(request);
   if (!token) {
@@ -87,8 +102,8 @@ async function getAccountContext(request) {
     throw new ApiError(401, "Your session has expired. Please sign in again.");
   }
 
-  const profiles = await supabaseRequest(`/rest/v1/profiles?id=eq.${user.id}&select=id,plan`, { token });
-  const profile = profiles?.[0] || { id: user.id, plan: "free" };
+  const profiles = await supabaseRequest(`/rest/v1/profiles?id=eq.${user.id}&select=*`, { token });
+  const profile = profiles?.[0] || { id: user.id, plan: "free", audio_story_credits: 0 };
   const plan = getPlan(profile.plan);
   const monthKey = getCurrentMonthKey();
   const usageRows = await supabaseRequest(
@@ -134,6 +149,7 @@ async function enforceStoryAccess(request, body) {
   const context = await getAccountContext(request);
   const duration = getRequestedDuration(body);
   const storiesUsed = Number(context.usage?.stories_created || 0);
+  const audioCredits = Number(context.profile?.audio_story_credits || 0);
 
   if (duration > context.plan.maxDuration) {
     throw new ApiError(
@@ -142,7 +158,7 @@ async function enforceStoryAccess(request, body) {
     );
   }
 
-  if (body.audioNarration && !context.plan.canUseAudio) {
+  if (body.audioNarration && !context.plan.canUseAudio && audioCredits <= 0) {
     throw new ApiError(403, "Audio narration is included with DreamScapes Plus.");
   }
 
@@ -161,6 +177,11 @@ async function enforceNarrationAccess(request, body) {
   const requestedSeconds = getNarrationChargeSeconds(body);
   const usedSeconds = Number(context.usage?.audio_seconds_used || 0);
   const limitSeconds = context.plan.audioMinutes * 60;
+  const audioCredits = Number(context.profile?.audio_story_credits || 0);
+
+  if (audioCredits > 0) {
+    return { ...context, requestedAudioSeconds: requestedSeconds, useAudioCredit: true };
+  }
 
   if (!context.plan.canUseAudio) {
     throw new ApiError(403, "Audio narration is included with DreamScapes Plus.");
@@ -174,6 +195,21 @@ async function enforceNarrationAccess(request, body) {
 }
 
 async function incrementUsage(context, { stories = 0, audioSeconds = 0 } = {}) {
+  if (audioSeconds > 0 && context.useAudioCredit) {
+    const currentCredits = Math.max(0, Number(context.profile?.audio_story_credits || 0));
+    const nextCredits = Math.max(0, currentCredits - 1);
+    const updatedProfiles = await supabaseServiceRequest(`/rest/v1/profiles?id=eq.${context.user.id}&select=*`, {
+      method: "PATCH",
+      prefer: "return=representation",
+      body: {
+        audio_story_credits: nextCredits,
+      },
+    });
+
+    context.profile = updatedProfiles?.[0] || { ...context.profile, audio_story_credits: nextCredits };
+    return context.usage;
+  }
+
   if (!context?.usage?.id) return context?.usage || null;
 
   const nextUsage = {
@@ -202,9 +238,11 @@ function sendApiError(response, error, fallback = "Request failed") {
 module.exports = {
   enforceNarrationAccess,
   enforceStoryAccess,
+  getAccountContext,
   getPlan,
   getNarrationChargeSeconds,
   incrementUsage,
   sendApiError,
+  supabaseServiceRequest,
   supabaseRequest,
 };

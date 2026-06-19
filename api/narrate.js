@@ -120,6 +120,8 @@ module.exports = async function handler(request, response) {
       chunks: audio.length,
       voice,
       usage,
+      profile: account.profile,
+      usedAudioCredit: shouldChargeAudio && Boolean(account.useAudioCredit),
       charged: shouldChargeAudio,
       disclosure: "AI-generated narration",
     });

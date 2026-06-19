@@ -32,6 +32,8 @@ module.exports = async function handler(request, response) {
       ok: true,
       action,
       audioSeconds,
+      usedAudioCredit: action === "complete" && Boolean(account.useAudioCredit),
+      profile: account.profile,
       usage,
     });
   } catch (error) {
