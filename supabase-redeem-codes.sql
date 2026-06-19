@@ -22,11 +22,34 @@ create table if not exists public.redeem_codes (
 create table if not exists public.redeem_code_redemptions (
   id uuid primary key default gen_random_uuid(),
   redeem_code_id uuid not null references public.redeem_codes(id) on delete cascade,
+  redeem_code text,
   user_id uuid not null references auth.users(id) on delete cascade,
+  user_email text,
   audio_story_credits integer not null default 0,
   redeemed_at timestamptz not null default now(),
   unique (redeem_code_id, user_id)
 );
+
+alter table public.redeem_code_redemptions
+add column if not exists redeem_code text;
+
+alter table public.redeem_code_redemptions
+add column if not exists user_email text;
+
+update public.redeem_code_redemptions redemption
+set
+  redeem_code = coalesce(redemption.redeem_code, code.code),
+  user_email = coalesce(
+    redemption.user_email,
+    (select profile.email from public.profiles profile where profile.id = redemption.user_id),
+    (select auth_user.email from auth.users auth_user where auth_user.id = redemption.user_id)
+  )
+from public.redeem_codes code
+where redemption.redeem_code_id = code.id
+  and (
+    redemption.redeem_code is null
+    or redemption.user_email is null
+  );
 
 create or replace function public.set_updated_at()
 returns trigger
@@ -51,6 +74,9 @@ on public.redeem_codes (code);
 
 create index if not exists redeem_code_redemptions_user_idx
 on public.redeem_code_redemptions (user_id, redeemed_at desc);
+
+create index if not exists redeem_code_redemptions_email_idx
+on public.redeem_code_redemptions (user_email, redeemed_at desc);
 
 -- Example: one free audio story, up to 100 redemptions.
 -- Change or remove this before launch if you want a different code.

@@ -11,6 +11,15 @@ function normaliseCode(value) {
     .replace(/[^A-Z0-9_-]/g, "");
 }
 
+function isMissingTrackingColumnError(error) {
+  const message = String(error?.message || "");
+  return (
+    message.includes("redeem_code") ||
+    message.includes("user_email") ||
+    message.includes("schema cache")
+  );
+}
+
 module.exports = async function handler(request, response) {
   if (request.method !== "POST") {
     response.setHeader("Allow", "POST");
@@ -73,14 +82,31 @@ module.exports = async function handler(request, response) {
     });
     const profile = updatedProfiles?.[0] || { ...account.profile, audio_story_credits: nextCredits };
 
-    await supabaseServiceRequest("/rest/v1/redeem_code_redemptions", {
-      method: "POST",
-      body: {
-        redeem_code_id: redeemCode.id,
-        user_id: account.user.id,
-        audio_story_credits: audioCreditsToAdd,
-      },
-    });
+    const redemptionBody = {
+      redeem_code_id: redeemCode.id,
+      redeem_code: redeemCode.code || code,
+      user_id: account.user.id,
+      user_email: account.user.email || account.profile?.email || null,
+      audio_story_credits: audioCreditsToAdd,
+    };
+
+    try {
+      await supabaseServiceRequest("/rest/v1/redeem_code_redemptions", {
+        method: "POST",
+        body: redemptionBody,
+      });
+    } catch (redemptionError) {
+      if (!isMissingTrackingColumnError(redemptionError)) throw redemptionError;
+
+      await supabaseServiceRequest("/rest/v1/redeem_code_redemptions", {
+        method: "POST",
+        body: {
+          redeem_code_id: redemptionBody.redeem_code_id,
+          user_id: redemptionBody.user_id,
+          audio_story_credits: redemptionBody.audio_story_credits,
+        },
+      });
+    }
 
     await supabaseServiceRequest(`/rest/v1/redeem_codes?id=eq.${redeemCode.id}`, {
       method: "PATCH",

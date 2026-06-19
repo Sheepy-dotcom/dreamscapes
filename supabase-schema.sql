@@ -93,7 +93,9 @@ create table if not exists public.redeem_codes (
 create table if not exists public.redeem_code_redemptions (
   id uuid primary key default gen_random_uuid(),
   redeem_code_id uuid not null references public.redeem_codes(id) on delete cascade,
+  redeem_code text,
   user_id uuid not null references auth.users(id) on delete cascade,
+  user_email text,
   audio_story_credits integer not null default 0,
   redeemed_at timestamptz not null default now(),
   unique (redeem_code_id, user_id)
@@ -289,6 +291,9 @@ on public.redeem_codes (code);
 
 create index if not exists redeem_code_redemptions_user_idx
 on public.redeem_code_redemptions (user_id, redeemed_at desc);
+
+create index if not exists redeem_code_redemptions_email_idx
+on public.redeem_code_redemptions (user_email, redeemed_at desc);
 
 alter table public.profiles
 add column if not exists audio_story_credits integer not null default 0;
