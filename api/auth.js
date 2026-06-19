@@ -74,7 +74,15 @@ async function supabaseRequest(path, { token, method = "GET", body, prefer, apiK
   }
 
   if (response.status === 204) return null;
-  return response.json();
+
+  const text = await response.text();
+  if (!text) return null;
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new ApiError(response.status, text || "Supabase returned an invalid response");
+  }
 }
 
 async function supabaseServiceRequest(path, { method = "GET", body, prefer } = {}) {
