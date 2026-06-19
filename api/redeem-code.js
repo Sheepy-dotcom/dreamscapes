@@ -108,12 +108,16 @@ module.exports = async function handler(request, response) {
       });
     }
 
-    await supabaseServiceRequest(`/rest/v1/redeem_codes?id=eq.${redeemCode.id}`, {
-      method: "PATCH",
-      body: {
-        times_redeemed: Number(redeemCode.times_redeemed || 0) + 1,
-      },
-    });
+    try {
+      await supabaseServiceRequest(`/rest/v1/redeem_codes?id=eq.${redeemCode.id}`, {
+        method: "PATCH",
+        body: {
+          times_redeemed: Number(redeemCode.times_redeemed || 0) + 1,
+        },
+      });
+    } catch (counterError) {
+      console.warn("Redeem code counter update failed", counterError);
+    }
 
     return response.status(200).json({
       ok: true,
