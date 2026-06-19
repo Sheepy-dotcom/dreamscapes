@@ -148,7 +148,8 @@ as $$
 begin
   insert into public.profiles (id, email)
   values (new.id, new.email)
-  on conflict (id) do nothing;
+  on conflict (id) do update
+    set email = excluded.email;
 
   return new;
 end;
@@ -158,6 +159,32 @@ drop trigger if exists create_profile_on_signup on auth.users;
 create trigger create_profile_on_signup
 after insert on auth.users
 for each row execute function public.create_profile_for_new_user();
+
+create or replace function public.sync_profile_email_from_auth()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update public.profiles
+  set email = new.email
+  where id = new.id;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists sync_profile_email_on_auth_update on auth.users;
+create trigger sync_profile_email_on_auth_update
+after update of email on auth.users
+for each row execute function public.sync_profile_email_from_auth();
+
+update public.profiles profile
+set email = auth_user.email
+from auth.users auth_user
+where profile.id = auth_user.id
+  and profile.email is distinct from auth_user.email;
 
 alter table public.profiles enable row level security;
 alter table public.stories enable row level security;
