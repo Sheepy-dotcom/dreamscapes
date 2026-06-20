@@ -549,6 +549,7 @@ function normaliseChildProfile(profile = {}) {
     hairColour: cleanProfileValue(profile.hairColour || profile.hair_colour),
     parentNames: cleanProfileValue(profile.parentNames || profile.parent_names),
     interests: cleanProfileValue(profile.interests),
+    friends: cleanProfileValue(profile.friends),
     avoidTopics: cleanProfileValue(profile.avoidTopics || profile.avoid_topics),
     otherDetails: cleanProfileValue(profile.otherDetails || profile.other_details),
     createdAt: profile.createdAt || profile.created_at || new Date().toISOString(),
@@ -587,6 +588,7 @@ function profileToCloudRow(profile) {
     hair_colour: profile.hairColour || null,
     parent_names: profile.parentNames || null,
     interests: profile.interests || null,
+    friends: profile.friends || null,
     avoid_topics: profile.avoidTopics || null,
     other_details: profile.otherDetails || null,
   };
@@ -674,6 +676,7 @@ function getProfileSummary(profile) {
     profile.eyeColour ? `${profile.eyeColour} eyes` : "",
     profile.hairColour ? profile.hairColour : "",
     profile.interests ? `Likes ${profile.interests}` : "",
+    profile.friends ? `Friends: ${profile.friends}` : "",
   ]
     .filter(Boolean)
     .join(" · ");
@@ -752,6 +755,7 @@ function fillChildProfileForm(profile) {
   childProfileForm.elements.profileHairColour.value = profile.hairColour || "";
   childProfileForm.elements.profileParentNames.value = profile.parentNames || "";
   childProfileForm.elements.profileInterests.value = profile.interests || "";
+  childProfileForm.elements.profileFriends.value = profile.friends || "";
   childProfileForm.elements.profileAvoidTopics.value = profile.avoidTopics || "";
   childProfileForm.elements.profileOtherDetails.value = profile.otherDetails || "";
 }
@@ -1021,6 +1025,7 @@ function describeChildProfiles(profiles) {
       profile.hairColour ? `${profile.hairColour} hair` : "",
       profile.parentNames ? `parent names: ${profile.parentNames}` : "",
       profile.interests ? `interests: ${profile.interests}` : "",
+      profile.friends ? `friends: ${profile.friends}` : "",
       profile.avoidTopics ? `avoid: ${profile.avoidTopics}` : "",
       profile.otherDetails ? `other details: ${profile.otherDetails}` : "",
     ].filter(Boolean);
@@ -1037,6 +1042,7 @@ function buildProfileAwareStoryData(selectedPlan, selectedPlanKey) {
   const interests = [getValue("interests"), joinProfileValues(selectedProfiles, "interests")]
     .filter(Boolean)
     .join(", ");
+  const friends = joinProfileValues(selectedProfiles, "friends");
   const avoidTopics = [getValue("avoidTopics"), joinProfileValues(selectedProfiles, "avoidTopics")]
     .filter(Boolean)
     .join(", ");
@@ -1046,6 +1052,7 @@ function buildProfileAwareStoryData(selectedPlan, selectedPlanKey) {
     childName,
     childAge,
     interests,
+    friends,
     duration: getValue("durationChoice"),
     storyType: getValue("storyType"),
     moods: getValues("moods"),
@@ -1062,6 +1069,7 @@ function buildProfileAwareStoryData(selectedPlan, selectedPlanKey) {
       hairColour: profile.hairColour,
       parentNames: profile.parentNames,
       interests: profile.interests,
+      friends: profile.friends,
       avoidTopics: profile.avoidTopics,
       otherDetails: profile.otherDetails,
     })),
@@ -1400,6 +1408,7 @@ function createPrompt(data) {
     "If multiple profiles are selected, include both children as important characters and give each a kind moment.",
     `Package: ${plan.label}`,
     `Interests: ${data.interests || "not specified"}`,
+    `Friends: ${data.friends || "not specified"}`,
     `Avoid topics: ${data.avoidTopics || "none specified"}`,
     `Preferred lesson: ${data.preferredLesson || "use a gentle relevant lesson"}`,
     `Bedtime calm mode: ${data.calmMode ? "yes" : "no"}`,
@@ -2405,6 +2414,7 @@ childProfileForm?.addEventListener("submit", async (event) => {
     hairColour: cleanProfileValue(childProfileForm.elements.profileHairColour.value),
     parentNames: cleanProfileValue(childProfileForm.elements.profileParentNames.value),
     interests: cleanProfileValue(childProfileForm.elements.profileInterests.value),
+    friends: cleanProfileValue(childProfileForm.elements.profileFriends.value),
     avoidTopics: cleanProfileValue(childProfileForm.elements.profileAvoidTopics.value),
     otherDetails: cleanProfileValue(childProfileForm.elements.profileOtherDetails.value),
   };

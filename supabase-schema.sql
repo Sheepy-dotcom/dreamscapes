@@ -71,11 +71,15 @@ create table if not exists public.child_profiles (
   hair_colour text,
   parent_names text,
   interests text,
+  friends text,
   avoid_topics text,
   other_details text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.child_profiles
+add column if not exists friends text;
 
 create table if not exists public.redeem_codes (
   id uuid primary key default gen_random_uuid(),
