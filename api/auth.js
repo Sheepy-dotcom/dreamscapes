@@ -42,6 +42,20 @@ class ApiError extends Error {
   }
 }
 
+function getSupabaseErrorMessage(message) {
+  const fallback = message || "Supabase request failed";
+
+  try {
+    const parsed = JSON.parse(message);
+    if (parsed?.error_code === "session_not_found") {
+      return "Your sign-in session has expired. Please sign in again.";
+    }
+    return parsed?.msg || parsed?.message || parsed?.error_description || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 function getPlan(planKey) {
   return plans[planKey] || plans.free;
 }
@@ -74,7 +88,7 @@ async function supabaseRequest(path, { token, method = "GET", body, prefer, apiK
 
   if (!response.ok) {
     const message = await response.text();
-    throw new ApiError(response.status, message || "Supabase request failed");
+    throw new ApiError(response.status, getSupabaseErrorMessage(message));
   }
 
   if (response.status === 204) return null;

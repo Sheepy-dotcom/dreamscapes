@@ -788,6 +788,40 @@ async function getApiHeaders() {
   return headers;
 }
 
+function isExpiredSessionMessage(message) {
+  const text = String(message || "").toLowerCase();
+  return text.includes("session_not_found") || text.includes("session has expired");
+}
+
+async function handleExpiredSession(message = "Your sign-in session has expired. Please sign in again.") {
+  if (!isExpiredSessionMessage(message)) return false;
+
+  try {
+    await supabaseClient?.auth?.signOut();
+  } catch {
+    // Local cleanup still happens below.
+  }
+
+  setCurrentUser(null);
+  currentProfile = null;
+  currentUsage = null;
+  cloudStories = [];
+  cloudStoriesLoaded = false;
+  updatePlanFeatures();
+  setAuthStatus("Your sign-in session expired. Please sign in again.", true);
+  showScreen("account");
+  return true;
+}
+
+async function readApiError(response, fallback) {
+  const error = await response.json().catch(() => ({}));
+  const message = error.detail || error.error || error.msg || fallback;
+  if (await handleExpiredSession(message)) {
+    return "Your sign-in session expired. Please sign in again.";
+  }
+  return message;
+}
+
 function getCapacitorPlatform() {
   return window.Capacitor?.getPlatform?.() || window.Capacitor?.platform || "web";
 }
@@ -1450,8 +1484,7 @@ async function createStory(data) {
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      throw new Error(error.detail || error.error || "Story endpoint unavailable");
+      throw new Error(await readApiError(response, "Story endpoint unavailable"));
     }
 
     const aiStory = await response.json();
@@ -1561,8 +1594,7 @@ async function requestAiNarrationPart({ text, duration, voice, instructions }) {
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.detail || error.error || "Audio could not be created.");
+    throw new Error(await readApiError(response, "Audio could not be created."));
   }
 
   const data = await response.json();
@@ -1584,8 +1616,7 @@ async function updateAudioUsage(action, audioSeconds) {
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.detail || error.error || "Audio usage could not be updated.");
+    throw new Error(await readApiError(response, "Audio usage could not be updated."));
   }
 
   const data = await response.json();
@@ -2268,12 +2299,12 @@ redeemForm?.addEventListener("submit", async (event) => {
       headers: await getApiHeaders(),
       body: JSON.stringify({ code }),
     });
-    const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-      throw new Error(data.error || data.detail || "Code could not be redeemed.");
+      throw new Error(await readApiError(response, "Code could not be redeemed."));
     }
 
+    const data = await response.json().catch(() => ({}));
     if (data.profile) currentProfile = data.profile;
     if (redeemCodeInput) redeemCodeInput.value = "";
     if (redeemStatus) redeemStatus.textContent = data.message || "Code redeemed.";
