@@ -2,11 +2,11 @@ const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
 const { enforceStoryAccess, incrementUsage, sendApiError, supabaseRequest } = require("./auth");
 
 const durationTargets = {
-  5: { words: 850, minWords: 760, maxWords: 980, paragraphs: 10 },
-  10: { words: 1700, minWords: 1520, maxWords: 1950, paragraphs: 18 },
-  15: { words: 2600, minWords: 2350, maxWords: 2950, paragraphs: 28 },
-  20: { words: 3600, minWords: 3250, maxWords: 4100, paragraphs: 38 },
-  30: { words: 5400, minWords: 4900, maxWords: 6100, paragraphs: 56 },
+  5: { words: 900, minWords: 800, maxWords: 1050, paragraphs: 10 },
+  10: { words: 1850, minWords: 1650, maxWords: 2150, paragraphs: 20 },
+  15: { words: 3000, minWords: 2700, maxWords: 3450, paragraphs: 32 },
+  20: { words: 4200, minWords: 3800, maxWords: 4800, paragraphs: 44 },
+  30: { words: 6500, minWords: 5900, maxWords: 7350, paragraphs: 64 },
 };
 
 function cleanText(value, fallback = "") {
@@ -67,7 +67,7 @@ function buildPrompt(data) {
     `Target duration: ${cleanText(data.duration, "5")} minutes of calm narrated audio.`,
     `Word count target: ${target.words} words. Acceptable range: ${target.minWords}-${target.maxWords} words.`,
     `Paragraph target: about ${target.paragraphs} short, readable paragraphs.`,
-    "Timing rule: the selected duration is for narrated audio, so the story must be long enough when read aloud slowly.",
+    "Timing rule: the selected duration is for slow narrated audio, so the story must be long enough when read aloud calmly with pauses.",
     `Mood blend: ${moods.length ? moods.join(", ") : "relaxing"}.`,
     `Story idea from parent: ${cleanText(data.storyIdea, "a gentle adventure with a kind positive ending")}.`,
     `Selected child profile details: ${childProfileSummary.length ? childProfileSummary.join(" | ") : "not selected"}.`,
@@ -85,7 +85,7 @@ function buildPrompt(data) {
     "- Use selected profile details naturally where helpful, but do not list physical details awkwardly or make appearance the focus.",
     "- If multiple child profiles are selected, include each child as an important character and give each a kind moment.",
     "- Use short, gentle sentences with frequent natural pauses between phrases for bedtime narration.",
-    "- Do not finish early. The story should feel complete and should land inside the requested word range.",
+    "- Do not finish early. The story should feel complete and should land inside the requested word range, especially for 15, 20, and 30 minute stories.",
     "- Longer durations must include more complete scenes, not just longer sentences.",
     "- Include a positive ending and a gentle lesson without sounding preachy.",
     "- For bedtime, slow the ending down and make the final paragraph peaceful.",
@@ -225,7 +225,12 @@ async function requestStory(data) {
     throw new Error(`Story model returned no text. Status: ${result.status || "unknown"}`);
   }
 
-  const story = JSON.parse(text);
+  let story;
+  try {
+    story = JSON.parse(text);
+  } catch {
+    throw new Error("Story model returned an unreadable draft. Please try generating again.");
+  }
   const paragraphs = story.paragraphs.map((paragraph) => cleanText(paragraph)).filter(Boolean);
 
   return {

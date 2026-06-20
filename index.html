@@ -7,16 +7,22 @@
       name="description"
       content="DreamScapes creates personalised children’s bedtime and anytime stories."
     />
+    <meta name="theme-color" content="#16184a" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="DreamScapes" />
+    <meta name="application-name" content="DreamScapes" />
     <title>DreamScapes | Personalised Bedtime Stories</title>
     <link rel="icon" type="image/png" sizes="64x64" href="./assets/favicon.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="./assets/apple-touch-icon.png" />
+    <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026062001" />
+    <link rel="stylesheet" href="./styles.css?v=2026062002" />
   </head>
   <body class="home-active">
     <div class="stars" aria-hidden="true"></div>
@@ -354,6 +360,21 @@
           </div>
         </header>
         <p class="status-note library-status" id="library-status" role="status"></p>
+        <div class="library-toolbar" aria-label="Library controls">
+          <div class="library-filter" role="group" aria-label="Filter saved stories">
+            <button class="active" type="button" data-library-filter="all">All</button>
+            <button type="button" data-library-filter="audio">Audio</button>
+            <button type="button" data-library-filter="text">Text</button>
+          </div>
+          <label class="library-sort">
+            <span>Sort</span>
+            <select id="library-sort">
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+              <option value="duration">Longest</option>
+            </select>
+          </label>
+        </div>
         <div class="library-list" id="library-list"></div>
       </section>
 
@@ -776,6 +797,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026062001"></script>
+    <script src="./app.js?v=2026062002"></script>
   </body>
 </html>

@@ -1,0 +1,22 @@
+{
+  "name": "DreamScapes",
+  "short_name": "DreamScapes",
+  "description": "Personalised children’s bedtime and anytime stories.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#16184a",
+  "theme_color": "#16184a",
+  "icons": [
+    {
+      "src": "./assets/favicon.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "./assets/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}

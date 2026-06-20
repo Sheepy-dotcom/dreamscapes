@@ -31,6 +31,8 @@ const voicePreviewButton = document.querySelector("#voice-preview-button");
 const storyIdea = document.querySelector("#story-idea");
 const libraryStatus = document.querySelector("#library-status");
 const libraryList = document.querySelector("#library-list");
+const libraryFilterButtons = Array.from(document.querySelectorAll("[data-library-filter]"));
+const librarySort = document.querySelector("#library-sort");
 const durationInputs = Array.from(document.querySelectorAll('input[name="durationChoice"]'));
 const authForm = document.querySelector("#auth-form");
 const authEmail = document.querySelector("#auth-email");
@@ -92,6 +94,7 @@ let loadingMessageTimer = null;
 let revenueCatConfiguredForUser = "";
 let libraryNotice = "";
 let highlightedStoryId = "";
+let currentLibraryFilter = "all";
 const AI_ENDPOINT = window.DREAMSCAPES_AI_ENDPOINT || "/api/story";
 const NARRATION_ENDPOINT = window.DREAMSCAPES_NARRATION_ENDPOINT || "/api/narrate";
 const AUDIO_USAGE_ENDPOINT = window.DREAMSCAPES_AUDIO_USAGE_ENDPOINT || "/api/audio-usage";
@@ -359,6 +362,8 @@ const loadingMessages = [
   "Choosing kind characters",
   "Finding a gentle adventure",
   "Adding cosy details",
+  "Checking the story length",
+  "Preparing your story page",
   "Tucking in a happy ending",
 ];
 
@@ -1404,10 +1409,14 @@ function createPrompt(data) {
     `Story type: ${data.storyType === "bedtime" ? "bedtime story" : "anytime story"}`,
     `Moods: ${getSelectedMoods(data.moods).join(", ")}`,
     `Story idea: ${tidyIdea(data.storyIdea, data.childName)}`,
-    "Use warm imaginative language, a positive ending, and a gentle lesson where appropriate.",
+    "Make it feel like a real children's story, not a template or summary.",
+    "Use warm imaginative language, clear scenes, character moments, a positive ending, and a gentle lesson where appropriate.",
     "Write in British English throughout, using UK spelling and natural British wording such as mum, favourite, cosy, colour, and realised.",
     "Use short, gentle sentences with frequent natural pauses between phrases, especially for bedtime narration.",
+    "Longer stories must include more complete scenes, not just longer sentences.",
     "Do not announce or explain that the story is written in British English.",
+    "Do not end with farewell phrases such as ta-ta, ta ta for now, bye, or goodbye.",
+    "Do not mention AI, prompts, packages, subscriptions, or app settings.",
     "Return JSON with title and paragraphs fields.",
   ].join("\n");
 }
@@ -1790,6 +1799,33 @@ function isHighlightedStory(story) {
   );
 }
 
+function storyHasSavedAudio(story) {
+  return Boolean(getSavedAudioDurationSeconds(story) || story?.aiAudioTracks?.length || story?.aiAudioPaths?.length);
+}
+
+function getStoryTimeValue(story) {
+  return new Date(story?.savedAt || story?.createdAt || 0).getTime() || 0;
+}
+
+function sortLibraryStories(stories) {
+  const sortMode = librarySort?.value || "newest";
+  return [...stories].sort((firstStory, secondStory) => {
+    if (isHighlightedStory(firstStory) !== isHighlightedStory(secondStory)) {
+      return Number(isHighlightedStory(secondStory)) - Number(isHighlightedStory(firstStory));
+    }
+
+    if (sortMode === "oldest") return getStoryTimeValue(firstStory) - getStoryTimeValue(secondStory);
+    if (sortMode === "duration") return Number(secondStory.duration || 0) - Number(firstStory.duration || 0);
+    return getStoryTimeValue(secondStory) - getStoryTimeValue(firstStory);
+  });
+}
+
+function filterLibraryStories(stories) {
+  if (currentLibraryFilter === "audio") return stories.filter(storyHasSavedAudio);
+  if (currentLibraryFilter === "text") return stories.filter((story) => !storyHasSavedAudio(story));
+  return stories;
+}
+
 function upsertCloudStory(story) {
   const storyId = getStoryIdentity(story);
   if (!storyId) return;
@@ -1924,6 +1960,7 @@ async function saveStoryToCloud(story) {
     aiAudioTracks: story.aiAudioTracks || [],
     aiAudioPaths: story.aiAudioPaths || savedStory.aiAudioPaths || [],
     aiAudioTrackDurations: story.aiAudioTrackDurations || [],
+    saveError: "",
   };
   upsertCloudStory(currentStory);
   return currentStory;
@@ -2527,6 +2564,22 @@ document.querySelector("#view-library-button").addEventListener("click", () => {
   showScreen("library");
 });
 
+libraryFilterButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    currentLibraryFilter = button.dataset.libraryFilter || "all";
+    libraryFilterButtons.forEach((filterButton) => {
+      filterButton.classList.toggle("active", filterButton === button);
+    });
+    libraryNotice = "";
+    renderLibrary();
+  });
+});
+
+librarySort?.addEventListener("change", () => {
+  libraryNotice = "";
+  renderLibrary();
+});
+
 reportAudioButton?.addEventListener("click", async () => {
   if (!currentStory) return;
   await reportAudioIssue(currentStory, "result");
@@ -2670,11 +2723,14 @@ form.addEventListener("submit", async (event) => {
         targetWords: currentStory.durationTarget?.words || 0,
       });
       if (savedToLibrary) {
+        const savedMessage = currentStory.saveError
+          ? "Story created and saved locally. Cloud saving may need a refresh."
+          : currentStory.aiAudioPaths?.length || currentStory.aiAudioTracks?.length
+            ? "Story and audio saved to your library."
+            : "Story saved to your library. Open it when you are ready to read or create audio.";
         prepareLibraryHandoff(
           currentStory,
-          currentStory.aiAudioPaths?.length || currentStory.aiAudioTracks?.length
-            ? "Story and audio saved to your library."
-            : "Story saved to your library. Open it when you are ready to read or create audio."
+          savedMessage
         );
         showScreen("library");
       } else {
@@ -2738,13 +2794,9 @@ async function renderLibrary() {
         ),
       ]
     : localStories;
-  const orderedStories = highlightedStoryId
-    ? [...savedStories].sort(
-        (firstStory, secondStory) =>
-          Number(isHighlightedStory(secondStory)) - Number(isHighlightedStory(firstStory))
-      )
-    : savedStories;
-  const visibleStories = orderedStories.slice(0, MAX_LIBRARY_RENDER_ITEMS);
+  const orderedStories = sortLibraryStories(savedStories);
+  const filteredStories = filterLibraryStories(orderedStories);
+  const visibleStories = filteredStories.slice(0, MAX_LIBRARY_RENDER_ITEMS);
 
   if (savedStories.length === 0) {
     libraryList.innerHTML = `
@@ -2756,6 +2808,25 @@ async function renderLibrary() {
     `;
     libraryList.querySelector("[data-screen-target]")?.addEventListener("click", () => showScreen("builder"));
     return;
+  }
+
+  if (filteredStories.length === 0) {
+    const emptyLabel = currentLibraryFilter === "audio" ? "audio stories" : "text-only stories";
+    libraryList.innerHTML = `
+      <article class="library-item">
+        <h3>No ${emptyLabel} found</h3>
+        <p>Switch filters or create another story to add more to your library.</p>
+      </article>
+    `;
+    if (libraryStatus && !libraryNotice) {
+      libraryStatus.textContent = `${savedStories.length} saved ${savedStories.length === 1 ? "story" : "stories"}.`;
+    }
+    return;
+  }
+
+  if (libraryStatus && !libraryNotice) {
+    const shownCount = filteredStories.length;
+    libraryStatus.textContent = `${shownCount} ${shownCount === 1 ? "story" : "stories"} shown from ${savedStories.length} saved.`;
   }
 
   libraryList.innerHTML = visibleStories
@@ -2847,6 +2918,19 @@ function setAudioProgress(percent) {
   const safePercent = Math.max(0, Math.min(100, Number.isFinite(percent) ? percent : 0));
   audioProgress.value = String(Math.round(safePercent));
   audioProgressLabel.textContent = getAudioProgressLabel(safePercent);
+}
+
+function setAudioGenerationProgress(partIndex, totalParts, state = "creating") {
+  const safeTotal = Math.max(1, Number(totalParts) || 1);
+  const safeIndex = Math.max(0, Math.min(safeTotal, Number(partIndex) || 0));
+  const percent = (safeIndex / safeTotal) * 100;
+
+  audioProgressWrap.hidden = false;
+  audioProgress.value = String(Math.round(percent));
+  audioProgressLabel.textContent =
+    state === "complete"
+      ? "Audio ready"
+      : `Audio part ${Math.min(safeIndex + 1, safeTotal)} of ${safeTotal}`;
 }
 
 function getAudioProgressLabel(percent) {
@@ -3157,6 +3241,7 @@ async function startAiNarration() {
     const narrationParts = splitAiNarrationRequestText(storyAsText(currentStory));
     const partDuration = Math.max(0.1, (Number(currentStory.duration) || 5) / narrationParts.length);
     const chargeAudioSeconds = (Number(currentStory.duration) || 5) * 60;
+    setAudioGenerationProgress(0, narrationParts.length);
     await updateAudioUsage("check", chargeAudioSeconds);
     const audioTracks = [];
 
@@ -3164,6 +3249,7 @@ async function startAiNarration() {
       const totalParts = narrationParts.length;
       statusNote.textContent = `Creating audio part ${index + 1} of ${totalParts}. This can take a moment...`;
       narrationNote.textContent = `Creating audio ${index + 1}/${totalParts}`;
+      setAudioGenerationProgress(index, totalParts);
       const data = await requestAiNarrationPart({
         text: narrationParts[index],
         duration: partDuration,
@@ -3172,6 +3258,7 @@ async function startAiNarration() {
       });
 
       audioTracks.push(...data.audio);
+      setAudioGenerationProgress(index + 1, totalParts);
     }
 
     currentAudioTracks = audioTracks;
@@ -3196,6 +3283,7 @@ async function startAiNarration() {
       aiAudioGeneratedAt: new Date().toISOString(),
     };
     saveStoryToLibrary(currentStory, { silent: true });
+    setAudioGenerationProgress(narrationParts.length, narrationParts.length, "complete");
     playAiAudioTrack();
     statusNote.textContent = "Audio complete. Playing now.";
     narrationNote.textContent = aiAudioDurationSeconds
@@ -3208,7 +3296,7 @@ async function startAiNarration() {
     return true;
   } catch (error) {
     const message = /failed to fetch/i.test(error.message || "")
-      ? "Audio could not be reached. Please try again, and contact support if audio minutes were used."
+      ? "Audio could not be reached. Try again when your connection is steady. If a credit or audio minutes were used, report the audio issue so support can help."
       : error.message || "Audio could not be created. Try again in a moment.";
     statusNote.textContent = message;
     narrationNote.textContent = "Audio not created";
