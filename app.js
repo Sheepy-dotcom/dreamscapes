@@ -121,6 +121,7 @@ const SUPABASE_SCRIPT_URLS = [
 ];
 const AUDIO_BUCKET = "story-audio";
 const AI_NARRATION_REQUEST_MAX_LENGTH = 3400;
+const AUDIO_CREDIT_MAX_MINUTES = 10;
 const VOICE_PREVIEW_TEXT = "Hello from DreamScapes. Settle in, take a gentle breath, and let the story begin.";
 const VOICE_PREVIEW_CACHE_VERSION = "2026061529";
 const VOICE_PREVIEW_GAIN = 0.82;
@@ -1170,8 +1171,12 @@ function getAudioStoryCredits() {
   return canUseCloudLibrary() && currentProfile ? Number(currentProfile.audio_story_credits || 0) : 0;
 }
 
-function canUseAudioNarration() {
-  return getPlan(getCurrentPlanKey()).canUseAudio || getAudioStoryCredits() > 0;
+function canUseAudioCreditForDuration(duration = getValue("durationChoice")) {
+  return getAudioStoryCredits() > 0 && Number(duration || 0) <= AUDIO_CREDIT_MAX_MINUTES;
+}
+
+function canUseAudioNarration(duration = getValue("durationChoice")) {
+  return getPlan(getCurrentPlanKey()).canUseAudio || canUseAudioCreditForDuration(duration);
 }
 
 async function loadCloudUsage() {
@@ -1281,7 +1286,11 @@ async function requestPlusForAudio() {
   if (canUseAudioNarration()) return;
 
   audioToggle.checked = false;
-  planNote.textContent = "Audio narration is included with DreamScapes Plus, or with a redeemed audio credit.";
+  const selectedDuration = Number(getValue("durationChoice"));
+  planNote.textContent =
+    getAudioStoryCredits() > 0 && selectedDuration > AUDIO_CREDIT_MAX_MINUTES
+      ? `Redeemed audio credits can be used on stories up to ${AUDIO_CREDIT_MAX_MINUTES} minutes. Choose a shorter story or upgrade to DreamScapes Plus.`
+      : "Audio narration is included with DreamScapes Plus, or with a redeemed audio credit.";
   throw new Error("DreamScapes Plus or an audio credit is required for audio.");
 }
 
@@ -2199,7 +2208,6 @@ audioToggle.addEventListener("change", () => {
   if (audioToggle.checked) {
     requestPlusForAudio().catch(() => {
       audioToggle.checked = false;
-      planNote.textContent = "Audio narration is included with DreamScapes Plus, or with a redeemed audio credit.";
     });
   }
 });
@@ -2208,6 +2216,18 @@ durationInputs.forEach((input) => {
   input.addEventListener("change", () => {
     const plan = getPlan(getCurrentPlanKey());
     const duration = Number(input.value);
+    const audioAllowed = canUseAudioNarration(duration);
+
+    audioToggle.closest(".feature-toggle").classList.toggle("locked", !audioAllowed);
+
+    if (audioToggle.checked && !audioAllowed) {
+      audioToggle.checked = false;
+      planNote.textContent =
+        getAudioStoryCredits() > 0 && duration > AUDIO_CREDIT_MAX_MINUTES
+          ? `Redeemed audio credits can be used on stories up to ${AUDIO_CREDIT_MAX_MINUTES} minutes. Choose a shorter story or upgrade to DreamScapes Plus.`
+          : "Audio narration is included with DreamScapes Plus, or with a redeemed audio credit.";
+      return;
+    }
 
     if (duration <= plan.maxDuration) return;
 
@@ -2905,9 +2925,15 @@ async function renderLibrary() {
 function canUseNarration() {
   if (!currentStory) return;
   const accountPlan = getPlan(getCurrentPlanKey());
+  const storyDuration = Number(currentStory.duration || 0);
 
   if (!accountPlan.canUseAudio && getAudioStoryCredits() <= 0) {
     statusNote.textContent = "Audio narration is included with DreamScapes Plus, or with a redeemed audio credit.";
+    return false;
+  }
+
+  if (!accountPlan.canUseAudio && getAudioStoryCredits() > 0 && storyDuration > AUDIO_CREDIT_MAX_MINUTES) {
+    statusNote.textContent = `Redeemed audio credits can be used on stories up to ${AUDIO_CREDIT_MAX_MINUTES} minutes. Create a shorter audio story or upgrade to DreamScapes Plus.`;
     return false;
   }
 

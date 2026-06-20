@@ -3,6 +3,7 @@ const SUPABASE_ANON_KEY =
   process.env.SUPABASE_ANON_KEY ||
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtoZ3p6cml4aGV0YW9udG1kaGV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5OTkwMjMsImV4cCI6MjA5NTU3NTAyM30.Zij8eBhzxNecuPRsMliWChxYmogLBFbd1GScpKPM_5g";
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+const AUDIO_CREDIT_MAX_SECONDS = 10 * 60;
 
 const plans = {
   free: {
@@ -166,8 +167,17 @@ async function enforceStoryAccess(request, body) {
     );
   }
 
-  if (body.audioNarration && !context.plan.canUseAudio && audioCredits <= 0) {
-    throw new ApiError(403, "Audio narration is included with DreamScapes Plus.");
+  if (body.audioNarration && !context.plan.canUseAudio) {
+    if (audioCredits <= 0) {
+      throw new ApiError(403, "Audio narration is included with DreamScapes Plus.");
+    }
+
+    if (duration * 60 > AUDIO_CREDIT_MAX_SECONDS) {
+      throw new ApiError(
+        403,
+        "Redeemed audio credits can be used on stories up to 10 minutes. Choose a shorter story or upgrade to DreamScapes Plus."
+      );
+    }
   }
 
   if (storiesUsed >= context.plan.monthlyStories) {
@@ -186,9 +196,22 @@ async function enforceNarrationAccess(request, body) {
   const usedSeconds = Number(context.usage?.audio_seconds_used || 0);
   const limitSeconds = context.plan.audioMinutes * 60;
   const audioCredits = Number(context.profile?.audio_story_credits || 0);
+  const canUsePlanAudio =
+    context.plan.canUseAudio && limitSeconds > 0 && usedSeconds + requestedSeconds <= limitSeconds;
 
-  if (audioCredits > 0) {
+  if (canUsePlanAudio) {
+    return { ...context, requestedAudioSeconds: requestedSeconds };
+  }
+
+  if (audioCredits > 0 && requestedSeconds <= AUDIO_CREDIT_MAX_SECONDS) {
     return { ...context, requestedAudioSeconds: requestedSeconds, useAudioCredit: true };
+  }
+
+  if (audioCredits > 0 && requestedSeconds > AUDIO_CREDIT_MAX_SECONDS) {
+    throw new ApiError(
+      403,
+      "Redeemed audio credits can be used on stories up to 10 minutes. Choose a shorter story or upgrade to DreamScapes Plus."
+    );
   }
 
   if (!context.plan.canUseAudio) {
