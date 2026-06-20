@@ -170,11 +170,11 @@ const plans = {
     summary: "£0, 3 stories/month, up to 10 min",
     monthlyStories: 3,
     maxDuration: 10,
-    canSave: false,
+    canSave: true,
     canUseAudio: false,
-    savedLimit: 0,
+    savedLimit: 3,
     audioMinutes: 0,
-    note: "Free package: 3 stories this month, no saved library or audio narration.",
+    note: "Free package: 3 stories this month, 3 saved stories, no audio narration.",
   },
   premier: {
     label: "Premier",
@@ -1988,7 +1988,7 @@ async function saveGeneratedStoryToLibrary(story) {
   const plan = getPlan(story.plan);
 
   if (!plan.canSave) {
-    statusNote.textContent = "Story ready. Saved libraries are included with Premier and DreamScapes Plus.";
+    statusNote.textContent = "Story ready. Saved libraries are included with DreamScapes plans.";
     return false;
   }
 
@@ -2127,7 +2127,7 @@ function saveStoryToLibrary(story, { silent = false } = {}) {
   const plan = getPlan(story.plan);
 
   if (!plan.canSave) {
-    if (!silent) statusNote.textContent = "Saved story libraries are included with Premier and DreamScapes Plus.";
+    if (!silent) statusNote.textContent = "Saved story libraries are included with DreamScapes plans.";
     return false;
   }
 
@@ -2832,7 +2832,7 @@ async function renderLibrary() {
     libraryList.innerHTML = `
       <article class="library-item">
         <h3>No saved stories yet</h3>
-        <p>${usingCloudLibrary ? "Stories you create while signed in will save to your cloud library." : "Premier and DreamScapes Plus stories can be saved here."}</p>
+        <p>${usingCloudLibrary ? "Stories you create while signed in will save to your cloud library." : "Free saves up to 3 stories here. Premier and Plus save more."}</p>
         <button class="button primary-button" data-screen-target="builder" type="button">Create a Story</button>
       </article>
     `;

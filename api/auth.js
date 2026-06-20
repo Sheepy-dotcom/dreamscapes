@@ -10,8 +10,9 @@ const plans = {
     label: "Free",
     monthlyStories: 3,
     maxDuration: 10,
-    canSave: false,
+    canSave: true,
     canUseAudio: false,
+    savedLimit: 3,
     audioMinutes: 0,
   },
   premier: {
@@ -20,6 +21,7 @@ const plans = {
     maxDuration: 20,
     canSave: true,
     canUseAudio: false,
+    savedLimit: 15,
     audioMinutes: 0,
   },
   plus: {
@@ -28,6 +30,7 @@ const plans = {
     maxDuration: 30,
     canSave: true,
     canUseAudio: true,
+    savedLimit: 30,
     audioMinutes: 150,
   },
 };
