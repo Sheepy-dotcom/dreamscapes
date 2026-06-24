@@ -270,6 +270,7 @@ textarea:focus-visible {
 .upgrade-screen,
 .account-screen,
 .signup-screen,
+.admin-screen,
 .info-screen {
   padding: clamp(18px, 3vw, 32px);
 }
@@ -1020,6 +1021,113 @@ textarea:focus-visible {
   background: rgba(232, 255, 247, 0.82);
   color: #244f48;
   text-align: left;
+}
+
+.admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.admin-status {
+  margin: 0 0 14px;
+  border: 1px solid rgba(138, 215, 189, 0.42);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: rgba(232, 255, 247, 0.82);
+  color: #244f48;
+  text-align: left;
+}
+
+.admin-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.admin-summary-grid span {
+  display: grid;
+  gap: 5px;
+  min-height: 80px;
+  border: 1px solid rgba(123, 78, 216, 0.16);
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: rgba(255, 248, 220, 0.58);
+}
+
+.admin-summary-grid small {
+  color: #715c9b;
+  font-size: 0.72rem;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.admin-summary-grid strong {
+  color: var(--ink);
+  font-size: 1.18rem;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.admin-dashboard {
+  display: grid;
+  gap: 14px;
+}
+
+.admin-panel {
+  border: 1px solid rgba(123, 78, 216, 0.18);
+  border-radius: 8px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.admin-panel h3 {
+  margin-bottom: 12px;
+}
+
+.admin-list {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-row {
+  display: grid;
+  gap: 4px;
+  border: 1px solid rgba(123, 78, 216, 0.12);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: rgba(255, 248, 220, 0.42);
+}
+
+.admin-row strong,
+.admin-row span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.admin-row strong {
+  color: var(--ink);
+}
+
+.admin-row span,
+.admin-empty,
+.admin-footnote {
+  color: #5e5f80;
+  line-height: 1.45;
+}
+
+.warning-row {
+  border-color: rgba(255, 183, 42, 0.5);
+  background: rgba(255, 241, 184, 0.64);
+}
+
+.admin-footnote {
+  margin: 12px 0 0;
+  font-size: 0.9rem;
+  font-weight: 800;
 }
 
 .library-toolbar {

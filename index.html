@@ -22,7 +22,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026062403" />
+    <link rel="stylesheet" href="./styles.css?v=2026062404" />
   </head>
   <body class="home-active">
     <div class="stars" aria-hidden="true"></div>
@@ -589,6 +589,7 @@
             <p id="account-cloud-status">Account connected. Cloud story saving is active.</p>
             <div class="auth-actions">
               <button class="button primary-button" data-screen-target="library" type="button">Open Library</button>
+              <button class="button secondary-button" id="open-admin-button" type="button" hidden>Open Admin</button>
               <button class="button secondary-button" id="sign-out-button" type="button">Sign Out</button>
             </div>
           </article>
@@ -745,6 +746,25 @@
         <p class="status-note account-status" id="signup-status" role="status"></p>
       </section>
 
+      <section class="screen admin-screen" id="admin-screen" aria-labelledby="admin-title">
+        <header class="top-bar">
+          <button class="logo-button" data-screen-target="welcome" type="button" aria-label="Go to home">
+            <img class="mini-logo" src="./assets/dreamscapes-logo.png" alt="DreamScapes" />
+          </button>
+          <div>
+            <p class="eyebrow">Admin</p>
+            <h2 id="admin-title">DreamScapes Admin</h2>
+          </div>
+        </header>
+        <div class="admin-actions">
+          <button class="button secondary-button" data-screen-target="account" type="button">Back to Account</button>
+          <button class="button primary-button" id="refresh-admin-button" type="button">Refresh Admin</button>
+        </div>
+        <p class="status-note admin-status" id="admin-status" role="status"></p>
+        <div class="admin-summary-grid" id="admin-summary"></div>
+        <div class="admin-dashboard" id="admin-dashboard"></div>
+      </section>
+
       <section class="screen info-screen" id="legal-screen" aria-labelledby="legal-title">
         <header class="top-bar">
           <button class="logo-button" data-screen-target="welcome" type="button" aria-label="Go to home">
@@ -831,6 +851,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026062403"></script>
+    <script src="./app.js?v=2026062404"></script>
   </body>
 </html>

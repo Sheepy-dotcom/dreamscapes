@@ -7,6 +7,7 @@ const screens = {
   upgrade: document.querySelector("#upgrade-screen"),
   account: document.querySelector("#account-screen"),
   signup: document.querySelector("#signup-screen"),
+  admin: document.querySelector("#admin-screen"),
   legal: document.querySelector("#legal-screen"),
 };
 
@@ -58,6 +59,11 @@ const accountStories = document.querySelector("#account-stories");
 const accountSavedStories = document.querySelector("#account-saved-stories");
 const accountAudio = document.querySelector("#account-audio");
 const accountAudioCredits = document.querySelector("#account-audio-credits");
+const openAdminButton = document.querySelector("#open-admin-button");
+const adminStatus = document.querySelector("#admin-status");
+const adminSummary = document.querySelector("#admin-summary");
+const adminDashboard = document.querySelector("#admin-dashboard");
+const refreshAdminButton = document.querySelector("#refresh-admin-button");
 const childProfilesCard = document.querySelector("#child-profiles-card");
 const childProfileForm = document.querySelector("#child-profile-form");
 const childProfileList = document.querySelector("#child-profile-list");
@@ -105,6 +111,7 @@ const AI_ENDPOINT = window.DREAMSCAPES_AI_ENDPOINT || "/api/story";
 const NARRATION_ENDPOINT = window.DREAMSCAPES_NARRATION_ENDPOINT || "/api/narrate";
 const AUDIO_USAGE_ENDPOINT = window.DREAMSCAPES_AUDIO_USAGE_ENDPOINT || "/api/audio-usage";
 const REDEEM_CODE_ENDPOINT = window.DREAMSCAPES_REDEEM_CODE_ENDPOINT || "/api/redeem-code";
+const ADMIN_ENDPOINT = window.DREAMSCAPES_ADMIN_ENDPOINT || "/api/admin";
 const REVENUECAT_API_KEYS = {
   ios: window.DREAMSCAPES_REVENUECAT_IOS_KEY || "",
   android: window.DREAMSCAPES_REVENUECAT_ANDROID_KEY || "",
@@ -168,6 +175,7 @@ const AI_VOICE_PROFILES = {
 };
 const MAX_LOCAL_SAVED_STORIES = 30;
 const MAX_LIBRARY_RENDER_ITEMS = 30;
+const ADMIN_EMAILS = ["shaunrussett@gmail.com"];
 
 const plans = {
   free: {
@@ -414,6 +422,7 @@ function showScreen(name) {
     });
   }
   if (name === "account") refreshAccountSummary();
+  if (name === "admin") loadAdminDashboard();
   if (name === "loading") startLoadingMessages();
   else stopLoadingMessages();
   trackEvent("screen_view", { screen: name });
@@ -508,6 +517,7 @@ function updateAccountUI() {
   if (accountSavedStories) accountSavedStories.textContent = `${stories.length}/${plan.savedLimit}`;
   if (accountAudio) accountAudio.textContent = `${formatAudioTime(audioUsed)} / ${audioLimit}`;
   if (accountAudioCredits) accountAudioCredits.textContent = String(signedIn ? getAudioStoryCredits() : 0);
+  if (openAdminButton) openAdminButton.hidden = !isCurrentUserAdmin();
   if (accountCloudStatus) {
     accountCloudStatus.textContent = signedIn
       ? cloudStoriesLoaded
@@ -1767,6 +1777,176 @@ function formatAudioTime(totalSeconds) {
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
+function formatAdminDate(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function getAdminPlanLabel(plan) {
+  return getPlan(plan).label || sentenceCase(String(plan || "free"));
+}
+
+function isCurrentUserAdmin() {
+  return ADMIN_EMAILS.includes(String(currentUser?.email || "").trim().toLowerCase());
+}
+
+function setAdminStatus(message, isError = false) {
+  if (!adminStatus) return;
+  adminStatus.textContent = message;
+  adminStatus.classList.toggle("error", Boolean(isError));
+}
+
+function adminEmpty(label) {
+  return `<p class="admin-empty">${escapeHtml(label)}</p>`;
+}
+
+function renderAdminList(items, emptyText, renderer) {
+  if (!Array.isArray(items) || items.length === 0) return adminEmpty(emptyText);
+  return `<div class="admin-list">${items.map(renderer).join("")}</div>`;
+}
+
+function renderAdminSection(title, content, footnote = "") {
+  return `
+    <article class="admin-panel">
+      <h3>${escapeHtml(title)}</h3>
+      ${content}
+      ${footnote ? `<p class="admin-footnote">${escapeHtml(footnote)}</p>` : ""}
+    </article>
+  `;
+}
+
+function renderAdminDashboard(data) {
+  if (!adminSummary || !adminDashboard) return;
+  const summary = data.summary || {};
+  const tables = data.tables || {};
+  const planCounts = summary.plans || {};
+
+  adminSummary.innerHTML = [
+    ["Users", summary.users || 0],
+    ["Stories", summary.stories || 0],
+    ["This month", summary.storiesThisMonth || 0],
+    ["Audio used", formatAudioTime(summary.audioSecondsThisMonth || 0)],
+    ["Audio issues", summary.openAudioIssues || 0],
+    ["Feedback", summary.openFeedback || 0],
+    ["Credits redeemed", summary.redeemedCredits || 0],
+    ["Plus users", planCounts.plus || 0],
+  ]
+    .map(
+      ([label, value]) => `
+        <span>
+          <small>${escapeHtml(label)}</small>
+          <strong>${escapeHtml(value)}</strong>
+        </span>
+      `
+    )
+    .join("");
+
+  const tableErrors = Array.isArray(data.tableErrors) ? data.tableErrors : [];
+  const errorPanel = tableErrors.length
+    ? renderAdminSection(
+        "Setup notes",
+        renderAdminList(tableErrors, "", (error) => `
+          <div class="admin-row warning-row">
+            <strong>${escapeHtml(error.label)}</strong>
+            <span>${escapeHtml(error.message)}</span>
+          </div>
+        `)
+      )
+    : "";
+
+  adminDashboard.innerHTML = [
+    errorPanel,
+    renderAdminSection(
+      "Recent Users",
+      renderAdminList(tables.profiles, "No users found.", (profile) => `
+        <div class="admin-row">
+          <strong>${escapeHtml(profile.email || profile.id)}</strong>
+          <span>${escapeHtml(getAdminPlanLabel(profile.plan))} · Credits ${Number(profile.audio_story_credits || 0)} · ${escapeHtml(formatAdminDate(profile.created_at))}</span>
+        </div>
+      `)
+    ),
+    renderAdminSection(
+      "Recent Stories",
+      renderAdminList(tables.stories, "No stories found.", (story) => `
+        <div class="admin-row">
+          <strong>${escapeHtml(story.title || "Untitled story")}</strong>
+          <span>${escapeHtml(story.child_name || "Child")} · ${Number(story.duration_minutes || 0)} min · ${Number(story.word_count || 0)} words · ${story.audio_requested ? "Audio requested" : "Text"} · ${escapeHtml(formatAdminDate(story.created_at))}</span>
+        </div>
+      `)
+    ),
+    renderAdminSection(
+      "Audio Issues",
+      renderAdminList(tables.audioIssues, "No audio issues reported.", (issue) => `
+        <div class="admin-row">
+          <strong>${escapeHtml(issue.story_title || "Audio issue")}</strong>
+          <span>${escapeHtml(issue.status || "open")} · ${escapeHtml(issue.voice_style || "voice unknown")} · ${escapeHtml(issue.message || "")}</span>
+        </div>
+      `)
+    ),
+    renderAdminSection(
+      "Tester Feedback",
+      renderAdminList(tables.feedbackReports, "No tester feedback yet.", (report) => `
+        <div class="admin-row">
+          <strong>${escapeHtml(report.category || "feedback")} · ${escapeHtml(report.user_email || report.user_id || "user")}</strong>
+          <span>${escapeHtml(report.message || "")}</span>
+        </div>
+      `),
+      "Run supabase-feedback-reports.sql if this section shows a setup note."
+    ),
+    renderAdminSection(
+      "Redeem Activity",
+      renderAdminList(tables.redemptions, "No redemptions yet.", (redemption) => `
+        <div class="admin-row">
+          <strong>${escapeHtml(redemption.redeem_code || "Code")}</strong>
+          <span>${escapeHtml(redemption.user_email || redemption.user_id || "user")} · Credits ${Number(redemption.audio_story_credits || 0)} · ${escapeHtml(formatAdminDate(redemption.created_at))}</span>
+        </div>
+      `)
+    ),
+    renderAdminSection(
+      "Codes",
+      renderAdminList(tables.redeemCodes, "No redeem codes found.", (code) => `
+        <div class="admin-row">
+          <strong>${escapeHtml(code.code || "Code")}</strong>
+          <span>${code.active ? "Active" : "Paused"} · Credits ${Number(code.audio_story_credits || 0)} · Used ${Number(code.times_redeemed || 0)}${code.max_redemptions ? `/${Number(code.max_redemptions)}` : ""}</span>
+        </div>
+      `)
+    ),
+  ]
+    .filter(Boolean)
+    .join("");
+}
+
+async function loadAdminDashboard() {
+  if (!isCurrentUserAdmin()) {
+    setAdminStatus("Admin access is only enabled for the DreamScapes owner account.", true);
+    if (adminSummary) adminSummary.innerHTML = "";
+    if (adminDashboard) adminDashboard.innerHTML = "";
+    return;
+  }
+
+  setAdminStatus("Loading admin dashboard...");
+
+  try {
+    const response = await fetch(ADMIN_ENDPOINT, {
+      method: "GET",
+      headers: await getApiHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error(await readApiError(response, "Admin dashboard could not load."));
+    }
+
+    const data = await response.json();
+    renderAdminDashboard(data);
+    setAdminStatus(`Admin updated ${new Date(data.generatedAt || Date.now()).toLocaleTimeString()}.`);
+    trackEvent("admin_dashboard_loaded");
+  } catch (error) {
+    setAdminStatus(error.message || "Admin dashboard could not load.", true);
+  }
+}
+
 function getAudioPauseSeconds(story = currentStory) {
   return getNarrationPause(story) / 1000;
 }
@@ -2475,6 +2655,14 @@ feedbackForm?.addEventListener("submit", async (event) => {
 
   if (feedbackStatus) feedbackStatus.textContent = "Sending feedback...";
   await sendTesterFeedback();
+});
+
+openAdminButton?.addEventListener("click", () => {
+  showScreen("admin");
+});
+
+refreshAdminButton?.addEventListener("click", () => {
+  loadAdminDashboard();
 });
 
 document.querySelector("#sign-in-button")?.addEventListener("click", async () => {
