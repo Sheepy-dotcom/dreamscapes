@@ -58,7 +58,6 @@ const accountStories = document.querySelector("#account-stories");
 const accountSavedStories = document.querySelector("#account-saved-stories");
 const accountAudio = document.querySelector("#account-audio");
 const accountAudioCredits = document.querySelector("#account-audio-credits");
-const accountLengthFit = document.querySelector("#account-length-fit");
 const childProfilesCard = document.querySelector("#child-profiles-card");
 const childProfileForm = document.querySelector("#child-profile-form");
 const childProfileList = document.querySelector("#child-profile-list");
@@ -480,24 +479,6 @@ function getStoryActualDurationSeconds(story) {
   return getSavedAudioDurationSeconds(story) || getEstimatedTextDurationSeconds(story);
 }
 
-function getLengthFitPercent(story) {
-  const targetSeconds = getStoryTargetSeconds(story);
-  const actualSeconds = getStoryActualDurationSeconds(story);
-  if (!targetSeconds || !actualSeconds) return 0;
-  return Math.round((actualSeconds / targetSeconds) * 100);
-}
-
-function getLatestLengthSummary(stories = []) {
-  const story = stories.find((savedStory) => getStoryTargetSeconds(savedStory) > 0);
-  if (!story) return "No stories yet";
-
-  const targetSeconds = getStoryTargetSeconds(story);
-  const actualSeconds = getStoryActualDurationSeconds(story);
-  if (!actualSeconds) return `${formatAudioTime(targetSeconds)} target`;
-
-  return `${formatAudioTime(actualSeconds)} / ${formatAudioTime(targetSeconds)} (${getLengthFitPercent(story)}%)`;
-}
-
 function isPasswordRecoveryUrl() {
   const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
   const query = new URLSearchParams(window.location.search);
@@ -527,7 +508,6 @@ function updateAccountUI() {
   if (accountSavedStories) accountSavedStories.textContent = `${stories.length}/${plan.savedLimit}`;
   if (accountAudio) accountAudio.textContent = `${formatAudioTime(audioUsed)} / ${audioLimit}`;
   if (accountAudioCredits) accountAudioCredits.textContent = String(signedIn ? getAudioStoryCredits() : 0);
-  if (accountLengthFit) accountLengthFit.textContent = signedIn ? getLatestLengthSummary(stories) : "No stories yet";
   if (accountCloudStatus) {
     accountCloudStatus.textContent = signedIn
       ? cloudStoriesLoaded
