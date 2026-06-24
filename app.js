@@ -1878,7 +1878,9 @@ function renderAdminDashboard(data) {
           <strong>${escapeHtml(profile.email || profile.id)}</strong>
           <span>${escapeHtml(getAdminPlanLabel(profile.plan))} · Credits ${Number(profile.audio_story_credits || 0)} · ${escapeHtml(formatAdminDate(profile.created_at))}</span>
         </div>
-      `)
+      `),
+      "",
+      { collapsible: true }
     ),
     renderAdminSection(
       "Recent Stories",
@@ -1898,7 +1900,9 @@ function renderAdminDashboard(data) {
           <strong>${escapeHtml(issue.story_title || "Audio issue")}</strong>
           <span>${escapeHtml(issue.status || "open")} · ${escapeHtml(issue.voice_style || "voice unknown")} · ${escapeHtml(issue.message || "")}</span>
         </div>
-      `)
+      `),
+      "",
+      { collapsible: true }
     ),
     renderAdminSection(
       "Tester Feedback",
@@ -1917,7 +1921,9 @@ function renderAdminDashboard(data) {
           <strong>${escapeHtml(redemption.redeem_code || "Code")}</strong>
           <span>${escapeHtml(redemption.user_email || redemption.user_id || "user")} · Credits ${Number(redemption.audio_story_credits || 0)} · ${escapeHtml(formatAdminDate(redemption.created_at))}</span>
         </div>
-      `)
+      `),
+      "",
+      { collapsible: true }
     ),
     renderAdminSection(
       "Codes",
