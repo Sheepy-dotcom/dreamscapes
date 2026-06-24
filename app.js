@@ -180,6 +180,7 @@ const AI_VOICE_PROFILES = {
 const MAX_LOCAL_SAVED_STORIES = 30;
 const MAX_LIBRARY_RENDER_ITEMS = 30;
 const ADMIN_EMAILS = ["shaunrussett@gmail.com"];
+const ADMIN_LAST_SEEN_KEY = "dreamscapesAdminLastSeenAt";
 
 const plans = {
   free: {
@@ -1808,12 +1809,49 @@ function renderAdminList(items, emptyText, renderer) {
   return `<div class="admin-list">${items.map(renderer).join("")}</div>`;
 }
 
+function getAdminLastSeenTime() {
+  try {
+    const storedTime = new Date(localStorage.getItem(ADMIN_LAST_SEEN_KEY) || "").getTime();
+    if (Number.isFinite(storedTime)) return storedTime;
+  } catch {
+    // Fall back to recent activity below.
+  }
+
+  return Date.now() - 7 * 24 * 60 * 60 * 1000;
+}
+
+function setAdminLastSeenTime(value = new Date().toISOString()) {
+  try {
+    localStorage.setItem(ADMIN_LAST_SEEN_KEY, value);
+  } catch {
+    // Local storage can be unavailable in private browsing.
+  }
+}
+
+function countNewAdminItems(items, sinceTime) {
+  if (!Array.isArray(items)) return 0;
+
+  return items.filter((item) => {
+    const createdTime = new Date(item?.created_at || "").getTime();
+    return Number.isFinite(createdTime) && createdTime > sinceTime;
+  }).length;
+}
+
+function renderAdminBadge(count) {
+  return count > 0 ? `<span class="admin-badge">${count} new</span>` : "";
+}
+
 function renderAdminSection(title, content, footnote = "", options = {}) {
+  const badge = renderAdminBadge(options.newCount || 0);
+
   if (options.collapsible) {
     return `
       <details class="admin-panel admin-details" ${options.open ? "open" : ""}>
         <summary>
-          <span>${escapeHtml(title)}</span>
+          <span class="admin-section-title">
+            <span>${escapeHtml(title)}</span>
+            ${badge}
+          </span>
         </summary>
         ${content}
         ${footnote ? `<p class="admin-footnote">${escapeHtml(footnote)}</p>` : ""}
@@ -1823,7 +1861,10 @@ function renderAdminSection(title, content, footnote = "", options = {}) {
 
   return `
     <article class="admin-panel">
-      <h3>${escapeHtml(title)}</h3>
+      <h3 class="admin-section-title">
+        <span>${escapeHtml(title)}</span>
+        ${badge}
+      </h3>
       ${content}
       ${footnote ? `<p class="admin-footnote">${escapeHtml(footnote)}</p>` : ""}
     </article>
@@ -1835,6 +1876,15 @@ function renderAdminDashboard(data) {
   const summary = data.summary || {};
   const tables = data.tables || {};
   const planCounts = summary.plans || {};
+  const adminLastSeenTime = getAdminLastSeenTime();
+  const newCounts = {
+    profiles: countNewAdminItems(tables.profiles, adminLastSeenTime),
+    stories: countNewAdminItems(tables.stories, adminLastSeenTime),
+    audioIssues: countNewAdminItems(tables.audioIssues, adminLastSeenTime),
+    feedbackReports: countNewAdminItems(tables.feedbackReports, adminLastSeenTime),
+    redemptions: countNewAdminItems(tables.redemptions, adminLastSeenTime),
+    redeemCodes: countNewAdminItems(tables.redeemCodes, adminLastSeenTime),
+  };
 
   adminSummary.innerHTML = [
     ["Users", summary.users || 0],
@@ -1880,7 +1930,7 @@ function renderAdminDashboard(data) {
         </div>
       `),
       "",
-      { collapsible: true }
+      { collapsible: true, newCount: newCounts.profiles }
     ),
     renderAdminSection(
       "Recent Stories",
@@ -1891,7 +1941,7 @@ function renderAdminDashboard(data) {
         </div>
       `),
       "",
-      { collapsible: true }
+      { collapsible: true, newCount: newCounts.stories }
     ),
     renderAdminSection(
       "Audio Issues",
@@ -1902,7 +1952,7 @@ function renderAdminDashboard(data) {
         </div>
       `),
       "",
-      { collapsible: true }
+      { collapsible: true, newCount: newCounts.audioIssues }
     ),
     renderAdminSection(
       "Tester Feedback",
@@ -1912,7 +1962,8 @@ function renderAdminDashboard(data) {
           <span>${escapeHtml(report.message || "")}</span>
         </div>
       `),
-      "Run supabase-feedback-reports.sql if this section shows a setup note."
+      "Run supabase-feedback-reports.sql if this section shows a setup note.",
+      { collapsible: true, newCount: newCounts.feedbackReports }
     ),
     renderAdminSection(
       "Redeem Activity",
@@ -1923,7 +1974,7 @@ function renderAdminDashboard(data) {
         </div>
       `),
       "",
-      { collapsible: true }
+      { collapsible: true, newCount: newCounts.redemptions }
     ),
     renderAdminSection(
       "Codes",
@@ -1934,11 +1985,13 @@ function renderAdminDashboard(data) {
         </div>
       `),
       "",
-      { collapsible: true }
+      { collapsible: true, newCount: newCounts.redeemCodes }
     ),
   ]
     .filter(Boolean)
     .join("");
+
+  setAdminLastSeenTime(data.generatedAt || new Date().toISOString());
 }
 
 async function loadAdminDashboard() {
