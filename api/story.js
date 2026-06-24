@@ -1,5 +1,6 @@
 const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
 const { enforceStoryAccess, incrementUsage, sendApiError, supabaseRequest } = require("./auth");
+const NARRATION_WORDS_PER_MINUTE = 125;
 
 const durationTargets = {
   5: { words: 900, minWords: 800, maxWords: 1050, paragraphs: 10 },
@@ -25,6 +26,10 @@ function getTarget(duration) {
 
 function getMaxOutputTokens(duration) {
   return Math.min(Math.ceil(getTarget(duration).maxWords * 2.6), 24000);
+}
+
+function getEstimatedNarrationMinutes(wordCount) {
+  return Math.round((wordCount / NARRATION_WORDS_PER_MINUTE) * 10) / 10;
 }
 
 function extractResponseText(data) {
@@ -95,6 +100,33 @@ function buildPrompt(data) {
     "- Do not end with farewell phrases such as ta-ta, ta ta for now, bye, or goodbye.",
     "- Do not mention AI, prompts, packages, subscriptions, or app settings.",
     ...retryNote,
+  ].join("\n");
+}
+
+function buildExpansionPrompt(data, story) {
+  const target = getTarget(data.duration);
+  const currentWordCount = story.wordCount || countWords(story.paragraphs || []);
+
+  return [
+    "Expand this existing DreamScapes children's story so the final story is much closer to the requested narration duration.",
+    `Requested duration: ${cleanText(data.duration, "5")} minutes.`,
+    `Current word count: ${currentWordCount} words.`,
+    `Required minimum: ${target.minWords} words.`,
+    `Target: ${target.words} words.`,
+    `Maximum: ${target.maxWords} words.`,
+    "",
+    "Expansion rules:",
+    "- Return the full finished story, not just added paragraphs.",
+    "- Keep the same title unless a small improvement is needed.",
+    "- Preserve the child's name, selected mood, story type, positive ending, and child-friendly safety.",
+    "- Add complete scenes, gentle dialogue, sensory details, character choices, cosy transitions, and natural pauses.",
+    "- Do not pad with repeated wording or filler.",
+    "- Keep the story in British English, but do not announce that it is British English.",
+    "- Do not end with farewell phrases such as ta-ta, ta ta for now, bye, or goodbye.",
+    "- The final word count must be inside the requested range unless that is impossible.",
+    "",
+    "Existing story JSON:",
+    JSON.stringify({ title: story.title, paragraphs: story.paragraphs }, null, 2),
   ].join("\n");
 }
 
@@ -173,7 +205,7 @@ const storySchema = {
     paragraphs: {
       type: "array",
       minItems: 4,
-      maxItems: 80,
+      maxItems: 120,
       items: {
         type: "string",
         minLength: 20,
@@ -183,7 +215,7 @@ const storySchema = {
   },
 };
 
-async function requestStory(data) {
+async function requestStoryWithPrompt(data, prompt) {
   const response = await fetch(OPENAI_RESPONSES_URL, {
     method: "POST",
     headers: {
@@ -200,7 +232,7 @@ async function requestStory(data) {
         },
         {
           role: "user",
-          content: buildPrompt(data),
+          content: prompt,
         },
       ],
       max_output_tokens: getMaxOutputTokens(data.duration),
@@ -242,6 +274,14 @@ async function requestStory(data) {
   };
 }
 
+async function requestStory(data) {
+  return requestStoryWithPrompt(data, buildPrompt(data));
+}
+
+async function requestStoryExpansion(data, story) {
+  return requestStoryWithPrompt(data, buildExpansionPrompt(data, story));
+}
+
 async function createStory(data) {
   const target = getTarget(data.duration);
   let story = await requestStory(data);
@@ -251,6 +291,17 @@ async function createStory(data) {
     story = retry.wordCount > story.wordCount ? retry : story;
   }
 
+  for (let attempt = 0; attempt < 2 && story.wordCount < target.minWords; attempt += 1) {
+    try {
+      const expanded = await requestStoryExpansion(data, story);
+      story = expanded.wordCount > story.wordCount ? expanded : story;
+    } catch {
+      break;
+    }
+  }
+
+  const shortByWords = Math.max(0, target.minWords - story.wordCount);
+
   return {
     ...story,
     durationTarget: {
@@ -258,6 +309,10 @@ async function createStory(data) {
       words: target.words,
       minWords: target.minWords,
       maxWords: target.maxWords,
+      actualWords: story.wordCount,
+      estimatedNarrationMinutes: getEstimatedNarrationMinutes(story.wordCount),
+      withinRange: story.wordCount >= target.minWords && story.wordCount <= target.maxWords,
+      shortByWords,
     },
   };
 }
