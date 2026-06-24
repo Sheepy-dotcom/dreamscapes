@@ -31,6 +31,22 @@ async function safeServiceRequest(path, tableErrors, label) {
   }
 }
 
+async function safeServiceRequestWithFallback(primaryPath, fallbackPath, tableErrors, label) {
+  try {
+    return await supabaseServiceRequest(primaryPath);
+  } catch (primaryError) {
+    try {
+      return await supabaseServiceRequest(fallbackPath);
+    } catch (fallbackError) {
+      tableErrors.push({
+        label,
+        message: fallbackError.message || primaryError.message || "Could not load table",
+      });
+      return [];
+    }
+  }
+}
+
 function countBy(items, key) {
   return items.reduce((counts, item) => {
     const value = item?.[key] || "unknown";
@@ -66,8 +82,9 @@ module.exports = async function handler(request, response) {
           tableErrors,
           "profiles"
         ),
-        safeServiceRequest(
+        safeServiceRequestWithFallback(
           "/rest/v1/stories?select=id,user_id,title,child_name,duration_minutes,word_count,plan,audio_requested,audio_duration_seconds,created_at&order=created_at.desc&limit=500",
+          "/rest/v1/stories?select=id,user_id,title,child_name,duration_minutes,plan,audio_requested,audio_duration_seconds,created_at&order=created_at.desc&limit=500",
           tableErrors,
           "stories"
         ),
@@ -91,8 +108,9 @@ module.exports = async function handler(request, response) {
           tableErrors,
           "redeem codes"
         ),
-        safeServiceRequest(
+        safeServiceRequestWithFallback(
           "/rest/v1/redeem_code_redemptions?select=id,redeem_code,user_id,user_email,audio_story_credits,created_at&order=created_at.desc&limit=80",
+          "/rest/v1/redeem_code_redemptions?select=id,user_id,audio_story_credits&limit=80",
           tableErrors,
           "redemptions"
         ),

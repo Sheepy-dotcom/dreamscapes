@@ -1872,7 +1872,7 @@ function renderAdminDashboard(data) {
       renderAdminList(tables.stories, "No stories found.", (story) => `
         <div class="admin-row">
           <strong>${escapeHtml(story.title || "Untitled story")}</strong>
-          <span>${escapeHtml(story.child_name || "Child")} · ${Number(story.duration_minutes || 0)} min · ${Number(story.word_count || 0)} words · ${story.audio_requested ? "Audio requested" : "Text"} · ${escapeHtml(formatAdminDate(story.created_at))}</span>
+          <span>${escapeHtml(story.child_name || "Child")} · ${Number(story.duration_minutes || 0)} min · ${story.word_count ? `${Number(story.word_count)} words` : "Words not tracked"} · ${story.audio_requested ? "Audio requested" : "Text"} · ${escapeHtml(formatAdminDate(story.created_at))}</span>
         </div>
       `)
     ),
