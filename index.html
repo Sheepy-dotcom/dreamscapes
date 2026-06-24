@@ -22,7 +22,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026062401" />
+    <link rel="stylesheet" href="./styles.css?v=2026062402" />
   </head>
   <body class="home-active">
     <div class="stars" aria-hidden="true"></div>
@@ -574,12 +574,20 @@
                 <strong id="account-stories">0</strong>
               </span>
               <span>
-                <small>Audio used</small>
+                <small>Saved stories</small>
+                <strong id="account-saved-stories">0</strong>
+              </span>
+              <span>
+                <small>Audio minutes</small>
                 <strong id="account-audio">0:00</strong>
               </span>
               <span>
-                <small>Audio credits</small>
+                <small>Free audio credits</small>
                 <strong id="account-audio-credits">0</strong>
+              </span>
+              <span>
+                <small>Latest length</small>
+                <strong id="account-length-fit">No stories yet</strong>
               </span>
             </div>
             <p id="account-cloud-status">Account connected. Cloud story saving is active.</p>
@@ -601,6 +609,30 @@
               </div>
             </form>
             <p class="helper-text" id="redeem-status" role="status"></p>
+          </article>
+
+          <article class="auth-card feedback-card" id="feedback-card" hidden>
+            <h3>Tester feedback</h3>
+            <p>Send a quick note if something feels broken, confusing, too slow, or not quite ready for the app.</p>
+            <form class="auth-form feedback-form" id="feedback-form">
+              <label class="field">
+                <span>Type</span>
+                <select id="feedback-category">
+                  <option value="bug">Bug or fault</option>
+                  <option value="audio">Audio problem</option>
+                  <option value="story-length">Story length</option>
+                  <option value="idea">Idea or improvement</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Message</span>
+                <textarea id="feedback-message" rows="3" placeholder="Tell us what happened."></textarea>
+              </label>
+              <div class="auth-actions">
+                <button class="button primary-button" id="send-feedback-button" type="submit">Send Feedback</button>
+              </div>
+            </form>
+            <p class="helper-text" id="feedback-status" role="status"></p>
           </article>
 
           <article class="auth-card child-profiles-card" id="child-profiles-card" hidden>
@@ -803,6 +835,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026062401"></script>
+    <script src="./app.js?v=2026062402"></script>
   </body>
 </html>

@@ -55,8 +55,10 @@ const accountEmail = document.querySelector("#account-email");
 const accountCloudStatus = document.querySelector("#account-cloud-status");
 const accountPlan = document.querySelector("#account-plan");
 const accountStories = document.querySelector("#account-stories");
+const accountSavedStories = document.querySelector("#account-saved-stories");
 const accountAudio = document.querySelector("#account-audio");
 const accountAudioCredits = document.querySelector("#account-audio-credits");
+const accountLengthFit = document.querySelector("#account-length-fit");
 const childProfilesCard = document.querySelector("#child-profiles-card");
 const childProfileForm = document.querySelector("#child-profile-form");
 const childProfileList = document.querySelector("#child-profile-list");
@@ -65,6 +67,11 @@ const toggleProfileFormButton = document.querySelector("#toggle-profile-form");
 const builderChildProfiles = document.querySelector("#builder-child-profiles");
 const builderProfileList = document.querySelector("#builder-profile-list");
 const clearProfileSelectionButton = document.querySelector("#clear-profile-selection");
+const feedbackCard = document.querySelector("#feedback-card");
+const feedbackForm = document.querySelector("#feedback-form");
+const feedbackCategory = document.querySelector("#feedback-category");
+const feedbackMessage = document.querySelector("#feedback-message");
+const feedbackStatus = document.querySelector("#feedback-status");
 let currentStory = null;
 let currentUser = null;
 let supabaseClient = null;
@@ -200,6 +207,12 @@ const plans = {
     audioMinutes: 150,
     note: "DreamScapes Plus: £9.99/month for 30 stories, larger saved library, audio narration, 150 audio minutes, and stories up to 30 minutes.",
   },
+};
+
+const planRanks = {
+  free: 0,
+  premier: 1,
+  plus: 2,
 };
 
 const moodDetails = {
@@ -454,6 +467,37 @@ function validateSignupCredentials(email, password, passwordConfirm) {
   return "";
 }
 
+function getStoryTargetSeconds(story) {
+  return Math.max(0, Number(story?.duration || story?.duration_minutes || 0) * 60);
+}
+
+function getEstimatedTextDurationSeconds(story) {
+  const wordCount = Number(story?.wordCount || story?.word_count || 0);
+  return wordCount > 0 ? (wordCount / 125) * 60 : 0;
+}
+
+function getStoryActualDurationSeconds(story) {
+  return getSavedAudioDurationSeconds(story) || getEstimatedTextDurationSeconds(story);
+}
+
+function getLengthFitPercent(story) {
+  const targetSeconds = getStoryTargetSeconds(story);
+  const actualSeconds = getStoryActualDurationSeconds(story);
+  if (!targetSeconds || !actualSeconds) return 0;
+  return Math.round((actualSeconds / targetSeconds) * 100);
+}
+
+function getLatestLengthSummary(stories = []) {
+  const story = stories.find((savedStory) => getStoryTargetSeconds(savedStory) > 0);
+  if (!story) return "No stories yet";
+
+  const targetSeconds = getStoryTargetSeconds(story);
+  const actualSeconds = getStoryActualDurationSeconds(story);
+  if (!actualSeconds) return `${formatAudioTime(targetSeconds)} target`;
+
+  return `${formatAudioTime(actualSeconds)} / ${formatAudioTime(targetSeconds)} (${getLengthFitPercent(story)}%)`;
+}
+
 function isPasswordRecoveryUrl() {
   const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
   const query = new URLSearchParams(window.location.search);
@@ -464,17 +508,15 @@ function isPasswordRecoveryUrl() {
 function updateAccountUI() {
   const signedIn = Boolean(currentUser);
   const stories = signedIn ? cloudStories : [];
-  const totalAudioSeconds = stories.reduce(
-    (total, story) => total + (Number(story.aiAudioDurationSeconds) || 0),
-    0
-  );
   const plan = getPlan(getCurrentPlanKey());
   const storiesUsed = signedIn ? getStoriesUsed(getCurrentPlanKey()) : 0;
   const audioUsed = signedIn ? getAudioSecondsUsed() : 0;
+  const audioLimit = plan.audioMinutes > 0 ? formatAudioTime(plan.audioMinutes * 60) : "Plus only";
 
   if (authSignedOut) authSignedOut.hidden = signedIn;
   if (authSignedIn) authSignedIn.hidden = !signedIn;
   if (redeemCard) redeemCard.hidden = !signedIn;
+  if (feedbackCard) feedbackCard.hidden = !signedIn;
   if (childProfilesCard) childProfilesCard.hidden = !signedIn;
   if (passwordResetCard && !passwordRecoveryActive) {
     passwordResetCard.hidden = true;
@@ -482,8 +524,10 @@ function updateAccountUI() {
   if (accountEmail) accountEmail.textContent = currentUser?.email || "";
   if (accountPlan) accountPlan.textContent = plan.label;
   if (accountStories) accountStories.textContent = `${storiesUsed}/${plan.monthlyStories}`;
-  if (accountAudio) accountAudio.textContent = `${formatAudioTime(audioUsed)} / ${formatAudioTime(plan.audioMinutes * 60)}`;
+  if (accountSavedStories) accountSavedStories.textContent = `${stories.length}/${plan.savedLimit}`;
+  if (accountAudio) accountAudio.textContent = `${formatAudioTime(audioUsed)} / ${audioLimit}`;
   if (accountAudioCredits) accountAudioCredits.textContent = String(signedIn ? getAudioStoryCredits() : 0);
+  if (accountLengthFit) accountLengthFit.textContent = signedIn ? getLatestLengthSummary(stories) : "No stories yet";
   if (accountCloudStatus) {
     accountCloudStatus.textContent = signedIn
       ? cloudStoriesLoaded
@@ -896,6 +940,16 @@ async function refreshProfileAfterPurchase() {
 
 async function purchasePlan(planKey) {
   const plan = getPlan(planKey);
+  const currentPlanKey = getCurrentPlanKey();
+  if (planKey === currentPlanKey) {
+    upgradeNote.textContent = `${plan.label} is already active.`;
+    return;
+  }
+  if ((planRanks[planKey] || 0) < (planRanks[currentPlanKey] || 0)) {
+    upgradeNote.textContent = `${plan.label} is already included with your current subscription.`;
+    return;
+  }
+
   upgradeNote.textContent = `Opening ${plan.label} checkout...`;
 
   const Purchases = await configureRevenueCat();
@@ -914,6 +968,12 @@ async function purchasePlan(planKey) {
   }
 
   await refreshProfileAfterPurchase();
+  currentProfile = {
+    ...(currentProfile || {}),
+    plan: purchasedPlan,
+  };
+  updatePlanFeatures();
+  updateAccountUI();
   upgradeNote.textContent = `${getPlan(purchasedPlan).label} is active.`;
   trackEvent("revenuecat_purchase_completed", { plan: purchasedPlan });
 }
@@ -924,6 +984,14 @@ async function restorePurchases() {
   const result = await Purchases.restorePurchases();
   const restoredPlan = getPlanFromCustomerInfo(result.customerInfo);
   await refreshProfileAfterPurchase();
+  if (restoredPlan !== "free") {
+    currentProfile = {
+      ...(currentProfile || {}),
+      plan: restoredPlan,
+    };
+    updatePlanFeatures();
+    updateAccountUI();
+  }
   upgradeNote.textContent =
     restoredPlan === "free"
       ? "No active DreamScapes subscription was found."
@@ -1282,6 +1350,37 @@ function updatePlanFeatures() {
   audioToggle.closest(".feature-toggle").classList.toggle("locked", !audioAllowed);
   updateDurationLocks(plan);
   keepDurationWithinPlan(plan);
+  updatePlanActionButtons(planKey);
+}
+
+function updatePlanActionButtons(planKey = getCurrentPlanKey()) {
+  const currentRank = planRanks[planKey] || 0;
+
+  document.querySelectorAll("[data-plan-preview]").forEach((button) => {
+    button.textContent = planKey === "free" ? "Current" : "Included";
+    button.disabled = planKey === "free";
+  });
+
+  document.querySelectorAll("[data-purchase-plan]").forEach((button) => {
+    const targetPlan = button.dataset.purchasePlan;
+    const targetRank = planRanks[targetPlan] || 0;
+    const targetLabel = targetPlan === "plus" ? "Plus" : "Premier";
+
+    if (targetPlan === planKey) {
+      button.textContent = "Active";
+      button.disabled = true;
+      return;
+    }
+
+    if (targetRank < currentRank) {
+      button.textContent = "Included";
+      button.disabled = true;
+      return;
+    }
+
+    button.textContent = targetLabel;
+    button.disabled = false;
+  });
 }
 
 function getHighestAllowedDuration(plan) {
@@ -1523,10 +1622,13 @@ function renderStory(story) {
   const duration = getDuration(story.duration);
   const plan = getPlan(story.plan);
   const savedAudioDuration = getSavedAudioDurationSeconds(story);
+  const actualLengthSeconds = getStoryActualDurationSeconds(story);
+  const targetLengthSeconds = getStoryTargetSeconds(story);
   document.querySelector("#story-title").textContent = story.title;
   document.querySelector("#story-meta").innerHTML = `
     <span>${plan.label}</span>
     <span>${duration.label}${duration.premium ? " Premium" : ""}</span>
+    ${actualLengthSeconds && targetLengthSeconds ? `<span>Length ${formatAudioTime(actualLengthSeconds)} / ${formatAudioTime(targetLengthSeconds)}</span>` : ""}
     ${savedAudioDuration ? `<span>Audio ${formatAudioTime(savedAudioDuration)}</span>` : ""}
     <span>${story.storyType === "bedtime" ? "Bedtime story" : "Anytime story"}</span>
     <span>${selectedMoods.map(sentenceCase).join(" + ")}</span>
@@ -2156,6 +2258,70 @@ async function reportAudioIssue(story, source = "result") {
   }
 }
 
+function getFeedbackReports() {
+  try {
+    const reports = JSON.parse(localStorage.getItem("dreamscapesFeedbackReports") || "[]");
+    return Array.isArray(reports) ? reports : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveFeedbackReportLocally(report) {
+  const reports = getFeedbackReports();
+  reports.unshift({ ...report, localId: createStoryId(), createdAt: new Date().toISOString() });
+  localStorage.setItem("dreamscapesFeedbackReports", JSON.stringify(reports.slice(0, 30)));
+}
+
+async function sendTesterFeedback() {
+  const message = feedbackMessage?.value.trim() || "";
+  const category = feedbackCategory?.value || "bug";
+
+  if (!message) {
+    if (feedbackStatus) feedbackStatus.textContent = "Add a short message before sending.";
+    return false;
+  }
+
+  const report = {
+    user_id: currentUser?.id || null,
+    user_email: currentUser?.email || null,
+    category,
+    message,
+    app_screen: Object.entries(screens).find(([, screen]) => screen.classList.contains("active"))?.[0] || "account",
+    story_id: currentStory?.cloudId || null,
+    story_title: currentStory?.title || null,
+    device_info: {
+      platform: getCapacitorPlatform(),
+      native: isNativeMobileApp(),
+      userAgent: navigator.userAgent,
+      width: window.innerWidth,
+      height: window.innerHeight,
+    },
+    status: "open",
+  };
+
+  if (!canUseCloudLibrary()) {
+    saveFeedbackReportLocally(report);
+    if (feedbackStatus) feedbackStatus.textContent = "Feedback saved on this device. Thank you.";
+    return true;
+  }
+
+  try {
+    const { error } = await supabaseClient.from("feedback_reports").insert(report);
+    if (error) throw error;
+    if (feedbackMessage) feedbackMessage.value = "";
+    if (feedbackStatus) feedbackStatus.textContent = "Feedback sent. Thank you.";
+    trackEvent("tester_feedback_sent", { category });
+    return true;
+  } catch {
+    saveFeedbackReportLocally(report);
+    if (feedbackStatus) {
+      feedbackStatus.textContent = "Feedback saved on this device. Run the feedback SQL to store it in Supabase.";
+    }
+    return false;
+  }
+}
+
 function saveStoryToLibrary(story, { silent = false } = {}) {
   const plan = getPlan(story.plan);
 
@@ -2317,6 +2483,18 @@ redeemForm?.addEventListener("submit", async (event) => {
     if (redeemStatus) redeemStatus.textContent = error.message || "Code could not be redeemed.";
     trackEvent("redeem_code_failed");
   }
+});
+
+feedbackForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  if (!currentUser) {
+    if (feedbackStatus) feedbackStatus.textContent = "Sign in before sending feedback.";
+    return;
+  }
+
+  if (feedbackStatus) feedbackStatus.textContent = "Sending feedback...";
+  await sendTesterFeedback();
 });
 
 document.querySelector("#sign-in-button")?.addEventListener("click", async () => {
@@ -3300,7 +3478,11 @@ async function startAiNarration() {
       trackEvent("cloud_ai_audio_played", { voiceStyle: currentStory.voiceStyle });
       return true;
     } catch {
-      statusNote.textContent = "Cloud audio could not load. Creating audio again.";
+      statusNote.textContent =
+        "Saved cloud audio could not load. Try again in a moment or report the audio issue so support can help.";
+      narrationNote.textContent = "Saved audio could not load";
+      trackEvent("cloud_ai_audio_load_failed", { storyId: currentStory.cloudId || currentStory.id });
+      return "blocked";
     }
   }
 
@@ -3366,7 +3548,7 @@ async function startAiNarration() {
     return true;
   } catch (error) {
     const message = /failed to fetch/i.test(error.message || "")
-      ? "Audio could not be reached. Try again when your connection is steady. If a credit or audio minutes were used, report the audio issue so support can help."
+      ? "Audio could not be reached. Try again when your connection is steady. Audio minutes are only updated after completed audio is measured."
       : error.message || "Audio could not be created. Try again in a moment.";
     statusNote.textContent = message;
     narrationNote.textContent = "Audio not created";
