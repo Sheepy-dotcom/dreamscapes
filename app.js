@@ -1613,16 +1613,13 @@ async function createStory(data) {
 
 function renderStory(story) {
   const selectedMoods = getSelectedMoods(story.moods);
-  const duration = getDuration(story.duration);
   const plan = getPlan(story.plan);
   const savedAudioDuration = getSavedAudioDurationSeconds(story);
   const actualLengthSeconds = getStoryActualDurationSeconds(story);
-  const targetLengthSeconds = getStoryTargetSeconds(story);
   document.querySelector("#story-title").textContent = story.title;
   document.querySelector("#story-meta").innerHTML = `
     <span>${plan.label}</span>
-    <span>${duration.label}${duration.premium ? " Premium" : ""}</span>
-    ${actualLengthSeconds && targetLengthSeconds ? `<span>Length ${formatAudioTime(actualLengthSeconds)} / ${formatAudioTime(targetLengthSeconds)}</span>` : ""}
+    ${actualLengthSeconds ? `<span>Story length ${formatAudioTime(actualLengthSeconds)}</span>` : ""}
     ${savedAudioDuration ? `<span>Audio ${formatAudioTime(savedAudioDuration)}</span>` : ""}
     <span>${story.storyType === "bedtime" ? "Bedtime story" : "Anytime story"}</span>
     <span>${selectedMoods.map(sentenceCase).join(" + ")}</span>
@@ -3321,11 +3318,18 @@ async function renderLibrary() {
             ? `Audio saved ${formatAudioTime(savedAudioDuration)}`
             : "Audio will be created on first play"
           : "Text only";
+        const storyLengthSeconds = getStoryActualDurationSeconds(story);
+        const metadata = [
+          getPlan(story.plan).label,
+          storyLengthSeconds ? `Story ${formatAudioTime(storyLengthSeconds)}` : "",
+          audioLabel,
+          new Date(story.createdAt).toLocaleDateString(),
+        ].filter(Boolean);
         return `
         <article class="library-item ${isNewStory ? "new-story" : ""}">
           ${isNewStory ? '<span class="new-story-badge">New story</span>' : ""}
           <h3>${escapeHtml(story.title)}</h3>
-          <p>${escapeHtml(getPlan(story.plan).label)} · ${escapeHtml(getDuration(story.duration).label)} · ${escapeHtml(audioLabel)} · ${new Date(story.createdAt).toLocaleDateString()}</p>
+          <p>${escapeHtml(metadata.join(" · "))}</p>
           <p>${escapeHtml(story.text?.[0]?.slice(0, 120) || "Saved story")}...</p>
           <div class="library-actions">
             <button class="button secondary-button" data-library-index="${index}" type="button">Open</button>
