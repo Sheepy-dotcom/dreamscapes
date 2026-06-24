@@ -22,7 +22,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026062404" />
+    <link rel="stylesheet" href="./styles.css?v=2026062405" />
   </head>
   <body class="home-active">
     <div class="stars" aria-hidden="true"></div>
@@ -761,6 +761,21 @@
           <button class="button primary-button" id="refresh-admin-button" type="button">Refresh Admin</button>
         </div>
         <p class="status-note admin-status" id="admin-status" role="status"></p>
+        <article class="admin-panel admin-credit-panel">
+          <h3>Add audio credits</h3>
+          <form class="admin-credit-form" id="admin-credit-form">
+            <label class="field">
+              <span>User email</span>
+              <input id="admin-credit-email" type="email" placeholder="parent@example.com" />
+            </label>
+            <label class="field">
+              <span>Credits</span>
+              <input id="admin-credit-amount" type="number" min="1" max="100" value="1" />
+            </label>
+            <button class="button primary-button" type="submit">Add Credits</button>
+          </form>
+          <p class="helper-text" id="admin-credit-status" role="status"></p>
+        </article>
         <div class="admin-summary-grid" id="admin-summary"></div>
         <div class="admin-dashboard" id="admin-dashboard"></div>
       </section>
@@ -851,6 +866,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026062404"></script>
+    <script src="./app.js?v=2026062405"></script>
   </body>
 </html>

@@ -64,6 +64,10 @@ const adminStatus = document.querySelector("#admin-status");
 const adminSummary = document.querySelector("#admin-summary");
 const adminDashboard = document.querySelector("#admin-dashboard");
 const refreshAdminButton = document.querySelector("#refresh-admin-button");
+const adminCreditForm = document.querySelector("#admin-credit-form");
+const adminCreditEmail = document.querySelector("#admin-credit-email");
+const adminCreditAmount = document.querySelector("#admin-credit-amount");
+const adminCreditStatus = document.querySelector("#admin-credit-status");
 const childProfilesCard = document.querySelector("#child-profiles-card");
 const childProfileForm = document.querySelector("#child-profile-form");
 const childProfileList = document.querySelector("#child-profile-list");
@@ -1807,7 +1811,19 @@ function renderAdminList(items, emptyText, renderer) {
   return `<div class="admin-list">${items.map(renderer).join("")}</div>`;
 }
 
-function renderAdminSection(title, content, footnote = "") {
+function renderAdminSection(title, content, footnote = "", options = {}) {
+  if (options.collapsible) {
+    return `
+      <details class="admin-panel admin-details" ${options.open ? "open" : ""}>
+        <summary>
+          <span>${escapeHtml(title)}</span>
+        </summary>
+        ${content}
+        ${footnote ? `<p class="admin-footnote">${escapeHtml(footnote)}</p>` : ""}
+      </details>
+    `;
+  }
+
   return `
     <article class="admin-panel">
       <h3>${escapeHtml(title)}</h3>
@@ -1874,7 +1890,9 @@ function renderAdminDashboard(data) {
           <strong>${escapeHtml(story.title || "Untitled story")}</strong>
           <span>${escapeHtml(story.child_name || "Child")} · ${Number(story.duration_minutes || 0)} min · ${story.word_count ? `${Number(story.word_count)} words` : "Words not tracked"} · ${story.audio_requested ? "Audio requested" : "Text"} · ${escapeHtml(formatAdminDate(story.created_at))}</span>
         </div>
-      `)
+      `),
+      "",
+      { collapsible: true }
     ),
     renderAdminSection(
       "Audio Issues",
@@ -1911,7 +1929,9 @@ function renderAdminDashboard(data) {
           <strong>${escapeHtml(code.code || "Code")}</strong>
           <span>${code.active ? "Active" : "Paused"} · Credits ${Number(code.audio_story_credits || 0)} · Used ${Number(code.times_redeemed || 0)}${code.max_redemptions ? `/${Number(code.max_redemptions)}` : ""}</span>
         </div>
-      `)
+      `),
+      "",
+      { collapsible: true }
     ),
   ]
     .filter(Boolean)
@@ -1944,6 +1964,54 @@ async function loadAdminDashboard() {
     trackEvent("admin_dashboard_loaded");
   } catch (error) {
     setAdminStatus(error.message || "Admin dashboard could not load.", true);
+  }
+}
+
+async function addAdminAudioCredits() {
+  if (!isCurrentUserAdmin()) {
+    if (adminCreditStatus) adminCreditStatus.textContent = "Admin access is not enabled for this account.";
+    return false;
+  }
+
+  const email = adminCreditEmail?.value.trim() || "";
+  const credits = Math.max(0, Math.floor(Number(adminCreditAmount?.value || 0)));
+
+  if (!email) {
+    if (adminCreditStatus) adminCreditStatus.textContent = "Enter the user's email address.";
+    return false;
+  }
+
+  if (!credits) {
+    if (adminCreditStatus) adminCreditStatus.textContent = "Enter at least 1 credit.";
+    return false;
+  }
+
+  if (adminCreditStatus) adminCreditStatus.textContent = "Adding credits...";
+
+  try {
+    const response = await fetch(ADMIN_ENDPOINT, {
+      method: "POST",
+      headers: await getApiHeaders(),
+      body: JSON.stringify({
+        action: "addAudioCredits",
+        email,
+        credits,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(await readApiError(response, "Credits could not be added."));
+    }
+
+    const data = await response.json();
+    if (adminCreditStatus) adminCreditStatus.textContent = data.message || "Credits added.";
+    if (adminCreditAmount) adminCreditAmount.value = "1";
+    await loadAdminDashboard();
+    trackEvent("admin_audio_credits_added", { credits });
+    return true;
+  } catch (error) {
+    if (adminCreditStatus) adminCreditStatus.textContent = error.message || "Credits could not be added.";
+    return false;
   }
 }
 
@@ -2663,6 +2731,11 @@ openAdminButton?.addEventListener("click", () => {
 
 refreshAdminButton?.addEventListener("click", () => {
   loadAdminDashboard();
+});
+
+adminCreditForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  await addAdminAudioCredits();
 });
 
 document.querySelector("#sign-in-button")?.addEventListener("click", async () => {

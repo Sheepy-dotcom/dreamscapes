@@ -59,18 +59,84 @@ function sumBy(items, key) {
   return items.reduce((total, item) => total + Number(item?.[key] || 0), 0);
 }
 
+async function getVerifiedAdminAccount(request) {
+  const account = await getAccountContext(request);
+  const email = account.user?.email || account.profile?.email || "";
+
+  if (!isAdminEmail(email)) {
+    return { account, email, allowed: false };
+  }
+
+  return { account, email, allowed: true };
+}
+
+async function addAudioCreditsToProfile(body) {
+  const email = String(body.email || "")
+    .trim()
+    .toLowerCase();
+  const credits = Math.max(0, Math.min(100, Math.floor(Number(body.credits || body.audioStoryCredits || 0))));
+
+  if (!email) {
+    return { status: 400, body: { error: "Enter the user's email address." } };
+  }
+
+  if (!credits) {
+    return { status: 400, body: { error: "Enter at least 1 audio credit." } };
+  }
+
+  const matches = await supabaseServiceRequest(
+    `/rest/v1/profiles?email=ilike.${encodeURIComponent(email)}&select=id,email,plan,audio_story_credits&limit=2`
+  );
+  const profile = matches?.[0];
+
+  if (!profile) {
+    return { status: 404, body: { error: "No DreamScapes profile was found for that email." } };
+  }
+
+  const previousCredits = Math.max(0, Number(profile.audio_story_credits || 0));
+  const nextCredits = previousCredits + credits;
+  const updated = await supabaseServiceRequest(`/rest/v1/profiles?id=eq.${profile.id}&select=*`, {
+    method: "PATCH",
+    prefer: "return=representation",
+    body: {
+      audio_story_credits: nextCredits,
+    },
+  });
+
+  return {
+    status: 200,
+    body: {
+      ok: true,
+      profile: updated?.[0] || { ...profile, audio_story_credits: nextCredits },
+      creditsAdded: credits,
+      previousCredits,
+      nextCredits,
+      message: `${credits} audio ${credits === 1 ? "credit has" : "credits have"} been added to ${profile.email || email}.`,
+    },
+  };
+}
+
 module.exports = async function handler(request, response) {
-  if (request.method !== "GET") {
-    response.setHeader("Allow", "GET");
+  if (!["GET", "POST"].includes(request.method)) {
+    response.setHeader("Allow", "GET, POST");
     return response.status(405).json({ error: "Method not allowed" });
   }
 
   try {
-    const account = await getAccountContext(request);
-    const email = account.user?.email || account.profile?.email || "";
+    const admin = await getVerifiedAdminAccount(request);
 
-    if (!isAdminEmail(email)) {
+    if (!admin.allowed) {
       return response.status(403).json({ error: "Admin access is not enabled for this account." });
+    }
+
+    if (request.method === "POST") {
+      const body = typeof request.body === "string" ? JSON.parse(request.body) : request.body || {};
+      if (body.action !== "addAudioCredits") {
+        return response.status(400).json({ error: "Unknown admin action." });
+      }
+
+      const result = await addAudioCreditsToProfile(body);
+      return response.status(result.status).json(result.body);
     }
 
     const tableErrors = [];
@@ -121,7 +187,7 @@ module.exports = async function handler(request, response) {
 
     return response.status(200).json({
       ok: true,
-      adminEmail: email,
+      adminEmail: admin.email,
       generatedAt: new Date().toISOString(),
       currentMonth,
       summary: {
