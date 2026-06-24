@@ -5,6 +5,11 @@ function getAudioSeconds(body) {
   return Number.isFinite(seconds) && seconds > 0 ? Math.ceil(seconds) : 0;
 }
 
+function getRequestedAudioSeconds(body, fallbackSeconds) {
+  const seconds = Number(body.requestedAudioSeconds || body.requested_audio_seconds || 0);
+  return Number.isFinite(seconds) && seconds > 0 ? Math.ceil(seconds) : fallbackSeconds;
+}
+
 module.exports = async function handler(request, response) {
   if (request.method !== "POST") {
     response.setHeader("Allow", "POST");
@@ -15,13 +20,14 @@ module.exports = async function handler(request, response) {
     const body = typeof request.body === "string" ? JSON.parse(request.body) : request.body || {};
     const audioSeconds = getAudioSeconds(body);
     const action = body.action === "complete" ? "complete" : "check";
+    const entitlementSeconds = action === "complete" ? getRequestedAudioSeconds(body, audioSeconds) : audioSeconds;
 
     if (!audioSeconds) {
       return response.status(400).json({ error: "Audio duration is required" });
     }
 
     const account = await enforceNarrationAccess(request, {
-      duration: audioSeconds / 60,
+      duration: entitlementSeconds / 60,
     });
     const usage =
       action === "complete"

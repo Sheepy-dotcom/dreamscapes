@@ -1605,13 +1605,15 @@ async function requestAiNarrationPart({ text, duration, voice, instructions }) {
   return data;
 }
 
-async function updateAudioUsage(action, audioSeconds) {
+async function updateAudioUsage(action, audioSeconds, options = {}) {
+  const requestedAudioSeconds = Number(options.requestedAudioSeconds || audioSeconds || 0);
   const response = await fetch(AUDIO_USAGE_ENDPOINT, {
     method: "POST",
     headers: await getApiHeaders(),
     body: JSON.stringify({
       action,
       audioSeconds,
+      requestedAudioSeconds,
     }),
   });
 
@@ -3331,7 +3333,8 @@ async function startAiNarration() {
     currentAudioTracks = audioTracks;
     currentAudioTrackDurations = await measureAudioTrackDurations(audioTracks);
     const aiAudioDurationSeconds = getPlaybackDurationSeconds(currentAudioTrackDurations, currentStory);
-    await updateAudioUsage("complete", chargeAudioSeconds);
+    const completedAudioSeconds = aiAudioDurationSeconds > 0 ? Math.ceil(aiAudioDurationSeconds) : chargeAudioSeconds;
+    await updateAudioUsage("complete", completedAudioSeconds, { requestedAudioSeconds: chargeAudioSeconds });
     let aiAudioPaths = currentStory.aiAudioPaths || [];
     if (canUseCloudLibrary()) {
       try {
