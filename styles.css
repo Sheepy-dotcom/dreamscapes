@@ -1522,15 +1522,6 @@ textarea:focus-visible {
   background: #ffe4ee;
 }
 
-.theme-card {
-  display: grid;
-  gap: 10px;
-}
-
-.theme-toggle {
-  margin-top: 4px;
-}
-
 body.night-mode {
   color: #f8f4ff;
   background:
@@ -1639,10 +1630,18 @@ body.night-mode .duration-grid input:checked + span,
 body.night-mode .mood-grid input:checked + span,
 body.night-mode .profile-choice-list input:checked + span,
 body.night-mode .library-filter button.active {
-  color: #fff8dc;
-  border-color: rgba(255, 217, 106, 0.62);
-  background: linear-gradient(135deg, rgba(70, 47, 122, 0.84), rgba(255, 217, 106, 0.18));
-  box-shadow: 0 0 0 3px rgba(255, 217, 106, 0.1);
+  color: #160f35;
+  border-color: rgba(255, 231, 133, 0.98);
+  background: linear-gradient(135deg, #ffe785 0%, #ffb0d0 52%, #cdb7ff 100%);
+  box-shadow:
+    0 0 0 3px rgba(255, 231, 133, 0.24),
+    0 14px 32px rgba(0, 0, 0, 0.34);
+  transform: translateY(-1px);
+}
+
+body.night-mode .duration-grid input:checked + span small,
+body.night-mode .profile-choice-list input:checked + span small {
+  color: #352063;
 }
 
 body.night-mode .duration-grid small,
