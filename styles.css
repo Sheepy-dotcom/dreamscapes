@@ -797,41 +797,105 @@ textarea:focus-visible {
   padding: clamp(24px, 5vw, 56px);
   place-items: center;
   text-align: center;
+  overflow: hidden;
 }
 
 .loading-screen.active {
   display: grid;
 }
 
+.loading-screen::before,
+.loading-screen::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.loading-screen::before {
+  inset: 8%;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 26% 24%, rgba(255, 231, 133, 0.24), transparent 18%),
+    radial-gradient(circle at 78% 30%, rgba(255, 143, 183, 0.18), transparent 20%),
+    radial-gradient(circle at 50% 76%, rgba(205, 183, 255, 0.2), transparent 24%);
+  filter: blur(10px);
+  animation: loadingAurora 7s ease-in-out infinite alternate;
+}
+
+.loading-screen::after {
+  inset: auto 14% 10%;
+  height: 88px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(255, 217, 106, 0.18), transparent 68%);
+  filter: blur(2px);
+  animation: loadingGlow 3.8s ease-in-out infinite;
+}
+
 .loading-scene {
   position: relative;
   display: grid;
   justify-items: center;
-  gap: 14px;
-  width: min(520px, 100%);
-  padding: clamp(18px, 4vw, 30px);
+  gap: 16px;
+  width: min(560px, 100%);
+  padding: clamp(18px, 4vw, 34px);
+  z-index: 1;
+}
+
+.loading-orbit {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: min(320px, 74vw);
+  aspect-ratio: 1;
+  margin: -4px auto 0;
+}
+
+.loading-orbit::before,
+.loading-orbit::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.loading-orbit::before {
+  inset: 4%;
+  border: 1px solid rgba(255, 217, 106, 0.2);
+  border-top-color: rgba(255, 217, 106, 0.7);
+  border-right-color: rgba(205, 183, 255, 0.54);
+  animation: storyOrbit 10s linear infinite;
+}
+
+.loading-orbit::after {
+  inset: 18%;
+  background: radial-gradient(circle, rgba(255, 217, 106, 0.18), transparent 68%);
+  filter: blur(1px);
+  animation: loadingPulse 2.6s ease-in-out infinite;
 }
 
 .moon-loader {
-  position: relative;
-  width: 122px;
-  height: 122px;
-  margin: 0 auto 8px;
+  position: absolute;
+  top: 6%;
+  right: 10%;
+  width: clamp(86px, 24vw, 122px);
+  height: clamp(86px, 24vw, 122px);
   border-radius: 50%;
   background: linear-gradient(135deg, #ffe783, #ffd36b);
-  box-shadow: 0 0 44px rgba(255, 217, 106, 0.64);
+  box-shadow:
+    0 0 34px rgba(255, 217, 106, 0.72),
+    0 0 80px rgba(255, 217, 106, 0.18);
   animation: floatMoon 1.8s ease-in-out infinite alternate;
 }
 
 .moon-loader::after {
   content: "";
   position: absolute;
-  right: -18px;
-  top: 12px;
-  width: 92px;
-  height: 92px;
+  right: -15%;
+  top: 10%;
+  width: 76%;
+  height: 76%;
   border-radius: 50%;
-  background: #fff8dc;
+  background: #151849;
 }
 
 .moon-loader span {
@@ -864,8 +928,8 @@ textarea:focus-visible {
 
 .story-sparkles {
   position: absolute;
-  inset: 22px 0 auto;
-  height: 160px;
+  inset: 18px 0 auto;
+  height: 210px;
   pointer-events: none;
 }
 
@@ -902,6 +966,114 @@ textarea:focus-visible {
   animation-delay: 1.3s;
 }
 
+.book-loader {
+  position: relative;
+  z-index: 2;
+  width: min(198px, 52vw);
+  height: min(112px, 29vw);
+  margin-top: 42px;
+  perspective: 520px;
+  filter: drop-shadow(0 22px 26px rgba(0, 0, 0, 0.34));
+}
+
+.book-loader::before {
+  content: "";
+  position: absolute;
+  inset: auto 8% -8px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.28);
+  filter: blur(7px);
+}
+
+.book-loader span {
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  border: 2px solid rgba(255, 231, 133, 0.72);
+  background:
+    repeating-linear-gradient(0deg, transparent 0 16px, rgba(53, 32, 99, 0.12) 17px),
+    linear-gradient(135deg, #fff8dc, #ffe4ee 54%, #d8c6ff);
+}
+
+.book-loader span:first-child {
+  left: 0;
+  border-radius: 18px 5px 8px 18px;
+  transform-origin: right center;
+  transform: rotateY(24deg);
+  animation: leftPageFlutter 2.8s ease-in-out infinite;
+}
+
+.book-loader span:last-child {
+  right: 0;
+  border-radius: 5px 18px 18px 8px;
+  transform-origin: left center;
+  transform: rotateY(-24deg);
+  animation: rightPageFlutter 2.8s ease-in-out infinite;
+}
+
+.book-loader span:first-child::after,
+.book-loader span:last-child::after {
+  content: "";
+  position: absolute;
+  top: 18px;
+  bottom: 18px;
+  width: 2px;
+  border-radius: 999px;
+  background: rgba(123, 78, 216, 0.22);
+}
+
+.book-loader span:first-child::after {
+  right: 16px;
+}
+
+.book-loader span:last-child::after {
+  left: 16px;
+}
+
+.floating-story-card {
+  position: absolute;
+  z-index: 1;
+  width: 58px;
+  height: 74px;
+  border: 1px solid rgba(255, 231, 133, 0.5);
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, rgba(255, 231, 133, 0.64) 0 6px, transparent 6px),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.86) 0 5px, rgba(216, 198, 255, 0.34) 6px 8px);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.3);
+  opacity: 0.86;
+}
+
+.floating-story-card::after {
+  content: "";
+  position: absolute;
+  left: 16px;
+  right: 10px;
+  top: 16px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(123, 78, 216, 0.34);
+  box-shadow:
+    0 14px 0 rgba(123, 78, 216, 0.2),
+    0 28px 0 rgba(123, 78, 216, 0.16);
+}
+
+.card-one {
+  left: 7%;
+  top: 33%;
+  transform: rotate(-12deg);
+  animation: floatStoryCard 3.6s ease-in-out infinite;
+}
+
+.card-two {
+  right: 5%;
+  bottom: 17%;
+  transform: rotate(10deg) scale(0.92);
+  animation: floatStoryCard 3.9s ease-in-out 500ms infinite reverse;
+}
+
 .loading-message {
   min-height: 24px;
   margin: 0;
@@ -912,11 +1084,11 @@ textarea:focus-visible {
 .story-weaver {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  width: min(280px, 82vw);
-  height: 10px;
-  margin: 2px 0 4px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  width: min(340px, 86vw);
+  height: 14px;
+  margin: 4px 0 6px;
 }
 
 .story-weaver::before {
@@ -943,6 +1115,10 @@ textarea:focus-visible {
 
 .story-weaver span:nth-child(3) {
   animation-delay: 440ms;
+}
+
+.story-weaver span:nth-child(4) {
+  animation-delay: 660ms;
 }
 
 .loading-steps {
@@ -1962,6 +2138,77 @@ body.night-mode .delete-button {
   }
 }
 
+@keyframes loadingAurora {
+  from {
+    transform: translate3d(-12px, -8px, 0) scale(0.96);
+    opacity: 0.7;
+  }
+  to {
+    transform: translate3d(12px, 10px, 0) scale(1.04);
+    opacity: 1;
+  }
+}
+
+@keyframes loadingGlow {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scaleX(0.92);
+  }
+  50% {
+    opacity: 0.94;
+    transform: scaleX(1.08);
+  }
+}
+
+@keyframes loadingPulse {
+  0%,
+  100% {
+    opacity: 0.48;
+    transform: scale(0.94);
+  }
+  50% {
+    opacity: 0.86;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes storyOrbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes leftPageFlutter {
+  0%,
+  100% {
+    transform: rotateY(24deg);
+  }
+  50% {
+    transform: rotateY(34deg) translateY(-3px);
+  }
+}
+
+@keyframes rightPageFlutter {
+  0%,
+  100% {
+    transform: rotateY(-24deg);
+  }
+  50% {
+    transform: rotateY(-34deg) translateY(-3px);
+  }
+}
+
+@keyframes floatStoryCard {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -14px;
+  }
+}
+
 @keyframes weaveStory {
   0%,
   100% {
@@ -2022,6 +2269,26 @@ body.night-mode .delete-button {
 
   .loading-screen {
     min-height: calc(100vh - 132px);
+    padding: 18px 10px;
+  }
+
+  .loading-scene {
+    gap: 12px;
+    padding: 16px 6px;
+  }
+
+  .loading-orbit {
+    width: min(286px, 86vw);
+  }
+
+  .floating-story-card {
+    width: 48px;
+    height: 62px;
+  }
+
+  .loading-steps span {
+    padding: 7px 9px;
+    font-size: 0.72rem;
   }
 
   .form-grid,
