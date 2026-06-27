@@ -397,13 +397,13 @@ const britishVoiceHints = {
 };
 
 const loadingMessages = [
-  "Gathering moonlight and story dust",
-  "Choosing kind characters",
-  "Finding a gentle adventure",
-  "Adding cosy details",
-  "Checking the story length",
-  "Preparing your story page",
-  "Tucking in a happy ending",
+  "Opening the storybook under the stars",
+  "Choosing kind characters and cosy details",
+  "Building the adventure scene by scene",
+  "Sprinkling in gentle surprises",
+  "Checking the story feels close to your chosen time",
+  "Saving the story safely to your library",
+  "Tucking in a warm, happy ending",
 ];
 
 function startLoadingMessages() {
