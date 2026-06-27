@@ -8,3 +8,4 @@ dreamscapes-testers.csv
 node_modules/
 dist/
 www/
+ios/build/
