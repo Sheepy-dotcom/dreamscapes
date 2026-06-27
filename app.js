@@ -39,6 +39,7 @@ const authForm = document.querySelector("#auth-form");
 const authEmail = document.querySelector("#auth-email");
 const authPassword = document.querySelector("#auth-password");
 const authStatus = document.querySelector("#auth-status");
+const nightModeToggle = document.querySelector("#night-mode-toggle");
 const signupForm = document.querySelector("#signup-form");
 const signupEmail = document.querySelector("#signup-email");
 const signupPassword = document.querySelector("#signup-password");
@@ -194,6 +195,7 @@ const MAX_LOCAL_SAVED_STORIES = 30;
 const MAX_LIBRARY_RENDER_ITEMS = 30;
 const ADMIN_EMAILS = ["shaunrussett@gmail.com"];
 const ADMIN_LAST_SEEN_KEY = "dreamscapesAdminLastSeenAt";
+const NIGHT_MODE_KEY = "dreamscapesNightMode";
 
 const plans = {
   free: {
@@ -420,6 +422,27 @@ function startLoadingMessages() {
 function stopLoadingMessages() {
   window.clearInterval(loadingMessageTimer);
   loadingMessageTimer = null;
+}
+
+function isNightModeEnabled() {
+  try {
+    return localStorage.getItem(NIGHT_MODE_KEY) === "true";
+  } catch {
+    return document.body.classList.contains("night-mode");
+  }
+}
+
+function setNightMode(enabled) {
+  document.body.classList.toggle("night-mode", Boolean(enabled));
+  if (nightModeToggle) nightModeToggle.checked = Boolean(enabled);
+
+  try {
+    localStorage.setItem(NIGHT_MODE_KEY, enabled ? "true" : "false");
+  } catch {
+    // The class still updates if storage is unavailable.
+  }
+
+  trackEvent("night_mode_changed", { enabled: Boolean(enabled) });
 }
 
 function showScreen(name) {
@@ -2699,6 +2722,12 @@ document.querySelector("#welcome-back-button").addEventListener("click", () => s
 document.querySelectorAll("[data-screen-target]").forEach((button) => {
   button.addEventListener("click", () => showScreen(button.dataset.screenTarget));
 });
+
+if (nightModeToggle) {
+  nightModeToggle.checked = isNightModeEnabled();
+  document.body.classList.toggle("night-mode", nightModeToggle.checked);
+  nightModeToggle.addEventListener("change", () => setNightMode(nightModeToggle.checked));
+}
 
 audioToggle.addEventListener("change", () => {
   if (audioToggle.checked) {

@@ -22,9 +22,16 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026062702" />
+    <link rel="stylesheet" href="./styles.css?v=2026062703" />
   </head>
   <body class="home-active">
+    <script>
+      try {
+        if (localStorage.getItem("dreamscapesNightMode") === "true") {
+          document.body.classList.add("night-mode");
+        }
+      } catch {}
+    </script>
     <div class="stars" aria-hidden="true"></div>
     <main class="app-shell">
       <section class="screen welcome-screen active" id="welcome-screen" aria-label="DreamScapes home">
@@ -518,6 +525,17 @@
         </header>
 
         <div class="auth-grid">
+          <article class="auth-card theme-card">
+            <h3>Display</h3>
+            <label class="feature-toggle theme-toggle">
+              <input id="night-mode-toggle" type="checkbox" />
+              <span>
+                <strong>Night mode</strong>
+                <small>Use a darker, softer bedtime theme.</small>
+              </span>
+            </label>
+          </article>
+
           <article class="auth-card" id="auth-signed-out">
             <h3>Welcome back</h3>
             <p>Sign in to save stories, audio, child profiles, and your plan across devices.</p>
@@ -866,6 +884,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026062702"></script>
+    <script src="./app.js?v=2026062703"></script>
   </body>
 </html>

@@ -1522,6 +1522,194 @@ textarea:focus-visible {
   background: #ffe4ee;
 }
 
+.theme-card {
+  display: grid;
+  gap: 10px;
+}
+
+.theme-toggle {
+  margin-top: 4px;
+}
+
+body.night-mode {
+  color: #f8f4ff;
+  background:
+    radial-gradient(circle at 16% 8%, rgba(255, 217, 106, 0.2), transparent 16rem),
+    radial-gradient(circle at 86% 12%, rgba(216, 198, 255, 0.18), transparent 18rem),
+    radial-gradient(circle at 70% 86%, rgba(138, 215, 189, 0.14), transparent 18rem),
+    linear-gradient(145deg, #050b24 0%, #14194d 44%, #352062 100%);
+}
+
+body.night-mode .stars {
+  opacity: 0.78;
+}
+
+body.night-mode .screen {
+  border-color: rgba(216, 198, 255, 0.28);
+  background:
+    linear-gradient(135deg, rgba(18, 24, 60, 0.96), rgba(33, 30, 82, 0.94)),
+    linear-gradient(90deg, rgba(216, 198, 255, 0.12), rgba(255, 143, 183, 0.12));
+  color: #f8f4ff;
+  box-shadow: 0 26px 70px rgba(0, 0, 0, 0.46);
+}
+
+body.night-mode .welcome-screen {
+  background:
+    linear-gradient(118deg, rgba(5, 11, 36, 0.98) 0%, rgba(22, 24, 74, 0.94) 48%, rgba(63, 40, 108, 0.92) 100%),
+    radial-gradient(circle at 80% 16%, rgba(255, 217, 106, 0.28), transparent 15rem);
+}
+
+body.night-mode .welcome-copy p,
+body.night-mode .field,
+body.night-mode .choice-group legend,
+body.night-mode .narration-panel strong,
+body.night-mode .child-profile-item h4,
+body.night-mode .auth-card h3,
+body.night-mode .library-item h3,
+body.night-mode .upgrade-grid h3,
+body.night-mode .story-text,
+body.night-mode .account-summary strong,
+body.night-mode .story-card,
+body.night-mode h1,
+body.night-mode h2,
+body.night-mode h3 {
+  color: #f8f4ff;
+}
+
+body.night-mode .secondary-button {
+  color: #f8f4ff;
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(216, 198, 255, 0.22);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.26);
+}
+
+body.night-mode .field input,
+body.night-mode .field textarea,
+body.night-mode .field select,
+body.night-mode .library-sort select {
+  color: #f8f4ff;
+  border-color: rgba(216, 198, 255, 0.24);
+  background: rgba(6, 11, 36, 0.62);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+body.night-mode .field input::placeholder,
+body.night-mode .field textarea::placeholder {
+  color: rgba(248, 244, 255, 0.48);
+}
+
+body.night-mode .field select,
+body.night-mode .library-sort select {
+  background:
+    linear-gradient(45deg, transparent 50%, #ffd96a 50%) right 17px center / 8px 8px no-repeat,
+    rgba(6, 11, 36, 0.62);
+}
+
+body.night-mode .feature-toggle,
+body.night-mode .segmented-control span,
+body.night-mode .duration-grid span,
+body.night-mode .mood-grid span,
+body.night-mode .profile-choice-list span,
+body.night-mode .subscription-card,
+body.night-mode .package-panel,
+body.night-mode .library-filter,
+body.night-mode .narration-panel,
+body.night-mode .child-profile-form,
+body.night-mode .child-profile-item,
+body.night-mode .library-item,
+body.night-mode .upgrade-grid article,
+body.night-mode .auth-card,
+body.night-mode .admin-panel,
+body.night-mode .plan-table-wrap,
+body.night-mode .story-card,
+body.night-mode .app-tabbar {
+  border-color: rgba(216, 198, 255, 0.22);
+  background: rgba(10, 15, 48, 0.72);
+}
+
+body.night-mode .story-card {
+  background:
+    linear-gradient(rgba(10, 15, 48, 0.9), rgba(10, 15, 48, 0.9)),
+    repeating-linear-gradient(0deg, transparent 0 31px, rgba(255, 217, 106, 0.1) 32px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+body.night-mode .segmented-control input:checked + span,
+body.night-mode .duration-grid input:checked + span,
+body.night-mode .mood-grid input:checked + span,
+body.night-mode .profile-choice-list input:checked + span,
+body.night-mode .library-filter button.active {
+  color: #fff8dc;
+  border-color: rgba(255, 217, 106, 0.62);
+  background: linear-gradient(135deg, rgba(70, 47, 122, 0.84), rgba(255, 217, 106, 0.18));
+  box-shadow: 0 0 0 3px rgba(255, 217, 106, 0.1);
+}
+
+body.night-mode .duration-grid small,
+body.night-mode .profile-choice-list small,
+body.night-mode .choice-group .helper-text,
+body.night-mode .subscription-card span,
+body.night-mode .feature-toggle small,
+body.night-mode .narration-panel span,
+body.night-mode .library-item p,
+body.night-mode .upgrade-grid p,
+body.night-mode .auth-card p,
+body.night-mode .library-sort,
+body.night-mode .account-summary span,
+body.night-mode .account-summary small,
+body.night-mode .plan-note,
+body.night-mode .status-note,
+body.night-mode .plan-comparison-table,
+body.night-mode .plan-comparison-table th,
+body.night-mode .plan-comparison-table td {
+  color: rgba(248, 244, 255, 0.72);
+}
+
+body.night-mode .story-meta span,
+body.night-mode .new-story-badge,
+body.night-mode .admin-badge {
+  color: #fff8dc;
+  background: rgba(255, 217, 106, 0.16);
+  border-color: rgba(255, 217, 106, 0.38);
+}
+
+body.night-mode .plan-comparison-table thead th {
+  color: #f8f4ff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+body.night-mode .plan-comparison-table tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+body.night-mode .result-screen > .status-note,
+body.night-mode .library-status {
+  color: #fff8dc;
+  border-color: rgba(255, 217, 106, 0.26);
+  background: rgba(255, 217, 106, 0.12);
+}
+
+body.night-mode .app-tabbar {
+  background: rgba(8, 12, 38, 0.94);
+  box-shadow: 0 -12px 34px rgba(0, 0, 0, 0.32);
+}
+
+body.night-mode .app-tabbar button {
+  color: rgba(248, 244, 255, 0.72);
+}
+
+body.night-mode .app-tabbar button:hover,
+body.night-mode .app-tabbar button.active {
+  color: #fff8dc;
+  background: rgba(255, 217, 106, 0.14);
+}
+
+body.night-mode .delete-button {
+  color: #ffd7e5;
+  background: rgba(127, 29, 69, 0.26);
+  border-color: rgba(255, 143, 183, 0.32);
+}
+
 .upgrade-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
