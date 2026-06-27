@@ -111,11 +111,24 @@ let revenueCatConfiguredForUser = "";
 let libraryNotice = "";
 let highlightedStoryId = "";
 let currentLibraryFilter = "all";
-const AI_ENDPOINT = window.DREAMSCAPES_AI_ENDPOINT || "/api/story";
-const NARRATION_ENDPOINT = window.DREAMSCAPES_NARRATION_ENDPOINT || "/api/narrate";
-const AUDIO_USAGE_ENDPOINT = window.DREAMSCAPES_AUDIO_USAGE_ENDPOINT || "/api/audio-usage";
-const REDEEM_CODE_ENDPOINT = window.DREAMSCAPES_REDEEM_CODE_ENDPOINT || "/api/redeem-code";
-const ADMIN_ENDPOINT = window.DREAMSCAPES_ADMIN_ENDPOINT || "/api/admin";
+const PRODUCTION_API_BASE = "https://www.dreamscapes.cloud";
+function resolveApiEndpoint(value, fallbackPath) {
+  const endpoint = value || fallbackPath;
+  if (/^https?:\/\//i.test(endpoint)) return endpoint;
+
+  const platform = getCapacitorPlatform();
+  const protocol = window.location.protocol;
+  const isBundledApp = ["ios", "android"].includes(platform) || protocol === "capacitor:";
+  const apiBase = window.DREAMSCAPES_API_BASE || (isBundledApp ? PRODUCTION_API_BASE : "");
+
+  return apiBase ? `${apiBase}${endpoint}` : endpoint;
+}
+
+const AI_ENDPOINT = resolveApiEndpoint(window.DREAMSCAPES_AI_ENDPOINT, "/api/story");
+const NARRATION_ENDPOINT = resolveApiEndpoint(window.DREAMSCAPES_NARRATION_ENDPOINT, "/api/narrate");
+const AUDIO_USAGE_ENDPOINT = resolveApiEndpoint(window.DREAMSCAPES_AUDIO_USAGE_ENDPOINT, "/api/audio-usage");
+const REDEEM_CODE_ENDPOINT = resolveApiEndpoint(window.DREAMSCAPES_REDEEM_CODE_ENDPOINT, "/api/redeem-code");
+const ADMIN_ENDPOINT = resolveApiEndpoint(window.DREAMSCAPES_ADMIN_ENDPOINT, "/api/admin");
 const REVENUECAT_API_KEYS = {
   ios: window.DREAMSCAPES_REVENUECAT_IOS_KEY || "",
   android: window.DREAMSCAPES_REVENUECAT_ANDROID_KEY || "",
