@@ -1,5 +1,6 @@
 const {
   getAccountContext,
+  handleCorsPreflight,
   sendApiError,
   supabaseServiceRequest,
 } = require("./auth");
@@ -117,6 +118,8 @@ async function addAudioCreditsToProfile(body) {
 }
 
 module.exports = async function handler(request, response) {
+  if (handleCorsPreflight(request, response, "GET, POST, OPTIONS")) return;
+
   if (!["GET", "POST"].includes(request.method)) {
     response.setHeader("Allow", "GET, POST");
     return response.status(405).json({ error: "Method not allowed" });

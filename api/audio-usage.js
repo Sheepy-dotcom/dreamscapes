@@ -1,4 +1,4 @@
-const { enforceNarrationAccess, incrementUsage, sendApiError } = require("./auth");
+const { enforceNarrationAccess, handleCorsPreflight, incrementUsage, sendApiError } = require("./auth");
 
 function getAudioSeconds(body) {
   const seconds = Number(body.audioSeconds || body.audio_seconds || 0);
@@ -11,6 +11,8 @@ function getRequestedAudioSeconds(body, fallbackSeconds) {
 }
 
 module.exports = async function handler(request, response) {
+  if (handleCorsPreflight(request, response, "POST, OPTIONS")) return;
+
   if (request.method !== "POST") {
     response.setHeader("Allow", "POST");
     return response.status(405).json({ error: "Method not allowed" });

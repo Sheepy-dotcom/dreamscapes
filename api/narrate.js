@@ -1,5 +1,5 @@
 const OPENAI_SPEECH_URL = "https://api.openai.com/v1/audio/speech";
-const { enforceNarrationAccess, incrementUsage, sendApiError } = require("./auth");
+const { enforceNarrationAccess, handleCorsPreflight, incrementUsage, sendApiError } = require("./auth");
 const MAX_CHUNK_LENGTH = 3800;
 const MAX_CHUNKS = 20;
 const SUPPORTED_VOICES = new Set([
@@ -86,6 +86,8 @@ async function createSpeech({ input, voice, instructions, index = 0, total = 1 }
 }
 
 module.exports = async function handler(request, response) {
+  if (handleCorsPreflight(request, response, "POST, OPTIONS")) return;
+
   if (request.method !== "POST") {
     response.setHeader("Allow", "POST");
     return response.status(405).json({ error: "Method not allowed" });

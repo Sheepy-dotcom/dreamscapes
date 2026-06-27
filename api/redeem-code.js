@@ -1,5 +1,6 @@
 const {
   getAccountContext,
+  handleCorsPreflight,
   sendApiError,
   supabaseServiceRequest,
 } = require("./auth");
@@ -21,6 +22,8 @@ function isMissingTrackingColumnError(error) {
 }
 
 module.exports = async function handler(request, response) {
+  if (handleCorsPreflight(request, response, "POST, OPTIONS")) return;
+
   if (request.method !== "POST") {
     response.setHeader("Allow", "POST");
     return response.status(405).json({ error: "Method not allowed" });

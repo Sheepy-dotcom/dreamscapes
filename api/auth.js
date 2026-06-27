@@ -4,6 +4,15 @@ const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtoZ3p6cml4aGV0YW9udG1kaGV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5OTkwMjMsImV4cCI6MjA5NTU3NTAyM30.Zij8eBhzxNecuPRsMliWChxYmogLBFbd1GScpKPM_5g";
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 const AUDIO_CREDIT_MAX_SECONDS = 10 * 60;
+const ALLOWED_CORS_ORIGINS = [
+  "https://www.dreamscapes.cloud",
+  "https://dreamscapes.cloud",
+  "capacitor://localhost",
+  "ionic://localhost",
+  "http://localhost",
+  "http://localhost:4173",
+  "http://127.0.0.1:4173",
+];
 
 const plans = {
   free: {
@@ -283,14 +292,39 @@ function sendApiError(response, error, fallback = "Request failed") {
   });
 }
 
+function setCorsHeaders(request, response, methods = "GET, POST, OPTIONS") {
+  const origin = request.headers.origin || "";
+  const allowedOrigin = ALLOWED_CORS_ORIGINS.includes(origin) ? origin : ALLOWED_CORS_ORIGINS[0];
+
+  response.setHeader("Access-Control-Allow-Origin", allowedOrigin);
+  response.setHeader("Vary", "Origin");
+  response.setHeader("Access-Control-Allow-Methods", methods);
+  response.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, apikey, x-client-info");
+  response.setHeader("Access-Control-Max-Age", "86400");
+}
+
+function handleCorsPreflight(request, response, methods) {
+  setCorsHeaders(request, response, methods);
+
+  if (request.method === "OPTIONS") {
+    response.setHeader("Allow", methods);
+    response.status(204).end();
+    return true;
+  }
+
+  return false;
+}
+
 module.exports = {
   enforceNarrationAccess,
   enforceStoryAccess,
   getAccountContext,
   getPlan,
   getNarrationChargeSeconds,
+  handleCorsPreflight,
   incrementUsage,
   sendApiError,
+  setCorsHeaders,
   supabaseServiceRequest,
   supabaseRequest,
 };

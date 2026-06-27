@@ -1,5 +1,11 @@
 const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
-const { enforceStoryAccess, incrementUsage, sendApiError, supabaseRequest } = require("./auth");
+const {
+  enforceStoryAccess,
+  handleCorsPreflight,
+  incrementUsage,
+  sendApiError,
+  supabaseRequest,
+} = require("./auth");
 const NARRATION_WORDS_PER_MINUTE = 125;
 
 const durationTargets = {
@@ -318,6 +324,8 @@ async function createStory(data) {
 }
 
 module.exports = async function handler(request, response) {
+  if (handleCorsPreflight(request, response, "POST, OPTIONS")) return;
+
   if (request.method !== "POST") {
     response.setHeader("Allow", "POST");
     return response.status(405).json({ error: "Method not allowed" });
