@@ -922,7 +922,11 @@ async function configureRevenueCat() {
   }
 
   if (currentUser.email && Purchases.setEmail) {
-    await Purchases.setEmail({ email: currentUser.email }).catch(() => {});
+    try {
+      await Promise.resolve(Purchases.setEmail({ email: currentUser.email }));
+    } catch {
+      // Email attribution is helpful for RevenueCat, but purchases can continue without it.
+    }
   }
 
   return Purchases;
