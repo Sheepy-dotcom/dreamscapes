@@ -931,11 +931,13 @@ async function configureRevenueCat() {
 function findRevenueCatPackage(offerings, planKey) {
   const productId = REVENUECAT_PRODUCT_IDS[planKey];
   const packages = offerings?.current?.availablePackages || [];
+  const matchesProductId = (value) => String(value || "").split(":")[0] === productId;
+
   return packages.find(
     (availablePackage) =>
-      availablePackage?.product?.identifier === productId ||
-      availablePackage?.identifier === productId ||
-      availablePackage?.offeringIdentifier === productId
+      matchesProductId(availablePackage?.product?.identifier) ||
+      matchesProductId(availablePackage?.identifier) ||
+      matchesProductId(availablePackage?.offeringIdentifier)
   );
 }
 
