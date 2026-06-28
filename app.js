@@ -890,6 +890,27 @@ function getRevenueCatApiKey() {
   return REVENUECAT_API_KEYS[getCapacitorPlatform()] || "";
 }
 
+function getRevenueCatErrorMessage(error, fallback = "Purchase could not be started.") {
+  const candidates = [
+    error?.message,
+    error?.underlyingErrorMessage,
+    error?.readableErrorCode,
+    error?.userInfo?.underlyingErrorMessage,
+    error?.userInfo?.readableErrorCode,
+    error?.userInfo?.message,
+    error?.details?.underlyingErrorMessage,
+    error?.error?.underlyingErrorMessage,
+    error?.error?.message,
+  ];
+  const message = candidates
+    .map((value) => String(value || "").trim())
+    .filter(Boolean)
+    .filter((value, index, values) => values.indexOf(value) === index)
+    .join(" ");
+
+  return message || fallback;
+}
+
 function getPlanFromCustomerInfo(customerInfo) {
   const active = customerInfo?.entitlements?.active || {};
   if (REVENUECAT_ENTITLEMENTS.plus.some((id) => active[id])) return "plus";
@@ -3168,7 +3189,13 @@ document.querySelectorAll("[data-purchase-plan]").forEach((button) => {
     try {
       await purchasePlan(button.dataset.purchasePlan);
     } catch (error) {
-      upgradeNote.textContent = error.message || "Purchase could not be started.";
+      const message = getRevenueCatErrorMessage(error);
+      console.error("RevenueCat purchase error", error);
+      upgradeNote.textContent = message;
+      trackEvent("revenuecat_purchase_failed", {
+        plan: button.dataset.purchasePlan,
+        message: message.slice(0, 300),
+      });
     }
   });
 });
@@ -3177,7 +3204,12 @@ document.querySelector("#restore-purchases-button")?.addEventListener("click", a
   try {
     await restorePurchases();
   } catch (error) {
-    upgradeNote.textContent = error.message || "Purchases could not be restored.";
+    const message = getRevenueCatErrorMessage(error, "Purchases could not be restored.");
+    console.error("RevenueCat restore error", error);
+    upgradeNote.textContent = message;
+    trackEvent("revenuecat_restore_failed", {
+      message: message.slice(0, 300),
+    });
   }
 });
 
