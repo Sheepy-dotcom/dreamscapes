@@ -7,6 +7,7 @@ const AUDIO_CREDIT_MAX_SECONDS = 10 * 60;
 const ALLOWED_CORS_ORIGINS = [
   "https://www.dreamscapes.cloud",
   "https://dreamscapes.cloud",
+  "https://localhost",
   "capacitor://localhost",
   "ionic://localhost",
   "http://localhost",

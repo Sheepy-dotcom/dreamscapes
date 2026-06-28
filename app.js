@@ -891,22 +891,36 @@ function getRevenueCatApiKey() {
 }
 
 function getRevenueCatErrorMessage(error, fallback = "Purchase could not be started.") {
+  let rawDetails = "";
+  try {
+    rawDetails = JSON.stringify(error, Object.getOwnPropertyNames(error || {}));
+  } catch {
+    rawDetails = "";
+  }
+
   const candidates = [
     error?.message,
+    error?.code ? `Code: ${error.code}` : "",
     error?.underlyingErrorMessage,
     error?.readableErrorCode,
+    error?.userInfo?.code ? `Code: ${error.userInfo.code}` : "",
     error?.userInfo?.underlyingErrorMessage,
     error?.userInfo?.readableErrorCode,
     error?.userInfo?.message,
     error?.details?.underlyingErrorMessage,
     error?.error?.underlyingErrorMessage,
     error?.error?.message,
+    rawDetails && rawDetails !== "{}" ? rawDetails.slice(0, 500) : "",
   ];
   const message = candidates
     .map((value) => String(value || "").trim())
     .filter(Boolean)
     .filter((value, index, values) => values.indexOf(value) === index)
     .join(" ");
+
+  if (/configuration/i.test(message) && !/Code:|underlying|product|offering|billing|store/i.test(message)) {
+    return `${message} RevenueCat did not return extra details in this build. Check the Android product IDs, current offering, active base plans, and that the app was installed from the Play testing link.`;
+  }
 
   return message || fallback;
 }
