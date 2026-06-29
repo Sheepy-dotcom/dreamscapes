@@ -519,7 +519,8 @@ function updateAccountUI() {
   const plan = getPlan(getCurrentPlanKey());
   const storiesUsed = signedIn ? getStoriesUsed(getCurrentPlanKey()) : 0;
   const audioUsed = signedIn ? getAudioSecondsUsed() : 0;
-  const audioLimit = plan.audioMinutes > 0 ? formatAudioTime(plan.audioMinutes * 60) : "Plus only";
+  const audioUsedLabel = formatPlanMinutesFromSeconds(audioUsed);
+  const audioLimit = plan.audioMinutes > 0 ? `${plan.audioMinutes} min` : "Plus only";
 
   if (authSignedOut) authSignedOut.hidden = signedIn;
   if (authSignedIn) authSignedIn.hidden = !signedIn;
@@ -538,7 +539,7 @@ function updateAccountUI() {
   if (accountPlan) accountPlan.textContent = plan.label;
   if (accountStories) accountStories.textContent = `${storiesUsed}/${plan.monthlyStories}`;
   if (accountSavedStories) accountSavedStories.textContent = `${stories.length}/${plan.savedLimit}`;
-  if (accountAudio) accountAudio.textContent = `${formatAudioTime(audioUsed)} / ${audioLimit}`;
+  if (accountAudio) accountAudio.textContent = `${audioUsedLabel} / ${audioLimit}`;
   if (accountAudioCredits) accountAudioCredits.textContent = String(signedIn ? getAudioStoryCredits() : 0);
   if (openAdminButton) openAdminButton.hidden = !isCurrentUserAdmin();
   if (accountCloudStatus) {
@@ -1836,6 +1837,11 @@ function formatAudioTime(totalSeconds) {
   }
 
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+function formatPlanMinutesFromSeconds(totalSeconds) {
+  const minutes = Math.ceil(Math.max(0, Number(totalSeconds) || 0) / 60);
+  return `${minutes} min`;
 }
 
 function formatAdminDate(value) {
