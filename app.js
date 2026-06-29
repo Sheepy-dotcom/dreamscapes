@@ -523,6 +523,11 @@ function updateAccountUI() {
 
   if (authSignedOut) authSignedOut.hidden = signedIn;
   if (authSignedIn) authSignedIn.hidden = !signedIn;
+  if (authSignedIn) {
+    authSignedIn.classList.toggle("plan-free", plan.key === "free");
+    authSignedIn.classList.toggle("plan-premier", plan.key === "premier");
+    authSignedIn.classList.toggle("plan-plus", plan.key === "plus");
+  }
   if (redeemCard) redeemCard.hidden = !signedIn;
   if (feedbackCard) feedbackCard.hidden = !signedIn;
   if (childProfilesCard) childProfilesCard.hidden = !signedIn;
