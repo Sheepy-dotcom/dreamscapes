@@ -2159,6 +2159,15 @@ body.night-mode .plan-comparison-table tbody tr:nth-child(even) {
   background: rgba(255, 255, 255, 0.04);
 }
 
+body.night-mode .plan-check {
+  color: #042f24;
+  border-color: rgba(163, 255, 211, 0.96);
+  background: linear-gradient(135deg, #b8ffd9 0%, #5ce1a9 100%);
+  box-shadow:
+    0 0 0 3px rgba(92, 225, 169, 0.2),
+    0 0 20px rgba(92, 225, 169, 0.24);
+}
+
 body.night-mode .result-screen > .status-note,
 body.night-mode .library-status {
   color: #fff8dc;
@@ -2306,12 +2315,15 @@ body.night-mode .delete-button {
   width: 28px;
   height: 28px;
   place-items: center;
-  border: 1px solid rgba(84, 174, 144, 0.32);
+  border: 1px solid rgba(92, 225, 169, 0.72);
   border-radius: 999px;
-  background: rgba(138, 215, 189, 0.28);
-  color: #246b57;
+  background: linear-gradient(135deg, rgba(163, 255, 211, 0.98), rgba(92, 225, 169, 0.72));
+  color: #064d37;
   font-weight: 900;
   line-height: 1;
+  box-shadow:
+    0 0 0 3px rgba(92, 225, 169, 0.16),
+    0 8px 18px rgba(47, 157, 116, 0.18);
 }
 
 .plan-miss {
