@@ -1498,6 +1498,13 @@ textarea:focus-visible {
   animation: newStoryArrival 700ms ease-out both, newStoryGlow 2.6s ease-in-out 700ms 3;
 }
 
+.library-item.favourite-story {
+  border-color: rgba(255, 231, 133, 0.62);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 18px 38px rgba(64, 45, 130, 0.18);
+}
+
 .library-item.new-story::before {
   content: "";
   position: absolute;
@@ -1517,11 +1524,17 @@ textarea:focus-visible {
   color: rgba(248, 244, 255, 0.86);
 }
 
+.library-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 10px;
+}
+
 .new-story-badge {
   display: inline-flex;
   align-items: center;
   min-height: 28px;
-  margin: 0 0 10px;
   border: 1px solid rgba(255, 231, 133, 0.95);
   border-radius: 999px;
   padding: 5px 11px;
@@ -1531,6 +1544,20 @@ textarea:focus-visible {
   font-weight: 900;
   letter-spacing: 0;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.22);
+}
+
+.favourite-story-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border: 1px solid rgba(255, 231, 133, 0.72);
+  border-radius: 999px;
+  padding: 5px 11px;
+  color: #fff8dc;
+  background: rgba(255, 217, 106, 0.18);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0;
 }
 
 .library-item h3,
@@ -1888,7 +1915,7 @@ textarea:focus-visible {
 
 .library-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -1899,6 +1926,17 @@ textarea:focus-visible {
 .delete-button {
   color: #7f1d45;
   background: #ffe4ee;
+}
+
+.favourite-button {
+  color: #5d3f00;
+  background: #fff6cc;
+}
+
+.favourite-button.active {
+  color: #160f35;
+  border-color: rgba(255, 231, 133, 0.92);
+  background: linear-gradient(135deg, #ffe785, #ffb0d0);
 }
 
 body.night-mode {
@@ -2060,6 +2098,16 @@ body.night-mode .library-item.new-story {
     0 0 42px rgba(255, 217, 106, 0.26);
 }
 
+body.night-mode .library-item.favourite-story:not(.new-story) {
+  border-color: rgba(255, 231, 133, 0.5);
+  background:
+    linear-gradient(145deg, rgba(15, 21, 56, 0.9), rgba(42, 31, 92, 0.76)),
+    rgba(10, 15, 48, 0.76);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 20px 44px rgba(0, 0, 0, 0.26);
+}
+
 body.night-mode .segmented-control input:checked + span,
 body.night-mode .duration-grid input:checked + span,
 body.night-mode .duration-grid label.selected-choice span,
@@ -2210,6 +2258,12 @@ body.night-mode .new-story-badge {
   background: linear-gradient(135deg, #ffe785, #ffb0d0);
 }
 
+body.night-mode .favourite-story-badge {
+  color: #fff8dc;
+  border-color: rgba(255, 231, 133, 0.48);
+  background: rgba(255, 217, 106, 0.16);
+}
+
 body.night-mode .plan-comparison-table thead th {
   color: #f8f4ff;
   background:
@@ -2297,6 +2351,18 @@ body.night-mode .delete-button {
   color: #ffd7e5;
   background: rgba(127, 29, 69, 0.26);
   border-color: rgba(255, 143, 183, 0.32);
+}
+
+body.night-mode .favourite-button {
+  color: #fff8dc;
+  background: rgba(255, 217, 106, 0.14);
+  border-color: rgba(255, 231, 133, 0.28);
+}
+
+body.night-mode .favourite-button.active {
+  color: #160f35;
+  border-color: rgba(255, 231, 133, 0.86);
+  background: linear-gradient(135deg, #ffe785, #ffb0d0);
 }
 
 .upgrade-grid {
@@ -2877,6 +2943,10 @@ body.night-mode .delete-button {
 @media (max-width: 420px) {
   .duration-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .library-actions {
+    grid-template-columns: 1fr;
   }
 
   .redeem-form {

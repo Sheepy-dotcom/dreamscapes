@@ -197,6 +197,7 @@ const AI_VOICE_PROFILES = {
 };
 const MAX_LOCAL_SAVED_STORIES = 30;
 const MAX_LIBRARY_RENDER_ITEMS = 30;
+const STORY_FAVOURITES_KEY = "dreamscapesStoryFavourites";
 const ADMIN_EMAILS = ["shaunrussett@gmail.com"];
 const ADMIN_LAST_SEEN_KEY = "dreamscapesAdminLastSeenAt";
 
@@ -2306,7 +2307,7 @@ function getSavedStories() {
 function setSavedStories(stories) {
   localStorage.setItem(
     "dreamscapesStories",
-    JSON.stringify(stories.slice(0, MAX_LOCAL_SAVED_STORIES))
+    JSON.stringify(trimSavedStoriesForLimit(stories, MAX_LOCAL_SAVED_STORIES))
   );
 }
 
@@ -2328,6 +2329,63 @@ function storiesMatch(left, right) {
   return Boolean(leftId && rightId && leftId === rightId);
 }
 
+function getStoryFavouriteIds() {
+  try {
+    const favouriteIds = JSON.parse(localStorage.getItem(STORY_FAVOURITES_KEY) || "[]");
+    return Array.isArray(favouriteIds) ? favouriteIds.filter(Boolean) : [];
+  } catch {
+    return [];
+  }
+}
+
+function setStoryFavouriteIds(favouriteIds) {
+  localStorage.setItem(
+    STORY_FAVOURITES_KEY,
+    JSON.stringify([...new Set(favouriteIds.filter(Boolean))].slice(0, 200))
+  );
+}
+
+function getStoryFavouriteKey(story) {
+  return getStoryIdentity(story);
+}
+
+function isStoryFavourite(story) {
+  const favouriteKey = getStoryFavouriteKey(story);
+  return Boolean(
+    story?.isFavourite ||
+      story?.is_favourite ||
+      story?.favourite ||
+      (favouriteKey && getStoryFavouriteIds().includes(favouriteKey))
+  );
+}
+
+function setStoryFavouriteFlag(story, isFavourite) {
+  const favouriteKey = getStoryFavouriteKey(story);
+  if (!favouriteKey) return;
+
+  const favouriteIds = getStoryFavouriteIds().filter((savedKey) => savedKey !== favouriteKey);
+  if (isFavourite) favouriteIds.unshift(favouriteKey);
+  setStoryFavouriteIds(favouriteIds);
+}
+
+function trimSavedStoriesForLimit(stories, limit = MAX_LOCAL_SAVED_STORIES) {
+  const parsedLimit = Number(limit);
+  const safeLimit = Math.max(
+    0,
+    Math.min(Number.isFinite(parsedLimit) ? parsedLimit : MAX_LOCAL_SAVED_STORIES, MAX_LOCAL_SAVED_STORIES)
+  );
+  const normalisedStories = stories.map((story) => ({
+    ...story,
+    isFavourite: isStoryFavourite(story),
+  }));
+
+  if (normalisedStories.length <= safeLimit) return normalisedStories;
+
+  const favouriteStories = normalisedStories.filter(isStoryFavourite);
+  const otherStories = normalisedStories.filter((story) => !isStoryFavourite(story));
+  return [...favouriteStories, ...otherStories].slice(0, safeLimit);
+}
+
 function isHighlightedStory(story) {
   return Boolean(
     highlightedStoryId && (story?.cloudId === highlightedStoryId || story?.id === highlightedStoryId)
@@ -2347,6 +2405,10 @@ function sortLibraryStories(stories) {
   return [...stories].sort((firstStory, secondStory) => {
     if (isHighlightedStory(firstStory) !== isHighlightedStory(secondStory)) {
       return Number(isHighlightedStory(secondStory)) - Number(isHighlightedStory(firstStory));
+    }
+
+    if (isStoryFavourite(firstStory) !== isStoryFavourite(secondStory)) {
+      return Number(isStoryFavourite(secondStory)) - Number(isStoryFavourite(firstStory));
     }
 
     if (sortMode === "oldest") return getStoryTimeValue(firstStory) - getStoryTimeValue(secondStory);
@@ -2380,16 +2442,18 @@ function getStoryStorageSize(story) {
 }
 
 function saveStoryLocally(story, plan, { silent = false } = {}) {
+  const existingStory = getSavedStories().find((savedStory) => storiesMatch(savedStory, story) || savedStory.id === story.id);
   const storyToSave = {
     ...story,
     id: story.id || createStoryId(),
     savedAt: story.savedAt || new Date().toISOString(),
+    isFavourite: Boolean(isStoryFavourite(story) || existingStory?.isFavourite),
   };
-  const savedStories = getSavedStories().filter((savedStory) => savedStory.id !== storyToSave.id);
+  const savedStories = getSavedStories().filter((savedStory) => !storiesMatch(savedStory, storyToSave) && savedStory.id !== storyToSave.id);
   savedStories.unshift(storyToSave);
 
   try {
-    setSavedStories(savedStories.slice(0, Math.min(plan.savedLimit, MAX_LOCAL_SAVED_STORIES)));
+    setSavedStories(trimSavedStoriesForLimit(savedStories, Math.min(plan.savedLimit, MAX_LOCAL_SAVED_STORIES)));
   } catch {
     const withoutAudio = {
       ...storyToSave,
@@ -2398,7 +2462,7 @@ function saveStoryLocally(story, plan, { silent = false } = {}) {
     };
     const smallerStories = [withoutAudio, ...savedStories.slice(1)];
     try {
-      setSavedStories(smallerStories.slice(0, Math.min(plan.savedLimit, MAX_LOCAL_SAVED_STORIES)));
+      setSavedStories(trimSavedStoriesForLimit(smallerStories, Math.min(plan.savedLimit, MAX_LOCAL_SAVED_STORIES)));
     } catch {
       if (!silent) {
         statusNote.textContent = "This device storage is full, so the story could not be saved here.";
@@ -2435,6 +2499,7 @@ function storyToCloudRow(story) {
     audio_track_durations: story.aiAudioTrackDurations || [],
     audio_duration_seconds: getSavedAudioDurationSeconds(story) || null,
     audio_generated_at: story.aiAudioGeneratedAt || null,
+    is_favourite: isStoryFavourite(story),
     created_at: story.createdAt || new Date().toISOString(),
   };
 }
@@ -2462,6 +2527,7 @@ function cloudRowToStory(row) {
     aiAudioTrackDurations: row.audio_track_durations || [],
     aiAudioDurationSeconds: row.audio_duration_seconds || 0,
     aiAudioGeneratedAt: row.audio_generated_at || "",
+    isFavourite: Boolean(row.is_favourite || getStoryFavouriteIds().includes(row.id)),
     createdAt: row.created_at,
     savedAt: row.updated_at || row.created_at,
   };
@@ -2470,19 +2536,23 @@ function cloudRowToStory(row) {
 async function saveStoryToCloud(story) {
   if (!canUseCloudLibrary()) return false;
 
-  const row = storyToCloudRow(story);
-  let query = story.cloudId
-    ? supabaseClient.from("stories").update(row).eq("id", story.cloudId || story.id).select().single()
-    : supabaseClient.from("stories").insert(row).select().single();
-  let { data, error } = await query;
+  let row = storyToCloudRow(story);
+  let data;
+  let error;
 
-  if (error && String(error.message || "").includes("word_count")) {
-    const fallbackRow = { ...row };
-    delete fallbackRow.word_count;
-    query = story.cloudId
-      ? supabaseClient.from("stories").update(fallbackRow).eq("id", story.cloudId || story.id).select().single()
-      : supabaseClient.from("stories").insert(fallbackRow).select().single();
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const query = story.cloudId
+      ? supabaseClient.from("stories").update(row).eq("id", story.cloudId || story.id).select().single()
+      : supabaseClient.from("stories").insert(row).select().single();
     ({ data, error } = await query);
+    if (!error) break;
+
+    const message = String(error.message || "");
+    const fallbackRow = { ...row };
+    if (message.includes("word_count")) delete fallbackRow.word_count;
+    if (message.includes("is_favourite")) delete fallbackRow.is_favourite;
+    if (Object.keys(fallbackRow).length === Object.keys(row).length) break;
+    row = fallbackRow;
   }
 
   if (error) throw error;
@@ -2553,11 +2623,20 @@ async function saveGeneratedStoryToLibrary(story) {
 async function loadCloudStories() {
   if (!canUseCloudLibrary()) return [];
 
-  const { data, error } = await supabaseClient
+  let { data, error } = await supabaseClient
     .from("stories")
     .select("*")
+    .order("is_favourite", { ascending: false })
     .order("created_at", { ascending: false })
     .limit(MAX_LIBRARY_RENDER_ITEMS);
+
+  if (error && String(error.message || "").includes("is_favourite")) {
+    ({ data, error } = await supabaseClient
+      .from("stories")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(MAX_LIBRARY_RENDER_ITEMS));
+  }
 
   if (error) throw error;
 
@@ -2566,12 +2645,79 @@ async function loadCloudStories() {
   return cloudStories;
 }
 
+async function updateCloudStoryFavourite(story, isFavourite) {
+  if (!canUseCloudLibrary() || !story?.cloudId) return false;
+
+  const { data, error } = await supabaseClient
+    .from("stories")
+    .update({ is_favourite: isFavourite })
+    .eq("id", story.cloudId)
+    .select()
+    .single();
+
+  if (error) {
+    if (String(error.message || "").includes("is_favourite")) return false;
+    throw error;
+  }
+
+  const updatedStory = {
+    ...story,
+    ...cloudRowToStory(data),
+    isFavourite,
+  };
+  upsertCloudStory(updatedStory);
+  return true;
+}
+
+async function toggleStoryFavourite(story) {
+  if (!story) return;
+
+  const isFavourite = !isStoryFavourite(story);
+  setStoryFavouriteFlag(story, isFavourite);
+
+  const localStories = getSavedStories();
+  const localIndex = localStories.findIndex((savedStory) => storiesMatch(savedStory, story) || savedStory.id === story.id);
+  if (localIndex >= 0) {
+    localStories[localIndex] = {
+      ...localStories[localIndex],
+      isFavourite,
+    };
+    setSavedStories(localStories);
+  }
+
+  cloudStories = cloudStories.map((savedStory) =>
+    storiesMatch(savedStory, story) ? { ...savedStory, isFavourite } : savedStory
+  );
+
+  if (currentStory && storiesMatch(currentStory, story)) {
+    currentStory = {
+      ...currentStory,
+      isFavourite,
+    };
+  }
+
+  let cloudSynced = true;
+  try {
+    cloudSynced = await updateCloudStoryFavourite(story, isFavourite);
+  } catch {
+    cloudSynced = false;
+  }
+
+  libraryNotice = isFavourite
+    ? cloudSynced
+      ? "Added to favourites. DreamScapes will keep this before older non-favourites."
+      : "Added to favourites on this device. Run the favourites SQL to sync it across devices."
+    : "Removed from favourites.";
+  trackEvent("story_favourite_changed", { isFavourite, cloudSynced });
+}
+
 async function deleteCloudStory(story) {
   if (!canUseCloudLibrary() || !story?.cloudId) return false;
 
   const { error } = await supabaseClient.from("stories").delete().eq("id", story.cloudId);
   if (error) throw error;
 
+  setStoryFavouriteFlag(story, false);
   cloudStories = cloudStories.filter((savedStory) => savedStory.cloudId !== story.cloudId);
   updateAccountUI();
   return true;
@@ -3514,6 +3660,7 @@ async function renderLibrary() {
       (story, index) => {
         const savedAudioDuration = getSavedAudioDurationSeconds(story);
         const isNewStory = isHighlightedStory(story);
+        const isFavourite = isStoryFavourite(story);
         const audioLabel = story.audioNarration
           ? savedAudioDuration
             ? `Audio saved ${formatAudioTime(savedAudioDuration)}`
@@ -3527,13 +3674,21 @@ async function renderLibrary() {
           new Date(story.createdAt).toLocaleDateString(),
         ].filter(Boolean);
         return `
-        <article class="library-item ${isNewStory ? "new-story" : ""}">
-          ${isNewStory ? '<span class="new-story-badge">New story</span>' : ""}
+        <article class="library-item ${isNewStory ? "new-story" : ""} ${isFavourite ? "favourite-story" : ""}">
+          ${
+            isNewStory || isFavourite
+              ? `<div class="library-badges">
+                  ${isNewStory ? '<span class="new-story-badge">New story</span>' : ""}
+                  ${isFavourite ? '<span class="favourite-story-badge">Favourite</span>' : ""}
+                </div>`
+              : ""
+          }
           <h3>${escapeHtml(story.title)}</h3>
           <p>${escapeHtml(metadata.join(" · "))}</p>
           <p>${escapeHtml(story.text?.[0]?.slice(0, 120) || "Saved story")}...</p>
           <div class="library-actions">
             <button class="button secondary-button" data-library-index="${index}" type="button">Open</button>
+            <button class="button secondary-button favourite-button ${isFavourite ? "active" : ""}" data-favourite-index="${index}" type="button" aria-pressed="${isFavourite ? "true" : "false"}">${isFavourite ? "Favourited" : "Favourite"}</button>
             <button class="button secondary-button delete-button" data-delete-index="${index}" type="button">Delete</button>
           </div>
         </article>
@@ -3548,6 +3703,16 @@ async function renderLibrary() {
       renderStory(currentStory);
       statusNote.textContent = "";
       showScreen("result");
+    });
+  });
+
+  libraryList.querySelectorAll("[data-favourite-index]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const index = Number(button.dataset.favouriteIndex);
+      const storyToFavourite = visibleStories[index];
+      button.disabled = true;
+      await toggleStoryFavourite(storyToFavourite);
+      renderLibrary();
     });
   });
 
@@ -3570,6 +3735,7 @@ async function renderLibrary() {
         const nextStories = getSavedStories();
         const localIndex = nextStories.findIndex((story) => story.id === storyToDelete?.id);
         if (localIndex >= 0) nextStories.splice(localIndex, 1);
+        setStoryFavouriteFlag(storyToDelete, false);
         setSavedStories(nextStories);
       }
 

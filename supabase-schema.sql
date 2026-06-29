@@ -24,6 +24,7 @@ create table if not exists public.stories (
   story_idea text,
   paragraphs jsonb not null,
   word_count integer,
+  is_favourite boolean not null default false,
   plan text not null default 'free' check (plan in ('free', 'premier', 'plus')),
   voice_style text,
   audio_requested boolean not null default false,
@@ -310,6 +311,9 @@ using (auth.uid() = user_id);
 create index if not exists stories_user_created_idx
 on public.stories (user_id, created_at desc);
 
+create index if not exists stories_user_favourite_created_idx
+on public.stories (user_id, is_favourite, created_at desc);
+
 create index if not exists usage_months_user_month_idx
 on public.usage_months (user_id, month_key);
 
@@ -339,6 +343,9 @@ on public.redeem_code_redemptions (user_email, redeemed_at desc);
 
 alter table public.profiles
 add column if not exists audio_story_credits integer not null default 0;
+
+alter table public.stories
+add column if not exists is_favourite boolean not null default false;
 
 alter table public.stories
 add column if not exists audio_requested boolean not null default false;
