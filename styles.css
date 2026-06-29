@@ -2109,7 +2109,50 @@ body.night-mode .new-story-badge {
 
 body.night-mode .plan-comparison-table thead th {
   color: #f8f4ff;
-  background: rgba(255, 255, 255, 0.06);
+  background:
+    linear-gradient(145deg, rgba(22, 30, 74, 0.92), rgba(39, 29, 88, 0.78)),
+    rgba(255, 255, 255, 0.06);
+}
+
+body.night-mode .plan-comparison-table th:nth-child(3),
+body.night-mode .plan-comparison-table td:nth-child(3) {
+  background: rgba(255, 143, 183, 0.1);
+}
+
+body.night-mode .plan-comparison-table th:nth-child(4),
+body.night-mode .plan-comparison-table td:nth-child(4) {
+  background: rgba(255, 217, 106, 0.12);
+  box-shadow:
+    inset 1px 0 0 rgba(255, 231, 133, 0.18),
+    inset -1px 0 0 rgba(255, 231, 133, 0.18);
+}
+
+body.night-mode .plan-comparison-table thead th:nth-child(3) {
+  background:
+    linear-gradient(145deg, rgba(72, 37, 96, 0.96), rgba(31, 32, 82, 0.88)),
+    rgba(255, 143, 183, 0.1);
+}
+
+body.night-mode .plan-comparison-table thead th:nth-child(4) {
+  background:
+    linear-gradient(145deg, rgba(100, 67, 132, 0.9), rgba(42, 35, 94, 0.94) 52%, rgba(92, 65, 128, 0.84)),
+    rgba(255, 217, 106, 0.12);
+}
+
+body.night-mode .plan-comparison-table thead th span {
+  color: rgba(255, 248, 220, 0.76);
+}
+
+body.night-mode .plan-comparison-table thead th em {
+  color: #fff8dc;
+  border-color: rgba(255, 231, 133, 0.28);
+  background: rgba(255, 217, 106, 0.12);
+}
+
+body.night-mode .plan-comparison-table thead th:nth-child(4) em {
+  color: #160f35;
+  border-color: rgba(255, 231, 133, 0.86);
+  background: linear-gradient(135deg, #ffe785, #ffb0d0);
 }
 
 body.night-mode .plan-comparison-table tbody tr:nth-child(even) {
@@ -2150,10 +2193,14 @@ body.night-mode .delete-button {
 
 .plan-table-wrap {
   overflow-x: auto;
-  border: 1px solid rgba(123, 78, 216, 0.18);
+  border: 1px solid rgba(216, 198, 255, 0.32);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.72);
-  box-shadow: 0 14px 30px rgba(30, 34, 91, 0.08);
+  background:
+    linear-gradient(145deg, rgba(255, 248, 220, 0.68), rgba(255, 228, 238, 0.5) 45%, rgba(216, 198, 255, 0.54)),
+    rgba(255, 255, 255, 0.78);
+  box-shadow:
+    0 18px 42px rgba(30, 34, 91, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
 .plan-comparison-table {
@@ -2171,6 +2218,19 @@ body.night-mode .delete-button {
   vertical-align: middle;
 }
 
+.plan-comparison-table th:nth-child(3),
+.plan-comparison-table td:nth-child(3) {
+  background: rgba(255, 228, 238, 0.34);
+}
+
+.plan-comparison-table th:nth-child(4),
+.plan-comparison-table td:nth-child(4) {
+  background: rgba(255, 248, 220, 0.48);
+  box-shadow:
+    inset 1px 0 0 rgba(255, 217, 106, 0.24),
+    inset -1px 0 0 rgba(255, 217, 106, 0.24);
+}
+
 .plan-comparison-table th:first-child,
 .plan-comparison-table td:first-child {
   text-align: left;
@@ -2180,6 +2240,14 @@ body.night-mode .delete-button {
   background: linear-gradient(180deg, rgba(255, 248, 220, 0.96), rgba(245, 235, 255, 0.92));
   color: var(--ink);
   font-weight: 900;
+}
+
+.plan-comparison-table thead th:nth-child(3) {
+  background: linear-gradient(180deg, rgba(255, 228, 238, 0.96), rgba(236, 222, 255, 0.92));
+}
+
+.plan-comparison-table thead th:nth-child(4) {
+  background: linear-gradient(180deg, rgba(255, 231, 133, 0.96), rgba(255, 176, 208, 0.78), rgba(216, 198, 255, 0.88));
 }
 
 .plan-comparison-table thead th strong {
@@ -2194,6 +2262,29 @@ body.night-mode .delete-button {
   color: #715c9b;
   font-size: 0.82rem;
   font-weight: 900;
+}
+
+.plan-comparison-table thead th em {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  margin-top: 9px;
+  border: 1px solid rgba(123, 78, 216, 0.18);
+  border-radius: 999px;
+  padding: 4px 9px;
+  color: #3b2c72;
+  background: rgba(255, 255, 255, 0.54);
+  font-size: 0.68rem;
+  font-style: normal;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.plan-comparison-table thead th:nth-child(4) em {
+  color: #160f35;
+  border-color: rgba(255, 217, 106, 0.6);
+  background: rgba(255, 248, 220, 0.86);
 }
 
 .plan-comparison-table tbody th {
@@ -2231,7 +2322,7 @@ body.night-mode .delete-button {
 
 .plan-action-row th,
 .plan-action-row td {
-  background: rgba(216, 198, 255, 0.2);
+  background: rgba(216, 198, 255, 0.24);
 }
 
 .plan-action-row .button {
@@ -2570,6 +2661,14 @@ body.night-mode .delete-button {
   .plan-comparison-table thead th span {
     font-size: 0.56rem;
     line-height: 1.12;
+  }
+
+  .plan-comparison-table thead th em {
+    min-height: 20px;
+    margin-top: 6px;
+    padding: 3px 5px;
+    font-size: 0.48rem;
+    line-height: 1.05;
   }
 
   .plan-comparison-table tbody th {
