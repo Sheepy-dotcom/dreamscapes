@@ -6,6 +6,7 @@ const entitlementPlanMap = {
   dreamscapes_premier: "premier",
   premier: "premier",
   dreamscapes_plus: "plus",
+  dreamscapes_Plus: "plus",
   plus: "plus",
 };
 
@@ -41,8 +42,17 @@ function getBestPlan(plans) {
   return plans.sort((left, right) => paidPlanRank[right] - paidPlanRank[left])[0] || "free";
 }
 
+function getEventEntitlementIds(event) {
+  const ids = [];
+
+  if (Array.isArray(event.entitlement_ids)) ids.push(...event.entitlement_ids);
+  if (event.entitlement_id) ids.push(event.entitlement_id);
+
+  return ids.map((id) => String(id || "").trim()).filter(Boolean);
+}
+
 function getPlanFromEvent(event) {
-  const entitlementPlans = (event.entitlement_ids || [])
+  const entitlementPlans = getEventEntitlementIds(event)
     .map((id) => entitlementPlanMap[id])
     .filter(Boolean);
 
