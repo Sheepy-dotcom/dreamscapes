@@ -540,6 +540,7 @@ textarea:focus-visible {
 
 .segmented-control input:checked + span,
 .duration-grid input:checked + span,
+.duration-grid label.selected-choice span,
 .mood-grid input:checked + span {
   border-color: rgba(123, 78, 216, 0.68);
   color: #241f52;
@@ -2061,6 +2062,7 @@ body.night-mode .library-item.new-story {
 
 body.night-mode .segmented-control input:checked + span,
 body.night-mode .duration-grid input:checked + span,
+body.night-mode .duration-grid label.selected-choice span,
 body.night-mode .mood-grid input:checked + span,
 body.night-mode .profile-choice-list input:checked + span,
 body.night-mode .library-filter button.active {
@@ -2074,6 +2076,7 @@ body.night-mode .library-filter button.active {
 }
 
 body.night-mode .duration-grid input:checked + span small,
+body.night-mode .duration-grid label.selected-choice span small,
 body.night-mode .profile-choice-list input:checked + span small {
   color: #352063;
 }

@@ -882,7 +882,28 @@ async function readApiError(response, fallback) {
   if (await handleExpiredSession(message)) {
     return "Your sign-in session expired. Please sign in again.";
   }
-  return message;
+  return getFriendlyFaultMessage(message, fallback);
+}
+
+function getFriendlyFaultMessage(errorOrMessage, fallback = "Something went wrong. Please try again.") {
+  const rawMessage = String(errorOrMessage?.message || errorOrMessage || "").trim();
+  const lowerMessage = rawMessage.toLowerCase();
+
+  if (!rawMessage) return fallback;
+  if (isExpiredSessionMessage(rawMessage) || /jwt|session_not_found|session from session_id/i.test(rawMessage)) {
+    return "Your sign-in session expired. Please sign in again.";
+  }
+  if (/failed to fetch|networkerror|load failed|could not connect/i.test(rawMessage)) {
+    return "DreamScapes could not connect. Check your connection and try again.";
+  }
+  if (/not valid|invalid|expired|already used|redeem/i.test(lowerMessage) && !/[{}]|stack|code:/i.test(rawMessage)) {
+    return rawMessage;
+  }
+  if (/[{}]|\"stack\"|error_code|trace|jwt|code:\s*\d+|underlying|at\s+\w+/i.test(rawMessage)) {
+    return fallback;
+  }
+
+  return rawMessage.length > 140 ? fallback : rawMessage;
 }
 
 function getCapacitorPlatform() {
@@ -901,27 +922,17 @@ function getRevenueCatApiKey() {
   return REVENUECAT_API_KEYS[getCapacitorPlatform()] || "";
 }
 
-function getRevenueCatErrorMessage(error, fallback = "Purchase could not be started.") {
-  let rawDetails = "";
-  try {
-    rawDetails = JSON.stringify(error, Object.getOwnPropertyNames(error || {}));
-  } catch {
-    rawDetails = "";
-  }
-
+function getRevenueCatErrorMessage(error, fallback = "Purchase could not be started. Please try again.") {
   const candidates = [
     error?.message,
-    error?.code ? `Code: ${error.code}` : "",
     error?.underlyingErrorMessage,
     error?.readableErrorCode,
-    error?.userInfo?.code ? `Code: ${error.userInfo.code}` : "",
     error?.userInfo?.underlyingErrorMessage,
     error?.userInfo?.readableErrorCode,
     error?.userInfo?.message,
     error?.details?.underlyingErrorMessage,
     error?.error?.underlyingErrorMessage,
     error?.error?.message,
-    rawDetails && rawDetails !== "{}" ? rawDetails.slice(0, 500) : "",
   ];
   const message = candidates
     .map((value) => String(value || "").trim())
@@ -929,11 +940,11 @@ function getRevenueCatErrorMessage(error, fallback = "Purchase could not be star
     .filter((value, index, values) => values.indexOf(value) === index)
     .join(" ");
 
-  if (/configuration/i.test(message) && !/Code:|underlying|product|offering|billing|store/i.test(message)) {
-    return `${message} RevenueCat did not return extra details in this build. Check the Android product IDs, current offering, active base plans, and that the app was installed from the Play testing link.`;
+  if (/configuration|offering|product|billing|store/i.test(message)) {
+    return "Purchases are not available just now. Please try again later or contact support.";
   }
 
-  return message || fallback;
+  return getFriendlyFaultMessage(message, fallback);
 }
 
 function getPlanFromCustomerInfo(customerInfo) {
@@ -1411,6 +1422,7 @@ function updatePlanFeatures() {
   audioToggle.closest(".feature-toggle").classList.toggle("locked", !audioAllowed);
   updateDurationLocks(plan);
   keepDurationWithinPlan(plan);
+  syncDurationChoiceHighlight();
   updatePlanActionButtons(planKey);
 }
 
@@ -1689,7 +1701,7 @@ async function createStory(data) {
       throw new Error("DreamScapes could not connect to the story service. Check your connection and try again.");
     }
 
-    throw error;
+    throw new Error(getFriendlyFaultMessage(error, "Story could not be created. Please try again."));
   }
 }
 
@@ -2781,29 +2793,45 @@ audioToggle.addEventListener("change", () => {
   }
 });
 
-durationInputs.forEach((input) => {
-  input.addEventListener("change", () => {
-    const plan = getPlan(getCurrentPlanKey());
-    const duration = Number(input.value);
-    const audioAllowed = canUseAudioNarration(duration);
-
-    audioToggle.closest(".feature-toggle").classList.toggle("locked", !audioAllowed);
-
-    if (audioToggle.checked && !audioAllowed) {
-      audioToggle.checked = false;
-      planNote.textContent =
-        getAudioStoryCredits() > 0 && duration > AUDIO_CREDIT_MAX_MINUTES
-          ? `Redeemed audio credits can be used on stories up to ${AUDIO_CREDIT_MAX_MINUTES} minutes. Choose a shorter story or upgrade to DreamScapes Plus.`
-          : "Audio narration is included with DreamScapes Plus, or with a redeemed audio credit.";
-      return;
-    }
-
-    if (duration <= plan.maxDuration) return;
-
-    keepDurationWithinPlan(plan);
-    planNote.textContent = `${plan.label} includes stories up to ${plan.maxDuration} minutes. Premier and Plus subscriptions are coming soon in the app stores.`;
+function syncDurationChoiceHighlight() {
+  durationInputs.forEach((input) => {
+    input.closest("label")?.classList.toggle("selected-choice", input.checked);
   });
+}
+
+function handleDurationChoiceChange(input) {
+  syncDurationChoiceHighlight();
+  const plan = getPlan(getCurrentPlanKey());
+  const duration = Number(input.value);
+  const audioAllowed = canUseAudioNarration(duration);
+
+  audioToggle.closest(".feature-toggle").classList.toggle("locked", !audioAllowed);
+
+  if (audioToggle.checked && !audioAllowed) {
+    audioToggle.checked = false;
+    planNote.textContent =
+      getAudioStoryCredits() > 0 && duration > AUDIO_CREDIT_MAX_MINUTES
+        ? `Redeemed audio credits can be used on stories up to ${AUDIO_CREDIT_MAX_MINUTES} minutes. Choose a shorter story or upgrade to DreamScapes Plus.`
+        : "Audio narration is included with DreamScapes Plus, or with a redeemed audio credit.";
+    return;
+  }
+
+  if (duration <= plan.maxDuration) return;
+
+  keepDurationWithinPlan(plan);
+  syncDurationChoiceHighlight();
+  planNote.textContent = `${plan.label} includes stories up to ${plan.maxDuration} minutes. Premier and Plus subscriptions are coming soon in the app stores.`;
+}
+
+durationInputs.forEach((input) => {
+  input.closest("label")?.addEventListener("pointerdown", () => {
+    if (input.disabled) return;
+    input.checked = true;
+    syncDurationChoiceHighlight();
+  });
+  input.addEventListener("change", () => handleDurationChoiceChange(input));
 });
+syncDurationChoiceHighlight();
 
 authForm?.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -2850,7 +2878,7 @@ redeemForm?.addEventListener("submit", async (event) => {
     updatePlanFeatures();
     trackEvent("redeem_code_success", { audioStoryCreditsAdded: data.audioStoryCreditsAdded || 0 });
   } catch (error) {
-    if (redeemStatus) redeemStatus.textContent = error.message || "Code could not be redeemed.";
+    if (redeemStatus) redeemStatus.textContent = getFriendlyFaultMessage(error, "Code could not be redeemed.");
     trackEvent("redeem_code_failed");
   }
 });
@@ -2898,7 +2926,7 @@ document.querySelector("#sign-in-button")?.addEventListener("click", async () =>
   const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
   if (error) {
-    setAuthStatus(error.message, true);
+    setAuthStatus(getFriendlyFaultMessage(error, "Sign in could not be completed. Please try again."), true);
     return;
   }
 
@@ -2942,7 +2970,7 @@ document.querySelector("#create-account-button")?.addEventListener("click", asyn
   const { error } = await supabaseClient.auth.signUp({ email, password });
 
   if (error) {
-    setSignupStatus(error.message, true);
+    setSignupStatus(getFriendlyFaultMessage(error, "Account could not be created. Please try again."), true);
     return;
   }
 
@@ -2974,7 +3002,7 @@ document.querySelector("#forgot-password-button")?.addEventListener("click", asy
   });
 
   if (error) {
-    setAuthStatus(error.message, true);
+    setAuthStatus(getFriendlyFaultMessage(error, "Password reset email could not be sent. Please try again."), true);
     return;
   }
 
@@ -2999,7 +3027,7 @@ document.querySelector("#update-password-button")?.addEventListener("click", asy
   const { error } = await supabaseClient.auth.updateUser({ password });
 
   if (error) {
-    setAuthStatus(error.message, true);
+    setAuthStatus(getFriendlyFaultMessage(error, "Password could not be updated. Please try again."), true);
     return;
   }
 
@@ -3019,7 +3047,7 @@ document.querySelector("#sign-out-button")?.addEventListener("click", async () =
   const { error } = await supabaseClient.auth.signOut();
 
   if (error) {
-    setAuthStatus(error.message, true);
+    setAuthStatus(getFriendlyFaultMessage(error, "Sign out could not be completed. Please try again."), true);
     return;
   }
 
@@ -3357,7 +3385,7 @@ form.addEventListener("submit", async (event) => {
       }
 
       showScreen("builder");
-      planNote.textContent = error.message || "Could not create that story. Try again.";
+      planNote.textContent = getFriendlyFaultMessage(error, "Could not create that story. Try again.");
       return;
     }
 
@@ -3965,10 +3993,10 @@ async function startAiNarration() {
     });
     return true;
   } catch (error) {
-    const message = /failed to fetch/i.test(error.message || "")
-      ? "Audio could not be reached. Try again when your connection is steady. Audio minutes are only updated after completed audio is measured."
-      : error.message || "Audio could not be created. Try again in a moment.";
-    statusNote.textContent = message;
+    statusNote.textContent = getFriendlyFaultMessage(
+      error,
+      "Audio could not be created. Try again in a moment."
+    );
     narrationNote.textContent = "Audio not created";
     return "blocked";
   }
