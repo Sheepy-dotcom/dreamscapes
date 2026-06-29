@@ -18,6 +18,11 @@ const loadingMessage = document.querySelector("#loading-message");
 const currentPlanName = document.querySelector("#current-plan-name");
 const currentPlanSummary = document.querySelector("#current-plan-summary");
 const upgradeNote = document.querySelector("#upgrade-note");
+const planAuthNotice = document.querySelector("#plan-auth-notice");
+const planAuthTitle = document.querySelector("#plan-auth-title");
+const planAuthCopy = document.querySelector("#plan-auth-copy");
+const planAuthCreateButton = document.querySelector("#plan-auth-create-button");
+const planAuthSigninButton = document.querySelector("#plan-auth-signin-button");
 const audioToggle = document.querySelector("#audio-narration");
 const audioPlayButton = document.querySelector("#audio-play-button");
 const audioPauseButton = document.querySelector("#audio-pause-button");
@@ -1399,6 +1404,7 @@ function updatePlanFeatures() {
   const plan = getPlan(planKey);
   const audioAllowed = canUseAudioNarration();
 
+  if (currentUser) hidePlanAuthNotice();
   if (currentPlanName) currentPlanName.textContent = plan.label;
   if (currentPlanSummary) currentPlanSummary.textContent = plan.summary;
   if (planNote) planNote.textContent = "";
@@ -1436,6 +1442,21 @@ function updatePlanActionButtons(planKey = getCurrentPlanKey()) {
     button.textContent = targetLabel;
     button.disabled = false;
   });
+}
+
+function hidePlanAuthNotice() {
+  if (planAuthNotice) planAuthNotice.hidden = true;
+}
+
+function showPlanAuthNotice(planKey) {
+  const plan = getPlan(planKey);
+  if (upgradeNote) upgradeNote.textContent = "";
+  if (planAuthTitle) planAuthTitle.textContent = "Create a free account first";
+  if (planAuthCopy) {
+    planAuthCopy.textContent = `${plan.label} needs a DreamScapes account so your package, stories, and audio stay linked to you.`;
+  }
+  if (planAuthNotice) planAuthNotice.hidden = false;
+  trackEvent("plan_account_required", { plan: planKey });
 }
 
 function getHighestAllowedDuration(plan) {
@@ -2893,6 +2914,16 @@ document.querySelector("#open-sign-up-button")?.addEventListener("click", () => 
   showScreen("signup");
 });
 
+planAuthCreateButton?.addEventListener("click", () => {
+  setSignupStatus("Create your free account, then choose your DreamScapes package.");
+  showScreen("signup");
+});
+
+planAuthSigninButton?.addEventListener("click", () => {
+  setAuthStatus("Sign in, then return to Plans to choose your package.");
+  showScreen("account");
+});
+
 document.querySelector("#create-account-button")?.addEventListener("click", async () => {
   if (!(await ensureSupabaseClient())) {
     setSignupStatus("Account signup could not load. Check your connection and refresh DreamScapes.", true);
@@ -3201,6 +3232,7 @@ document.querySelector("#sleep-timer-off")?.addEventListener("click", () => {
 
 document.querySelectorAll("[data-plan-preview]").forEach((button) => {
   button.addEventListener("click", () => {
+    hidePlanAuthNotice();
     const planKey = button.dataset.planPreview;
     upgradeNote.textContent =
       planKey === "free"
@@ -3211,6 +3243,12 @@ document.querySelectorAll("[data-plan-preview]").forEach((button) => {
 
 document.querySelectorAll("[data-purchase-plan]").forEach((button) => {
   button.addEventListener("click", async () => {
+    if (!currentUser) {
+      showPlanAuthNotice(button.dataset.purchasePlan);
+      return;
+    }
+
+    hidePlanAuthNotice();
     try {
       await purchasePlan(button.dataset.purchasePlan);
     } catch (error) {

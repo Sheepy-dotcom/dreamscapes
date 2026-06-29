@@ -22,7 +22,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026062906" />
+    <link rel="stylesheet" href="./styles.css?v=2026062907" />
   </head>
   <body class="home-active night-mode">
     <div class="stars" aria-hidden="true"></div>
@@ -519,6 +519,20 @@
             Restore Purchases
           </button>
         </div>
+        <div class="plan-auth-notice" id="plan-auth-notice" role="status" hidden>
+          <div>
+            <strong id="plan-auth-title">Create a free account first</strong>
+            <span id="plan-auth-copy">Your package will be linked to your DreamScapes account.</span>
+          </div>
+          <div class="plan-auth-actions">
+            <button class="button primary-button compact-button" id="plan-auth-create-button" type="button">
+              Create Account
+            </button>
+            <button class="button secondary-button compact-button" id="plan-auth-signin-button" type="button">
+              Sign In
+            </button>
+          </div>
+        </div>
         <p class="status-note" id="upgrade-note" role="status"></p>
       </section>
 
@@ -890,6 +904,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026062904"></script>
+    <script src="./app.js?v=2026062907"></script>
   </body>
 </html>

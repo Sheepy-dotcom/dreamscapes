@@ -1838,6 +1838,53 @@ textarea:focus-visible {
   color: #7f1d45;
 }
 
+.plan-auth-notice {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin: 14px 0 0;
+  border: 1px solid rgba(255, 183, 42, 0.42);
+  border-radius: 8px;
+  padding: 12px;
+  background:
+    linear-gradient(135deg, rgba(255, 248, 220, 0.82), rgba(255, 228, 238, 0.58)),
+    rgba(255, 255, 255, 0.68);
+  box-shadow: 0 12px 28px rgba(123, 78, 216, 0.14);
+}
+
+.plan-auth-notice[hidden] {
+  display: none;
+}
+
+.plan-auth-notice > div:first-child {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  text-align: left;
+}
+
+.plan-auth-notice strong {
+  color: var(--ink);
+  font-family: "Baloo 2", "Nunito", sans-serif;
+  font-size: 1.05rem;
+  line-height: 1.05;
+}
+
+.plan-auth-notice span {
+  color: #715c9b;
+  font-size: 0.86rem;
+  font-weight: 800;
+  line-height: 1.32;
+}
+
+.plan-auth-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 8px;
+  align-items: center;
+}
+
 .library-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -2060,6 +2107,24 @@ body.night-mode .signup-highlights li {
   border-color: rgba(255, 231, 133, 0.26);
   background: rgba(255, 255, 255, 0.08);
   color: #fff8dc;
+}
+
+body.night-mode .plan-auth-notice {
+  border-color: rgba(255, 231, 133, 0.4);
+  background:
+    linear-gradient(145deg, rgba(43, 39, 96, 0.94), rgba(78, 48, 118, 0.82)),
+    rgba(10, 15, 48, 0.86);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 16px 34px rgba(0, 0, 0, 0.24);
+}
+
+body.night-mode .plan-auth-notice strong {
+  color: #fff8dc;
+}
+
+body.night-mode .plan-auth-notice span {
+  color: rgba(248, 244, 255, 0.76);
 }
 
 body.night-mode .account-summary span {
@@ -2680,6 +2745,21 @@ body.night-mode .delete-button {
     font-size: 0.62rem;
     line-height: 1.12;
     white-space: normal;
+  }
+
+  .plan-auth-notice {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .plan-auth-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+  }
+
+  .plan-auth-actions .button {
+    width: 100%;
   }
 
   .plan-miss {
