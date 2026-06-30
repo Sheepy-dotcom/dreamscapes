@@ -1213,7 +1213,7 @@ textarea:focus-visible {
 }
 
 .library-list {
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
 }
 
 .library-item,
@@ -1582,6 +1582,20 @@ textarea:focus-visible {
   line-height: 1.45;
 }
 
+.library-item .library-meta {
+  color: rgba(255, 248, 220, 0.76);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.library-item .library-preview {
+  display: -webkit-box;
+  min-height: 2.9em;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
 .auth-card[hidden] {
   display: none;
 }
@@ -1915,12 +1929,19 @@ textarea:focus-visible {
 
 .library-actions {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 
 .library-actions .button {
+  min-width: 0;
   width: 100%;
+  padding-inline: 10px;
+  white-space: normal;
+}
+
+.library-open-button {
+  grid-column: 1 / -1;
 }
 
 .delete-button {
@@ -2962,7 +2983,7 @@ body.night-mode .favourite-button.active {
   }
 
   .library-actions {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .redeem-form {

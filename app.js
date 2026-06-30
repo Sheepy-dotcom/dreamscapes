@@ -3695,12 +3695,12 @@ async function renderLibrary() {
               : ""
           }
           <h3>${escapeHtml(story.title)}</h3>
-          <p>${escapeHtml(metadata.join(" · "))}</p>
-          <p>${escapeHtml(story.text?.[0]?.slice(0, 120) || "Saved story")}...</p>
+          <p class="library-meta">${escapeHtml(metadata.join(" · "))}</p>
+          <p class="library-preview">${escapeHtml(story.text?.[0]?.slice(0, 150) || "Saved story")}...</p>
           <div class="library-actions">
-            <button class="button secondary-button" data-library-index="${index}" type="button">Open</button>
+            <button class="button primary-button library-open-button" data-library-index="${index}" type="button">Open Story</button>
             <button class="button secondary-button favourite-button ${isFavourite ? "active" : ""}" data-favourite-index="${index}" type="button" aria-pressed="${isFavourite ? "true" : "false"}">${isFavourite ? "Saved" : "Save"}</button>
-            <button class="button secondary-button delete-button ${isFavourite ? "protected-delete-button" : ""}" data-delete-index="${index}" type="button">${isFavourite ? "Protected" : "Delete"}</button>
+            <button class="button secondary-button delete-button ${isFavourite ? "protected-delete-button" : ""}" data-delete-index="${index}" type="button" aria-label="${isFavourite ? "Favourite story locked from deletion" : "Delete story"}">${isFavourite ? "Locked" : "Delete"}</button>
           </div>
         </article>
       `;
