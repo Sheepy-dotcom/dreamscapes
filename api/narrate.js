@@ -1,6 +1,7 @@
 const OPENAI_SPEECH_URL = "https://api.openai.com/v1/audio/speech";
 const { enforceNarrationAccess, handleCorsPreflight, incrementUsage, sendApiError } = require("./auth");
-const MAX_CHUNK_LENGTH = 3800;
+const DEFAULT_SPEECH_MODEL = "gpt-4o-mini-tts-2025-12-15";
+const MAX_CHUNK_LENGTH = 6000;
 const MAX_CHUNKS = 20;
 const SUPPORTED_VOICES = new Set([
   "alloy",
@@ -61,6 +62,8 @@ function getChunkInstructions(instructions, index, total) {
 
 async function createSpeech({ input, voice, instructions, index = 0, total = 1 }) {
   const chunkInstructions = getChunkInstructions(instructions, index, total);
+  const configuredModel = cleanText(process.env.OPENAI_TTS_MODEL) || DEFAULT_SPEECH_MODEL;
+  const model = configuredModel === "gpt-4o-mini-tts" ? DEFAULT_SPEECH_MODEL : configuredModel;
   const response = await fetch(OPENAI_SPEECH_URL, {
     method: "POST",
     headers: {
@@ -68,7 +71,7 @@ async function createSpeech({ input, voice, instructions, index = 0, total = 1 }
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "gpt-4o-mini-tts",
+      model,
       voice,
       input,
       instructions: chunkInstructions,

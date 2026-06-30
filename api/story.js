@@ -49,10 +49,10 @@ function extractResponseText(data) {
 }
 
 function getStoryModel() {
-  const model = cleanText(process.env.OPENAI_STORY_MODEL, "gpt-4o-mini");
-  const expensivePrototypeModels = new Set(["gpt-5.2", "gpt-5-mini"]);
+  const model = cleanText(process.env.OPENAI_STORY_MODEL, "gpt-5.4-mini");
+  const legacyModels = new Set(["gpt-4o-mini", "gpt-5", "gpt-5-mini", "gpt-5.2"]);
 
-  return expensivePrototypeModels.has(model) ? "gpt-4o-mini" : model;
+  return legacyModels.has(model) ? "gpt-5.4-mini" : model;
 }
 
 function buildPrompt(data) {
@@ -74,7 +74,7 @@ function buildPrompt(data) {
   return [
     `Write a polished, imaginative children's ${storyType}.`,
     `Child name: ${cleanText(data.childName, "the child")}.`,
-    `Child age: ${cleanText(data.childAge, "5")}.`,
+    `Child age: ${cleanText(data.childAge, "not specified; use language suitable for a young child")}.`,
     `Target duration: ${cleanText(data.duration, "5")} minutes of calm narrated audio.`,
     `Word count target: ${target.words} words. Acceptable range: ${target.minWords}-${target.maxWords} words.`,
     `Paragraph target: about ${target.paragraphs} short, readable paragraphs.`,
@@ -222,35 +222,44 @@ const storySchema = {
 };
 
 async function requestStoryWithPrompt(data, prompt) {
+  const model = getStoryModel();
+  const requestBody = {
+    model,
+    input: [
+      {
+        role: "developer",
+        content:
+          "You are DreamScapes, an exceptional British children's author writing for parents to read aloud. Create an original, emotionally warm story with a satisfying narrative arc, vivid but gentle scenes, natural dialogue, and a positive ending. Preserve every safety, personalisation, timing, and output requirement. Never write like a template. Return only valid JSON matching the supplied schema.",
+      },
+      {
+        role: "user",
+        content: prompt,
+      },
+    ],
+    max_output_tokens: getMaxOutputTokens(data.duration),
+    text: {
+      format: {
+        type: "json_schema",
+        name: "dreamscapes_story",
+        strict: true,
+        schema: storySchema,
+      },
+    },
+  };
+
+  if (model.startsWith("gpt-5")) {
+    requestBody.reasoning = { effort: "low" };
+    requestBody.text.verbosity = "high";
+    requestBody.prompt_cache_key = "dreamscapes-story-v3";
+  }
+
   const response = await fetch(OPENAI_RESPONSES_URL, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      model: getStoryModel(),
-      input: [
-        {
-          role: "developer",
-          content:
-            "You are DreamScapes, a careful children's story writer for parents. Always write safe, warm, age-appropriate stories and return only valid JSON matching the schema.",
-        },
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-      max_output_tokens: getMaxOutputTokens(data.duration),
-      text: {
-        format: {
-          type: "json_schema",
-          name: "dreamscapes_story",
-          strict: true,
-          schema: storySchema,
-        },
-      },
-    }),
+    body: JSON.stringify(requestBody),
   });
 
   if (!response.ok) {
