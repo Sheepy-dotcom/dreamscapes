@@ -671,8 +671,8 @@ textarea:focus-visible {
   left: 50%;
   bottom: 0;
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  width: min(640px, calc(100% - var(--safe-left) - var(--safe-right)));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  width: min(560px, calc(100% - var(--safe-left) - var(--safe-right)));
   transform: translateX(-50%);
   border: 1px solid rgba(255, 255, 255, 0.44);
   border-bottom: 0;
@@ -689,11 +689,11 @@ textarea:focus-visible {
   place-items: center;
   border: 0;
   border-radius: 8px;
-  padding: 8px 4px;
+  padding: 8px 6px;
   color: #34245f;
   background: transparent;
   cursor: pointer;
-  font-size: 0.68rem;
+  font-size: 0.74rem;
   font-weight: 900;
 }
 
@@ -1921,11 +1921,6 @@ textarea:focus-visible {
 
 .library-actions .button {
   width: 100%;
-}
-
-.library-page-button {
-  min-height: 40px;
-  white-space: nowrap;
 }
 
 .delete-button {
