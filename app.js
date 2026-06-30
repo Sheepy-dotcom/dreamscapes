@@ -3110,7 +3110,7 @@ function startWeeklyJourney() {
     seriesTitle: `${childName}'s Seven-Night DreamScape`,
     chapterNumber: 1,
     continuationSummary: "",
-    continuationChoice: `${childName} finds a seven-pointed star map and begins the first gentle night of a week-long adventure.`,
+    continuationChoice: `${childName} begins the first chapter of a magical adventure that unfolds gently over seven nights.`,
     journeyLength: WEEKLY_JOURNEY_LENGTH,
     journeyDay: 1,
   };
