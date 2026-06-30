@@ -2706,9 +2706,9 @@ async function toggleStoryFavourite(story) {
 
   libraryNotice = isFavourite
     ? cloudSynced
-      ? "Added to favourites. DreamScapes will keep this before older non-favourites."
-      : "Added to favourites on this device. Run the favourites SQL to sync it across devices."
-    : "Removed from favourites.";
+      ? "Story saved and protected. DreamScapes will keep it before older stories."
+      : "Story saved and protected on this device. Run the library setup SQL to sync it across devices."
+    : "Save removed. This story can now be deleted.";
   trackEvent("story_favourite_changed", { isFavourite, cloudSynced });
 }
 
@@ -3644,7 +3644,7 @@ async function renderLibrary() {
       currentLibraryFilter === "audio"
         ? "audio stories"
         : currentLibraryFilter === "favourites"
-          ? "favourite stories"
+          ? "protected stories"
           : "text-only stories";
     libraryList.innerHTML = `
       <article class="library-item">
@@ -3662,7 +3662,7 @@ async function renderLibrary() {
     const shownCount = filteredStories.length;
     libraryStatus.textContent =
       currentLibraryFilter === "favourites"
-        ? `${shownCount} favourite ${shownCount === 1 ? "story" : "stories"} shown from ${savedStories.length} saved.`
+        ? `${shownCount} saved and protected ${shownCount === 1 ? "story" : "stories"} shown from ${savedStories.length} in your library.`
         : `${shownCount} ${shownCount === 1 ? "story" : "stories"} shown from ${savedStories.length} saved.`;
   }
 
@@ -3690,7 +3690,7 @@ async function renderLibrary() {
             isNewStory || isFavourite
               ? `<div class="library-badges">
                   ${isNewStory ? '<span class="new-story-badge">New story</span>' : ""}
-                  ${isFavourite ? '<span class="favourite-story-badge">Favourite</span>' : ""}
+                  ${isFavourite ? '<span class="favourite-story-badge">Saved</span>' : ""}
                 </div>`
               : ""
           }
@@ -3700,7 +3700,7 @@ async function renderLibrary() {
           <div class="library-actions">
             <button class="button primary-button library-open-button" data-library-index="${index}" type="button">Open Story</button>
             <button class="button secondary-button favourite-button ${isFavourite ? "active" : ""}" data-favourite-index="${index}" type="button" aria-pressed="${isFavourite ? "true" : "false"}">${isFavourite ? "Saved" : "Save"}</button>
-            <button class="button secondary-button delete-button ${isFavourite ? "protected-delete-button" : ""}" data-delete-index="${index}" type="button" aria-label="${isFavourite ? "Favourite story locked from deletion" : "Delete story"}">${isFavourite ? "Locked" : "Delete"}</button>
+            <button class="button secondary-button delete-button ${isFavourite ? "protected-delete-button" : ""}" data-delete-index="${index}" type="button" aria-label="${isFavourite ? "Saved story locked from deletion" : "Delete story"}">${isFavourite ? "Locked" : "Delete"}</button>
           </div>
         </article>
       `;
@@ -3733,7 +3733,7 @@ async function renderLibrary() {
       const storyToDelete = visibleStories[index];
 
       if (isStoryFavourite(storyToDelete)) {
-        libraryNotice = "This story is protected. Tap Saved to remove it from favourites before deleting.";
+        libraryNotice = "This story is protected. Tap Saved to remove its protection before deleting.";
         trackEvent("protected_story_delete_blocked", { index });
         renderLibrary();
         return;
