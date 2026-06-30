@@ -22,7 +22,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026063003" />
+    <link rel="stylesheet" href="./styles.css?v=2026063006" />
   </head>
   <body class="home-active night-mode">
     <div class="stars" aria-hidden="true"></div>
@@ -69,6 +69,34 @@
             <button class="button secondary-button compact-button" id="clear-profile-selection" type="button">
               Clear Profiles
             </button>
+          </fieldset>
+
+          <fieldset class="choice-group story-spark-panel">
+            <legend>Story spark <small>optional</small></legend>
+            <div class="story-spark-actions">
+              <button class="button secondary-button" id="tonights-story-button" type="button">Tonight's Story</button>
+              <button class="button secondary-button" id="weekly-journey-button" type="button">Start 7-Night Journey</button>
+            </div>
+            <label class="field compact-select-field">
+              <span>Special occasion</span>
+              <select id="story-occasion" name="occasion">
+                <option value="">None</option>
+                <option value="birthday">Birthday</option>
+                <option value="first day at school">First day at school</option>
+                <option value="holiday">Holiday</option>
+                <option value="lost tooth">Lost tooth</option>
+                <option value="new sibling">Welcoming a new sibling</option>
+                <option value="confidence">Building confidence</option>
+                <option value="friendship">Friendship</option>
+              </select>
+            </label>
+            <div class="continuation-banner" id="continuation-banner" hidden>
+              <div>
+                <strong id="continuation-title">Continuing an adventure</strong>
+                <span id="continuation-note"></span>
+              </div>
+              <button class="button secondary-button compact-button" id="cancel-continuation-button" type="button">Cancel</button>
+            </div>
           </fieldset>
 
           <div class="form-grid">
@@ -345,10 +373,24 @@
           <button class="button primary-button" id="create-another-button" type="button">
             Create Another Story
           </button>
+          <button class="button secondary-button" id="continue-adventure-button" type="button">
+            Continue Adventure
+          </button>
+          <button class="button secondary-button" id="share-family-button" type="button">
+            Share with Family
+          </button>
           <button class="button secondary-button" id="report-audio-button" type="button" hidden>
             Report Audio Issue
           </button>
         </div>
+
+        <section class="next-adventure-panel" id="next-adventure-panel" aria-labelledby="next-adventure-title" hidden>
+          <div>
+            <p class="eyebrow">Next Time</p>
+            <h3 id="next-adventure-title">Where should the adventure go next?</h3>
+          </div>
+          <div class="next-adventure-actions" id="next-adventure-actions"></div>
+        </section>
 
         <div class="sleep-timer-panel" aria-label="Sleep timer">
           <div>
@@ -381,6 +423,7 @@
             <button type="button" data-library-filter="audio">Audio</button>
             <button type="button" data-library-filter="text">Text</button>
             <button type="button" data-library-filter="favourites">Saved</button>
+            <button type="button" data-library-filter="series">Series</button>
           </div>
           <label class="library-sort">
             <span>Sort</span>
@@ -711,6 +754,10 @@
                 <input id="profile-friends" name="profileFriends" type="text" placeholder="Mia, Jack, cousin Lily" />
               </label>
               <label class="field">
+                <span>Recurring story characters <small>optional</small></span>
+                <input id="profile-recurring-characters" name="profileRecurringCharacters" type="text" placeholder="Nova the unicorn, Pip the moon dragon" />
+              </label>
+              <label class="field">
                 <span>Things to avoid</span>
                 <input id="profile-avoid-topics" name="profileAvoidTopics" type="text" placeholder="Storms, spiders, getting lost" />
               </label>
@@ -724,6 +771,28 @@
               </div>
             </form>
             <div class="child-profile-list" id="child-profile-list"></div>
+          </article>
+
+          <article class="auth-card story-memories-card" id="story-memories-card" hidden>
+            <h3>Story memories</h3>
+            <div class="memory-grid" id="story-memory-grid"></div>
+          </article>
+
+          <article class="auth-card reminder-card" id="reminder-card" hidden>
+            <h3>Bedtime reminder</h3>
+            <p>Choose an optional daily time for the next DreamScapes adventure.</p>
+            <form class="reminder-form" id="reminder-form">
+              <label class="field">
+                <span>Reminder time</span>
+                <input id="reminder-time" type="time" value="19:00" />
+              </label>
+              <label class="feature-toggle compact-toggle">
+                <input id="reminder-enabled" type="checkbox" />
+                <span><strong>Daily reminder</strong></span>
+              </label>
+              <button class="button primary-button" type="submit">Save Reminder</button>
+            </form>
+            <p class="helper-text" id="reminder-status" role="status"></p>
           </article>
         </div>
 
@@ -930,6 +999,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026063003"></script>
+    <script src="./app.js?v=2026063006"></script>
   </body>
 </html>

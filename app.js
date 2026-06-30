@@ -35,6 +35,17 @@ const sleepTimerNote = document.querySelector("#sleep-timer-note");
 const voiceStyle = document.querySelector("#voice-style");
 const voicePreviewButton = document.querySelector("#voice-preview-button");
 const storyIdea = document.querySelector("#story-idea");
+const storyOccasion = document.querySelector("#story-occasion");
+const tonightsStoryButton = document.querySelector("#tonights-story-button");
+const weeklyJourneyButton = document.querySelector("#weekly-journey-button");
+const continuationBanner = document.querySelector("#continuation-banner");
+const continuationTitle = document.querySelector("#continuation-title");
+const continuationNote = document.querySelector("#continuation-note");
+const cancelContinuationButton = document.querySelector("#cancel-continuation-button");
+const continueAdventureButton = document.querySelector("#continue-adventure-button");
+const shareFamilyButton = document.querySelector("#share-family-button");
+const nextAdventurePanel = document.querySelector("#next-adventure-panel");
+const nextAdventureActions = document.querySelector("#next-adventure-actions");
 const libraryStatus = document.querySelector("#library-status");
 const libraryList = document.querySelector("#library-list");
 const libraryFilterButtons = Array.from(document.querySelectorAll("[data-library-filter]"));
@@ -86,6 +97,13 @@ const feedbackForm = document.querySelector("#feedback-form");
 const feedbackCategory = document.querySelector("#feedback-category");
 const feedbackMessage = document.querySelector("#feedback-message");
 const feedbackStatus = document.querySelector("#feedback-status");
+const storyMemoriesCard = document.querySelector("#story-memories-card");
+const storyMemoryGrid = document.querySelector("#story-memory-grid");
+const reminderCard = document.querySelector("#reminder-card");
+const reminderForm = document.querySelector("#reminder-form");
+const reminderTime = document.querySelector("#reminder-time");
+const reminderEnabled = document.querySelector("#reminder-enabled");
+const reminderStatus = document.querySelector("#reminder-status");
 let currentStory = null;
 let currentUser = null;
 let supabaseClient = null;
@@ -116,6 +134,20 @@ let revenueCatConfiguredForUser = "";
 let libraryNotice = "";
 let highlightedStoryId = "";
 let currentLibraryFilter = "all";
+let pendingStoryContext = null;
+const WEEKLY_JOURNEY_LENGTH = 7;
+const BEDTIME_REMINDER_NOTIFICATION_ID = 71001;
+const CLOUD_RETENTION_COLUMNS = [
+  "story_summary",
+  "next_ideas",
+  "occasion",
+  "recurring_characters",
+  "series_id",
+  "series_title",
+  "chapter_number",
+  "journey_length",
+  "journey_day",
+];
 const PRODUCTION_API_BASE = "https://www.dreamscapes.cloud";
 function resolveApiEndpoint(value, fallbackPath) {
   const endpoint = value || fallbackPath;
@@ -538,6 +570,8 @@ function updateAccountUI() {
   if (redeemCard) redeemCard.hidden = !signedIn;
   if (feedbackCard) feedbackCard.hidden = !signedIn;
   if (childProfilesCard) childProfilesCard.hidden = !signedIn;
+  if (storyMemoriesCard) storyMemoriesCard.hidden = !signedIn;
+  if (reminderCard) reminderCard.hidden = !signedIn;
   if (passwordResetCard && !passwordRecoveryActive) {
     passwordResetCard.hidden = true;
   }
@@ -554,6 +588,10 @@ function updateAccountUI() {
         ? "Cloud library connected."
         : "Account connected. Library totals load when your cloud stories sync."
       : "Sign in to prepare cloud saving across devices.";
+  }
+  if (signedIn) {
+    renderStoryMemories();
+    loadReminderSettings();
   }
 }
 
@@ -615,6 +653,7 @@ function normaliseChildProfile(profile = {}) {
     parentNames: cleanProfileValue(profile.parentNames || profile.parent_names),
     interests: cleanProfileValue(profile.interests),
     friends: cleanProfileValue(profile.friends),
+    recurringCharacters: cleanProfileValue(profile.recurringCharacters || profile.recurring_characters),
     avoidTopics: cleanProfileValue(profile.avoidTopics || profile.avoid_topics),
     otherDetails: cleanProfileValue(profile.otherDetails || profile.other_details),
     createdAt: profile.createdAt || profile.created_at || new Date().toISOString(),
@@ -654,6 +693,7 @@ function profileToCloudRow(profile) {
     parent_names: profile.parentNames || null,
     interests: profile.interests || null,
     friends: profile.friends || null,
+    recurring_characters: profile.recurringCharacters || null,
     avoid_topics: profile.avoidTopics || null,
     other_details: profile.otherDetails || null,
   };
@@ -742,6 +782,7 @@ function getProfileSummary(profile) {
     profile.hairColour ? profile.hairColour : "",
     profile.interests ? `Likes ${profile.interests}` : "",
     profile.friends ? `Friends: ${profile.friends}` : "",
+    profile.recurringCharacters ? `Story friends: ${profile.recurringCharacters}` : "",
   ]
     .filter(Boolean)
     .join(" · ");
@@ -821,6 +862,7 @@ function fillChildProfileForm(profile) {
   childProfileForm.elements.profileParentNames.value = profile.parentNames || "";
   childProfileForm.elements.profileInterests.value = profile.interests || "";
   childProfileForm.elements.profileFriends.value = profile.friends || "";
+  childProfileForm.elements.profileRecurringCharacters.value = profile.recurringCharacters || "";
   childProfileForm.elements.profileAvoidTopics.value = profile.avoidTopics || "";
   childProfileForm.elements.profileOtherDetails.value = profile.otherDetails || "";
 }
@@ -1201,6 +1243,7 @@ function describeChildProfiles(profiles) {
       profile.parentNames ? `parent names: ${profile.parentNames}` : "",
       profile.interests ? `interests: ${profile.interests}` : "",
       profile.friends ? `friends: ${profile.friends}` : "",
+      profile.recurringCharacters ? `recurring story characters: ${profile.recurringCharacters}` : "",
       profile.avoidTopics ? `avoid: ${profile.avoidTopics}` : "",
       profile.otherDetails ? `other details: ${profile.otherDetails}` : "",
     ].filter(Boolean);
@@ -1218,6 +1261,7 @@ function buildProfileAwareStoryData(selectedPlan, selectedPlanKey) {
     .filter(Boolean)
     .join(", ");
   const friends = joinProfileValues(selectedProfiles, "friends");
+  const recurringCharacters = joinProfileValues(selectedProfiles, "recurringCharacters");
   const avoidTopics = [getValue("avoidTopics"), joinProfileValues(selectedProfiles, "avoidTopics")]
     .filter(Boolean)
     .join(", ");
@@ -1228,10 +1272,12 @@ function buildProfileAwareStoryData(selectedPlan, selectedPlanKey) {
     childAge,
     interests,
     friends,
+    recurringCharacters,
     duration: getValue("durationChoice"),
     storyType: getValue("storyType"),
     moods: getValues("moods"),
     storyIdea: getValue("storyIdea"),
+    occasion: getValue("occasion"),
     avoidTopics,
     preferredLesson: getValue("preferredLesson"),
     calmMode: new FormData(form).has("calmMode"),
@@ -1245,10 +1291,18 @@ function buildProfileAwareStoryData(selectedPlan, selectedPlanKey) {
       parentNames: profile.parentNames,
       interests: profile.interests,
       friends: profile.friends,
+      recurringCharacters: profile.recurringCharacters,
       avoidTopics: profile.avoidTopics,
       otherDetails: profile.otherDetails,
     })),
     childProfileSummary: describeChildProfiles(selectedProfiles),
+    seriesId: pendingStoryContext?.seriesId || "",
+    seriesTitle: pendingStoryContext?.seriesTitle || "",
+    chapterNumber: pendingStoryContext?.chapterNumber || 1,
+    continuationSummary: pendingStoryContext?.continuationSummary || "",
+    continuationChoice: pendingStoryContext?.continuationChoice || "",
+    journeyLength: pendingStoryContext?.journeyLength || null,
+    journeyDay: pendingStoryContext?.journeyDay || null,
   };
 }
 
@@ -1621,6 +1675,11 @@ function generateStory(data) {
     ...data,
     title,
     text: paragraphs,
+    summary: `${data.childName} followed a gentle path through the DreamScape, helped someone with kindness, and returned home safely.`,
+    nextIdeas: [
+      `${data.childName} follows a new trail beyond the glowing storybook.`,
+      `${data.childName} meets a new friend who needs help before bedtime.`,
+    ],
     createdAt: new Date().toISOString(),
   };
 }
@@ -1690,6 +1749,8 @@ async function createStory(data) {
       ...data,
       title: aiStory.title,
       text: aiStory.paragraphs,
+      summary: aiStory.summary || "",
+      nextIdeas: Array.isArray(aiStory.nextIdeas) ? aiStory.nextIdeas.slice(0, 2) : [],
       wordCount: aiStory.wordCount || 0,
       durationTarget: aiStory.durationTarget || null,
       cloudId: aiStory.cloudId || "",
@@ -1717,6 +1778,9 @@ function renderStory(story) {
     ${actualLengthSeconds ? `<span>Story length ${formatAudioTime(actualLengthSeconds)}</span>` : ""}
     ${savedAudioDuration ? `<span>Audio ${formatAudioTime(savedAudioDuration)}</span>` : ""}
     <span>${story.storyType === "bedtime" ? "Bedtime story" : "Anytime story"}</span>
+    ${story.seriesTitle ? `<span>${escapeHtml(story.seriesTitle)} · Chapter ${Number(story.chapterNumber) || 1}</span>` : ""}
+    ${story.journeyLength ? `<span>Night ${Number(story.journeyDay) || 1} of ${Number(story.journeyLength)}</span>` : ""}
+    ${story.occasion ? `<span>${escapeHtml(sentenceCase(story.occasion))}</span>` : ""}
     <span>${selectedMoods.map(sentenceCase).join(" + ")}</span>
     <span>${story.audioNarration ? "Audio narration" : "Text only"}</span>
     ${story.childAge ? `<span>Age ${story.childAge}</span>` : ""}
@@ -1737,6 +1801,8 @@ function renderStory(story) {
       : "Play narration";
   audioPlayButton.setAttribute("aria-label", audioPlayButton.title);
   if (reportAudioButton) reportAudioButton.hidden = !story.audioNarration;
+  if (continueAdventureButton) continueAdventureButton.hidden = false;
+  renderNextAdventureChoices(story);
   resetAudioProgress();
   setAudioProgressVisible(Boolean(story.audioNarration));
 }
@@ -2421,6 +2487,14 @@ function filterLibraryStories(stories) {
   if (currentLibraryFilter === "audio") return stories.filter(storyHasSavedAudio);
   if (currentLibraryFilter === "text") return stories.filter((story) => !storyHasSavedAudio(story));
   if (currentLibraryFilter === "favourites") return stories.filter(isStoryFavourite);
+  if (currentLibraryFilter === "series") {
+    return stories
+      .filter((story) => story.seriesId)
+      .sort((firstStory, secondStory) => {
+        const seriesOrder = String(firstStory.seriesTitle || "").localeCompare(String(secondStory.seriesTitle || ""));
+        return seriesOrder || Number(firstStory.chapterNumber || 1) - Number(secondStory.chapterNumber || 1);
+      });
+  }
   return stories;
 }
 
@@ -2491,6 +2565,15 @@ function storyToCloudRow(story) {
     duration_minutes: Number(story.duration) || 5,
     moods: getSelectedMoods(story.moods),
     story_idea: story.storyIdea || null,
+    story_summary: story.summary || null,
+    next_ideas: story.nextIdeas || [],
+    occasion: story.occasion || null,
+    recurring_characters: story.recurringCharacters || null,
+    series_id: story.seriesId || null,
+    series_title: story.seriesTitle || null,
+    chapter_number: Number(story.chapterNumber) || 1,
+    journey_length: Number(story.journeyLength) || null,
+    journey_day: Number(story.journeyDay) || null,
     paragraphs: story.text || [],
     word_count: story.wordCount || null,
     plan: story.plan || "free",
@@ -2516,6 +2599,15 @@ function cloudRowToStory(row) {
     storyType: row.story_type || "bedtime",
     moods: row.moods || ["relaxing"],
     storyIdea: row.story_idea || "",
+    summary: row.story_summary || "",
+    nextIdeas: Array.isArray(row.next_ideas) ? row.next_ideas : [],
+    occasion: row.occasion || "",
+    recurringCharacters: row.recurring_characters || "",
+    seriesId: row.series_id || "",
+    seriesTitle: row.series_title || "",
+    chapterNumber: Number(row.chapter_number) || 1,
+    journeyLength: Number(row.journey_length) || null,
+    journeyDay: Number(row.journey_day) || null,
     title: row.title,
     text: Array.isArray(row.paragraphs) ? row.paragraphs : [],
     wordCount: row.word_count || 0,
@@ -2552,6 +2644,9 @@ async function saveStoryToCloud(story) {
     const fallbackRow = { ...row };
     if (message.includes("word_count")) delete fallbackRow.word_count;
     if (message.includes("is_favourite")) delete fallbackRow.is_favourite;
+    if (CLOUD_RETENTION_COLUMNS.some((column) => message.includes(column))) {
+      CLOUD_RETENTION_COLUMNS.forEach((column) => delete fallbackRow[column]);
+    }
     if (Object.keys(fallbackRow).length === Object.keys(row).length) break;
     row = fallbackRow;
   }
@@ -2926,10 +3021,235 @@ function getPreferredDeviceVoice(style = "female calm") {
   return hintedVoice || britishVoices[0] || voices.find((voice) => voice.lang?.toLowerCase().startsWith("en")) || null;
 }
 
+function getBuilderChildName() {
+  const selectedProfiles = getSelectedChildProfiles();
+  return cleanProfileValue(form.elements.childName.value) || joinProfileValues(selectedProfiles, "childName") || "Your child";
+}
+
+function renderPendingStoryContext() {
+  if (!continuationBanner) return;
+  continuationBanner.hidden = !pendingStoryContext;
+  if (!pendingStoryContext) return;
+
+  continuationTitle.textContent = pendingStoryContext.seriesTitle || "Continuing an adventure";
+  const chapter = Number(pendingStoryContext.chapterNumber) || 1;
+  const journey = pendingStoryContext.journeyLength
+    ? `Night ${pendingStoryContext.journeyDay} of ${pendingStoryContext.journeyLength}`
+    : `Chapter ${chapter}`;
+  continuationNote.textContent = pendingStoryContext.continuationChoice
+    ? `${journey}: ${pendingStoryContext.continuationChoice}`
+    : journey;
+}
+
+function clearPendingStoryContext() {
+  pendingStoryContext = null;
+  renderPendingStoryContext();
+}
+
+function getStorySummary(story) {
+  if (story?.summary) return story.summary;
+  return (story?.text || []).slice(0, 2).join(" ").slice(0, 550);
+}
+
+function beginStoryContinuation(story, choice = "") {
+  if (!story) return;
+
+  if (!story.seriesId) {
+    story.seriesId = createStoryId();
+    story.seriesTitle = `${story.childName || "DreamScapes"}'s Adventures`;
+    story.chapterNumber = 1;
+    saveStoryToLibrary(story, { silent: true });
+  }
+
+  const journeyLength = Number(story.journeyLength) || null;
+  const previousJourneyDay = Number(story.journeyDay) || 1;
+  pendingStoryContext = {
+    seriesId: story.seriesId,
+    seriesTitle: story.seriesTitle,
+    chapterNumber: (Number(story.chapterNumber) || 1) + 1,
+    continuationSummary: getStorySummary(story),
+    continuationChoice: choice || story.nextIdeas?.[0] || "A new gentle adventure begins where the last story ended.",
+    journeyLength,
+    journeyDay: journeyLength ? Math.min(previousJourneyDay + 1, journeyLength) : null,
+  };
+
+  form.elements.childName.value = story.childName || "";
+  form.elements.childAge.value = story.childAge || "";
+  form.elements.interests.value = story.interests || "";
+  form.elements.storyIdea.value = pendingStoryContext.continuationChoice;
+  if (storyOccasion) storyOccasion.value = "";
+  renderPendingStoryContext();
+  stopNarration();
+  showScreen("builder");
+  trackEvent("story_continuation_started", { seriesId: story.seriesId, chapter: pendingStoryContext.chapterNumber });
+}
+
+function createTonightStoryIdea() {
+  const childName = getBuilderChildName();
+  const selectedProfiles = getSelectedChildProfiles();
+  const interests = [form.elements.interests.value, joinProfileValues(selectedProfiles, "interests")]
+    .filter(Boolean)
+    .join(", ");
+  const recurring = joinProfileValues(selectedProfiles, "recurringCharacters");
+  const ideas = [
+    `${childName} discovers a tiny door in the moonlight and helps a sleepy star find its favourite place in the sky.`,
+    `${childName} and ${recurring || "a gentle cloud fox"} follow glowing footprints and learn that asking for help can be brave.`,
+    `${childName} visits a cosy night-time festival inspired by ${interests || "their favourite things"} and finds a thoughtful surprise for a friend.`,
+    `${childName} sails across a quiet sea of clouds, returning a lost lullaby before bedtime.`,
+  ];
+  storyIdea.value = ideas[Math.floor(Date.now() / 86400000) % ideas.length];
+  clearPendingStoryContext();
+  planNote.textContent = "Tonight's personalised story idea is ready.";
+  trackEvent("tonights_story_selected");
+}
+
+function startWeeklyJourney() {
+  const childName = getBuilderChildName();
+  pendingStoryContext = {
+    seriesId: createStoryId(),
+    seriesTitle: `${childName}'s Seven-Night DreamScape`,
+    chapterNumber: 1,
+    continuationSummary: "",
+    continuationChoice: `${childName} finds a seven-pointed star map and begins the first gentle night of a week-long adventure.`,
+    journeyLength: WEEKLY_JOURNEY_LENGTH,
+    journeyDay: 1,
+  };
+  storyIdea.value = pendingStoryContext.continuationChoice;
+  renderPendingStoryContext();
+  planNote.textContent = "Your seven-night journey is ready to begin.";
+  trackEvent("weekly_journey_started");
+}
+
+function renderNextAdventureChoices(story) {
+  if (!nextAdventurePanel || !nextAdventureActions) return;
+  const ideas = Array.isArray(story?.nextIdeas) ? story.nextIdeas.filter(Boolean).slice(0, 2) : [];
+  nextAdventurePanel.hidden = ideas.length === 0;
+  nextAdventureActions.innerHTML = ideas
+    .map(
+      (idea, index) =>
+        `<button class="button secondary-button" type="button" data-next-adventure-index="${index}">${escapeHtml(idea)}</button>`
+    )
+    .join("");
+}
+
+async function shareStoryWithFamily(story) {
+  if (!story) return;
+  const fullText = `${story.title}\n\n${(story.text || []).join("\n\n")}\n\nCreated with DreamScapes`;
+  const safeTitle = String(story.title || "DreamScapes Story").replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "");
+
+  try {
+    if (!navigator.share) throw new Error("Share sheet unavailable");
+    const file = typeof File === "function"
+      ? new File([fullText], `${safeTitle || "DreamScapes-Story"}.txt`, { type: "text/plain" })
+      : null;
+    const shareData = file && navigator.canShare?.({ files: [file] })
+      ? { title: story.title, text: "A personalised DreamScapes story for you.", files: [file] }
+      : { title: story.title, text: fullText };
+    await navigator.share(shareData);
+    statusNote.textContent = "Story shared with family.";
+    trackEvent("story_shared_with_family");
+  } catch (error) {
+    if (error?.name === "AbortError") return;
+    await navigator.clipboard?.writeText(fullText);
+    statusNote.textContent = "Story copied. You can now paste it into a message for family.";
+  }
+}
+
+function getReminderStorageKey() {
+  return `dreamscapesBedtimeReminder:${currentUser?.id || "local"}`;
+}
+
+function loadReminderSettings() {
+  try {
+    const settings = JSON.parse(localStorage.getItem(getReminderStorageKey()) || "{}");
+    if (reminderTime) reminderTime.value = settings.time || "19:00";
+    if (reminderEnabled) reminderEnabled.checked = Boolean(settings.enabled);
+  } catch {
+    if (reminderTime) reminderTime.value = "19:00";
+    if (reminderEnabled) reminderEnabled.checked = false;
+  }
+}
+
+async function saveBedtimeReminder() {
+  const enabled = Boolean(reminderEnabled?.checked);
+  const time = reminderTime?.value || "19:00";
+  const [hour, minute] = time.split(":").map(Number);
+  localStorage.setItem(getReminderStorageKey(), JSON.stringify({ enabled, time }));
+
+  const notifications = window.Capacitor?.Plugins?.LocalNotifications;
+  if (notifications) {
+    await notifications.cancel({ notifications: [{ id: BEDTIME_REMINDER_NOTIFICATION_ID }] }).catch(() => {});
+    if (enabled) {
+      let permission = await notifications.checkPermissions();
+      if (permission.display !== "granted") permission = await notifications.requestPermissions();
+      if (permission.display !== "granted") throw new Error("Notification permission was not allowed.");
+      await notifications.schedule({
+        notifications: [
+          {
+            id: BEDTIME_REMINDER_NOTIFICATION_ID,
+            title: "A new DreamScapes adventure is waiting",
+            body: "Create tonight's personalised story when your family is ready.",
+            schedule: { on: { hour, minute }, repeats: true, allowWhileIdle: true },
+          },
+        ],
+      });
+    }
+  }
+
+  reminderStatus.textContent = enabled
+    ? notifications
+      ? `Daily reminder set for ${time}.`
+      : "Reminder preference saved. Daily notifications are available in the iOS and Android app."
+    : "Bedtime reminder turned off.";
+  trackEvent("bedtime_reminder_changed", { enabled, time });
+}
+
+function renderStoryMemories() {
+  if (!storyMemoryGrid) return;
+  const stories = currentUser ? cloudStories : getSavedStories();
+  const memories = [
+    ["Adventures", stories.length],
+    ["Story series", new Set(stories.map((story) => story.seriesId).filter(Boolean)).size],
+    ["Bedtime stories", stories.filter((story) => story.storyType === "bedtime").length],
+    ["Audio stories", stories.filter(storyHasSavedAudio).length],
+    ["Saved safely", stories.filter(isStoryFavourite).length],
+  ];
+  storyMemoryGrid.innerHTML = memories
+    .map(([label, value]) => `<span><small>${label}</small><strong>${value}</strong></span>`)
+    .join("");
+}
+
 document.querySelector("#start-button").addEventListener("click", () => showScreen("builder"));
 document.querySelector("#welcome-back-button").addEventListener("click", () => showScreen("welcome"));
 document.querySelectorAll("[data-screen-target]").forEach((button) => {
   button.addEventListener("click", () => showScreen(button.dataset.screenTarget));
+});
+
+tonightsStoryButton?.addEventListener("click", createTonightStoryIdea);
+weeklyJourneyButton?.addEventListener("click", startWeeklyJourney);
+cancelContinuationButton?.addEventListener("click", clearPendingStoryContext);
+continueAdventureButton?.addEventListener("click", () => beginStoryContinuation(currentStory));
+shareFamilyButton?.addEventListener("click", () => shareStoryWithFamily(currentStory));
+nextAdventureActions?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-next-adventure-index]");
+  if (!button || !currentStory) return;
+  const idea = currentStory.nextIdeas?.[Number(button.dataset.nextAdventureIndex)] || "";
+  beginStoryContinuation(currentStory, idea);
+});
+
+storyOccasion?.addEventListener("change", () => {
+  if (!storyOccasion.value || storyIdea.value.trim()) return;
+  const childName = getBuilderChildName();
+  storyIdea.value = `${childName} has a gentle ${storyOccasion.value} adventure filled with reassurance, kindness, and a happy memory.`;
+});
+
+reminderForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  try {
+    await saveBedtimeReminder();
+  } catch (error) {
+    reminderStatus.textContent = getFriendlyFaultMessage(error, "The reminder could not be scheduled.");
+  }
 });
 
 audioToggle.addEventListener("change", () => {
@@ -3214,6 +3534,7 @@ childProfileForm?.addEventListener("submit", async (event) => {
     parentNames: cleanProfileValue(childProfileForm.elements.profileParentNames.value),
     interests: cleanProfileValue(childProfileForm.elements.profileInterests.value),
     friends: cleanProfileValue(childProfileForm.elements.profileFriends.value),
+    recurringCharacters: cleanProfileValue(childProfileForm.elements.profileRecurringCharacters.value),
     avoidTopics: cleanProfileValue(childProfileForm.elements.profileAvoidTopics.value),
     otherDetails: cleanProfileValue(childProfileForm.elements.profileOtherDetails.value),
   };
@@ -3363,6 +3684,7 @@ document.querySelector("#create-another-button").addEventListener("click", () =>
   statusNote.textContent = "";
   libraryNotice = "";
   highlightedStoryId = "";
+  clearPendingStoryContext();
   stopNarration();
   updatePlanFeatures();
   showScreen("builder");
@@ -3539,6 +3861,7 @@ form.addEventListener("submit", async (event) => {
     try {
       currentStory = generatedStory;
       currentStory.id = currentStory.cloudId || currentStory.id || createStoryId();
+      clearPendingStoryContext();
       if (!canUseCloudLibrary()) incrementStoriesUsed(selectedPlanKey);
       renderStory(currentStory);
       const savedToLibrary = await saveGeneratedStoryToLibrary(currentStory);
@@ -3645,6 +3968,8 @@ async function renderLibrary() {
         ? "audio stories"
         : currentLibraryFilter === "favourites"
           ? "protected stories"
+          : currentLibraryFilter === "series"
+            ? "story series"
           : "text-only stories";
     libraryList.innerHTML = `
       <article class="library-item">
@@ -3680,6 +4005,8 @@ async function renderLibrary() {
         const storyLengthSeconds = getStoryActualDurationSeconds(story);
         const metadata = [
           getPlan(story.plan).label,
+          story.seriesTitle ? `${story.seriesTitle} · Chapter ${Number(story.chapterNumber) || 1}` : "",
+          story.journeyLength ? `Night ${Number(story.journeyDay) || 1}/${Number(story.journeyLength)}` : "",
           storyLengthSeconds ? `Story ${formatAudioTime(storyLengthSeconds)}` : "",
           audioLabel,
           new Date(story.createdAt).toLocaleDateString(),

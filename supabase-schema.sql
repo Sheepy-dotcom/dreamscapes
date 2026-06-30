@@ -22,6 +22,15 @@ create table if not exists public.stories (
   duration_minutes integer not null,
   moods text[] not null default '{}',
   story_idea text,
+  story_summary text,
+  next_ideas text[] not null default '{}',
+  occasion text,
+  recurring_characters text,
+  series_id text,
+  series_title text,
+  chapter_number integer not null default 1,
+  journey_length integer,
+  journey_day integer,
   paragraphs jsonb not null,
   word_count integer,
   is_favourite boolean not null default false,
@@ -89,6 +98,7 @@ create table if not exists public.child_profiles (
   parent_names text,
   interests text,
   friends text,
+  recurring_characters text,
   avoid_topics text,
   other_details text,
   created_at timestamptz not null default now(),
@@ -97,6 +107,9 @@ create table if not exists public.child_profiles (
 
 alter table public.child_profiles
 add column if not exists friends text;
+
+alter table public.child_profiles
+add column if not exists recurring_characters text;
 
 create table if not exists public.redeem_codes (
   id uuid primary key default gen_random_uuid(),
@@ -311,6 +324,9 @@ using (auth.uid() = user_id);
 create index if not exists stories_user_created_idx
 on public.stories (user_id, created_at desc);
 
+create index if not exists stories_user_series_chapter_idx
+on public.stories (user_id, series_id, chapter_number);
+
 create index if not exists stories_user_favourite_created_idx
 on public.stories (user_id, is_favourite, created_at desc);
 
@@ -346,6 +362,17 @@ add column if not exists audio_story_credits integer not null default 0;
 
 alter table public.stories
 add column if not exists is_favourite boolean not null default false;
+
+alter table public.stories
+add column if not exists story_summary text,
+add column if not exists next_ideas text[] not null default '{}',
+add column if not exists occasion text,
+add column if not exists recurring_characters text,
+add column if not exists series_id text,
+add column if not exists series_title text,
+add column if not exists chapter_number integer not null default 1,
+add column if not exists journey_length integer,
+add column if not exists journey_day integer;
 
 alter table public.stories
 add column if not exists audio_requested boolean not null default false;

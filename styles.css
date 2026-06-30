@@ -1236,6 +1236,102 @@ textarea:focus-visible {
   text-align: left;
 }
 
+.story-spark-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.story-spark-actions,
+.next-adventure-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.compact-select-field {
+  max-width: 420px;
+}
+
+.continuation-banner {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  border-left: 3px solid #ffe785;
+  padding: 10px 12px;
+  background: rgba(255, 231, 133, 0.1);
+}
+
+.continuation-banner[hidden],
+.next-adventure-panel[hidden] {
+  display: none;
+}
+
+.continuation-banner div {
+  display: grid;
+  gap: 3px;
+}
+
+.continuation-banner span {
+  color: rgba(248, 244, 255, 0.78);
+  font-size: 0.88rem;
+}
+
+.next-adventure-panel {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+  border-top: 1px solid rgba(216, 198, 255, 0.2);
+  border-bottom: 1px solid rgba(216, 198, 255, 0.2);
+  padding: 16px 0;
+}
+
+.next-adventure-panel h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.next-adventure-actions .button {
+  min-height: 54px;
+  white-space: normal;
+}
+
+.memory-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 8px;
+}
+
+.memory-grid span {
+  display: grid;
+  gap: 3px;
+  border: 1px solid rgba(255, 231, 133, 0.2);
+  border-radius: 8px;
+  padding: 10px;
+  background: rgba(255, 217, 106, 0.08);
+}
+
+.memory-grid small {
+  color: rgba(248, 244, 255, 0.72);
+  font-weight: 800;
+}
+
+.memory-grid strong {
+  color: #fff8dc;
+  font-size: 1.15rem;
+}
+
+.reminder-form {
+  display: grid;
+  grid-template-columns: minmax(130px, 1fr) minmax(150px, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.compact-toggle {
+  min-height: 48px;
+}
+
 .admin-actions {
   display: flex;
   flex-wrap: wrap;
@@ -1434,7 +1530,7 @@ textarea:focus-visible {
 
 .library-filter {
   display: inline-grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 4px;
   border: 1px solid rgba(123, 78, 216, 0.16);
   border-radius: 8px;
@@ -2060,6 +2156,11 @@ body.night-mode .story-card,
 body.night-mode .app-tabbar {
   border-color: rgba(216, 198, 255, 0.22);
   background: rgba(10, 15, 48, 0.72);
+}
+
+body.night-mode .continuation-banner {
+  border-left-color: #ffe785;
+  background: rgba(255, 217, 106, 0.1);
 }
 
 body.night-mode .segmented-control span,
@@ -2909,6 +3010,10 @@ body.night-mode .favourite-button.active {
     align-items: stretch;
   }
 
+  .reminder-form {
+    grid-template-columns: 1fr;
+  }
+
   .library-filter {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -2984,6 +3089,16 @@ body.night-mode .favourite-button.active {
 
   .library-actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .story-spark-actions,
+  .next-adventure-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .continuation-banner {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .redeem-form {

@@ -7,6 +7,17 @@ const {
   supabaseRequest,
 } = require("./auth");
 const NARRATION_WORDS_PER_MINUTE = 125;
+const OPTIONAL_RETENTION_COLUMNS = [
+  "story_summary",
+  "next_ideas",
+  "occasion",
+  "recurring_characters",
+  "series_id",
+  "series_title",
+  "chapter_number",
+  "journey_length",
+  "journey_day",
+];
 
 const durationTargets = {
   5: { words: 900, minWords: 800, maxWords: 1050, paragraphs: 10 },
@@ -81,6 +92,13 @@ function buildPrompt(data) {
     "Timing rule: the selected duration is for slow narrated audio, so the story must be long enough when read aloud calmly with pauses.",
     `Mood blend: ${moods.length ? moods.join(", ") : "relaxing"}.`,
     `Story idea from parent: ${cleanText(data.storyIdea, "a gentle adventure with a kind positive ending")}.`,
+    `Special occasion or life moment: ${cleanText(data.occasion, "none selected")}.`,
+    `Recurring story characters: ${cleanText(data.recurringCharacters, "none selected")}.`,
+    `Series title: ${cleanText(data.seriesTitle, "new standalone story")}.`,
+    `Series chapter: ${cleanText(data.chapterNumber, "1")}.`,
+    `Previous adventure: ${cleanText(data.continuationSummary, "none; begin a fresh adventure")}.`,
+    `Chosen direction for this chapter: ${cleanText(data.continuationChoice, "follow the parent's story idea")}.`,
+    `Seven-night journey progress: ${data.journeyLength ? `night ${cleanText(data.journeyDay, "1")} of ${cleanText(data.journeyLength, "7")}` : "not part of a journey"}.`,
     `Selected child profile details: ${childProfileSummary.length ? childProfileSummary.join(" | ") : "not selected"}.`,
     `Child interests: ${cleanText(data.interests, "not specified")}.`,
     `Friends who may appear naturally: ${cleanText(data.friends, "not specified")}.`,
@@ -101,6 +119,8 @@ function buildPrompt(data) {
     "- Do not finish early. The story should feel complete and should land inside the requested word range, especially for 15, 20, and 30 minute stories.",
     "- Longer durations must include more complete scenes, not just longer sentences.",
     "- Include a positive ending and a gentle lesson without sounding preachy.",
+    "- If this continues a series, preserve established characters and warmly acknowledge what happened before without repeating the previous story.",
+    "- End the main story peacefully and completely, then provide two short, child-friendly ideas for a possible next adventure in the JSON nextIdeas field.",
     "- For bedtime, slow the ending down and make the final paragraph peaceful.",
     "- Do not announce or explain that the story is written in British English.",
     "- Do not end with farewell phrases such as ta-ta, ta ta for now, bye, or goodbye.",
@@ -132,7 +152,7 @@ function buildExpansionPrompt(data, story) {
     "- The final word count must be inside the requested range unless that is impossible.",
     "",
     "Existing story JSON:",
-    JSON.stringify({ title: story.title, paragraphs: story.paragraphs }, null, 2),
+    JSON.stringify({ title: story.title, summary: story.summary, paragraphs: story.paragraphs }, null, 2),
   ].join("\n");
 }
 
@@ -161,6 +181,15 @@ function storyToRow({ account, body, story }) {
     duration_minutes: Number(body.duration) || 5,
     moods: cleanList(body.moods),
     story_idea: cleanText(body.storyIdea) || null,
+    story_summary: cleanText(story.summary) || null,
+    next_ideas: cleanList(story.nextIdeas),
+    occasion: cleanText(body.occasion) || null,
+    recurring_characters: cleanText(body.recurringCharacters) || null,
+    series_id: cleanText(body.seriesId) || null,
+    series_title: cleanText(body.seriesTitle) || null,
+    chapter_number: Number(body.chapterNumber) || 1,
+    journey_length: Number(body.journeyLength) || null,
+    journey_day: Number(body.journeyDay) || null,
     paragraphs: story.paragraphs || [],
     word_count: story.wordCount || null,
     plan: normalisePlan(account.profile?.plan || body.plan),
@@ -190,9 +219,12 @@ async function saveGeneratedStory(account, body, story) {
     const saved = await insert(row);
     return saved?.[0] || null;
   } catch (error) {
-    if (!String(error.message || "").includes("word_count")) throw error;
+    const message = String(error.message || "");
+    const canFallback = message.includes("word_count") || OPTIONAL_RETENTION_COLUMNS.some((column) => message.includes(column));
+    if (!canFallback) throw error;
     const fallbackRow = { ...row };
     delete fallbackRow.word_count;
+    OPTIONAL_RETENTION_COLUMNS.forEach((column) => delete fallbackRow[column]);
     const saved = await insert(fallbackRow);
     return saved?.[0] || null;
   }
@@ -201,12 +233,27 @@ async function saveGeneratedStory(account, body, story) {
 const storySchema = {
   type: "object",
   additionalProperties: false,
-  required: ["title", "paragraphs"],
+  required: ["title", "summary", "nextIdeas", "paragraphs"],
   properties: {
     title: {
       type: "string",
       minLength: 3,
       maxLength: 90,
+    },
+    summary: {
+      type: "string",
+      minLength: 20,
+      maxLength: 600,
+    },
+    nextIdeas: {
+      type: "array",
+      minItems: 2,
+      maxItems: 2,
+      items: {
+        type: "string",
+        minLength: 8,
+        maxLength: 140,
+      },
     },
     paragraphs: {
       type: "array",
@@ -284,6 +331,8 @@ async function requestStoryWithPrompt(data, prompt) {
 
   return {
     title: cleanText(story.title, "A DreamScapes Story"),
+    summary: cleanText(story.summary),
+    nextIdeas: cleanList(story.nextIdeas).slice(0, 2),
     paragraphs,
     wordCount: countWords(paragraphs),
   };
