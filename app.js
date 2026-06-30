@@ -4,6 +4,7 @@ const screens = {
   loading: document.querySelector("#loading-screen"),
   result: document.querySelector("#result-screen"),
   library: document.querySelector("#library-screen"),
+  favourites: document.querySelector("#favourites-screen"),
   upgrade: document.querySelector("#upgrade-screen"),
   account: document.querySelector("#account-screen"),
   signup: document.querySelector("#signup-screen"),
@@ -39,6 +40,9 @@ const libraryStatus = document.querySelector("#library-status");
 const libraryList = document.querySelector("#library-list");
 const libraryFilterButtons = Array.from(document.querySelectorAll("[data-library-filter]"));
 const librarySort = document.querySelector("#library-sort");
+const favouritesStatus = document.querySelector("#favourites-status");
+const favouritesList = document.querySelector("#favourites-list");
+const favouritesSort = document.querySelector("#favourites-sort");
 const durationInputs = Array.from(document.querySelectorAll('input[name="durationChoice"]'));
 const authForm = document.querySelector("#auth-form");
 const authEmail = document.querySelector("#auth-email");
@@ -435,9 +439,10 @@ function showScreen(name) {
   document.querySelectorAll("[data-screen-target]").forEach((button) => {
     button.classList.toggle("active", button.dataset.screenTarget === name);
   });
-  if (name === "library") {
-    renderLibrary().catch(() => {
-      libraryList.innerHTML = `
+  if (name === "library" || name === "favourites") {
+    renderLibrary({ favouritesOnly: name === "favourites" }).catch(() => {
+      const listElement = name === "favourites" ? favouritesList : libraryList;
+      listElement.innerHTML = `
         <article class="library-item">
           <h3>Library needs a refresh</h3>
           <p>DreamScapes could not load your saved stories just now. Try opening the library again.</p>
@@ -2400,8 +2405,8 @@ function getStoryTimeValue(story) {
   return new Date(story?.savedAt || story?.createdAt || 0).getTime() || 0;
 }
 
-function sortLibraryStories(stories) {
-  const sortMode = librarySort?.value || "newest";
+function sortLibraryStories(stories, sortModeOverride = "") {
+  const sortMode = sortModeOverride || librarySort?.value || "newest";
   return [...stories].sort((firstStory, secondStory) => {
     if (isHighlightedStory(firstStory) !== isHighlightedStory(secondStory)) {
       return Number(isHighlightedStory(secondStory)) - Number(isHighlightedStory(firstStory));
@@ -3388,6 +3393,11 @@ librarySort?.addEventListener("change", () => {
   renderLibrary();
 });
 
+favouritesSort?.addEventListener("change", () => {
+  libraryNotice = "";
+  renderLibrary({ favouritesOnly: true });
+});
+
 reportAudioButton?.addEventListener("click", async () => {
   if (!currentStory) return;
   await reportAudioIssue(currentStory, "result");
@@ -3578,13 +3588,19 @@ document.querySelector("#save-story-button")?.addEventListener("click", () => {
   saveStoryToLibrary(currentStory);
 });
 
-async function renderLibrary() {
-  if (libraryStatus) {
-    libraryStatus.textContent = libraryNotice;
+async function renderLibrary({ favouritesOnly = false } = {}) {
+  const listElement = favouritesOnly ? favouritesList : libraryList;
+  const statusElement = favouritesOnly ? favouritesStatus : libraryStatus;
+  const sortElement = favouritesOnly ? favouritesSort : librarySort;
+
+  if (!listElement) return;
+
+  if (statusElement) {
+    statusElement.textContent = libraryNotice;
   }
 
   if (canUseCloudLibrary() && !cloudStoriesLoaded) {
-    libraryList.innerHTML = `
+    listElement.innerHTML = `
       <article class="library-item">
         <h3>Loading your cloud library...</h3>
         <p>DreamScapes is checking your saved stories.</p>
@@ -3594,7 +3610,7 @@ async function renderLibrary() {
     try {
       await loadCloudStories();
     } catch {
-      libraryList.innerHTML = `
+      listElement.innerHTML = `
         <article class="library-item">
           <h3>Cloud library could not load</h3>
           <p>Check the Supabase table setup, then try again.</p>
@@ -3620,42 +3636,56 @@ async function renderLibrary() {
         ),
       ]
     : localStories;
-  const orderedStories = sortLibraryStories(savedStories);
-  const filteredStories = filterLibraryStories(orderedStories);
+  const orderedStories = sortLibraryStories(savedStories, sortElement?.value);
+  const pageStories = favouritesOnly ? orderedStories.filter(isStoryFavourite) : orderedStories;
+  const filteredStories = favouritesOnly ? pageStories : filterLibraryStories(pageStories);
   const visibleStories = filteredStories.slice(0, MAX_LIBRARY_RENDER_ITEMS);
 
   if (savedStories.length === 0) {
-    libraryList.innerHTML = `
+    listElement.innerHTML = `
       <article class="library-item">
         <h3>No saved stories yet</h3>
         <p>${usingCloudLibrary ? "Stories you create while signed in will save to your cloud library." : "Free saves up to 3 stories here. Premier and Plus save more."}</p>
         <button class="button primary-button" data-screen-target="builder" type="button">Create a Story</button>
       </article>
     `;
-    libraryList.querySelector("[data-screen-target]")?.addEventListener("click", () => showScreen("builder"));
+    listElement.querySelector("[data-screen-target]")?.addEventListener("click", () => showScreen("builder"));
     return;
   }
 
   if (filteredStories.length === 0) {
     const emptyLabel = currentLibraryFilter === "audio" ? "audio stories" : "text-only stories";
-    libraryList.innerHTML = `
+    listElement.innerHTML = favouritesOnly
+      ? `
+      <article class="library-item">
+        <h3>No favourites yet</h3>
+        <p>Tap Save on a story in your library to keep it protected here.</p>
+        <button class="button primary-button" data-screen-target="library" type="button">Open Library</button>
+      </article>
+    `
+      : `
       <article class="library-item">
         <h3>No ${emptyLabel} found</h3>
         <p>Switch filters or create another story to add more to your library.</p>
       </article>
     `;
-    if (libraryStatus && !libraryNotice) {
-      libraryStatus.textContent = `${savedStories.length} saved ${savedStories.length === 1 ? "story" : "stories"}.`;
+    listElement.querySelector("[data-screen-target]")?.addEventListener("click", () => showScreen("library"));
+    if (statusElement && !libraryNotice) {
+      statusElement.textContent = favouritesOnly
+        ? `${savedStories.length} saved ${savedStories.length === 1 ? "story" : "stories"}.`
+        : `${savedStories.length} saved ${savedStories.length === 1 ? "story" : "stories"}.`;
     }
     return;
   }
 
-  if (libraryStatus && !libraryNotice) {
+  if (statusElement && !libraryNotice) {
     const shownCount = filteredStories.length;
-    libraryStatus.textContent = `${shownCount} ${shownCount === 1 ? "story" : "stories"} shown from ${savedStories.length} saved.`;
+    statusElement.textContent = favouritesOnly
+      ? `${shownCount} favourite ${shownCount === 1 ? "story" : "stories"}.`
+      : `${shownCount} ${shownCount === 1 ? "story" : "stories"} shown from ${savedStories.length} saved.`;
   }
 
-  libraryList.innerHTML = visibleStories
+  listElement.innerHTML = visibleStories
     .map(
       (story, index) => {
         const savedAudioDuration = getSavedAudioDurationSeconds(story);
@@ -3688,7 +3718,7 @@ async function renderLibrary() {
           <p>${escapeHtml(story.text?.[0]?.slice(0, 120) || "Saved story")}...</p>
           <div class="library-actions">
             <button class="button secondary-button" data-library-index="${index}" type="button">Open</button>
-            <button class="button secondary-button favourite-button ${isFavourite ? "active" : ""}" data-favourite-index="${index}" type="button" aria-pressed="${isFavourite ? "true" : "false"}">${isFavourite ? "Favourited" : "Favourite"}</button>
+            <button class="button secondary-button favourite-button ${isFavourite ? "active" : ""}" data-favourite-index="${index}" type="button" aria-pressed="${isFavourite ? "true" : "false"}">${isFavourite ? "Saved" : "Save"}</button>
             <button class="button secondary-button delete-button" data-delete-index="${index}" type="button">Delete</button>
           </div>
         </article>
@@ -3697,7 +3727,7 @@ async function renderLibrary() {
     )
     .join("");
 
-  libraryList.querySelectorAll("[data-library-index]").forEach((button) => {
+  listElement.querySelectorAll("[data-library-index]").forEach((button) => {
     button.addEventListener("click", () => {
       currentStory = visibleStories[Number(button.dataset.libraryIndex)];
       renderStory(currentStory);
@@ -3706,17 +3736,17 @@ async function renderLibrary() {
     });
   });
 
-  libraryList.querySelectorAll("[data-favourite-index]").forEach((button) => {
+  listElement.querySelectorAll("[data-favourite-index]").forEach((button) => {
     button.addEventListener("click", async () => {
       const index = Number(button.dataset.favouriteIndex);
       const storyToFavourite = visibleStories[index];
       button.disabled = true;
       await toggleStoryFavourite(storyToFavourite);
-      renderLibrary();
+      renderLibrary({ favouritesOnly });
     });
   });
 
-  libraryList.querySelectorAll("[data-delete-index]").forEach((button) => {
+  listElement.querySelectorAll("[data-delete-index]").forEach((button) => {
     button.addEventListener("click", async () => {
       const index = Number(button.dataset.deleteIndex);
       const storyToDelete = visibleStories[index];
@@ -3725,7 +3755,7 @@ async function renderLibrary() {
         try {
           await deleteCloudStory(storyToDelete);
         } catch {
-          libraryList.insertAdjacentHTML(
+          listElement.insertAdjacentHTML(
             "afterbegin",
             '<p class="status-note account-status error">Could not delete that cloud story. Try again.</p>'
           );
@@ -3740,7 +3770,7 @@ async function renderLibrary() {
       }
 
       trackEvent("story_deleted", { index, source: usingCloudLibrary ? "cloud" : "local" });
-      renderLibrary();
+      renderLibrary({ favouritesOnly });
     });
   });
 }

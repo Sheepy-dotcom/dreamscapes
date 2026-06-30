@@ -22,7 +22,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026062910" />
+    <link rel="stylesheet" href="./styles.css?v=2026062911" />
   </head>
   <body class="home-active night-mode">
     <div class="stars" aria-hidden="true"></div>
@@ -380,6 +380,7 @@
             <button class="active" type="button" data-library-filter="all">All</button>
             <button type="button" data-library-filter="audio">Audio</button>
             <button type="button" data-library-filter="text">Text</button>
+            <button type="button" data-screen-target="favourites">Favourites</button>
           </div>
           <label class="library-sort">
             <span>Sort</span>
@@ -391,6 +392,31 @@
           </label>
         </div>
         <div class="library-list" id="library-list"></div>
+      </section>
+
+      <section class="screen library-screen favourites-screen" id="favourites-screen" aria-labelledby="favourites-title">
+        <header class="top-bar">
+          <button class="logo-button" data-screen-target="welcome" type="button" aria-label="Go to home">
+            <img class="mini-logo" src="./assets/dreamscapes-logo.png" alt="DreamScapes" />
+          </button>
+          <div>
+            <p class="eyebrow">Protected Stories</p>
+            <h2 id="favourites-title">Favourites</h2>
+          </div>
+        </header>
+        <p class="status-note library-status" id="favourites-status" role="status"></p>
+        <div class="library-toolbar" aria-label="Favourite story controls">
+          <button class="button secondary-button library-page-button" data-screen-target="library" type="button">All Stories</button>
+          <label class="library-sort">
+            <span>Sort</span>
+            <select id="favourites-sort">
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+              <option value="duration">Longest</option>
+            </select>
+          </label>
+        </div>
+        <div class="library-list" id="favourites-list"></div>
       </section>
 
       <section class="screen upgrade-screen" id="upgrade-screen" aria-labelledby="upgrade-title">
@@ -913,6 +939,10 @@
           <span aria-hidden="true">▣</span>
           Library
         </button>
+        <button type="button" data-screen-target="favourites">
+          <span aria-hidden="true">♡</span>
+          Faves
+        </button>
         <button type="button" data-screen-target="upgrade">
           <span aria-hidden="true">★</span>
           Plans
@@ -929,6 +959,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026062910"></script>
+    <script src="./app.js?v=2026062911"></script>
   </body>
 </html>
