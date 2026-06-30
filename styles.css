@@ -1928,6 +1928,12 @@ textarea:focus-visible {
   background: #ffe4ee;
 }
 
+.delete-button.protected-delete-button {
+  color: #5d3f00;
+  border-color: rgba(255, 231, 133, 0.72);
+  background: #fff6cc;
+}
+
 .favourite-button {
   color: #5d3f00;
   background: #fff6cc;
@@ -2351,6 +2357,12 @@ body.night-mode .delete-button {
   color: #ffd7e5;
   background: rgba(127, 29, 69, 0.26);
   border-color: rgba(255, 143, 183, 0.32);
+}
+
+body.night-mode .delete-button.protected-delete-button {
+  color: #fff8dc;
+  background: rgba(255, 217, 106, 0.14);
+  border-color: rgba(255, 231, 133, 0.34);
 }
 
 body.night-mode .favourite-button {

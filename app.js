@@ -3700,7 +3700,7 @@ async function renderLibrary() {
           <div class="library-actions">
             <button class="button secondary-button" data-library-index="${index}" type="button">Open</button>
             <button class="button secondary-button favourite-button ${isFavourite ? "active" : ""}" data-favourite-index="${index}" type="button" aria-pressed="${isFavourite ? "true" : "false"}">${isFavourite ? "Saved" : "Save"}</button>
-            <button class="button secondary-button delete-button" data-delete-index="${index}" type="button">Delete</button>
+            <button class="button secondary-button delete-button ${isFavourite ? "protected-delete-button" : ""}" data-delete-index="${index}" type="button">${isFavourite ? "Protected" : "Delete"}</button>
           </div>
         </article>
       `;
@@ -3731,6 +3731,13 @@ async function renderLibrary() {
     button.addEventListener("click", async () => {
       const index = Number(button.dataset.deleteIndex);
       const storyToDelete = visibleStories[index];
+
+      if (isStoryFavourite(storyToDelete)) {
+        libraryNotice = "This story is protected. Tap Saved to remove it from favourites before deleting.";
+        trackEvent("protected_story_delete_blocked", { index });
+        renderLibrary();
+        return;
+      }
 
       if (usingCloudLibrary && storyToDelete?.cloudId) {
         try {
