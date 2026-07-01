@@ -176,7 +176,7 @@ function getNarrationChargeSeconds(body) {
   const wordCount = String(body.text || "")
     .split(/\s+/)
     .filter(Boolean).length;
-  const textEstimateSeconds = wordCount > 0 ? Math.ceil((wordCount / 125) * 60) : durationSeconds;
+  const textEstimateSeconds = wordCount > 0 ? Math.ceil((wordCount / 85) * 60) : durationSeconds;
 
   return Math.max(durationSeconds, textEstimateSeconds);
 }

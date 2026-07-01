@@ -6,7 +6,7 @@ const {
   sendApiError,
   supabaseRequest,
 } = require("./auth");
-const NARRATION_WORDS_PER_MINUTE = 125;
+const NARRATION_WORDS_PER_MINUTE = 85;
 const OPTIONAL_RETENTION_COLUMNS = [
   "story_summary",
   "next_ideas",
@@ -20,11 +20,11 @@ const OPTIONAL_RETENTION_COLUMNS = [
 ];
 
 const durationTargets = {
-  5: { words: 900, minWords: 800, maxWords: 1050, paragraphs: 10 },
-  10: { words: 1850, minWords: 1650, maxWords: 2150, paragraphs: 20 },
-  15: { words: 3000, minWords: 2700, maxWords: 3450, paragraphs: 32 },
-  20: { words: 4200, minWords: 3800, maxWords: 4800, paragraphs: 44 },
-  30: { words: 6500, minWords: 5900, maxWords: 7350, paragraphs: 64 },
+  5: { words: 425, minWords: 375, maxWords: 500, paragraphs: 7 },
+  10: { words: 850, minWords: 760, maxWords: 960, paragraphs: 12 },
+  15: { words: 1275, minWords: 1150, maxWords: 1450, paragraphs: 18 },
+  20: { words: 1700, minWords: 1530, maxWords: 1900, paragraphs: 24 },
+  30: { words: 2550, minWords: 2300, maxWords: 2850, paragraphs: 34 },
 };
 
 function cleanText(value, fallback = "") {
