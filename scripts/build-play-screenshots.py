@@ -60,7 +60,7 @@ def cover(image, size):
 
 
 def rounded_image(image, size, radius):
-    fitted = cover(image, size)
+    fitted = image.resize(size, Image.Resampling.LANCZOS)
     mask = Image.new("L", size, 0)
     ImageDraw.Draw(mask).rounded_rectangle((0, 0, size[0], size[1]), radius=radius, fill=255)
     fitted.putalpha(mask)
@@ -92,8 +92,8 @@ def build(output_name, source_name, headline, subhead):
     )
     draw.text((76, 348), subhead, font=subhead_font, fill=(226, 221, 255, 255))
 
-    frame_size = (880, 1408)
-    frame_position = (100, 438)
+    frame_size = (810, 1440)
+    frame_position = (135, 438)
     frame_radius = 38
     shadow = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
     shadow_draw = ImageDraw.Draw(shadow)
