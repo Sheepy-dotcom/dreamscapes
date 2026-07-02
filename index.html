@@ -22,7 +22,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026063007" />
+    <link rel="stylesheet" href="./styles.css?v=2026070201" />
   </head>
   <body class="home-active night-mode">
     <div class="stars" aria-hidden="true"></div>
@@ -62,6 +62,24 @@
         </header>
 
         <form class="story-form" id="story-form">
+          <div class="builder-progress" aria-label="Story builder progress">
+            <div class="builder-progress-heading">
+              <span id="builder-step-count">Step 1 of 4</span>
+              <strong id="builder-step-title">Child</strong>
+            </div>
+            <div class="builder-progress-track" aria-hidden="true">
+              <span id="builder-progress-fill"></span>
+            </div>
+            <ol class="builder-step-list" aria-hidden="true">
+              <li class="active" data-builder-step-marker="0"><span>1</span>Child</li>
+              <li data-builder-step-marker="1"><span>2</span>Story</li>
+              <li data-builder-step-marker="2"><span>3</span>Mood</li>
+              <li data-builder-step-marker="3"><span>4</span>Audio</li>
+            </ol>
+          </div>
+
+          <section class="builder-step active" data-builder-step="0" aria-labelledby="builder-step-child-title">
+            <h3 id="builder-step-child-title">Who is this story for?</h3>
           <fieldset class="choice-group child-profile-picker" id="builder-child-profiles" hidden>
             <legend>Child profiles <small>optional</small></legend>
             <p class="helper-text">Choose one or more saved profiles to personalise the story.</p>
@@ -70,6 +88,29 @@
               Clear Profiles
             </button>
           </fieldset>
+
+          <div class="form-grid">
+            <label class="field">
+              <span>Child name <small>or pick a profile</small></span>
+              <input id="child-name" name="childName" type="text" placeholder="Rosie" />
+            </label>
+
+            <label class="field">
+              <span>Age <small>optional</small></span>
+              <input id="child-age" name="childAge" type="number" min="1" max="12" placeholder="5" />
+            </label>
+          </div>
+
+          <div class="form-grid profile-grid">
+            <label class="field">
+              <span>Interests</span>
+              <input name="interests" type="text" placeholder="Unicorns, space, football" />
+            </label>
+          </div>
+          </section>
+
+          <section class="builder-step" data-builder-step="1" aria-labelledby="builder-step-story-title" hidden>
+            <h3 id="builder-step-story-title">Shape the story</h3>
 
           <fieldset class="choice-group story-spark-panel">
             <legend>Story spark <small>optional</small></legend>
@@ -98,25 +139,6 @@
               <button class="button secondary-button compact-button" id="cancel-continuation-button" type="button">Cancel</button>
             </div>
           </fieldset>
-
-          <div class="form-grid">
-            <label class="field">
-              <span>Child name <small>or pick a profile</small></span>
-              <input id="child-name" name="childName" type="text" placeholder="Rosie" />
-            </label>
-
-            <label class="field">
-              <span>Age <small>optional</small></span>
-              <input id="child-age" name="childAge" type="number" min="1" max="12" placeholder="5" />
-            </label>
-          </div>
-
-          <div class="form-grid profile-grid">
-            <label class="field">
-              <span>Interests</span>
-              <input name="interests" type="text" placeholder="Unicorns, space, football" />
-            </label>
-          </div>
 
           <fieldset class="choice-group">
             <legend>Story duration</legend>
@@ -158,6 +180,10 @@
               </label>
             </div>
           </fieldset>
+          </section>
+
+          <section class="builder-step" data-builder-step="2" aria-labelledby="builder-step-mood-title" hidden>
+            <h3 id="builder-step-mood-title">Set the mood</h3>
 
           <fieldset class="choice-group">
             <legend>Moods</legend>
@@ -233,6 +259,10 @@
               required
             ></textarea>
           </label>
+          </section>
+
+          <section class="builder-step" data-builder-step="3" aria-labelledby="builder-step-audio-title" hidden>
+            <h3 id="builder-step-audio-title">Add narration</h3>
 
           <label class="feature-toggle">
             <input id="audio-narration" name="audioNarration" type="checkbox" />
@@ -263,12 +293,14 @@
             support@dreamscapes.cloud so we can help with credits. Redeemed audio credits can be used
             on stories up to 10 minutes.
           </p>
+          </section>
 
           <div class="builder-actions">
-            <button class="button secondary-button" id="welcome-back-button" type="button">
+            <button class="button secondary-button" id="builder-step-back" type="button">
               Back
             </button>
-            <button class="button primary-button" type="submit">Generate Story</button>
+            <button class="button primary-button" id="builder-step-next" type="button">Next</button>
+            <button class="button primary-button" id="generate-story-button" type="submit" hidden>Generate Story</button>
           </div>
           <p class="plan-note" id="plan-note" role="status"></p>
         </form>
@@ -999,6 +1031,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026063007"></script>
+    <script src="./app.js?v=2026070201"></script>
   </body>
 </html>

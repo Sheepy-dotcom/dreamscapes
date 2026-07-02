@@ -12,6 +12,14 @@ const screens = {
 };
 
 const form = document.querySelector("#story-form");
+const builderSteps = Array.from(document.querySelectorAll("[data-builder-step]"));
+const builderStepMarkers = Array.from(document.querySelectorAll("[data-builder-step-marker]"));
+const builderStepCount = document.querySelector("#builder-step-count");
+const builderStepTitle = document.querySelector("#builder-step-title");
+const builderProgressFill = document.querySelector("#builder-progress-fill");
+const builderStepBackButton = document.querySelector("#builder-step-back");
+const builderStepNextButton = document.querySelector("#builder-step-next");
+const generateStoryButton = document.querySelector("#generate-story-button");
 const statusNote = document.querySelector("#status-note");
 const planNote = document.querySelector("#plan-note");
 const loadingMessage = document.querySelector("#loading-message");
@@ -135,6 +143,7 @@ let libraryNotice = "";
 let highlightedStoryId = "";
 let currentLibraryFilter = "all";
 let pendingStoryContext = null;
+let currentBuilderStep = 0;
 const WEEKLY_JOURNEY_LENGTH = 7;
 const BEDTIME_REMINDER_NOTIFICATION_ID = 71001;
 const CLOUD_RETENTION_COLUMNS = [
@@ -460,10 +469,71 @@ function stopLoadingMessages() {
   loadingMessageTimer = null;
 }
 
+const BUILDER_STEP_TITLES = ["Child", "Story", "Mood", "Audio"];
+
+function setBuilderStep(stepIndex, announce = true) {
+  if (!builderSteps.length) return;
+  currentBuilderStep = Math.max(0, Math.min(Number(stepIndex) || 0, builderSteps.length - 1));
+
+  builderSteps.forEach((step, index) => {
+    const isActive = index === currentBuilderStep;
+    step.hidden = !isActive;
+    step.classList.toggle("active", isActive);
+    step.setAttribute("aria-hidden", String(!isActive));
+  });
+
+  builderStepMarkers.forEach((marker, index) => {
+    marker.classList.toggle("active", index === currentBuilderStep);
+    marker.classList.toggle("complete", index < currentBuilderStep);
+  });
+
+  const isLastStep = currentBuilderStep === builderSteps.length - 1;
+  if (builderStepCount) builderStepCount.textContent = `Step ${currentBuilderStep + 1} of ${builderSteps.length}`;
+  if (builderStepTitle) builderStepTitle.textContent = BUILDER_STEP_TITLES[currentBuilderStep];
+  if (builderProgressFill) {
+    builderProgressFill.style.width = `${((currentBuilderStep + 1) / builderSteps.length) * 100}%`;
+  }
+  if (builderStepBackButton) builderStepBackButton.textContent = currentBuilderStep === 0 ? "Home" : "Back";
+  if (builderStepNextButton) builderStepNextButton.hidden = isLastStep;
+  if (generateStoryButton) generateStoryButton.hidden = !isLastStep;
+
+  if (announce) {
+    planNote.textContent = "";
+    trackEvent("builder_step_view", { step: currentBuilderStep + 1 });
+  }
+
+  if (screens.builder.classList.contains("active")) {
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+    window.scrollTo({ top: 0, behavior: "auto" });
+    window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "auto" }));
+  }
+}
+
+function validateBuilderStep(stepIndex) {
+  if (stepIndex === 0) {
+    const enteredName = cleanProfileValue(form.elements.childName.value);
+    if (!enteredName && getSelectedChildProfiles().length === 0) {
+      planNote.textContent = "Add a child name or choose a saved child profile to continue.";
+      form.elements.childName.focus();
+      return false;
+    }
+  }
+
+  if (stepIndex === 2 && !storyIdea.value.trim()) {
+    planNote.textContent = "Add a short story idea to continue.";
+    storyIdea.focus();
+    return false;
+  }
+
+  return true;
+}
+
 function showScreen(name) {
   Object.values(screens).forEach((screen) => screen.classList.remove("active"));
   screens[name].classList.add("active");
+  if (name === "builder") setBuilderStep(0, false);
   document.body.classList.toggle("home-active", name === "welcome");
+  document.body.classList.toggle("builder-active", name === "builder");
   document.querySelectorAll("[data-screen-target]").forEach((button) => {
     button.classList.toggle("active", button.dataset.screenTarget === name);
   });
@@ -3220,7 +3290,17 @@ function renderStoryMemories() {
 }
 
 document.querySelector("#start-button").addEventListener("click", () => showScreen("builder"));
-document.querySelector("#welcome-back-button").addEventListener("click", () => showScreen("welcome"));
+builderStepBackButton?.addEventListener("click", () => {
+  if (currentBuilderStep === 0) {
+    showScreen("welcome");
+    return;
+  }
+  setBuilderStep(currentBuilderStep - 1);
+});
+builderStepNextButton?.addEventListener("click", () => {
+  if (!validateBuilderStep(currentBuilderStep)) return;
+  setBuilderStep(currentBuilderStep + 1);
+});
 document.querySelectorAll("[data-screen-target]").forEach((button) => {
   button.addEventListener("click", () => showScreen(button.dataset.screenTarget));
 });
@@ -3854,6 +3934,7 @@ form.addEventListener("submit", async (event) => {
       }
 
       showScreen("builder");
+      setBuilderStep(builderSteps.length - 1, false);
       planNote.textContent = getFriendlyFaultMessage(error, "Could not create that story. Try again.");
       return;
     }
