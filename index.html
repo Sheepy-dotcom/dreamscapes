@@ -22,7 +22,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026070202" />
+    <link rel="stylesheet" href="./styles.css?v=2026070205" />
   </head>
   <body class="home-active night-mode">
     <div class="stars" aria-hidden="true"></div>
@@ -64,7 +64,7 @@
         <form class="story-form" id="story-form">
           <div class="builder-progress" aria-label="Story builder progress">
             <div class="builder-progress-heading">
-              <span id="builder-step-count">Step 1 of 4</span>
+              <span id="builder-step-count">Step 1 of 7</span>
               <strong id="builder-step-title">Child</strong>
             </div>
             <div class="builder-progress-track" aria-hidden="true">
@@ -73,51 +73,39 @@
             <ol class="builder-step-list" aria-hidden="true">
               <li class="active" data-builder-step-marker="0"><span>1</span>Child</li>
               <li data-builder-step-marker="1"><span>2</span>Story</li>
-              <li data-builder-step-marker="2"><span>3</span>Mood</li>
-              <li data-builder-step-marker="3"><span>4</span>Audio</li>
+              <li data-builder-step-marker="2"><span>3</span>Length</li>
+              <li data-builder-step-marker="3"><span>4</span>Mood</li>
+              <li data-builder-step-marker="4"><span>5</span>Safety</li>
+              <li data-builder-step-marker="5"><span>6</span>Idea</li>
+              <li data-builder-step-marker="6"><span>7</span>Audio</li>
             </ol>
           </div>
 
           <section class="builder-step active" data-builder-step="0" aria-labelledby="builder-step-child-title">
             <h3 id="builder-step-child-title">Who is this story for?</h3>
-          <fieldset class="choice-group child-profile-picker" id="builder-child-profiles" hidden>
-            <legend>Child profiles <small>optional</small></legend>
-            <p class="helper-text">Choose one or more saved profiles to personalise the story.</p>
-            <div class="profile-choice-list" id="builder-profile-list"></div>
-            <button class="button secondary-button compact-button" id="clear-profile-selection" type="button">
-              Clear Profiles
-            </button>
-          </fieldset>
+            <fieldset class="choice-group child-profile-picker" id="builder-child-profiles" hidden>
+              <legend>Child profiles <small>optional</small></legend>
+              <div class="profile-choice-list" id="builder-profile-list"></div>
+              <button class="button secondary-button compact-button" id="clear-profile-selection" type="button">Clear Profiles</button>
+            </fieldset>
+            <div class="form-grid child-basics-grid">
+              <label class="field">
+                <span>Child name <small>or pick a profile</small></span>
+                <input id="child-name" name="childName" type="text" placeholder="Rosie" />
+              </label>
+              <label class="field">
+                <span>Age <small>optional</small></span>
+                <input id="child-age" name="childAge" type="number" min="1" max="12" placeholder="5" />
+              </label>
+            </div>
+          </section>
 
-          <div class="form-grid">
-            <label class="field">
-              <span>Child name <small>or pick a profile</small></span>
-              <input id="child-name" name="childName" type="text" placeholder="Rosie" />
-            </label>
-
-            <label class="field">
-              <span>Age <small>optional</small></span>
-              <input id="child-age" name="childAge" type="number" min="1" max="12" placeholder="5" />
-            </label>
-          </div>
-
-          <div class="form-grid profile-grid">
+          <section class="builder-step" data-builder-step="1" aria-labelledby="builder-step-story-title" hidden>
+            <h3 id="builder-step-story-title">Choose the story type</h3>
             <label class="field">
               <span>Interests</span>
               <input name="interests" type="text" placeholder="Unicorns, space, football" />
             </label>
-          </div>
-          </section>
-
-          <section class="builder-step" data-builder-step="1" aria-labelledby="builder-step-story-title" hidden>
-            <h3 id="builder-step-story-title">Shape the story</h3>
-
-          <fieldset class="choice-group story-spark-panel">
-            <legend>Story spark <small>optional</small></legend>
-            <div class="story-spark-actions">
-              <button class="button secondary-button" id="tonights-story-button" type="button">Tonight's Story</button>
-              <button class="button secondary-button" id="weekly-journey-button" type="button">Start 7-Night Journey</button>
-            </div>
             <label class="field compact-select-field">
               <span>Special occasion</span>
               <select id="story-occasion" name="occasion">
@@ -131,174 +119,106 @@
                 <option value="friendship">Friendship</option>
               </select>
             </label>
-            <div class="continuation-banner" id="continuation-banner" hidden>
-              <div>
-                <strong id="continuation-title">Continuing an adventure</strong>
-                <span id="continuation-note"></span>
+            <fieldset class="choice-group">
+              <legend>Story time</legend>
+              <div class="segmented-control" role="radiogroup" aria-label="Story type">
+                <label><input type="radio" name="storyType" value="bedtime" checked /><span>Bedtime story</span></label>
+                <label><input type="radio" name="storyType" value="anytime" /><span>Anytime story</span></label>
               </div>
-              <button class="button secondary-button compact-button" id="cancel-continuation-button" type="button">Cancel</button>
-            </div>
-          </fieldset>
-
-          <fieldset class="choice-group">
-            <legend>Story duration</legend>
-            <div class="duration-grid" role="radiogroup" aria-label="Story duration">
-              <label>
-                <input type="radio" name="durationChoice" value="5" checked />
-                <span>5 min <small>Free</small></span>
-              </label>
-              <label>
-                <input type="radio" name="durationChoice" value="10" />
-                <span>10 min <small>Free</small></span>
-              </label>
-              <label>
-                <input type="radio" name="durationChoice" value="15" />
-                <span>15 min <small>Premier</small></span>
-              </label>
-              <label>
-                <input type="radio" name="durationChoice" value="20" />
-                <span>20 min <small>Premier</small></span>
-              </label>
-              <label>
-                <input type="radio" name="durationChoice" value="30" />
-                <span>30 min <small>Plus</small></span>
-              </label>
-            </div>
-            <p class="helper-text">Story times are a guide. DreamScapes aims to get as close as possible, but narrated length can vary slightly.</p>
-          </fieldset>
-
-          <fieldset class="choice-group">
-            <legend>Story time</legend>
-            <div class="segmented-control" role="radiogroup" aria-label="Story type">
-              <label>
-                <input type="radio" name="storyType" value="bedtime" checked />
-                <span>Bedtime story</span>
-              </label>
-              <label>
-                <input type="radio" name="storyType" value="anytime" />
-                <span>Anytime story</span>
-              </label>
-            </div>
-          </fieldset>
+            </fieldset>
           </section>
 
-          <section class="builder-step" data-builder-step="2" aria-labelledby="builder-step-mood-title" hidden>
+          <section class="builder-step" data-builder-step="2" aria-labelledby="builder-step-length-title" hidden>
+            <h3 id="builder-step-length-title">Pick the story length</h3>
+            <fieldset class="choice-group story-spark-panel">
+              <legend>Story path <small>optional</small></legend>
+              <div class="story-spark-actions">
+                <button class="button secondary-button" id="tonights-story-button" type="button">Tonight's Story</button>
+                <button class="button secondary-button" id="weekly-journey-button" type="button">Start 7-Night Journey</button>
+              </div>
+              <div class="continuation-banner" id="continuation-banner" hidden>
+                <div><strong id="continuation-title">Continuing an adventure</strong><span id="continuation-note"></span></div>
+                <button class="button secondary-button compact-button" id="cancel-continuation-button" type="button">Cancel</button>
+              </div>
+            </fieldset>
+            <fieldset class="choice-group">
+              <legend>Story duration</legend>
+              <div class="duration-grid" role="radiogroup" aria-label="Story duration">
+                <label><input type="radio" name="durationChoice" value="5" checked /><span>5 min <small>Free</small></span></label>
+                <label><input type="radio" name="durationChoice" value="10" /><span>10 min <small>Free</small></span></label>
+                <label><input type="radio" name="durationChoice" value="15" /><span>15 min <small>Premier</small></span></label>
+                <label><input type="radio" name="durationChoice" value="20" /><span>20 min <small>Premier</small></span></label>
+                <label><input type="radio" name="durationChoice" value="30" /><span>30 min <small>Plus</small></span></label>
+              </div>
+              <p class="helper-text">Times are a guide; narration may vary.</p>
+            </fieldset>
+          </section>
+
+          <section class="builder-step" data-builder-step="3" aria-labelledby="builder-step-mood-title" hidden>
             <h3 id="builder-step-mood-title">Set the mood</h3>
-
-          <fieldset class="choice-group">
-            <legend>Moods</legend>
-            <div class="mood-grid" aria-label="Story moods">
-              <label>
-                <input type="checkbox" name="moods" value="relaxing" checked />
-                <span>Relaxing</span>
-              </label>
-              <label>
-                <input type="checkbox" name="moods" value="magical" />
-                <span>Magical</span>
-              </label>
-              <label>
-                <input type="checkbox" name="moods" value="funny" />
-                <span>Funny</span>
-              </label>
-              <label>
-                <input type="checkbox" name="moods" value="adventurous" />
-                <span>Adventurous</span>
-              </label>
-              <label>
-                <input type="checkbox" name="moods" value="energetic" />
-                <span>Energetic</span>
-              </label>
-              <label>
-                <input type="checkbox" name="moods" value="sleepy bedtime" />
-                <span>Sleepy bedtime</span>
-              </label>
-              <label>
-                <input type="checkbox" name="moods" value="educational" />
-                <span>Educational</span>
-              </label>
-            </div>
-          </fieldset>
-
-          <fieldset class="choice-group safety-grid">
-            <legend>Parent safety controls</legend>
-            <label class="field">
-              <span>Avoid topics</span>
-              <input name="avoidTopics" type="text" placeholder="Dragons, storms, getting lost" />
-            </label>
-            <label class="field">
-              <span>Preferred lesson</span>
-              <input name="preferredLesson" type="text" placeholder="Kindness, confidence, sharing" />
-            </label>
-            <label class="feature-toggle calm-toggle">
-              <input name="calmMode" type="checkbox" />
-              <span>
-                <strong>Bedtime calm mode</strong>
-                <small>Soft pacing, lower excitement, peaceful ending</small>
-              </span>
-            </label>
-          </fieldset>
-
-          <label class="field">
-            <span>Story idea</span>
-            <div class="idea-examples" aria-label="Story idea examples">
-              <button type="button" data-idea="A brave child helps a shy moon dragon learn to make friends.">
-                Moon dragon
-              </button>
-              <button type="button" data-idea="A child visits a cloud bakery and learns that sharing makes treats taste better.">
-                Cloud bakery
-              </button>
-              <button type="button" data-idea="A curious child explores a rainbow library and learns a new fact on every shelf.">
-                Rainbow library
-              </button>
-            </div>
-            <textarea
-              id="story-idea"
-              name="storyIdea"
-              rows="5"
-              placeholder="A little girl called Rosie goes on an adventure with a unicorn and learns to be kind."
-              required
-            ></textarea>
-          </label>
+            <fieldset class="choice-group">
+              <legend>Choose one or more</legend>
+              <div class="mood-grid" aria-label="Story moods">
+                <label><input type="checkbox" name="moods" value="relaxing" checked /><span>Relaxing</span></label>
+                <label><input type="checkbox" name="moods" value="magical" /><span>Magical</span></label>
+                <label><input type="checkbox" name="moods" value="funny" /><span>Funny</span></label>
+                <label><input type="checkbox" name="moods" value="adventurous" /><span>Adventurous</span></label>
+                <label><input type="checkbox" name="moods" value="energetic" /><span>Energetic</span></label>
+                <label><input type="checkbox" name="moods" value="sleepy bedtime" /><span>Sleepy bedtime</span></label>
+                <label><input type="checkbox" name="moods" value="educational" /><span>Educational</span></label>
+              </div>
+            </fieldset>
           </section>
 
-          <section class="builder-step" data-builder-step="3" aria-labelledby="builder-step-audio-title" hidden>
+          <section class="builder-step" data-builder-step="4" aria-labelledby="builder-step-safety-title" hidden>
+            <h3 id="builder-step-safety-title">Set the gentle boundaries</h3>
+            <fieldset class="choice-group safety-grid">
+              <legend>Parent safety controls</legend>
+              <label class="field"><span>Avoid topics</span><input name="avoidTopics" type="text" placeholder="Dragons, storms, getting lost" /></label>
+              <label class="field"><span>Preferred lesson</span><input name="preferredLesson" type="text" placeholder="Kindness, confidence, sharing" /></label>
+              <label class="feature-toggle calm-toggle">
+                <input name="calmMode" type="checkbox" />
+                <span><strong>Bedtime calm mode</strong><small>Soft pacing, lower excitement, peaceful ending</small></span>
+              </label>
+            </fieldset>
+          </section>
+
+          <section class="builder-step" data-builder-step="5" aria-labelledby="builder-step-idea-title" hidden>
+            <h3 id="builder-step-idea-title">What should happen?</h3>
+            <label class="field">
+              <span>Story idea</span>
+              <div class="idea-examples" aria-label="Story idea examples">
+                <button type="button" data-idea="A brave child helps a shy moon dragon learn to make friends.">Moon dragon</button>
+                <button type="button" data-idea="A child visits a cloud bakery and learns that sharing makes treats taste better.">Cloud bakery</button>
+                <button type="button" data-idea="A curious child explores a rainbow library and learns a new fact on every shelf.">Rainbow library</button>
+              </div>
+              <textarea id="story-idea" name="storyIdea" rows="5" placeholder="A little girl called Rosie goes on an adventure with a unicorn and learns to be kind." required></textarea>
+            </label>
+          </section>
+
+          <section class="builder-step" data-builder-step="6" aria-labelledby="builder-step-audio-title" hidden>
             <h3 id="builder-step-audio-title">Add narration</h3>
-
-          <label class="feature-toggle">
-            <input id="audio-narration" name="audioNarration" type="checkbox" />
-            <span>
-              <strong>Add audio narration</strong>
-              <small>Selecting audio uses DreamScapes Plus</small>
-            </span>
-          </label>
-
-          <label class="field voice-field">
-            <span>Narration voice</span>
-            <select id="voice-style" name="voiceStyle">
-              <option value="female calm">Female Storyteller</option>
-              <option value="female sage calm">Female Calm</option>
-              <option value="male calm">Male Storyteller</option>
-              <option value="ash storyteller">Male Calm</option>
-            </select>
-          </label>
-
-          <div class="audio-settings">
-            <button class="button secondary-button compact-button" id="voice-preview-button" type="button">
-              Preview Voice
-            </button>
-          </div>
-          <p class="audio-note">
-            DreamScapes Plus uses premium AI narration when configured. AI audio can occasionally fail,
-            sound uneven, or generate incorrectly. If that happens, try again or contact
-            support@dreamscapes.cloud so we can help with credits. Redeemed audio credits can be used
-            on stories up to 10 minutes.
-          </p>
+            <label class="feature-toggle">
+              <input id="audio-narration" name="audioNarration" type="checkbox" />
+              <span><strong>Add audio narration</strong><small>Selecting audio uses DreamScapes Plus</small></span>
+            </label>
+            <label class="field voice-field">
+              <span>Narration voice</span>
+              <select id="voice-style" name="voiceStyle">
+                <option value="female calm">Female Storyteller</option>
+                <option value="female sage calm">Female Calm</option>
+                <option value="male calm">Male Storyteller</option>
+                <option value="ash storyteller">Male Calm</option>
+              </select>
+            </label>
+            <div class="audio-settings">
+              <button class="button secondary-button compact-button" id="voice-preview-button" type="button">Preview Voice</button>
+            </div>
+            <p class="audio-note">AI audio can occasionally fail or sound uneven. Try again or contact support@dreamscapes.cloud for help with credits. Redeemed audio credits work on stories up to 10 minutes.</p>
           </section>
 
           <div class="builder-actions">
-            <button class="button secondary-button" id="builder-step-back" type="button">
-              Back
-            </button>
+            <button class="button secondary-button" id="builder-step-back" type="button">Back</button>
             <button class="button primary-button" id="builder-step-next" type="button">Next</button>
             <button class="button primary-button" id="generate-story-button" type="submit" hidden>Generate Story</button>
           </div>
@@ -1031,6 +951,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026070202"></script>
+    <script src="./app.js?v=2026070205"></script>
   </body>
 </html>

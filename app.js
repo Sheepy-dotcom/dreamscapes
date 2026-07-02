@@ -469,7 +469,7 @@ function stopLoadingMessages() {
   loadingMessageTimer = null;
 }
 
-const BUILDER_STEP_TITLES = ["Child", "Story", "Mood", "Audio"];
+const BUILDER_STEP_TITLES = ["Child", "Story", "Length", "Mood", "Safety", "Idea", "Audio"];
 
 function setBuilderStep(stepIndex, announce = true) {
   if (!builderSteps.length) return;
@@ -520,7 +520,7 @@ function validateBuilderStep(stepIndex) {
     }
   }
 
-  if (stepIndex === 2 && !storyIdea.value.trim()) {
+  if (stepIndex === 5 && !storyIdea.value.trim()) {
     planNote.textContent = "Add a short story idea to continue.";
     storyIdea.focus();
     return false;
@@ -3100,6 +3100,7 @@ function getBuilderChildName() {
 function renderPendingStoryContext() {
   if (!continuationBanner) return;
   continuationBanner.hidden = !pendingStoryContext;
+  continuationBanner.closest(".story-spark-panel")?.classList.toggle("has-continuation", Boolean(pendingStoryContext));
   if (!pendingStoryContext) return;
 
   continuationTitle.textContent = pendingStoryContext.seriesTitle || "Continuing an adventure";
