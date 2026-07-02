@@ -22,7 +22,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026070207" />
+    <link rel="stylesheet" href="./styles.css?v=2026070210" />
   </head>
   <body class="home-active night-mode">
     <div class="stars" aria-hidden="true"></div>
@@ -63,14 +63,13 @@
 
         <form class="story-form" id="story-form">
           <div class="builder-progress" aria-label="Story builder progress">
-            <div class="builder-progress-heading"><span id="builder-step-count">Step 1 of 5</span><strong id="builder-step-title">Child</strong></div>
+            <div class="builder-progress-heading"><span id="builder-step-count">Step 1 of 4</span><strong id="builder-step-title">Basics</strong></div>
             <div class="builder-progress-track" aria-hidden="true"><span id="builder-progress-fill"></span></div>
             <ol class="builder-step-list" aria-hidden="true">
-              <li class="active" data-builder-step-marker="0"><span>1</span>Child</li>
-              <li data-builder-step-marker="1"><span>2</span>Story</li>
-              <li data-builder-step-marker="2"><span>3</span>Style</li>
-              <li data-builder-step-marker="3"><span>4</span>Details</li>
-              <li data-builder-step-marker="4"><span>5</span>Audio</li>
+              <li class="active" data-builder-step-marker="0"><span>1</span>Basics</li>
+              <li data-builder-step-marker="1"><span>2</span>Style</li>
+              <li data-builder-step-marker="2"><span>3</span>Details</li>
+              <li data-builder-step-marker="3"><span>4</span>Audio</li>
             </ol>
           </div>
 
@@ -85,19 +84,17 @@
               <label class="field"><span>Child name <small>or pick a profile</small></span><input id="child-name" name="childName" type="text" placeholder="Rosie" /></label>
               <label class="field"><span>Age <small>optional</small></span><input id="child-age" name="childAge" type="number" min="1" max="12" placeholder="5" /></label>
             </div>
-            <label class="field"><span>Interests</span><input name="interests" type="text" placeholder="Unicorns, space, football" /></label>
-          </section>
-
-          <section class="builder-step" data-builder-step="1" aria-labelledby="builder-step-story-title" hidden>
-            <h3 id="builder-step-story-title">Choose the story</h3>
-            <label class="field compact-select-field">
-              <span>Special occasion</span>
-              <select id="story-occasion" name="occasion">
-                <option value="">None</option><option value="birthday">Birthday</option><option value="first day at school">First day at school</option>
-                <option value="holiday">Holiday</option><option value="lost tooth">Lost tooth</option><option value="new sibling">Welcoming a new sibling</option>
-                <option value="confidence">Building confidence</option><option value="friendship">Friendship</option>
-              </select>
-            </label>
+            <div class="form-grid basics-details-grid">
+              <label class="field"><span>Interests</span><input name="interests" type="text" placeholder="Unicorns, space, football" /></label>
+              <label class="field">
+                <span>Special occasion</span>
+                <select id="story-occasion" name="occasion">
+                  <option value="">None</option><option value="birthday">Birthday</option><option value="first day at school">First day at school</option>
+                  <option value="holiday">Holiday</option><option value="lost tooth">Lost tooth</option><option value="new sibling">Welcoming a new sibling</option>
+                  <option value="confidence">Building confidence</option><option value="friendship">Friendship</option>
+                </select>
+              </label>
+            </div>
             <fieldset class="choice-group">
               <legend>Story time</legend>
               <div class="segmented-control" role="radiogroup" aria-label="Story type">
@@ -118,7 +115,7 @@
             </fieldset>
           </section>
 
-          <section class="builder-step" data-builder-step="2" aria-labelledby="builder-step-style-title" hidden>
+          <section class="builder-step" data-builder-step="1" aria-labelledby="builder-step-style-title" hidden>
             <h3 id="builder-step-style-title">Choose the style</h3>
             <fieldset class="choice-group">
               <legend>Story duration</legend>
@@ -145,7 +142,7 @@
             </fieldset>
           </section>
 
-          <section class="builder-step" data-builder-step="3" aria-labelledby="builder-step-details-title" hidden>
+          <section class="builder-step" data-builder-step="2" aria-labelledby="builder-step-details-title" hidden>
             <h3 id="builder-step-details-title">Add the details</h3>
             <fieldset class="choice-group safety-grid compact-safety-grid">
               <legend>Parent controls</legend>
@@ -164,7 +161,7 @@
             </label>
           </section>
 
-          <section class="builder-step" data-builder-step="4" aria-labelledby="builder-step-audio-title" hidden>
+          <section class="builder-step" data-builder-step="3" aria-labelledby="builder-step-audio-title" hidden>
             <h3 id="builder-step-audio-title">Add narration</h3>
             <label class="feature-toggle"><input id="audio-narration" name="audioNarration" type="checkbox" /><span><strong>Add audio narration</strong><small>Selecting audio uses DreamScapes Plus</small></span></label>
             <label class="field voice-field">
@@ -912,6 +909,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026070207"></script>
+    <script src="./app.js?v=2026070210"></script>
   </body>
 </html>
