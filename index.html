@@ -22,7 +22,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026070205" />
+    <link rel="stylesheet" href="./styles.css?v=2026070207" />
   </head>
   <body class="home-active night-mode">
     <div class="stars" aria-hidden="true"></div>
@@ -63,21 +63,14 @@
 
         <form class="story-form" id="story-form">
           <div class="builder-progress" aria-label="Story builder progress">
-            <div class="builder-progress-heading">
-              <span id="builder-step-count">Step 1 of 7</span>
-              <strong id="builder-step-title">Child</strong>
-            </div>
-            <div class="builder-progress-track" aria-hidden="true">
-              <span id="builder-progress-fill"></span>
-            </div>
+            <div class="builder-progress-heading"><span id="builder-step-count">Step 1 of 5</span><strong id="builder-step-title">Child</strong></div>
+            <div class="builder-progress-track" aria-hidden="true"><span id="builder-progress-fill"></span></div>
             <ol class="builder-step-list" aria-hidden="true">
               <li class="active" data-builder-step-marker="0"><span>1</span>Child</li>
               <li data-builder-step-marker="1"><span>2</span>Story</li>
-              <li data-builder-step-marker="2"><span>3</span>Length</li>
-              <li data-builder-step-marker="3"><span>4</span>Mood</li>
-              <li data-builder-step-marker="4"><span>5</span>Safety</li>
-              <li data-builder-step-marker="5"><span>6</span>Idea</li>
-              <li data-builder-step-marker="6"><span>7</span>Audio</li>
+              <li data-builder-step-marker="2"><span>3</span>Style</li>
+              <li data-builder-step-marker="3"><span>4</span>Details</li>
+              <li data-builder-step-marker="4"><span>5</span>Audio</li>
             </ol>
           </div>
 
@@ -89,34 +82,20 @@
               <button class="button secondary-button compact-button" id="clear-profile-selection" type="button">Clear Profiles</button>
             </fieldset>
             <div class="form-grid child-basics-grid">
-              <label class="field">
-                <span>Child name <small>or pick a profile</small></span>
-                <input id="child-name" name="childName" type="text" placeholder="Rosie" />
-              </label>
-              <label class="field">
-                <span>Age <small>optional</small></span>
-                <input id="child-age" name="childAge" type="number" min="1" max="12" placeholder="5" />
-              </label>
+              <label class="field"><span>Child name <small>or pick a profile</small></span><input id="child-name" name="childName" type="text" placeholder="Rosie" /></label>
+              <label class="field"><span>Age <small>optional</small></span><input id="child-age" name="childAge" type="number" min="1" max="12" placeholder="5" /></label>
             </div>
+            <label class="field"><span>Interests</span><input name="interests" type="text" placeholder="Unicorns, space, football" /></label>
           </section>
 
           <section class="builder-step" data-builder-step="1" aria-labelledby="builder-step-story-title" hidden>
-            <h3 id="builder-step-story-title">Choose the story type</h3>
-            <label class="field">
-              <span>Interests</span>
-              <input name="interests" type="text" placeholder="Unicorns, space, football" />
-            </label>
+            <h3 id="builder-step-story-title">Choose the story</h3>
             <label class="field compact-select-field">
               <span>Special occasion</span>
               <select id="story-occasion" name="occasion">
-                <option value="">None</option>
-                <option value="birthday">Birthday</option>
-                <option value="first day at school">First day at school</option>
-                <option value="holiday">Holiday</option>
-                <option value="lost tooth">Lost tooth</option>
-                <option value="new sibling">Welcoming a new sibling</option>
-                <option value="confidence">Building confidence</option>
-                <option value="friendship">Friendship</option>
+                <option value="">None</option><option value="birthday">Birthday</option><option value="first day at school">First day at school</option>
+                <option value="holiday">Holiday</option><option value="lost tooth">Lost tooth</option><option value="new sibling">Welcoming a new sibling</option>
+                <option value="confidence">Building confidence</option><option value="friendship">Friendship</option>
               </select>
             </label>
             <fieldset class="choice-group">
@@ -126,10 +105,6 @@
                 <label><input type="radio" name="storyType" value="anytime" /><span>Anytime story</span></label>
               </div>
             </fieldset>
-          </section>
-
-          <section class="builder-step" data-builder-step="2" aria-labelledby="builder-step-length-title" hidden>
-            <h3 id="builder-step-length-title">Pick the story length</h3>
             <fieldset class="choice-group story-spark-panel">
               <legend>Story path <small>optional</small></legend>
               <div class="story-spark-actions">
@@ -141,6 +116,10 @@
                 <button class="button secondary-button compact-button" id="cancel-continuation-button" type="button">Cancel</button>
               </div>
             </fieldset>
+          </section>
+
+          <section class="builder-step" data-builder-step="2" aria-labelledby="builder-step-style-title" hidden>
+            <h3 id="builder-step-style-title">Choose the style</h3>
             <fieldset class="choice-group">
               <legend>Story duration</legend>
               <div class="duration-grid" role="radiogroup" aria-label="Story duration">
@@ -152,12 +131,8 @@
               </div>
               <p class="helper-text">Times are a guide; narration may vary.</p>
             </fieldset>
-          </section>
-
-          <section class="builder-step" data-builder-step="3" aria-labelledby="builder-step-mood-title" hidden>
-            <h3 id="builder-step-mood-title">Set the mood</h3>
             <fieldset class="choice-group">
-              <legend>Choose one or more</legend>
+              <legend>Moods <small>choose more than one</small></legend>
               <div class="mood-grid" aria-label="Story moods">
                 <label><input type="checkbox" name="moods" value="relaxing" checked /><span>Relaxing</span></label>
                 <label><input type="checkbox" name="moods" value="magical" /><span>Magical</span></label>
@@ -170,50 +145,36 @@
             </fieldset>
           </section>
 
-          <section class="builder-step" data-builder-step="4" aria-labelledby="builder-step-safety-title" hidden>
-            <h3 id="builder-step-safety-title">Set the gentle boundaries</h3>
-            <fieldset class="choice-group safety-grid">
-              <legend>Parent safety controls</legend>
-              <label class="field"><span>Avoid topics</span><input name="avoidTopics" type="text" placeholder="Dragons, storms, getting lost" /></label>
-              <label class="field"><span>Preferred lesson</span><input name="preferredLesson" type="text" placeholder="Kindness, confidence, sharing" /></label>
-              <label class="feature-toggle calm-toggle">
-                <input name="calmMode" type="checkbox" />
-                <span><strong>Bedtime calm mode</strong><small>Soft pacing, lower excitement, peaceful ending</small></span>
-              </label>
+          <section class="builder-step" data-builder-step="3" aria-labelledby="builder-step-details-title" hidden>
+            <h3 id="builder-step-details-title">Add the details</h3>
+            <fieldset class="choice-group safety-grid compact-safety-grid">
+              <legend>Parent controls</legend>
+              <label class="field"><span>Avoid topics</span><input name="avoidTopics" type="text" placeholder="Storms, getting lost" /></label>
+              <label class="field"><span>Gentle lesson</span><input name="preferredLesson" type="text" placeholder="Kindness, confidence" /></label>
+              <label class="feature-toggle calm-toggle"><input name="calmMode" type="checkbox" /><span><strong>Bedtime calm mode</strong><small>Soft pacing and a peaceful ending</small></span></label>
             </fieldset>
-          </section>
-
-          <section class="builder-step" data-builder-step="5" aria-labelledby="builder-step-idea-title" hidden>
-            <h3 id="builder-step-idea-title">What should happen?</h3>
-            <label class="field">
+            <label class="field story-idea-field">
               <span>Story idea</span>
               <div class="idea-examples" aria-label="Story idea examples">
                 <button type="button" data-idea="A brave child helps a shy moon dragon learn to make friends.">Moon dragon</button>
                 <button type="button" data-idea="A child visits a cloud bakery and learns that sharing makes treats taste better.">Cloud bakery</button>
                 <button type="button" data-idea="A curious child explores a rainbow library and learns a new fact on every shelf.">Rainbow library</button>
               </div>
-              <textarea id="story-idea" name="storyIdea" rows="5" placeholder="A little girl called Rosie goes on an adventure with a unicorn and learns to be kind." required></textarea>
+              <textarea id="story-idea" name="storyIdea" rows="4" placeholder="A little girl called Rosie goes on an adventure with a unicorn and learns to be kind." required></textarea>
             </label>
           </section>
 
-          <section class="builder-step" data-builder-step="6" aria-labelledby="builder-step-audio-title" hidden>
+          <section class="builder-step" data-builder-step="4" aria-labelledby="builder-step-audio-title" hidden>
             <h3 id="builder-step-audio-title">Add narration</h3>
-            <label class="feature-toggle">
-              <input id="audio-narration" name="audioNarration" type="checkbox" />
-              <span><strong>Add audio narration</strong><small>Selecting audio uses DreamScapes Plus</small></span>
-            </label>
+            <label class="feature-toggle"><input id="audio-narration" name="audioNarration" type="checkbox" /><span><strong>Add audio narration</strong><small>Selecting audio uses DreamScapes Plus</small></span></label>
             <label class="field voice-field">
               <span>Narration voice</span>
               <select id="voice-style" name="voiceStyle">
-                <option value="female calm">Female Storyteller</option>
-                <option value="female sage calm">Female Calm</option>
-                <option value="male calm">Male Storyteller</option>
-                <option value="ash storyteller">Male Calm</option>
+                <option value="female calm">Female Storyteller</option><option value="female sage calm">Female Calm</option>
+                <option value="male calm">Male Storyteller</option><option value="ash storyteller">Male Calm</option>
               </select>
             </label>
-            <div class="audio-settings">
-              <button class="button secondary-button compact-button" id="voice-preview-button" type="button">Preview Voice</button>
-            </div>
+            <div class="audio-settings"><button class="button secondary-button compact-button" id="voice-preview-button" type="button">Preview Voice</button></div>
             <p class="audio-note">AI audio can occasionally fail or sound uneven. Try again or contact support@dreamscapes.cloud for help with credits. Redeemed audio credits work on stories up to 10 minutes.</p>
           </section>
 
@@ -951,6 +912,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026070205"></script>
+    <script src="./app.js?v=2026070207"></script>
   </body>
 </html>

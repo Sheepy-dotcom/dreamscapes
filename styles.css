@@ -395,7 +395,7 @@ textarea:focus-visible {
 
 .builder-progress-track span {
   display: block;
-  width: 14.2857%;
+  width: 20%;
   height: 100%;
   border-radius: inherit;
   background: linear-gradient(90deg, #ffe785, #ffb0d0 55%, #cdb7ff);
@@ -404,7 +404,7 @@ textarea:focus-visible {
 
 .builder-step-list {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 8px;
   margin: 0;
   padding: 0;
@@ -3414,26 +3414,78 @@ body.night-mode .favourite-button.active {
     grid-template-columns: 1fr;
   }
 
-  .builder-step[data-builder-step="2"] .story-spark-actions {
+  .builder-step[data-builder-step="1"] .story-spark-actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .builder-step[data-builder-step="2"] .duration-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .builder-step[data-builder-step="2"] {
+  .builder-step[data-builder-step="1"] {
     gap: 8px;
   }
 
-  .builder-step[data-builder-step="2"] .choice-group legend {
+  .builder-step[data-builder-step="1"] .choice-group legend {
     margin-bottom: 6px;
+  }
+
+  .builder-step[data-builder-step="2"] .duration-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .builder-step[data-builder-step="2"] {
+    gap: 7px;
+  }
+
+  .builder-step[data-builder-step="2"] .choice-group legend {
+    margin-bottom: 4px;
   }
 
   .builder-step[data-builder-step="2"] .helper-text {
     margin: 4px 0 0;
     font-size: 0.72rem;
     line-height: 1.15;
+  }
+
+  .builder-step[data-builder-step="2"] .mood-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .builder-step[data-builder-step="2"] .mood-grid span {
+    min-height: 38px;
+    padding: 6px 4px;
+    font-size: 0.8rem;
+  }
+
+  .builder-step[data-builder-step="3"] {
+    gap: 6px;
+  }
+
+  .builder-step[data-builder-step="3"] .compact-safety-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .builder-step[data-builder-step="3"] .compact-safety-grid legend,
+  .builder-step[data-builder-step="3"] .story-idea-field > span {
+    margin-bottom: 0;
+  }
+
+  .builder-step[data-builder-step="3"] .feature-toggle {
+    min-height: 44px;
+    padding: 7px 9px;
+  }
+
+  .builder-step[data-builder-step="3"] .idea-examples {
+    gap: 5px;
+  }
+
+  .builder-step[data-builder-step="3"] .idea-examples button {
+    padding: 5px 7px;
+    font-size: 0.72rem;
+  }
+
+  .builder-step[data-builder-step="3"] .field textarea {
+    min-height: 84px;
+    max-height: 84px;
   }
 
   .story-spark-panel.has-continuation .story-spark-actions {
