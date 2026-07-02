@@ -337,11 +337,17 @@ textarea:focus-visible {
 }
 
 .builder-screen.active {
+  position: fixed;
+  z-index: 2;
+  top: calc(18px + var(--safe-top));
+  bottom: calc(88px + var(--safe-bottom));
+  left: 50%;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  width: 100%;
-  height: min(860px, calc(100dvh - 150px));
-  min-height: 560px;
+  width: min(980px, calc(100% - 24px - var(--safe-left) - var(--safe-right)));
+  height: auto;
+  min-height: 0;
+  transform: translateX(-50%);
   overflow: hidden;
 }
 
@@ -472,8 +478,10 @@ textarea:focus-visible {
 }
 
 .builder-screen .story-form > .plan-note {
+  height: 42px;
   min-height: 42px;
   margin: 0;
+  overflow-y: auto;
 }
 
 .package-panel {
@@ -3004,7 +3012,10 @@ body.night-mode .favourite-button.active {
   }
 
   .builder-screen.active {
-    height: calc(100dvh - 132px);
+    top: calc(10px + var(--safe-top));
+    bottom: calc(78px + var(--safe-bottom));
+    width: calc(100% - 20px - var(--safe-left) - var(--safe-right));
+    height: auto;
     min-height: 0;
     padding: 14px;
   }
@@ -3052,6 +3063,7 @@ body.night-mode .favourite-button.active {
   }
 
   .builder-screen .story-form > .plan-note {
+    height: 38px;
     min-height: 38px;
     font-size: 0.8rem;
   }

@@ -480,6 +480,7 @@ function setBuilderStep(stepIndex, announce = true) {
     step.hidden = !isActive;
     step.classList.toggle("active", isActive);
     step.setAttribute("aria-hidden", String(!isActive));
+    if (isActive) step.scrollTop = 0;
   });
 
   builderStepMarkers.forEach((marker, index) => {
@@ -552,7 +553,7 @@ function showScreen(name) {
   if (name === "loading") startLoadingMessages();
   else stopLoadingMessages();
   trackEvent("screen_view", { screen: name });
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo({ top: 0, behavior: name === "builder" ? "auto" : "smooth" });
 }
 
 function setAuthStatus(message, isError = false) {
