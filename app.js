@@ -532,7 +532,10 @@ function validateBuilderStep(stepIndex) {
 function showScreen(name) {
   Object.values(screens).forEach((screen) => screen.classList.remove("active"));
   screens[name].classList.add("active");
-  if (name === "builder") setBuilderStep(0, false);
+  if (name === "builder") {
+    setBuilderStep(0, false);
+    if (!pendingStoryContext && !storyIdea.value.trim()) createTonightStoryIdea({ announce: false });
+  }
   document.body.classList.toggle("home-active", name === "welcome");
   document.body.classList.toggle("builder-active", name === "builder");
   document.querySelectorAll("[data-screen-target]").forEach((button) => {
@@ -3099,6 +3102,11 @@ function getBuilderChildName() {
 
 function renderPendingStoryContext() {
   if (!continuationBanner) return;
+  const weeklyJourneySelected = Number(pendingStoryContext?.journeyLength) === WEEKLY_JOURNEY_LENGTH;
+  tonightsStoryButton?.classList.toggle("active", !weeklyJourneySelected);
+  tonightsStoryButton?.setAttribute("aria-pressed", String(!weeklyJourneySelected));
+  weeklyJourneyButton?.classList.toggle("active", weeklyJourneySelected);
+  weeklyJourneyButton?.setAttribute("aria-pressed", String(weeklyJourneySelected));
   continuationBanner.hidden = !pendingStoryContext;
   continuationBanner.closest(".story-spark-panel")?.classList.toggle("has-continuation", Boolean(pendingStoryContext));
   if (!pendingStoryContext) return;
@@ -3156,7 +3164,7 @@ function beginStoryContinuation(story, choice = "") {
   trackEvent("story_continuation_started", { seriesId: story.seriesId, chapter: pendingStoryContext.chapterNumber });
 }
 
-function createTonightStoryIdea() {
+function createTonightStoryIdea({ announce = true } = {}) {
   const childName = getBuilderChildName();
   const selectedProfiles = getSelectedChildProfiles();
   const interests = [form.elements.interests.value, joinProfileValues(selectedProfiles, "interests")]
@@ -3171,7 +3179,7 @@ function createTonightStoryIdea() {
   ];
   storyIdea.value = ideas[Math.floor(Date.now() / 86400000) % ideas.length];
   clearPendingStoryContext();
-  planNote.textContent = "Tonight's personalised story idea is ready.";
+  if (announce) planNote.textContent = "Tonight's personalised story idea is ready.";
   trackEvent("tonights_story_selected");
 }
 

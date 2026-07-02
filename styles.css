@@ -1427,6 +1427,24 @@ textarea:focus-visible {
   gap: 8px;
 }
 
+.story-path-button.active {
+  color: #3b205f;
+  border-color: rgba(255, 176, 208, 0.92);
+  background: linear-gradient(135deg, #ffe4ee, #d8c6ff);
+  box-shadow:
+    0 0 0 3px rgba(255, 176, 208, 0.16),
+    0 12px 24px rgba(35, 24, 76, 0.16);
+}
+
+body.night-mode .story-path-button.active {
+  color: #3b205f;
+  border-color: #ffb0d0;
+  background: linear-gradient(135deg, #ffe4ee, #d8c6ff);
+  box-shadow:
+    0 0 0 3px rgba(255, 176, 208, 0.2),
+    0 12px 28px rgba(7, 9, 35, 0.24);
+}
+
 .compact-select-field {
   max-width: 420px;
 }
@@ -3802,20 +3820,20 @@ body.night-mode .loading-steps span {
     grid-template-columns: 1fr;
   }
 
-  .builder-step[data-builder-step="0"] .story-spark-actions {
+  .builder-step[data-builder-step="1"] .story-spark-actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .builder-step[data-builder-step="0"] {
-    gap: 6px;
+    gap: 12px;
   }
 
   .builder-step[data-builder-step="0"] .choice-group legend {
-    margin-bottom: 4px;
+    margin-bottom: 7px;
   }
 
   .builder-step[data-builder-step="0"] .basics-details-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
     gap: 8px;
   }
 
@@ -3824,15 +3842,15 @@ body.night-mode .loading-steps span {
   }
 
   .builder-step[data-builder-step="1"] .duration-grid {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .builder-step[data-builder-step="1"] {
-    gap: 7px;
+    gap: 12px;
   }
 
   .builder-step[data-builder-step="1"] .choice-group legend {
-    margin-bottom: 4px;
+    margin-bottom: 7px;
   }
 
   .builder-step[data-builder-step="1"] .helper-text {
@@ -3842,7 +3860,7 @@ body.night-mode .loading-steps span {
   }
 
   .builder-step[data-builder-step="1"] .mood-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 6px;
   }
 
@@ -3853,12 +3871,12 @@ body.night-mode .loading-steps span {
   }
 
   .builder-step[data-builder-step="2"] {
-    gap: 6px;
+    gap: 12px;
   }
 
   .builder-step[data-builder-step="2"] .compact-safety-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 6px;
+    grid-template-columns: 1fr;
+    gap: 9px;
   }
 
   .builder-step[data-builder-step="2"] .compact-safety-grid legend,

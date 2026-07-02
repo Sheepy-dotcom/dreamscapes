@@ -22,7 +22,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026070213" />
+    <link rel="stylesheet" href="./styles.css?v=2026070214" />
   </head>
   <body class="home-active night-mode">
     <div class="stars" aria-hidden="true"></div>
@@ -86,7 +86,7 @@
                 <label class="field"><span>Age <small>optional</small></span><input id="child-age" name="childAge" type="number" min="1" max="12" placeholder="5" /></label>
               </div>
               <div class="form-grid basics-details-grid">
-                <label class="field"><span>Interests</span><input name="interests" type="text" placeholder="Unicorns, space, football" /></label>
+                <label class="field"><span>Interests</span><input name="interests" type="text" /></label>
                 <label class="field">
                   <span>Special occasion</span>
                   <select id="story-occasion" name="occasion">
@@ -104,21 +104,21 @@
                 <label><input type="radio" name="storyType" value="anytime" /><span>Anytime story</span></label>
               </div>
             </fieldset>
+          </section>
+
+          <section class="builder-step" data-builder-step="1" aria-labelledby="builder-step-style-title" hidden>
+            <h3 id="builder-step-style-title">Choose the style</h3>
             <fieldset class="choice-group story-spark-panel builder-group builder-group-pink">
-              <legend>Story path <small>optional</small></legend>
+              <legend>Story path</legend>
               <div class="story-spark-actions">
-                <button class="button secondary-button" id="tonights-story-button" type="button">Tonight's Story</button>
-                <button class="button secondary-button" id="weekly-journey-button" type="button">Start 7-Night Journey</button>
+                <button class="button secondary-button story-path-button active" id="tonights-story-button" type="button" aria-pressed="true">Tonight's Story</button>
+                <button class="button secondary-button story-path-button" id="weekly-journey-button" type="button" aria-pressed="false">7-Night Journey</button>
               </div>
               <div class="continuation-banner" id="continuation-banner" hidden>
                 <div><strong id="continuation-title">Continuing an adventure</strong><span id="continuation-note"></span></div>
                 <button class="button secondary-button compact-button" id="cancel-continuation-button" type="button">Cancel</button>
               </div>
             </fieldset>
-          </section>
-
-          <section class="builder-step" data-builder-step="1" aria-labelledby="builder-step-style-title" hidden>
-            <h3 id="builder-step-style-title">Choose the style</h3>
             <fieldset class="choice-group builder-group builder-group-gold duration-group">
               <legend>Story duration</legend>
               <div class="duration-grid" role="radiogroup" aria-label="Story duration">
@@ -148,8 +148,8 @@
             <h3 id="builder-step-details-title">Add the details</h3>
             <fieldset class="choice-group safety-grid compact-safety-grid builder-group builder-group-mint">
               <legend>Parent controls</legend>
-              <label class="field"><span>Avoid topics</span><input name="avoidTopics" type="text" placeholder="Storms, getting lost" /></label>
-              <label class="field"><span>Gentle lesson</span><input name="preferredLesson" type="text" placeholder="Kindness, confidence" /></label>
+              <label class="field"><span>Avoid topics</span><input name="avoidTopics" type="text" /></label>
+              <label class="field"><span>Gentle lesson</span><input name="preferredLesson" type="text" /></label>
               <label class="feature-toggle calm-toggle"><input name="calmMode" type="checkbox" /><span><strong>Bedtime calm mode</strong><small>Soft pacing and a peaceful ending</small></span></label>
             </fieldset>
             <label class="field story-idea-field builder-group builder-group-pink">
@@ -913,6 +913,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026070211"></script>
+    <script src="./app.js?v=2026070214"></script>
   </body>
 </html>
