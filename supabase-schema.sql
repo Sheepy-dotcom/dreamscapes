@@ -18,6 +18,7 @@ create table if not exists public.stories (
   title text not null,
   child_name text not null,
   child_age text,
+  story_language text not null default 'en-GB',
   story_type text not null check (story_type in ('bedtime', 'anytime')),
   duration_minutes integer not null,
   moods text[] not null default '{}',
@@ -362,6 +363,9 @@ add column if not exists audio_story_credits integer not null default 0;
 
 alter table public.stories
 add column if not exists is_favourite boolean not null default false;
+
+alter table public.stories
+add column if not exists story_language text not null default 'en-GB';
 
 alter table public.stories
 add column if not exists story_summary text,

@@ -132,6 +132,8 @@ let currentAudioTracks = [];
 let currentAudioIndex = 0;
 let currentAudioTrackDurations = [];
 let aiAudioPausedBetweenTracks = false;
+let nativeAudioActive = false;
+let nativeAudioListenersReady = false;
 let narrationRequestInFlight = false;
 let pendingAudioSeekPercent = null;
 let sleepTimerId = null;
@@ -147,6 +149,7 @@ let currentBuilderStep = 0;
 const WEEKLY_JOURNEY_LENGTH = 7;
 const BEDTIME_REMINDER_NOTIFICATION_ID = 71001;
 const CLOUD_RETENTION_COLUMNS = [
+  "story_language",
   "story_summary",
   "next_ideas",
   "occasion",
@@ -186,6 +189,99 @@ const REVENUECAT_PRODUCT_IDS = {
 const REVENUECAT_ENTITLEMENTS = {
   premier: ["dreamscapes_premier", "premier"],
   plus: ["dreamscapes_plus", "plus"],
+};
+const STORY_LANGUAGES = {
+  "en-GB": {
+    label: "English",
+    prompt: "British English",
+    instruction:
+      "Write in British English throughout, using UK spelling and natural British wording such as mum, favourite, cosy, colour, and realised.",
+    narration: "Use natural UK/British accent and British English pronunciation throughout.",
+  },
+  "cy-GB": {
+    label: "Welsh",
+    prompt: "Welsh",
+    instruction: "Write the full story in Welsh, using natural child-friendly Welsh wording.",
+    narration: "Read the story in Welsh with natural, gentle pronunciation.",
+  },
+  "fr-FR": {
+    label: "French",
+    prompt: "French",
+    instruction: "Write the full story in French, using natural child-friendly wording.",
+    narration: "Read the story in French with natural, gentle pronunciation.",
+  },
+  "es-ES": {
+    label: "Spanish",
+    prompt: "Spanish",
+    instruction: "Write the full story in Spanish, using natural child-friendly wording.",
+    narration: "Read the story in Spanish with natural, gentle pronunciation.",
+  },
+  "de-DE": {
+    label: "German",
+    prompt: "German",
+    instruction: "Write the full story in German, using natural child-friendly wording.",
+    narration: "Read the story in German with natural, gentle pronunciation.",
+  },
+  "it-IT": {
+    label: "Italian",
+    prompt: "Italian",
+    instruction: "Write the full story in Italian, using natural child-friendly wording.",
+    narration: "Read the story in Italian with natural, gentle pronunciation.",
+  },
+  "pt-PT": {
+    label: "Portuguese",
+    prompt: "Portuguese",
+    instruction: "Write the full story in Portuguese, using natural child-friendly wording.",
+    narration: "Read the story in Portuguese with natural, gentle pronunciation.",
+  },
+  "pl-PL": {
+    label: "Polish",
+    prompt: "Polish",
+    instruction: "Write the full story in Polish, using natural child-friendly wording.",
+    narration: "Read the story in Polish with natural, gentle pronunciation.",
+  },
+  ar: {
+    label: "Arabic",
+    prompt: "Arabic",
+    instruction: "Write the full story in Arabic, using natural child-friendly wording.",
+    narration: "Read the story in Arabic with natural, gentle pronunciation.",
+  },
+  "hi-IN": {
+    label: "Hindi",
+    prompt: "Hindi",
+    instruction: "Write the full story in Hindi, using natural child-friendly wording.",
+    narration: "Read the story in Hindi with natural, gentle pronunciation.",
+  },
+  "ur-PK": {
+    label: "Urdu",
+    prompt: "Urdu",
+    instruction: "Write the full story in Urdu, using natural child-friendly wording.",
+    narration: "Read the story in Urdu with natural, gentle pronunciation.",
+  },
+  "zh-CN": {
+    label: "Mandarin Chinese",
+    prompt: "Mandarin Chinese",
+    instruction: "Write the full story in Simplified Chinese, using natural child-friendly wording.",
+    narration: "Read the story in Mandarin Chinese with natural, gentle pronunciation.",
+  },
+  "ja-JP": {
+    label: "Japanese",
+    prompt: "Japanese",
+    instruction: "Write the full story in Japanese, using natural child-friendly wording.",
+    narration: "Read the story in Japanese with natural, gentle pronunciation.",
+  },
+  "ko-KR": {
+    label: "Korean",
+    prompt: "Korean",
+    instruction: "Write the full story in Korean, using natural child-friendly wording.",
+    narration: "Read the story in Korean with natural, gentle pronunciation.",
+  },
+  "nl-NL": {
+    label: "Dutch",
+    prompt: "Dutch",
+    instruction: "Write the full story in Dutch, using natural child-friendly wording.",
+    narration: "Read the story in Dutch with natural, gentle pronunciation.",
+  },
 };
 const SUPABASE_URL = "https://khgzzrixhetaontmdhez.supabase.co";
 const SUPABASE_ANON_KEY =
@@ -1348,6 +1444,7 @@ function buildProfileAwareStoryData(selectedPlan, selectedPlanKey) {
     friends,
     recurringCharacters,
     duration: getValue("durationChoice"),
+    storyLanguage: getStoryLanguage(getValue("storyLanguage")),
     storyType: getValue("storyType"),
     moods: getValues("moods"),
     storyIdea: getValue("storyIdea"),
@@ -1432,6 +1529,22 @@ function getDuration(duration) {
 
 function getPlan(plan) {
   return plans[plan] || plans.free;
+}
+
+function getStoryLanguage(value) {
+  return STORY_LANGUAGES[value] ? value : "en-GB";
+}
+
+function getStoryLanguageDetails(value) {
+  return STORY_LANGUAGES[getStoryLanguage(value)];
+}
+
+function getStoryLanguageLabel(value) {
+  return getStoryLanguageDetails(value).label;
+}
+
+function getStoryLanguageInstruction(value) {
+  return getStoryLanguageDetails(value).instruction;
 }
 
 function getCurrentPlanKey() {
@@ -1760,11 +1873,13 @@ function generateStory(data) {
 
 function createPrompt(data) {
   const plan = getPlan(data.plan);
+  const language = getStoryLanguageDetails(data.storyLanguage);
   const profileSummary = Array.isArray(data.childProfileSummary) && data.childProfileSummary.length
     ? data.childProfileSummary.join(" | ")
     : "not selected";
   return [
     "Write a safe, child-friendly personalised children's story.",
+    `Story language: ${language.prompt}`,
     `Child name: ${data.childName}`,
     `Child age: ${getChildAgePrompt(data.childAge)}`,
     `Selected child profile details: ${profileSummary}`,
@@ -1784,10 +1899,10 @@ function createPrompt(data) {
     `Story idea: ${tidyIdea(data.storyIdea, data.childName)}`,
     "Make it feel like a real children's story, not a template or summary.",
     "Use warm imaginative language, clear scenes, character moments, a positive ending, and a gentle lesson where appropriate.",
-    "Write in British English throughout, using UK spelling and natural British wording such as mum, favourite, cosy, colour, and realised.",
+    language.instruction,
     "Use short, gentle sentences with frequent natural pauses between phrases, especially for bedtime narration.",
     "Longer stories must include more complete scenes, not just longer sentences.",
-    "Do not announce or explain that the story is written in British English.",
+    "Do not announce or explain the selected language.",
     "Do not end with farewell phrases such as ta-ta, ta ta for now, bye, or goodbye.",
     "Do not mention AI, prompts, packages, subscriptions, or app settings.",
     "Return JSON with title and paragraphs fields.",
@@ -1849,6 +1964,7 @@ function renderStory(story) {
   document.querySelector("#story-title").textContent = story.title;
   document.querySelector("#story-meta").innerHTML = `
     <span>${plan.label}</span>
+    <span>${escapeHtml(getStoryLanguageLabel(story.storyLanguage))}</span>
     ${actualLengthSeconds ? `<span>Story length ${formatAudioTime(actualLengthSeconds)}</span>` : ""}
     ${savedAudioDuration ? `<span>Audio ${formatAudioTime(savedAudioDuration)}</span>` : ""}
     <span>${story.storyType === "bedtime" ? "Bedtime story" : "Anytime story"}</span>
@@ -2417,6 +2533,7 @@ function getAiNarrationVoice(style) {
 
 function getAiNarrationInstructions(story) {
   const profile = AI_VOICE_PROFILES[story.voiceStyle] || AI_VOICE_PROFILES["female calm"];
+  const language = getStoryLanguageDetails(story.storyLanguage);
   const bedtimeDirection =
     story.storyType === "bedtime"
       ? "For bedtime stories, add gentle natural pauses at sentence endings and let the final line settle peacefully."
@@ -2425,7 +2542,7 @@ function getAiNarrationInstructions(story) {
   return [
     `Read this children's story as ${profile.label}.`,
     profile.direction,
-    "Use natural UK/British accent and British English pronunciation throughout.",
+    language.narration,
     `Child age: ${getChildAgePrompt(story.childAge)}.`,
     bedtimeDirection,
     "Leave a little breathing space between phrases, and make each word feel clearly separated without sounding slow, broken, or robotic.",
@@ -2635,6 +2752,7 @@ function storyToCloudRow(story) {
     title: story.title,
     child_name: story.childName,
     child_age: story.childAge || null,
+    story_language: getStoryLanguage(story.storyLanguage),
     story_type: story.storyType,
     duration_minutes: Number(story.duration) || 5,
     moods: getSelectedMoods(story.moods),
@@ -2669,6 +2787,7 @@ function cloudRowToStory(row) {
     plan: row.plan || "free",
     childName: row.child_name,
     childAge: row.child_age || "",
+    storyLanguage: getStoryLanguage(row.story_language),
     duration: String(row.duration_minutes || 5),
     storyType: row.story_type || "bedtime",
     moods: row.moods || ["relaxing"],
@@ -4215,6 +4334,251 @@ function setAudioProgress(percent) {
   audioProgressLabel.textContent = getAudioProgressLabel(safePercent);
 }
 
+function supportsMediaSession() {
+  return "mediaSession" in navigator;
+}
+
+function getMediaArtwork() {
+  const iconUrl = new URL("./assets/apple-touch-icon.png", window.location.href).href;
+  const faviconUrl = new URL("./assets/favicon.png", window.location.href).href;
+
+  return [
+    { src: faviconUrl, sizes: "64x64", type: "image/png" },
+    { src: iconUrl, sizes: "180x180", type: "image/png" },
+    { src: iconUrl, sizes: "512x512", type: "image/png" },
+  ];
+}
+
+function setMediaSessionState(state) {
+  if (!supportsMediaSession()) return;
+
+  try {
+    navigator.mediaSession.playbackState = state;
+  } catch {
+    // Some WebViews expose Media Session partially.
+  }
+}
+
+function updateMediaSessionPosition() {
+  if (!supportsMediaSession() || typeof navigator.mediaSession.setPositionState !== "function") return;
+
+  const duration = getSavedAudioDurationSeconds(currentStory);
+  if (!duration || !Number.isFinite(duration)) return;
+
+  try {
+    navigator.mediaSession.setPositionState({
+      duration,
+      playbackRate: currentAudio?.playbackRate || 1,
+      position: Math.max(0, Math.min(duration, getAiAudioElapsedSeconds())),
+    });
+  } catch {
+    // Position state is best-effort across iOS/Android WebViews.
+  }
+}
+
+function seekAudioBySeconds(seconds) {
+  const duration = getSavedAudioDurationSeconds(currentStory);
+  if (!duration) return false;
+
+  const nextPosition = Math.max(0, Math.min(duration, getAiAudioElapsedSeconds() + seconds));
+  return seekAiAudio((nextPosition / duration) * 100);
+}
+
+async function resumeNarrationFromMediaSession() {
+  if (nativeAudioActive && (await resumeNativeAudio())) return;
+
+  if (currentAudio) {
+    await currentAudio.play();
+    setMediaSessionState("playing");
+    return;
+  }
+
+  if (aiAudioPausedBetweenTracks && currentAudioTracks.length > 0) {
+    aiAudioPausedBetweenTracks = false;
+    playAiAudioTrack();
+    setMediaSessionState("playing");
+    return;
+  }
+
+  if ("speechSynthesis" in window && window.speechSynthesis.paused) {
+    window.speechSynthesis.resume();
+    setMediaSessionState("playing");
+  }
+}
+
+function pauseNarrationFromMediaSession() {
+  if (nativeAudioActive) {
+    pauseNativeAudio().catch(() => {});
+    return;
+  }
+
+  if (currentAudio && !currentAudio.paused) {
+    currentAudio.pause();
+    setMediaSessionState("paused");
+    return;
+  }
+
+  if (currentAudioTracks.length > 0) {
+    window.clearTimeout(currentNarrationTimer);
+    aiAudioPausedBetweenTracks = true;
+    setMediaSessionState("paused");
+    return;
+  }
+
+  if ("speechSynthesis" in window && window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
+    window.speechSynthesis.pause();
+    setMediaSessionState("paused");
+  }
+}
+
+function setupMediaSession(story) {
+  if (!supportsMediaSession()) return;
+
+  try {
+    if ("MediaMetadata" in window) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: story?.title || "DreamScapes Story",
+        artist: story?.childName ? `DreamScapes for ${story.childName}` : "DreamScapes",
+        album: story?.storyType === "bedtime" ? "Bedtime Story" : "Anytime Story",
+        artwork: getMediaArtwork(),
+      });
+    }
+  } catch {
+    // Metadata is best-effort across iOS/Android WebViews.
+  }
+
+  setMediaActionHandler("play", () => {
+    resumeNarrationFromMediaSession().catch(() => setMediaSessionState("paused"));
+  });
+  setMediaActionHandler("pause", pauseNarrationFromMediaSession);
+  setMediaActionHandler("stop", () => stopNarration());
+  setMediaActionHandler("seekbackward", (details) => {
+    seekAudioBySeconds(-(details.seekOffset || 15));
+  });
+  setMediaActionHandler("seekforward", (details) => {
+    seekAudioBySeconds(details.seekOffset || 15);
+  });
+  setMediaActionHandler("seekto", (details) => {
+    const duration = getSavedAudioDurationSeconds(currentStory);
+    if (!duration || !Number.isFinite(details.seekTime)) return;
+    seekAiAudio((details.seekTime / duration) * 100);
+  });
+}
+
+function setMediaActionHandler(action, handler) {
+  if (!supportsMediaSession() || typeof navigator.mediaSession.setActionHandler !== "function") return;
+
+  try {
+    navigator.mediaSession.setActionHandler(action, handler);
+  } catch {
+    // Ignore actions unsupported by the current WebView.
+  }
+}
+
+function clearMediaSession() {
+  if (!supportsMediaSession()) return;
+
+  try {
+    setMediaSessionState("none");
+    navigator.mediaSession.metadata = null;
+  } catch {
+    // Ignore partial WebView support.
+  }
+}
+
+function getNativeAudioPlugin() {
+  if (!isNativeApp()) return null;
+  return window.Capacitor?.Plugins?.DreamAudio || null;
+}
+
+function canUseNativeAudioPlayer() {
+  const plugin = getNativeAudioPlugin();
+  return Boolean(
+    plugin &&
+      typeof plugin.play === "function" &&
+      typeof plugin.pause === "function" &&
+      typeof plugin.resume === "function" &&
+      typeof plugin.stop === "function"
+  );
+}
+
+function ensureNativeAudioListeners() {
+  const plugin = getNativeAudioPlugin();
+  if (!plugin || nativeAudioListenersReady || typeof plugin.addListener !== "function") return;
+
+  nativeAudioListenersReady = true;
+  plugin.addListener("progress", (state = {}) => {
+    nativeAudioActive = true;
+    currentAudioIndex = Math.max(0, Number(state.trackIndex || 0));
+    const duration = Number(state.duration || getSavedAudioDurationSeconds(currentStory) || 0);
+    const position = Math.max(0, Number(state.position || 0));
+    if (duration > 0) setAudioProgress((position / duration) * 100);
+  });
+  plugin.addListener("ended", () => {
+    nativeAudioActive = false;
+    currentAudio = null;
+    currentAudioIndex = 0;
+    aiAudioPausedBetweenTracks = false;
+    finishAudioProgress();
+    setMediaSessionState("none");
+    statusNote.textContent = "AI narration finished.";
+  });
+  plugin.addListener("error", () => {
+    nativeAudioActive = false;
+    currentAudio = null;
+    statusNote.textContent = "Native narration stopped. Trying the web player instead.";
+    playAiAudioTrack({ forceWeb: true });
+  });
+}
+
+async function playNativeAiAudioQueue() {
+  const plugin = getNativeAudioPlugin();
+  if (!plugin || !currentAudioTracks.length) return false;
+
+  ensureNativeAudioListeners();
+  setupMediaSession(currentStory);
+  nativeAudioActive = true;
+  aiAudioPausedBetweenTracks = false;
+  currentAudio = null;
+
+  await plugin.play({
+    tracks: currentAudioTracks,
+    durations: currentAudioTrackDurations,
+    title: currentStory?.title || "DreamScapes Story",
+    artist: currentStory?.childName ? `DreamScapes for ${currentStory.childName}` : "DreamScapes",
+    album: currentStory?.storyType === "bedtime" ? "Bedtime Story" : "Anytime Story",
+    duration: getSavedAudioDurationSeconds(currentStory) || getPlaybackDurationSeconds(currentAudioTrackDurations, currentStory),
+    artwork: new URL("./assets/apple-touch-icon.png", window.location.href).href,
+  });
+  setMediaSessionState("playing");
+  return true;
+}
+
+async function pauseNativeAudio() {
+  const plugin = getNativeAudioPlugin();
+  if (!nativeAudioActive || !plugin) return false;
+  await plugin.pause();
+  aiAudioPausedBetweenTracks = true;
+  setMediaSessionState("paused");
+  return true;
+}
+
+async function resumeNativeAudio() {
+  const plugin = getNativeAudioPlugin();
+  if (!nativeAudioActive || !plugin) return false;
+  await plugin.resume();
+  aiAudioPausedBetweenTracks = false;
+  setMediaSessionState("playing");
+  return true;
+}
+
+function stopNativeAudio() {
+  const plugin = getNativeAudioPlugin();
+  if (!plugin || !nativeAudioActive) return;
+  plugin.stop().catch(() => {});
+  nativeAudioActive = false;
+}
+
 function setAudioGenerationProgress(partIndex, totalParts, state = "creating") {
   const safeTotal = Math.max(1, Number(totalParts) || 1);
   const safeIndex = Math.max(0, Math.min(safeTotal, Number(partIndex) || 0));
@@ -4282,6 +4646,7 @@ function getAiAudioElapsedSeconds(percent = null) {
 
 function updateAiAudioProgress() {
   setAudioProgress(getAiAudioProgress());
+  updateMediaSessionPosition();
 }
 
 function updateDeviceAudioProgress() {
@@ -4291,6 +4656,17 @@ function updateDeviceAudioProgress() {
 
 function seekAiAudio(percent) {
   if (!currentAudioTracks.length) return false;
+
+  if (nativeAudioActive && getNativeAudioPlugin()?.seek) {
+    const totalSeconds = getSavedAudioDurationSeconds(currentStory);
+    if (totalSeconds) {
+      getNativeAudioPlugin()
+        .seek({ position: (Math.max(0, Math.min(100, percent)) / 100) * totalSeconds })
+        .catch(() => {});
+      setAudioProgress(percent);
+      return true;
+    }
+  }
 
   window.clearTimeout(currentNarrationTimer);
   currentNarrationTimer = null;
@@ -4394,6 +4770,7 @@ function stopNarration({ clearTimer = true } = {}) {
   if (clearTimer) clearSleepTimer({ silent: true });
   window.clearTimeout(currentNarrationTimer);
   currentNarrationTimer = null;
+  stopNativeAudio();
   if ("speechSynthesis" in window) window.speechSynthesis.cancel();
   if (currentAudio) {
     currentAudio.pause();
@@ -4409,7 +4786,9 @@ function stopNarration({ clearTimer = true } = {}) {
   currentAudioIndex = 0;
   currentAudioTrackDurations = [];
   aiAudioPausedBetweenTracks = false;
+  nativeAudioActive = false;
   resetAudioProgress();
+  clearMediaSession();
 }
 
 function getNarrationPause(story = currentStory) {
@@ -4432,6 +4811,7 @@ function speakNarrationSegment() {
     currentNarrationIndex = 0;
     narrationPausedBetweenSegments = false;
     finishAudioProgress();
+    setMediaSessionState("none");
     statusNote.textContent = "Audio narration finished.";
     return;
   }
@@ -4449,9 +4829,10 @@ function speakNarrationSegment() {
     statusNote.textContent = "Audio narration stopped. Try another device voice.";
   };
   window.speechSynthesis.speak(currentNarration);
+  setMediaSessionState("playing");
 }
 
-function playAiAudioTrack() {
+function playAiAudioTrack(options = {}) {
   if (aiAudioPausedBetweenTracks) return;
 
   if (currentAudioIndex >= currentAudioTracks.length) {
@@ -4461,10 +4842,20 @@ function playAiAudioTrack() {
     currentAudioIndex = 0;
     aiAudioPausedBetweenTracks = false;
     finishAudioProgress();
+    setMediaSessionState("none");
     statusNote.textContent = "AI narration finished.";
     return;
   }
 
+  if (!options.forceWeb && canUseNativeAudioPlayer()) {
+    playNativeAiAudioQueue().catch(() => {
+      nativeAudioActive = false;
+      playAiAudioTrack({ forceWeb: true });
+    });
+    return;
+  }
+
+  setupMediaSession(currentStory);
   currentAudio = new Audio(currentAudioTracks[currentAudioIndex]);
   currentAudio.ontimeupdate = updateAiAudioProgress;
   currentAudio.onloadedmetadata = () => {
@@ -4485,14 +4876,22 @@ function playAiAudioTrack() {
   };
   currentAudio.onerror = () => {
     currentAudio = null;
+    setMediaSessionState("none");
     statusNote.textContent = "AI narration stopped. Trying the device voice instead.";
     startDeviceNarration();
   };
-  currentAudio.play().catch(() => {
-    currentAudio = null;
-    statusNote.textContent = "AI narration could not play. Trying the device voice instead.";
-    startDeviceNarration();
-  });
+  currentAudio
+    .play()
+    .then(() => {
+      setMediaSessionState("playing");
+      updateMediaSessionPosition();
+    })
+    .catch(() => {
+      currentAudio = null;
+      setMediaSessionState("none");
+      statusNote.textContent = "AI narration could not play. Trying the device voice instead.";
+      startDeviceNarration();
+    });
 }
 
 async function startAiNarration() {
@@ -4610,6 +5009,7 @@ function startDeviceNarration() {
     return;
   }
 
+  setupMediaSession(currentStory);
   currentNarrationSegments = storyAsNarrationSegments(currentStory);
   currentNarrationIndex = 0;
   speakNarrationSegment();
@@ -4624,10 +5024,23 @@ audioPlayButton.addEventListener("click", async () => {
     return;
   }
 
+  if (nativeAudioActive) {
+    try {
+      if (await resumeNativeAudio()) {
+        statusNote.textContent = "AI narration resumed.";
+        return;
+      }
+    } catch {
+      statusNote.textContent = "AI narration could not resume. Try pressing play again.";
+      return;
+    }
+  }
+
   if (currentAudio) {
     currentAudio.play().catch(() => {
       statusNote.textContent = "AI narration could not resume. Try pressing play again.";
     });
+    setMediaSessionState("playing");
     statusNote.textContent = "AI narration resumed.";
     return;
   }
@@ -4635,12 +5048,14 @@ audioPlayButton.addEventListener("click", async () => {
   if (aiAudioPausedBetweenTracks && currentAudioTracks.length > 0) {
     aiAudioPausedBetweenTracks = false;
     playAiAudioTrack();
+    setMediaSessionState("playing");
     statusNote.textContent = "AI narration resumed.";
     return;
   }
 
   if ("speechSynthesis" in window && window.speechSynthesis.paused) {
     window.speechSynthesis.resume();
+    setMediaSessionState("playing");
     statusNote.textContent = "Audio narration resumed.";
     return;
   }
@@ -4666,8 +5081,23 @@ audioPlayButton.addEventListener("click", async () => {
 audioPauseButton.addEventListener("click", () => {
   if (!canUseNarration()) return;
 
+  if (nativeAudioActive) {
+    pauseNativeAudio()
+      .then((paused) => {
+        if (paused) {
+          trackEvent("audio_paused");
+          statusNote.textContent = "AI narration paused.";
+        }
+      })
+      .catch(() => {
+        statusNote.textContent = "AI narration could not pause.";
+      });
+    return;
+  }
+
   if (currentAudio && !currentAudio.paused) {
     currentAudio.pause();
+    setMediaSessionState("paused");
     trackEvent("audio_paused");
     statusNote.textContent = "AI narration paused.";
     return;
@@ -4676,6 +5106,7 @@ audioPauseButton.addEventListener("click", () => {
   if (currentAudioTracks.length > 0) {
     window.clearTimeout(currentNarrationTimer);
     aiAudioPausedBetweenTracks = true;
+    setMediaSessionState("paused");
     trackEvent("audio_paused");
     statusNote.textContent = "AI narration paused.";
     return;
@@ -4687,6 +5118,7 @@ audioPauseButton.addEventListener("click", () => {
     !window.speechSynthesis.paused
   ) {
     window.speechSynthesis.pause();
+    setMediaSessionState("paused");
     trackEvent("audio_paused");
     statusNote.textContent = "Audio narration paused.";
     return;
@@ -4702,6 +5134,7 @@ audioPauseButton.addEventListener("click", () => {
 
   if ("speechSynthesis" in window && window.speechSynthesis.paused) {
     window.speechSynthesis.resume();
+    setMediaSessionState("playing");
     trackEvent("audio_resumed");
     statusNote.textContent = "Audio narration resumed.";
     return;

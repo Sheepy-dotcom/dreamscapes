@@ -8,6 +8,7 @@ const {
 } = require("./auth");
 const NARRATION_WORDS_PER_MINUTE = 85;
 const OPTIONAL_RETENTION_COLUMNS = [
+  "story_language",
   "story_summary",
   "next_ideas",
   "occasion",
@@ -27,6 +28,85 @@ const durationTargets = {
   30: { words: 2550, minWords: 2300, maxWords: 2850, paragraphs: 34 },
 };
 
+const storyLanguages = {
+  "en-GB": {
+    label: "English",
+    prompt: "British English",
+    instruction:
+      "Write in British English throughout, using UK spelling and natural British wording. For example: mum, favourite, cosy, colour, realised.",
+  },
+  "cy-GB": {
+    label: "Welsh",
+    prompt: "Welsh",
+    instruction: "Write the full story in Welsh, using natural child-friendly Welsh wording.",
+  },
+  "fr-FR": {
+    label: "French",
+    prompt: "French",
+    instruction: "Write the full story in French, using natural child-friendly wording.",
+  },
+  "es-ES": {
+    label: "Spanish",
+    prompt: "Spanish",
+    instruction: "Write the full story in Spanish, using natural child-friendly wording.",
+  },
+  "de-DE": {
+    label: "German",
+    prompt: "German",
+    instruction: "Write the full story in German, using natural child-friendly wording.",
+  },
+  "it-IT": {
+    label: "Italian",
+    prompt: "Italian",
+    instruction: "Write the full story in Italian, using natural child-friendly wording.",
+  },
+  "pt-PT": {
+    label: "Portuguese",
+    prompt: "Portuguese",
+    instruction: "Write the full story in Portuguese, using natural child-friendly wording.",
+  },
+  "pl-PL": {
+    label: "Polish",
+    prompt: "Polish",
+    instruction: "Write the full story in Polish, using natural child-friendly wording.",
+  },
+  ar: {
+    label: "Arabic",
+    prompt: "Arabic",
+    instruction: "Write the full story in Arabic, using natural child-friendly wording.",
+  },
+  "hi-IN": {
+    label: "Hindi",
+    prompt: "Hindi",
+    instruction: "Write the full story in Hindi, using natural child-friendly wording.",
+  },
+  "ur-PK": {
+    label: "Urdu",
+    prompt: "Urdu",
+    instruction: "Write the full story in Urdu, using natural child-friendly wording.",
+  },
+  "zh-CN": {
+    label: "Mandarin Chinese",
+    prompt: "Mandarin Chinese",
+    instruction: "Write the full story in Simplified Chinese, using natural child-friendly wording.",
+  },
+  "ja-JP": {
+    label: "Japanese",
+    prompt: "Japanese",
+    instruction: "Write the full story in Japanese, using natural child-friendly wording.",
+  },
+  "ko-KR": {
+    label: "Korean",
+    prompt: "Korean",
+    instruction: "Write the full story in Korean, using natural child-friendly wording.",
+  },
+  "nl-NL": {
+    label: "Dutch",
+    prompt: "Dutch",
+    instruction: "Write the full story in Dutch, using natural child-friendly wording.",
+  },
+};
+
 function cleanText(value, fallback = "") {
   return String(value || fallback)
     .replace(/\s+/g, " ")
@@ -39,6 +119,10 @@ function cleanList(values) {
 
 function getTarget(duration) {
   return durationTargets[Number(duration)] || durationTargets[5];
+}
+
+function getStoryLanguage(value) {
+  return storyLanguages[value] || storyLanguages["en-GB"];
 }
 
 function getMaxOutputTokens(duration) {
@@ -71,6 +155,7 @@ function buildPrompt(data) {
   const storyType = data.storyType === "bedtime" ? "bedtime story" : "anytime story";
   const moods = cleanList(data.moods);
   const childProfileSummary = cleanList(data.childProfileSummary);
+  const language = getStoryLanguage(data.storyLanguage);
   const retryNote = data.enforceWordCount
     ? [
         "",
@@ -84,6 +169,7 @@ function buildPrompt(data) {
 
   return [
     `Write a polished, imaginative children's ${storyType}.`,
+    `Story language: ${language.prompt}.`,
     `Child name: ${cleanText(data.childName, "the child")}.`,
     `Child age: ${cleanText(data.childAge, "not specified; use language suitable for a young child")}.`,
     `Target duration: ${cleanText(data.duration, "5")} minutes of calm narrated audio.`,
@@ -108,7 +194,7 @@ function buildPrompt(data) {
     "",
     "Quality requirements:",
     "- Make it feel like a real children's story, not a template.",
-    "- Write in British English throughout, using UK spelling and natural British wording. For example: mum, favourite, cosy, colour, realised.",
+    `- ${language.instruction}`,
     "- Use warm, sensory, magical language with clear scenes and character moments.",
     "- Keep it age-appropriate, safe, non-frightening, and parent-friendly.",
     "- Give the child small choices, feelings, and discoveries.",
@@ -122,7 +208,7 @@ function buildPrompt(data) {
     "- If this continues a series, preserve established characters and warmly acknowledge what happened before without repeating the previous story.",
     "- End the main story peacefully and completely, then provide two short, child-friendly ideas for a possible next adventure in the JSON nextIdeas field.",
     "- For bedtime, slow the ending down and make the final paragraph peaceful.",
-    "- Do not announce or explain that the story is written in British English.",
+    "- Do not announce or explain the selected language.",
     "- Do not end with farewell phrases such as ta-ta, ta ta for now, bye, or goodbye.",
     "- Do not mention AI, prompts, packages, subscriptions, or app settings.",
     ...retryNote,
@@ -132,6 +218,7 @@ function buildPrompt(data) {
 function buildExpansionPrompt(data, story) {
   const target = getTarget(data.duration);
   const currentWordCount = story.wordCount || countWords(story.paragraphs || []);
+  const language = getStoryLanguage(data.storyLanguage);
 
   return [
     "Expand this existing DreamScapes children's story so the final story is much closer to the requested narration duration.",
@@ -147,7 +234,7 @@ function buildExpansionPrompt(data, story) {
     "- Preserve the child's name, selected mood, story type, positive ending, and child-friendly safety.",
     "- Add complete scenes, gentle dialogue, sensory details, character choices, cosy transitions, and natural pauses.",
     "- Do not pad with repeated wording or filler.",
-    "- Keep the story in British English, but do not announce that it is British English.",
+    `- Keep the story in ${language.prompt}, but do not announce the selected language.`,
     "- Do not end with farewell phrases such as ta-ta, ta ta for now, bye, or goodbye.",
     "- The final word count must be inside the requested range unless that is impossible.",
     "",
@@ -177,6 +264,7 @@ function storyToRow({ account, body, story }) {
     title: story.title,
     child_name: cleanText(body.childName, "the child"),
     child_age: cleanText(body.childAge) || null,
+    story_language: cleanText(body.storyLanguage, "en-GB"),
     story_type: normaliseStoryType(body.storyType),
     duration_minutes: Number(body.duration) || 5,
     moods: cleanList(body.moods),
@@ -276,7 +364,7 @@ async function requestStoryWithPrompt(data, prompt) {
       {
         role: "developer",
         content:
-          "You are DreamScapes, an exceptional British children's author writing for parents to read aloud. Create an original, emotionally warm story with a satisfying narrative arc, vivid but gentle scenes, natural dialogue, and a positive ending. Preserve every safety, personalisation, timing, and output requirement. Never write like a template. Return only valid JSON matching the supplied schema.",
+          "You are DreamScapes, an exceptional children's author writing for parents to read aloud. Create an original, emotionally warm story in the requested language with a satisfying narrative arc, vivid but gentle scenes, natural dialogue, and a positive ending. Preserve every safety, personalisation, timing, and output requirement. Never write like a template. Return only valid JSON matching the supplied schema.",
       },
       {
         role: "user",
