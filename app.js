@@ -630,7 +630,6 @@ function showScreen(name) {
   screens[name].classList.add("active");
   if (name === "builder") {
     setBuilderStep(0, false);
-    if (!pendingStoryContext && !storyIdea.value.trim()) createTonightStoryIdea({ announce: false });
   }
   document.body.classList.toggle("home-active", name === "welcome");
   document.body.classList.toggle("builder-active", name === "builder");
@@ -3801,13 +3800,6 @@ clearProfileSelectionButton?.addEventListener("click", () => {
   });
 });
 
-document.querySelectorAll("[data-idea]").forEach((button) => {
-  button.addEventListener("click", () => {
-    storyIdea.value = button.dataset.idea;
-    trackEvent("idea_example_selected", { label: button.textContent.trim() });
-  });
-});
-
 async function playAiVoicePreview() {
   const selectedVoiceStyle = voiceStyle.value;
   const previewGain = VOICE_PREVIEW_GAINS[selectedVoiceStyle] || VOICE_PREVIEW_GAIN;
@@ -4491,10 +4483,19 @@ function getNativeAudioPlugin() {
   return window.Capacitor?.Plugins?.DreamAudio || null;
 }
 
+function isInlineAudioTrack(track) {
+  return typeof track === "string" && track.startsWith("data:audio");
+}
+
+function hasInlineAudioTracks(tracks = currentAudioTracks) {
+  return Array.isArray(tracks) && tracks.some(isInlineAudioTrack);
+}
+
 function canUseNativeAudioPlayer() {
   const plugin = getNativeAudioPlugin();
   return Boolean(
     plugin &&
+      !hasInlineAudioTracks() &&
       typeof plugin.play === "function" &&
       typeof plugin.pause === "function" &&
       typeof plugin.resume === "function" &&
@@ -4968,6 +4969,10 @@ async function startAiNarration() {
     if (canUseCloudLibrary()) {
       try {
         aiAudioPaths = await uploadAudioTracksToCloud(currentStory, audioTracks);
+        const signedAudioTracks = await getSignedAudioUrls(aiAudioPaths);
+        if (signedAudioTracks.length === aiAudioPaths.length) {
+          currentAudioTracks = signedAudioTracks;
+        }
       } catch {
         aiAudioPaths = [];
       }

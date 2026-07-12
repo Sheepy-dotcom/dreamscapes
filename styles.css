@@ -757,23 +757,6 @@ textarea:focus-visible {
   opacity: 0.62;
 }
 
-.idea-examples {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.idea-examples button {
-  border: 1px solid rgba(123, 78, 216, 0.2);
-  border-radius: 999px;
-  padding: 7px 10px;
-  color: #34245f;
-  background: #ffe4ee;
-  cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 900;
-}
-
 .voice-field,
 .speed-field {
   min-width: 0;
@@ -3887,15 +3870,6 @@ body.night-mode .loading-steps span {
   .builder-step[data-builder-step="2"] .feature-toggle {
     min-height: 44px;
     padding: 7px 9px;
-  }
-
-  .builder-step[data-builder-step="2"] .idea-examples {
-    gap: 5px;
-  }
-
-  .builder-step[data-builder-step="2"] .idea-examples button {
-    padding: 5px 7px;
-    font-size: 0.72rem;
   }
 
   .builder-step[data-builder-step="2"] .field textarea {
