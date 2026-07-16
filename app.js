@@ -167,8 +167,10 @@ function resolveApiEndpoint(value, fallbackPath) {
 
   const platform = getCapacitorPlatform();
   const protocol = window.location.protocol;
+  const hostname = window.location.hostname;
   const isBundledApp = ["ios", "android"].includes(platform) || protocol === "capacitor:";
-  const apiBase = window.DREAMSCAPES_API_BASE || (isBundledApp ? PRODUCTION_API_BASE : "");
+  const isLocalPreview = protocol === "file:" || ["localhost", "127.0.0.1", ""].includes(hostname);
+  const apiBase = window.DREAMSCAPES_API_BASE || (isBundledApp || isLocalPreview ? PRODUCTION_API_BASE : "");
 
   return apiBase ? `${apiBase}${endpoint}` : endpoint;
 }
