@@ -47,7 +47,7 @@ OPENAI_API_KEY=your_openai_api_key
 Optional story model override:
 
 ```txt
-OPENAI_STORY_MODEL=gpt-4.1
+OPENAI_STORY_MODEL=gpt-5.6-terra
 ```
 
 Optional narration model override:

@@ -144,7 +144,7 @@ function extractResponseText(data) {
 }
 
 function getStoryModel() {
-  return cleanText(process.env.OPENAI_STORY_MODEL, "gpt-4.1");
+  return cleanText(process.env.OPENAI_STORY_MODEL, "gpt-5.6-terra");
 }
 
 function getStoryModelCandidates() {
