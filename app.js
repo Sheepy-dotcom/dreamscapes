@@ -4317,7 +4317,10 @@ async function renderLibrary() {
 }
 
 function canUseNarration() {
-  if (!currentStory) return;
+  if (!currentStory) {
+    statusNote.textContent = "Open a saved story first, then press play to create audio.";
+    return false;
+  }
   const accountPlan = getPlan(getCurrentPlanKey());
   const storyDuration = Number(currentStory.duration || 0);
 
@@ -5046,65 +5049,71 @@ function startDeviceNarration() {
 }
 
 audioPlayButton.addEventListener("click", async () => {
-  if (!canUseNarration()) return;
+  try {
+    if (!canUseNarration()) return;
 
-  if (narrationRequestInFlight) {
-    statusNote.textContent = "Audio is already being prepared.";
-    return;
-  }
-
-  if (nativeAudioActive) {
-    try {
-      if (await resumeNativeAudio()) {
-        statusNote.textContent = "AI narration resumed.";
-        return;
-      }
-    } catch {
-      statusNote.textContent = "AI narration could not resume. Try pressing play again.";
+    if (narrationRequestInFlight) {
+      statusNote.textContent = "Audio is already being prepared.";
       return;
     }
-  }
 
-  if (currentAudio) {
-    currentAudio.play().catch(() => {
-      statusNote.textContent = "AI narration could not resume. Try pressing play again.";
-    });
-    setMediaSessionState("playing");
-    statusNote.textContent = "AI narration resumed.";
-    return;
-  }
+    if (nativeAudioActive) {
+      try {
+        if (await resumeNativeAudio()) {
+          statusNote.textContent = "AI narration resumed.";
+          return;
+        }
+      } catch {
+        statusNote.textContent = "AI narration could not resume. Try pressing play again.";
+        return;
+      }
+    }
 
-  if (aiAudioPausedBetweenTracks && currentAudioTracks.length > 0) {
-    aiAudioPausedBetweenTracks = false;
-    playAiAudioTrack();
-    setMediaSessionState("playing");
-    statusNote.textContent = "AI narration resumed.";
-    return;
-  }
+    if (currentAudio) {
+      currentAudio.play().catch(() => {
+        statusNote.textContent = "AI narration could not resume. Try pressing play again.";
+      });
+      setMediaSessionState("playing");
+      statusNote.textContent = "AI narration resumed.";
+      return;
+    }
 
-  if ("speechSynthesis" in window && window.speechSynthesis.paused) {
-    window.speechSynthesis.resume();
-    setMediaSessionState("playing");
-    statusNote.textContent = "Audio narration resumed.";
-    return;
-  }
+    if (aiAudioPausedBetweenTracks && currentAudioTracks.length > 0) {
+      aiAudioPausedBetweenTracks = false;
+      playAiAudioTrack();
+      setMediaSessionState("playing");
+      statusNote.textContent = "AI narration resumed.";
+      return;
+    }
 
-  if (narrationPausedBetweenSegments && currentNarrationSegments.length > 0) {
-    narrationPausedBetweenSegments = false;
-    speakNarrationSegment();
-    trackEvent("audio_resumed");
-    statusNote.textContent = "Audio narration resumed.";
-    return;
-  }
+    if ("speechSynthesis" in window && window.speechSynthesis.paused) {
+      window.speechSynthesis.resume();
+      setMediaSessionState("playing");
+      statusNote.textContent = "Audio narration resumed.";
+      return;
+    }
 
-  stopNarration({ clearTimer: false });
-  statusNote.textContent = "Creating audio. This can take a moment...";
-  narrationNote.textContent = "Creating audio";
-  narrationRequestInFlight = true;
-  const usedAiNarration = await startAiNarration();
-  narrationRequestInFlight = false;
-  if (!usedAiNarration) startDeviceNarration();
-  trackEvent("audio_played", { voiceStyle: currentStory.voiceStyle });
+    if (narrationPausedBetweenSegments && currentNarrationSegments.length > 0) {
+      narrationPausedBetweenSegments = false;
+      speakNarrationSegment();
+      trackEvent("audio_resumed");
+      statusNote.textContent = "Audio narration resumed.";
+      return;
+    }
+
+    stopNarration({ clearTimer: false });
+    statusNote.textContent = "Creating audio. This can take a moment...";
+    narrationNote.textContent = "Creating audio";
+    narrationRequestInFlight = true;
+    const usedAiNarration = await startAiNarration();
+    if (!usedAiNarration) startDeviceNarration();
+    trackEvent("audio_played", { voiceStyle: currentStory.voiceStyle });
+  } catch (error) {
+    statusNote.textContent = getFriendlyFaultMessage(error, "Audio could not start. Try again.");
+    narrationNote.textContent = "Audio not created";
+  } finally {
+    narrationRequestInFlight = false;
+  }
 });
 
 audioPauseButton.addEventListener("click", () => {
