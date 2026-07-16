@@ -4506,7 +4506,7 @@ function clearMediaSession() {
 }
 
 function getNativeAudioPlugin() {
-  if (!isNativeApp()) return null;
+  if (!isNativeMobileApp()) return null;
   return window.Capacitor?.Plugins?.DreamAudio || null;
 }
 
