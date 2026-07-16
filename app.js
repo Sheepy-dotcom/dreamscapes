@@ -292,7 +292,8 @@ const SUPABASE_SCRIPT_URLS = [
   "https://unpkg.com/@supabase/supabase-js@2",
 ];
 const AUDIO_BUCKET = "story-audio";
-const AI_NARRATION_REQUEST_MAX_LENGTH = 3400;
+const AI_NARRATION_REQUEST_MAX_LENGTH = 1400;
+const AI_NARRATION_PART_TIMEOUT_MS = 90000;
 const AUDIO_CREDIT_MAX_MINUTES = 10;
 const VOICE_PREVIEW_TEXT = "Hello from DreamScapes. Settle in, take a gentle breath, and let the story begin.";
 const VOICE_PREVIEW_CACHE_VERSION = "2026061529";
@@ -2024,28 +2025,48 @@ function splitAiNarrationRequestText(text) {
 }
 
 async function requestAiNarrationPart({ text, duration, voice, instructions }) {
-  const response = await fetch(NARRATION_ENDPOINT, {
-    method: "POST",
-    headers: await getApiHeaders(),
-    body: JSON.stringify({
-      text,
-      duration,
-      voice,
-      instructions,
-      chargeAudio: false,
-    }),
-  });
+  let lastError = null;
 
-  if (!response.ok) {
-    throw new Error(await readApiError(response, "Audio could not be created."));
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), AI_NARRATION_PART_TIMEOUT_MS);
+
+    try {
+      const response = await fetch(NARRATION_ENDPOINT, {
+        method: "POST",
+        headers: await getApiHeaders(),
+        signal: controller.signal,
+        body: JSON.stringify({
+          text,
+          duration,
+          voice,
+          instructions,
+          chargeAudio: false,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(await readApiError(response, "Audio could not be created."));
+      }
+
+      const data = await response.json();
+      if (!Array.isArray(data.audio) || data.audio.length === 0) {
+        throw new Error("Audio could not be created. No narration was returned.");
+      }
+
+      return data;
+    } catch (error) {
+      lastError = error;
+      if (error.name === "AbortError") {
+        lastError = new Error("Audio took too long to create. Trying that part again.");
+      }
+      if (attempt === 0) continue;
+    } finally {
+      window.clearTimeout(timeoutId);
+    }
   }
 
-  const data = await response.json();
-  if (!Array.isArray(data.audio) || data.audio.length === 0) {
-    throw new Error("Audio could not be created. No narration was returned.");
-  }
-
-  return data;
+  throw lastError || new Error("Audio could not be created.");
 }
 
 async function updateAudioUsage(action, audioSeconds, options = {}) {
@@ -4947,7 +4968,7 @@ async function startAiNarration() {
 
     for (let index = 0; index < narrationParts.length; index += 1) {
       const totalParts = narrationParts.length;
-      statusNote.textContent = `Creating audio part ${index + 1} of ${totalParts}. This can take a moment...`;
+      statusNote.textContent = `Creating audio part ${index + 1} of ${totalParts}. Keep this screen open.`;
       narrationNote.textContent = `Creating audio ${index + 1}/${totalParts}`;
       setAudioGenerationProgress(index, totalParts);
       const data = await requestAiNarrationPart({
