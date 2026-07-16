@@ -3,6 +3,7 @@ const { enforceNarrationAccess, handleCorsPreflight, incrementUsage, sendApiErro
 const DEFAULT_SPEECH_MODEL = "gpt-4o-mini-tts";
 const MAX_CHUNK_LENGTH = 1400;
 const MAX_CHUNKS = 20;
+const SPEECH_CONCURRENCY = 2;
 const SUPPORTED_VOICES = new Set([
   "alloy",
   "ash",
@@ -89,6 +90,23 @@ async function createSpeech({ input, voice, instructions, index = 0, total = 1 }
   return `data:audio/mpeg;base64,${audioBuffer.toString("base64")}`;
 }
 
+async function mapWithConcurrency(items, limit, mapper) {
+  const results = new Array(items.length);
+  let nextIndex = 0;
+
+  async function worker() {
+    while (nextIndex < items.length) {
+      const index = nextIndex;
+      nextIndex += 1;
+      results[index] = await mapper(items[index], index);
+    }
+  }
+
+  const workers = Array.from({ length: Math.min(limit, items.length) }, worker);
+  await Promise.all(workers);
+  return results;
+}
+
 module.exports = async function handler(request, response) {
   if (handleCorsPreflight(request, response, "POST, OPTIONS")) return;
 
@@ -110,11 +128,9 @@ module.exports = async function handler(request, response) {
     if (!text) return response.status(400).json({ error: "Story text is required" });
 
     const chunks = splitText(text);
-    const audio = [];
-
-    for (let index = 0; index < chunks.length; index += 1) {
-      audio.push(await createSpeech({ input: chunks[index], voice, instructions, index, total: chunks.length }));
-    }
+    const audio = await mapWithConcurrency(chunks, SPEECH_CONCURRENCY, (chunk, index) =>
+      createSpeech({ input: chunk, voice, instructions, index, total: chunks.length })
+    );
 
     const shouldChargeAudio = body.chargeAudio !== false;
     const usage = shouldChargeAudio

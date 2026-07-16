@@ -296,6 +296,8 @@ const SUPABASE_SCRIPT_URLS = [
 const AUDIO_BUCKET = "story-audio";
 const AI_NARRATION_REQUEST_MAX_LENGTH = 1400;
 const AI_NARRATION_PART_TIMEOUT_MS = 90000;
+const AI_NARRATION_PART_CONCURRENCY = 2;
+const AUDIO_UPLOAD_CONCURRENCY = 3;
 const AUDIO_CREDIT_MAX_MINUTES = 10;
 const VOICE_PREVIEW_TEXT = "Hello from DreamScapes. Settle in, take a gentle breath, and let the story begin.";
 const VOICE_PREVIEW_CACHE_VERSION = "2026061529";
@@ -2477,6 +2479,27 @@ function getSavedAudioDurationSeconds(story) {
   return calculatedDuration > 0 ? calculatedDuration : 0;
 }
 
+async function mapWithConcurrency(items, limit, mapper, onComplete = null) {
+  const list = Array.isArray(items) ? items : [];
+  const results = new Array(list.length);
+  let nextIndex = 0;
+  let completed = 0;
+
+  async function worker() {
+    while (nextIndex < list.length) {
+      const index = nextIndex;
+      nextIndex += 1;
+      results[index] = await mapper(list[index], index);
+      completed += 1;
+      if (typeof onComplete === "function") onComplete(completed, list.length, index);
+    }
+  }
+
+  const workerCount = Math.min(Math.max(1, Number(limit) || 1), list.length);
+  await Promise.all(Array.from({ length: workerCount }, worker));
+  return results;
+}
+
 function measureAudioTrackDuration(src) {
   return new Promise((resolve) => {
     const audio = new Audio(src);
@@ -2493,13 +2516,7 @@ function measureAudioTrackDuration(src) {
 }
 
 async function measureAudioTrackDurations(tracks) {
-  const durations = [];
-
-  for (const track of tracks) {
-    durations.push(await measureAudioTrackDuration(track));
-  }
-
-  return durations;
+  return mapWithConcurrency(tracks, AUDIO_UPLOAD_CONCURRENCY, (track) => measureAudioTrackDuration(track));
 }
 
 function dataUrlToBlob(dataUrl) {
@@ -2524,27 +2541,30 @@ async function getSignedAudioUrls(paths) {
 
   if (error) throw error;
 
-  return (data || []).map((item) => item.signedUrl).filter(Boolean);
+  const signedUrls = (data || []).map((item) => item.signedUrl).filter(Boolean);
+  if (signedUrls.length !== paths.length) {
+    throw new Error("Saved audio could not be checked. Try again in a moment.");
+  }
+
+  return signedUrls;
 }
 
 async function uploadAudioTracksToCloud(story, tracks) {
   if (!canUseCloudLibrary() || !Array.isArray(tracks) || tracks.length === 0) return [];
 
   const storyId = story.cloudId || story.id || createStoryId();
-  const uploadedPaths = [];
-
-  for (let index = 0; index < tracks.length; index += 1) {
+  const uploadedPaths = await mapWithConcurrency(tracks, AUDIO_UPLOAD_CONCURRENCY, async (track, index) => {
     const path = `${currentUser.id}/${storyId}/track-${String(index + 1).padStart(2, "0")}.mp3`;
     const { error } = await supabaseClient.storage
       .from(AUDIO_BUCKET)
-      .upload(path, dataUrlToBlob(tracks[index]), {
+      .upload(path, dataUrlToBlob(track), {
         contentType: "audio/mpeg",
         upsert: true,
       });
 
     if (error) throw error;
-    uploadedPaths.push(path);
-  }
+    return path;
+  });
 
   return uploadedPaths;
 }
@@ -4922,6 +4942,18 @@ function playAiAudioTrack(options = {}) {
     });
 }
 
+async function saveAudioStoryUpdate(story) {
+  if (canUseCloudLibrary()) {
+    const savedStory = await saveStoryToCloud(story);
+    updateAccountUI();
+    if (screens.library.classList.contains("active")) renderLibrary();
+    return savedStory || story;
+  }
+
+  saveStoryToLibrary(story, { silent: true });
+  return story;
+}
+
 async function startAiNarration() {
   if (Array.isArray(currentStory.aiAudioTracks) && currentStory.aiAudioTracks.length > 0) {
     currentAudioTracks = currentStory.aiAudioTracks;
@@ -4969,25 +5001,29 @@ async function startAiNarration() {
     const chargeAudioSeconds = (Number(currentStory.duration) || 5) * 60;
     setAudioGenerationProgress(0, narrationParts.length);
     await updateAudioUsage("check", chargeAudioSeconds);
-    const audioTracks = [];
-
-    for (let index = 0; index < narrationParts.length; index += 1) {
-      const totalParts = narrationParts.length;
-      statusNote.textContent = `Creating audio part ${index + 1} of ${totalParts}. Keep this screen open.`;
-      narrationNote.textContent = `Creating audio ${index + 1}/${totalParts}`;
-      setAudioGenerationProgress(index, totalParts);
-      const data = await requestAiNarrationPart({
-        text: narrationParts[index],
-        duration: partDuration,
-        voice: getAiNarrationVoice(currentStory.voiceStyle),
-        instructions: getAiNarrationInstructions(currentStory),
-      });
-
-      audioTracks.push(...data.audio);
-      setAudioGenerationProgress(index + 1, totalParts);
-    }
+    statusNote.textContent = `Creating ${narrationParts.length} audio part${narrationParts.length === 1 ? "" : "s"}. Keep this screen open.`;
+    narrationNote.textContent = "Creating audio";
+    const partResults = await mapWithConcurrency(
+      narrationParts,
+      AI_NARRATION_PART_CONCURRENCY,
+      (partText) =>
+        requestAiNarrationPart({
+          text: partText,
+          duration: partDuration,
+          voice: getAiNarrationVoice(currentStory.voiceStyle),
+          instructions: getAiNarrationInstructions(currentStory),
+        }),
+      (completed, totalParts) => {
+        statusNote.textContent = `Creating audio part ${completed} of ${totalParts}. Keep this screen open.`;
+        narrationNote.textContent = `Creating audio ${completed}/${totalParts}`;
+        setAudioGenerationProgress(completed, totalParts);
+      }
+    );
+    const audioTracks = partResults.flatMap((data) => data.audio);
 
     currentAudioTracks = audioTracks;
+    statusNote.textContent = "Checking audio length...";
+    narrationNote.textContent = "Checking audio";
     currentAudioTrackDurations = await measureAudioTrackDurations(audioTracks);
     const aiAudioDurationSeconds = getPlaybackDurationSeconds(currentAudioTrackDurations, currentStory);
     const completedAudioSeconds = aiAudioDurationSeconds > 0 ? Math.ceil(aiAudioDurationSeconds) : chargeAudioSeconds;
@@ -4995,13 +5031,18 @@ async function startAiNarration() {
     let aiAudioPaths = currentStory.aiAudioPaths || [];
     if (canUseCloudLibrary()) {
       try {
+        statusNote.textContent = "Saving audio to your library...";
+        narrationNote.textContent = "Saving audio";
         aiAudioPaths = await uploadAudioTracksToCloud(currentStory, audioTracks);
+        statusNote.textContent = "Checking saved audio...";
         const signedAudioTracks = await getSignedAudioUrls(aiAudioPaths);
-        if (signedAudioTracks.length === aiAudioPaths.length) {
-          currentAudioTracks = signedAudioTracks;
-        }
-      } catch {
+        currentAudioTracks = signedAudioTracks;
+      } catch (error) {
         aiAudioPaths = [];
+        statusNote.textContent = getFriendlyFaultMessage(
+          error,
+          "Audio was created, but cloud saving needs another try."
+        );
       }
     }
     currentAudioIndex = 0;
@@ -5013,7 +5054,11 @@ async function startAiNarration() {
       aiAudioDurationSeconds,
       aiAudioGeneratedAt: new Date().toISOString(),
     };
-    saveStoryToLibrary(currentStory, { silent: true });
+    try {
+      currentStory = await saveAudioStoryUpdate(currentStory);
+    } catch {
+      statusNote.textContent = "Audio is ready on this device, but cloud saving needs another try.";
+    }
     setAudioGenerationProgress(narrationParts.length, narrationParts.length, "complete");
     playAiAudioTrack();
     statusNote.textContent = "Audio complete. Playing now.";
