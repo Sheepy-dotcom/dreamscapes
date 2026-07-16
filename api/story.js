@@ -144,10 +144,22 @@ function extractResponseText(data) {
 }
 
 function getStoryModel() {
-  const model = cleanText(process.env.OPENAI_STORY_MODEL, "gpt-5.4-mini");
-  const legacyModels = new Set(["gpt-4o-mini", "gpt-5", "gpt-5-mini", "gpt-5.2"]);
+  return cleanText(process.env.OPENAI_STORY_MODEL, "gpt-4.1");
+}
 
-  return legacyModels.has(model) ? "gpt-5.4-mini" : model;
+function getStoryModelCandidates() {
+  const configuredModel = getStoryModel();
+  const fallbackModels = ["gpt-4.1", "gpt-4o", "gpt-4o-mini"];
+
+  return [configuredModel, ...fallbackModels].filter(
+    (model, index, models) => model && models.indexOf(model) === index
+  );
+}
+
+function shouldTryNextStoryModel(status, message) {
+  if (![400, 404].includes(Number(status))) return false;
+
+  return /model|not found|does not exist|invalid|unsupported|access|permission/i.test(message || "");
 }
 
 function buildPrompt(data) {
@@ -357,73 +369,88 @@ const storySchema = {
 };
 
 async function requestStoryWithPrompt(data, prompt) {
-  const model = getStoryModel();
-  const requestBody = {
-    model,
-    input: [
-      {
-        role: "developer",
-        content:
-          "You are DreamScapes, an exceptional children's author writing for parents to read aloud. Create an original, emotionally warm story in the requested language with a satisfying narrative arc, vivid but gentle scenes, natural dialogue, and a positive ending. Preserve every safety, personalisation, timing, and output requirement. Never write like a template. Return only valid JSON matching the supplied schema.",
+  const modelCandidates = getStoryModelCandidates();
+  let lastError = null;
+
+  for (const model of modelCandidates) {
+    const requestBody = {
+      model,
+      input: [
+        {
+          role: "developer",
+          content:
+            "You are DreamScapes, an exceptional children's author writing for parents to read aloud. Create an original, emotionally warm story in the requested language with a satisfying narrative arc, vivid but gentle scenes, natural dialogue, and a positive ending. Preserve every safety, personalisation, timing, and output requirement. Never write like a template. Return only valid JSON matching the supplied schema.",
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      max_output_tokens: getMaxOutputTokens(data.duration),
+      text: {
+        format: {
+          type: "json_schema",
+          name: "dreamscapes_story",
+          strict: true,
+          schema: storySchema,
+        },
       },
-      {
-        role: "user",
-        content: prompt,
+    };
+
+    if (model.startsWith("gpt-5")) {
+      requestBody.reasoning = { effort: "low" };
+      requestBody.text.verbosity = "high";
+      requestBody.prompt_cache_key = "dreamscapes-story-v3";
+    }
+
+    const response = await fetch(OPENAI_RESPONSES_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        "Content-Type": "application/json",
       },
-    ],
-    max_output_tokens: getMaxOutputTokens(data.duration),
-    text: {
-      format: {
-        type: "json_schema",
-        name: "dreamscapes_story",
-        strict: true,
-        schema: storySchema,
-      },
-    },
-  };
+      body: JSON.stringify(requestBody),
+    });
 
-  if (model.startsWith("gpt-5")) {
-    requestBody.reasoning = { effort: "low" };
-    requestBody.text.verbosity = "high";
-    requestBody.prompt_cache_key = "dreamscapes-story-v3";
+    if (!response.ok) {
+      const message = await response.text();
+      lastError = new Error(message || "Story request failed");
+
+      if (shouldTryNextStoryModel(response.status, message)) {
+        continue;
+      }
+
+      throw lastError;
+    }
+
+    const result = await response.json();
+    const text = extractResponseText(result);
+
+    if (!text) {
+      lastError = new Error(`Story model returned no text. Status: ${result.status || "unknown"}`);
+      continue;
+    }
+
+    let story;
+    try {
+      story = JSON.parse(text);
+    } catch {
+      lastError = new Error("Story model returned an unreadable draft. Please try generating again.");
+      continue;
+    }
+
+    const paragraphs = story.paragraphs.map((paragraph) => cleanText(paragraph)).filter(Boolean);
+
+    return {
+      title: cleanText(story.title, "A DreamScapes Story"),
+      summary: cleanText(story.summary),
+      nextIdeas: cleanList(story.nextIdeas).slice(0, 2),
+      paragraphs,
+      wordCount: countWords(paragraphs),
+    };
   }
 
-  const response = await fetch(OPENAI_RESPONSES_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(requestBody),
-  });
-
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || "Story request failed");
-  }
-
-  const result = await response.json();
-  const text = extractResponseText(result);
-
-  if (!text) {
-    throw new Error(`Story model returned no text. Status: ${result.status || "unknown"}`);
-  }
-
-  let story;
-  try {
-    story = JSON.parse(text);
-  } catch {
-    throw new Error("Story model returned an unreadable draft. Please try generating again.");
-  }
-  const paragraphs = story.paragraphs.map((paragraph) => cleanText(paragraph)).filter(Boolean);
-
-  return {
-    title: cleanText(story.title, "A DreamScapes Story"),
-    summary: cleanText(story.summary),
-    nextIdeas: cleanList(story.nextIdeas).slice(0, 2),
-    paragraphs,
-    wordCount: countWords(paragraphs),
-  };
+  throw lastError || new Error("Story request failed");
 }
 
 async function requestStory(data) {

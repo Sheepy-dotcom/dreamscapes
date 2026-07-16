@@ -1,6 +1,6 @@
 const OPENAI_SPEECH_URL = "https://api.openai.com/v1/audio/speech";
 const { enforceNarrationAccess, handleCorsPreflight, incrementUsage, sendApiError } = require("./auth");
-const DEFAULT_SPEECH_MODEL = "gpt-4o-mini-tts-2025-12-15";
+const DEFAULT_SPEECH_MODEL = "gpt-4o-mini-tts";
 const MAX_CHUNK_LENGTH = 6000;
 const MAX_CHUNKS = 20;
 const SUPPORTED_VOICES = new Set([
@@ -57,13 +57,14 @@ function getChunkInstructions(instructions, index, total) {
     `This is narration part ${index + 1} of ${total}.`,
     "Keep exactly the same narrator identity, accent, age, pitch, pace, warmth, and microphone feel across every part.",
     "Continue as one continuous reading. Do not restart with a different character voice or change delivery between parts.",
+    "Match the previous and next parts as if the whole story were recorded in one calm session.",
   ].join(" ");
 }
 
 async function createSpeech({ input, voice, instructions, index = 0, total = 1 }) {
   const chunkInstructions = getChunkInstructions(instructions, index, total);
   const configuredModel = cleanText(process.env.OPENAI_TTS_MODEL) || DEFAULT_SPEECH_MODEL;
-  const model = configuredModel === "gpt-4o-mini-tts" ? DEFAULT_SPEECH_MODEL : configuredModel;
+  const model = configuredModel === "gpt-4o-mini-tts-2025-12-15" ? DEFAULT_SPEECH_MODEL : configuredModel;
   const response = await fetch(OPENAI_SPEECH_URL, {
     method: "POST",
     headers: {

@@ -2546,6 +2546,7 @@ function getAiNarrationInstructions(story) {
     bedtimeDirection,
     "Leave a little breathing space between phrases, and make each word feel clearly separated without sounding slow, broken, or robotic.",
     "Sound close, human, and reassuring, like a parent calmly reading beside the bed.",
+    "Keep the same narrator voice, accent, warmth, and pace for the whole story, even when the audio is created in separate parts.",
     "Do not add extra words that are not in the story.",
     "Do not add farewell sign-offs such as ta-ta, ta ta for now, bye, or goodbye.",
   ].join(" ");
