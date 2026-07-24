@@ -2152,6 +2152,31 @@ body.night-mode .story-path-button.active {
   overflow-wrap: anywhere;
 }
 
+.account-danger-zone {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+  border: 1px solid rgba(255, 143, 183, 0.34);
+  border-radius: 8px;
+  padding: 12px;
+  background: rgba(255, 228, 238, 0.42);
+}
+
+.account-danger-zone strong {
+  color: #653052;
+}
+
+.account-danger-zone p {
+  margin: 0;
+}
+
+.danger-button {
+  color: #fff;
+  border-color: rgba(191, 45, 93, 0.42);
+  background: linear-gradient(135deg, #bf2d5d, #7b4ed8);
+  box-shadow: 0 12px 24px rgba(191, 45, 93, 0.18);
+}
+
 .account-status.error {
   color: #7f1d45;
 }
@@ -2534,6 +2559,15 @@ body.night-mode .auth-card.plan-plus .account-summary span {
     0 0 0 1px rgba(255, 231, 133, 0.16),
     0 18px 42px rgba(0, 0, 0, 0.32),
     0 0 32px rgba(255, 217, 106, 0.08);
+}
+
+body.night-mode .account-danger-zone {
+  border-color: rgba(255, 143, 183, 0.34);
+  background: rgba(191, 45, 93, 0.12);
+}
+
+body.night-mode .account-danger-zone strong {
+  color: #ffd8e6;
 }
 
 body.night-mode .duration-grid small,

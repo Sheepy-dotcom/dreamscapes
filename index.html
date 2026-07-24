@@ -22,7 +22,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026071601" />
+    <link rel="stylesheet" href="./styles.css?v=2026072401" />
   </head>
   <body class="home-active night-mode">
     <div class="stars" aria-hidden="true"></div>
@@ -587,7 +587,7 @@
                 <small>Audio minutes</small>
                 <strong id="account-audio">0:00</strong>
               </span>
-              <span>
+              <span id="account-audio-credit-stat">
                 <small>Free audio credits</small>
                 <strong id="account-audio-credits">0</strong>
               </span>
@@ -597,6 +597,14 @@
               <button class="button primary-button" data-screen-target="library" type="button">Open Library</button>
               <button class="button secondary-button" id="open-admin-button" type="button" hidden>Open Admin</button>
               <button class="button secondary-button" id="sign-out-button" type="button">Sign Out</button>
+            </div>
+            <div class="account-danger-zone">
+              <strong>Delete account</strong>
+              <p>Delete your DreamScapes account, saved stories, child profiles, generated audio, and account data.</p>
+              <button class="button danger-button compact-button" id="delete-account-button" type="button">
+                Delete Account
+              </button>
+              <p class="helper-text" id="delete-account-status" role="status"></p>
             </div>
           </article>
 
@@ -849,7 +857,7 @@
 
           <h3>Privacy</h3>
           <ul>
-            <li>DreamScapes collects and uses information needed to run the app, such as your account email, saved stories, child profiles you create, plan status, usage limits, redeem codes, feedback, and audio issue reports.</li>
+            <li>DreamScapes collects and uses information needed to run the app, such as your account email, saved stories, child profiles you create, plan status, usage limits, feedback, and audio issue reports.</li>
             <li>Story prompts, generated stories, saved stories, profile details, and audio may be processed by trusted services used to provide the app, including account, cloud storage, AI generation, subscription, and app store services.</li>
             <li>Payments and subscriptions are handled by the Apple App Store or Google Play, with subscription status managed through RevenueCat. DreamScapes does not receive your full card details from the app stores.</li>
             <li>We aim to collect only what is needed to provide DreamScapes, improve reliability, keep accounts secure, and support parents who contact us.</li>
@@ -877,8 +885,8 @@
           <h3>Account and Data Deletion</h3>
           <ul>
             <li>You can delete saved stories from your library where deletion is available in the app.</li>
-            <li>To request full account deletion, email support from the email address linked to your DreamScapes account.</li>
-            <li>Account deletion may remove saved stories, child profiles, generated audio, usage records, and other account data where we are able to delete it.</li>
+            <li>You can initiate full account deletion from the Account screen when signed in.</li>
+            <li>Account deletion removes your DreamScapes account, saved stories, child profiles, generated audio, usage records, and other account data where we are able to delete it.</li>
             <li>We may need to retain limited records where required for security, billing, fraud prevention, dispute handling, legal compliance, or app store records.</li>
           </ul>
 
@@ -928,6 +936,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026071601"></script>
+    <script src="./app.js?v=2026072401"></script>
   </body>
 </html>

@@ -1,12 +1,20 @@
 package cloud.dreamscapes.app;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.media.AudioAttributes;
 import android.media.MediaMetadata;
 import android.media.MediaPlayer;
 import android.media.session.MediaSession;
 import android.media.session.PlaybackState;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Base64;
@@ -28,10 +36,17 @@ import java.util.List;
 
 @CapacitorPlugin(name = "DreamAudio")
 public class DreamAudioPlugin extends Plugin {
+    private static final String CHANNEL_ID = "dreamscapes_audio";
+    private static final int NOTIFICATION_ID = 71002;
+    private static final String ACTION_PLAY = "cloud.dreamscapes.app.audio.PLAY";
+    private static final String ACTION_PAUSE = "cloud.dreamscapes.app.audio.PAUSE";
+    private static final String ACTION_STOP = "cloud.dreamscapes.app.audio.STOP";
+
     private final Handler progressHandler = new Handler(Looper.getMainLooper());
     private final List<String> tracks = new ArrayList<>();
     private final List<Double> durations = new ArrayList<>();
     private final List<File> tempFiles = new ArrayList<>();
+    private boolean receiverRegistered = false;
     private MediaPlayer player;
     private MediaSession mediaSession;
     private int currentIndex = 0;
@@ -51,9 +66,32 @@ public class DreamAudioPlugin extends Plugin {
         }
     };
 
+    private final BroadcastReceiver audioActionReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (ACTION_PLAY.equals(action)) {
+                resumeInternal();
+            } else if (ACTION_PAUSE.equals(action)) {
+                pauseInternal();
+            } else if (ACTION_STOP.equals(action)) {
+                stopInternal(true);
+            }
+        }
+    };
+
     @Override
     public void load() {
+        createNotificationChannel();
+        registerAudioActionReceiver();
         setupMediaSession();
+    }
+
+    @Override
+    protected void handleOnDestroy() {
+        unregisterAudioActionReceiver();
+        cancelMediaNotification();
+        super.handleOnDestroy();
     }
 
     @PluginMethod
@@ -179,6 +217,7 @@ public class DreamAudioPlugin extends Plugin {
                 paused = false;
                 mediaSession.setActive(true);
                 updatePlaybackState(PlaybackState.STATE_PLAYING);
+                showMediaNotification(PlaybackState.STATE_PLAYING);
                 progressHandler.removeCallbacks(progressRunnable);
                 progressHandler.post(progressRunnable);
             });
@@ -209,6 +248,7 @@ public class DreamAudioPlugin extends Plugin {
             player.pause();
             paused = true;
             updatePlaybackState(PlaybackState.STATE_PAUSED);
+            showMediaNotification(PlaybackState.STATE_PAUSED);
         }
     }
 
@@ -217,6 +257,7 @@ public class DreamAudioPlugin extends Plugin {
             player.start();
             paused = false;
             updatePlaybackState(PlaybackState.STATE_PLAYING);
+            showMediaNotification(PlaybackState.STATE_PLAYING);
             progressHandler.post(progressRunnable);
         }
     }
@@ -230,6 +271,7 @@ public class DreamAudioPlugin extends Plugin {
             updatePlaybackState(PlaybackState.STATE_STOPPED);
             mediaSession.setActive(false);
         }
+        cancelMediaNotification();
         clearTempFiles();
         if (emitStopped) notifyListeners("stopped", new JSObject());
     }
@@ -345,5 +387,108 @@ public class DreamAudioPlugin extends Plugin {
             .setState(state, (long) (getElapsedSeconds() * 1000), 1.0f)
             .build();
         mediaSession.setPlaybackState(playbackState);
+    }
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
+
+        NotificationChannel channel = new NotificationChannel(
+            CHANNEL_ID,
+            "Story audio",
+            NotificationManager.IMPORTANCE_LOW
+        );
+        channel.setDescription("DreamScapes story playback controls");
+        NotificationManager manager = (NotificationManager) getContext().getSystemService(Context.NOTIFICATION_SERVICE);
+        if (manager != null) manager.createNotificationChannel(channel);
+    }
+
+    private void registerAudioActionReceiver() {
+        if (receiverRegistered) return;
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ACTION_PLAY);
+        filter.addAction(ACTION_PAUSE);
+        filter.addAction(ACTION_STOP);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            getContext().registerReceiver(audioActionReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            getContext().registerReceiver(audioActionReceiver, filter);
+        }
+        receiverRegistered = true;
+    }
+
+    private void unregisterAudioActionReceiver() {
+        if (!receiverRegistered) return;
+
+        try {
+            getContext().unregisterReceiver(audioActionReceiver);
+        } catch (IllegalArgumentException ignored) {
+            // Receiver may already have been cleared by Android.
+        }
+        receiverRegistered = false;
+    }
+
+    private PendingIntent createControlIntent(String action, int requestCode) {
+        Intent intent = new Intent(action);
+        intent.setPackage(getContext().getPackageName());
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) flags |= PendingIntent.FLAG_IMMUTABLE;
+        return PendingIntent.getBroadcast(getContext(), requestCode, intent, flags);
+    }
+
+    private PendingIntent createContentIntent() {
+        Intent intent = getContext().getPackageManager().getLaunchIntentForPackage(getContext().getPackageName());
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) flags |= PendingIntent.FLAG_IMMUTABLE;
+        return PendingIntent.getActivity(getContext(), 20, intent, flags);
+    }
+
+    private void showMediaNotification(int playbackState) {
+        if (mediaSession == null) return;
+
+        Notification.Action playPauseAction = playbackState == PlaybackState.STATE_PLAYING
+            ? new Notification.Action.Builder(
+                android.R.drawable.ic_media_pause,
+                "Pause",
+                createControlIntent(ACTION_PAUSE, 11)
+            ).build()
+            : new Notification.Action.Builder(
+                android.R.drawable.ic_media_play,
+                "Play",
+                createControlIntent(ACTION_PLAY, 10)
+            ).build();
+        Notification.Action stopAction = new Notification.Action.Builder(
+            android.R.drawable.ic_menu_close_clear_cancel,
+            "Stop",
+            createControlIntent(ACTION_STOP, 12)
+        ).build();
+
+        Notification.Builder builder = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+            ? new Notification.Builder(getContext(), CHANNEL_ID)
+            : new Notification.Builder(getContext());
+
+        Notification notification = builder
+            .setSmallIcon(getContext().getApplicationInfo().icon)
+            .setContentTitle(title)
+            .setContentText(artist)
+            .setSubText(album)
+            .setContentIntent(createContentIntent())
+            .setVisibility(Notification.VISIBILITY_PUBLIC)
+            .setOngoing(playbackState == PlaybackState.STATE_PLAYING)
+            .setOnlyAlertOnce(true)
+            .addAction(playPauseAction)
+            .addAction(stopAction)
+            .setStyle(new Notification.MediaStyle()
+                .setMediaSession(mediaSession.getSessionToken())
+                .setShowActionsInCompactView(0))
+            .build();
+
+        NotificationManager manager = (NotificationManager) getContext().getSystemService(Context.NOTIFICATION_SERVICE);
+        if (manager != null) manager.notify(NOTIFICATION_ID, notification);
+    }
+
+    private void cancelMediaNotification() {
+        NotificationManager manager = (NotificationManager) getContext().getSystemService(Context.NOTIFICATION_SERVICE);
+        if (manager != null) manager.cancel(NOTIFICATION_ID);
     }
 }

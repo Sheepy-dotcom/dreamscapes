@@ -82,7 +82,10 @@ const accountPlan = document.querySelector("#account-plan");
 const accountStories = document.querySelector("#account-stories");
 const accountSavedStories = document.querySelector("#account-saved-stories");
 const accountAudio = document.querySelector("#account-audio");
+const accountAudioCreditStat = document.querySelector("#account-audio-credit-stat");
 const accountAudioCredits = document.querySelector("#account-audio-credits");
+const deleteAccountButton = document.querySelector("#delete-account-button");
+const deleteAccountStatus = document.querySelector("#delete-account-status");
 const openAdminButton = document.querySelector("#open-admin-button");
 const adminStatus = document.querySelector("#admin-status");
 const adminSummary = document.querySelector("#admin-summary");
@@ -179,6 +182,7 @@ const AI_ENDPOINT = resolveApiEndpoint(window.DREAMSCAPES_AI_ENDPOINT, "/api/sto
 const NARRATION_ENDPOINT = resolveApiEndpoint(window.DREAMSCAPES_NARRATION_ENDPOINT, "/api/narrate");
 const AUDIO_USAGE_ENDPOINT = resolveApiEndpoint(window.DREAMSCAPES_AUDIO_USAGE_ENDPOINT, "/api/audio-usage");
 const REDEEM_CODE_ENDPOINT = resolveApiEndpoint(window.DREAMSCAPES_REDEEM_CODE_ENDPOINT, "/api/redeem-code");
+const DELETE_ACCOUNT_ENDPOINT = resolveApiEndpoint(window.DREAMSCAPES_DELETE_ACCOUNT_ENDPOINT, "/api/delete-account");
 const ADMIN_ENDPOINT = resolveApiEndpoint(window.DREAMSCAPES_ADMIN_ENDPOINT, "/api/admin");
 const REVENUECAT_API_KEYS = {
   ios: window.DREAMSCAPES_REVENUECAT_IOS_KEY || "",
@@ -741,7 +745,7 @@ function updateAccountUI() {
     authSignedIn.classList.toggle("plan-premier", plan.key === "premier");
     authSignedIn.classList.toggle("plan-plus", plan.key === "plus");
   }
-  if (redeemCard) redeemCard.hidden = !signedIn;
+  if (redeemCard) redeemCard.hidden = !signedIn || !canUseRedeemCodes();
   if (feedbackCard) feedbackCard.hidden = !signedIn;
   if (childProfilesCard) childProfilesCard.hidden = !signedIn;
   if (storyMemoriesCard) storyMemoriesCard.hidden = !signedIn;
@@ -754,6 +758,7 @@ function updateAccountUI() {
   if (accountStories) accountStories.textContent = `${storiesUsed}/${plan.monthlyStories}`;
   if (accountSavedStories) accountSavedStories.textContent = `${stories.length}/${plan.savedLimit}`;
   if (accountAudio) accountAudio.textContent = `${audioUsedLabel} / ${audioLimit}`;
+  if (accountAudioCreditStat) accountAudioCreditStat.hidden = !canUseRedeemCodes();
   if (accountAudioCredits) accountAudioCredits.textContent = String(signedIn ? getAudioStoryCredits() : 0);
   if (openAdminButton) openAdminButton.hidden = !isCurrentUserAdmin();
   if (accountCloudStatus) {
@@ -1131,6 +1136,14 @@ function isNativeMobileApp() {
   return ["ios", "android"].includes(getCapacitorPlatform());
 }
 
+function isIosNativeApp() {
+  return getCapacitorPlatform() === "ios";
+}
+
+function canUseRedeemCodes() {
+  return !isIosNativeApp();
+}
+
 function getRevenueCatPlugin() {
   return window.Capacitor?.Plugins?.Purchases || null;
 }
@@ -1157,7 +1170,7 @@ function getRevenueCatErrorMessage(error, fallback = "Purchase could not be star
     .filter((value, index, values) => values.indexOf(value) === index)
     .join(" ");
 
-  if (/configuration|offering|product|billing|store/i.test(message)) {
+  if (/configuration|offering|product|billing|store|entitlement/i.test(message)) {
     return "Purchases are not available just now. Please try again later or contact support.";
   }
 
@@ -1252,7 +1265,17 @@ async function purchasePlan(planKey) {
   const purchasedPlan = getPlanFromCustomerInfo(result.customerInfo);
 
   if (purchasedPlan === "free") {
-    throw new Error("Purchase finished, but no DreamScapes entitlement was returned yet.");
+    upgradeNote.textContent = "Purchase complete. Waiting for the App Store to confirm your DreamScapes plan...";
+    await refreshProfileAfterPurchase();
+    const refreshedPlan = getCurrentPlanKey();
+    if (refreshedPlan !== "free") {
+      upgradeNote.textContent = `${getPlan(refreshedPlan).label} is active.`;
+      trackEvent("revenuecat_purchase_completed", { plan: refreshedPlan, source: "profile_refresh" });
+      return;
+    }
+    upgradeNote.textContent = "Purchase is being confirmed. Tap Restore Purchases in a moment if your plan does not update.";
+    trackEvent("revenuecat_purchase_pending_entitlement", { plan: planKey });
+    return;
   }
 
   await refreshProfileAfterPurchase();
@@ -1587,6 +1610,7 @@ function getAudioSecondsUsed() {
 }
 
 function getAudioStoryCredits() {
+  if (!canUseRedeemCodes()) return 0;
   return canUseCloudLibrary() && currentProfile ? Number(currentProfile.audio_story_credits || 0) : 0;
 }
 
@@ -1754,11 +1778,14 @@ async function requestPlusForAudio() {
 
   audioToggle.checked = false;
   const selectedDuration = Number(getValue("durationChoice"));
-  planNote.textContent =
+  const creditMessage =
     getAudioStoryCredits() > 0 && selectedDuration > AUDIO_CREDIT_MAX_MINUTES
       ? `Redeemed audio credits can be used on stories up to ${AUDIO_CREDIT_MAX_MINUTES} minutes. Choose a shorter story or upgrade to DreamScapes Plus.`
       : "Audio narration is included with DreamScapes Plus, or with a redeemed audio credit.";
-  throw new Error("DreamScapes Plus or an audio credit is required for audio.");
+  planNote.textContent = canUseRedeemCodes()
+    ? creditMessage
+    : "Audio narration is included with DreamScapes Plus.";
+  throw new Error(canUseRedeemCodes() ? "DreamScapes Plus or an audio credit is required for audio." : "DreamScapes Plus is required for audio.");
 }
 
 function escapeHtml(value) {
@@ -3528,10 +3555,13 @@ function handleDurationChoiceChange(input) {
 
   if (audioToggle.checked && !audioAllowed) {
     audioToggle.checked = false;
-    planNote.textContent =
+    const creditMessage =
       getAudioStoryCredits() > 0 && duration > AUDIO_CREDIT_MAX_MINUTES
         ? `Redeemed audio credits can be used on stories up to ${AUDIO_CREDIT_MAX_MINUTES} minutes. Choose a shorter story or upgrade to DreamScapes Plus.`
         : "Audio narration is included with DreamScapes Plus, or with a redeemed audio credit.";
+    planNote.textContent = canUseRedeemCodes()
+      ? creditMessage
+      : "Audio narration is included with DreamScapes Plus.";
     return;
   }
 
@@ -3564,6 +3594,11 @@ signupForm?.addEventListener("submit", (event) => {
 
 redeemForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
+
+  if (!canUseRedeemCodes()) {
+    if (redeemStatus) redeemStatus.textContent = "Redeem codes are not available in the iOS app.";
+    return;
+  }
 
   if (!currentUser) {
     if (redeemStatus) redeemStatus.textContent = "Sign in before redeeming a code.";
@@ -3772,6 +3807,60 @@ document.querySelector("#sign-out-button")?.addEventListener("click", async () =
 
   setAuthStatus("Signed out.");
   trackEvent("account_signed_out");
+});
+
+deleteAccountButton?.addEventListener("click", async () => {
+  if (!(await ensureSupabaseClient())) return;
+
+  if (!currentUser) {
+    if (deleteAccountStatus) deleteAccountStatus.textContent = "Sign in before deleting your account.";
+    return;
+  }
+
+  const confirmed = window.prompt(
+    "This permanently deletes your DreamScapes account, saved stories, profiles, and generated audio. Type DELETE to confirm."
+  );
+  if (confirmed !== "DELETE") {
+    if (deleteAccountStatus) deleteAccountStatus.textContent = "Account deletion cancelled.";
+    return;
+  }
+
+  if (deleteAccountButton) deleteAccountButton.disabled = true;
+  if (deleteAccountStatus) deleteAccountStatus.textContent = "Deleting your DreamScapes account...";
+
+  try {
+    const response = await fetch(DELETE_ACCOUNT_ENDPOINT, {
+      method: "DELETE",
+      headers: await getApiHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error(await readApiError(response, "Account could not be deleted."));
+    }
+
+    await supabaseClient.auth.signOut().catch(() => {});
+    cloudStories = [];
+    cloudStoriesLoaded = false;
+    childProfiles = [];
+    childProfilesLoaded = false;
+    currentUsage = null;
+    currentProfile = null;
+    setCurrentUser(null);
+    updatePlanFeatures();
+    setAuthStatus("Your DreamScapes account has been deleted.");
+    if (deleteAccountStatus) deleteAccountStatus.textContent = "";
+    showScreen("account");
+    trackEvent("account_deleted");
+  } catch (error) {
+    if (deleteAccountStatus) {
+      deleteAccountStatus.textContent = getFriendlyFaultMessage(
+        error,
+        "Account could not be deleted. Please try again."
+      );
+    }
+  } finally {
+    if (deleteAccountButton) deleteAccountButton.disabled = false;
+  }
 });
 
 childProfileForm?.addEventListener("submit", async (event) => {
@@ -4344,12 +4433,16 @@ function canUseNarration() {
   const accountPlan = getPlan(getCurrentPlanKey());
   const storyDuration = Number(currentStory.duration || 0);
 
-  if (!accountPlan.canUseAudio && getAudioStoryCredits() <= 0) {
-    statusNote.textContent = "Audio narration is included with DreamScapes Plus, or with a redeemed audio credit.";
+  const audioCredits = getAudioStoryCredits();
+
+  if (!accountPlan.canUseAudio && audioCredits <= 0) {
+    statusNote.textContent = canUseRedeemCodes()
+      ? "Audio narration is included with DreamScapes Plus, or with a redeemed audio credit."
+      : "Audio narration is included with DreamScapes Plus.";
     return false;
   }
 
-  if (!accountPlan.canUseAudio && getAudioStoryCredits() > 0 && storyDuration > AUDIO_CREDIT_MAX_MINUTES) {
+  if (!accountPlan.canUseAudio && audioCredits > 0 && storyDuration > AUDIO_CREDIT_MAX_MINUTES) {
     statusNote.textContent = `Redeemed audio credits can be used on stories up to ${AUDIO_CREDIT_MAX_MINUTES} minutes. Create a shorter audio story or upgrade to DreamScapes Plus.`;
     return false;
   }
