@@ -3269,6 +3269,78 @@ body.night-mode .loading-steps span {
   line-height: 1.65;
 }
 
+.legal-link-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.legal-link-row a,
+.support-card a {
+  color: #ffe785;
+  font-weight: 900;
+}
+
+.support-page {
+  min-height: 100vh;
+  overflow: auto;
+}
+
+.support-shell {
+  position: relative;
+  z-index: 1;
+  width: min(960px, calc(100% - 28px));
+  margin: 0 auto;
+  padding: 28px 0 48px;
+}
+
+.support-hero,
+.support-card {
+  border: 1px solid rgba(216, 198, 255, 0.24);
+  border-radius: 8px;
+  background:
+    linear-gradient(145deg, rgba(20, 29, 77, 0.94), rgba(45, 34, 96, 0.88)),
+    rgba(10, 15, 48, 0.86);
+  color: rgba(248, 244, 255, 0.86);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 18px 46px rgba(0, 0, 0, 0.3);
+}
+
+.support-hero {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+  margin-bottom: 14px;
+  padding: 22px;
+}
+
+.support-hero h1,
+.support-card h2 {
+  margin: 0;
+  color: #fff8dc;
+}
+
+.support-hero p,
+.support-card p,
+.support-card li {
+  color: rgba(248, 244, 255, 0.82);
+}
+
+.support-card {
+  margin-top: 12px;
+  padding: 18px 20px;
+}
+
+.support-card ul {
+  margin: 10px 0 0;
+  padding-left: 20px;
+}
+
+.support-card li + li {
+  margin-top: 8px;
+}
+
 .info-card ul {
   margin-bottom: 0;
   padding-left: 20px;
