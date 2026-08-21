@@ -20,6 +20,9 @@ const builderProgressFill = document.querySelector("#builder-progress-fill");
 const builderStepBackButton = document.querySelector("#builder-step-back");
 const builderStepNextButton = document.querySelector("#builder-step-next");
 const generateStoryButton = document.querySelector("#generate-story-button");
+const builderAccountNotice = document.querySelector("#builder-account-notice");
+const builderCreateAccountButton = document.querySelector("#builder-create-account-button");
+const builderSignInButton = document.querySelector("#builder-sign-in-button");
 const statusNote = document.querySelector("#status-note");
 const planNote = document.querySelector("#plan-note");
 const loadingMessage = document.querySelector("#loading-message");
@@ -601,7 +604,11 @@ function setBuilderStep(stepIndex, announce = true) {
   }
   if (builderStepBackButton) builderStepBackButton.textContent = currentBuilderStep === 0 ? "Home" : "Back";
   if (builderStepNextButton) builderStepNextButton.hidden = isLastStep;
-  if (generateStoryButton) generateStoryButton.hidden = !isLastStep;
+  if (generateStoryButton) {
+    generateStoryButton.hidden = !isLastStep;
+    generateStoryButton.textContent = currentUser ? "Generate Story" : "Sign In to Generate";
+  }
+  updateBuilderAccountNotice();
 
   if (announce) {
     planNote.textContent = "";
@@ -612,6 +619,13 @@ function setBuilderStep(stepIndex, announce = true) {
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     window.scrollTo({ top: 0, behavior: "auto" });
     window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "auto" }));
+  }
+}
+
+function updateBuilderAccountNotice() {
+  if (builderAccountNotice) builderAccountNotice.hidden = Boolean(currentUser);
+  if (generateStoryButton && !generateStoryButton.hidden) {
+    generateStoryButton.textContent = currentUser ? "Generate Story" : "Sign In to Generate";
   }
 }
 
@@ -639,6 +653,7 @@ function showScreen(name) {
   screens[name].classList.add("active");
   if (name === "builder") {
     setBuilderStep(0, false);
+    updateBuilderAccountNotice();
   }
   document.body.classList.toggle("home-active", name === "welcome");
   document.body.classList.toggle("builder-active", name === "builder");
@@ -768,6 +783,7 @@ function updateAccountUI() {
         : "Account connected. Library totals load when your cloud stories sync."
       : "Sign in to prepare cloud saving across devices.";
   }
+  updateBuilderAccountNotice();
   if (signedIn) {
     renderStoryMemories();
     loadReminderSettings();
@@ -3706,6 +3722,18 @@ planAuthSigninButton?.addEventListener("click", () => {
   showScreen("account");
 });
 
+builderCreateAccountButton?.addEventListener("click", () => {
+  setSignupStatus("Create your free account, then come back to make your story.");
+  showScreen("signup");
+  trackEvent("builder_account_create_selected");
+});
+
+builderSignInButton?.addEventListener("click", () => {
+  setAuthStatus("Sign in, then return to Create a Story.");
+  showScreen("account");
+  trackEvent("builder_account_signin_selected");
+});
+
 document.querySelector("#create-account-button")?.addEventListener("click", async () => {
   if (!(await ensureSupabaseClient())) {
     setSignupStatus("Account signup could not load. Check your connection and refresh DreamScapes.", true);
@@ -4111,7 +4139,8 @@ form.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   if (!currentUser) {
-    planNote.textContent = "Sign in or create a free DreamScapes account before creating stories.";
+    planNote.textContent = "Create a free account or sign in before generating your story.";
+    updateBuilderAccountNotice();
     showScreen("account");
     return;
   }

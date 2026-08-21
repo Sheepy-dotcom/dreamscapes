@@ -22,7 +22,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026080101" />
+    <link rel="stylesheet" href="./styles.css?v=2026082101" />
   </head>
   <body class="home-active night-mode">
     <div class="stars" aria-hidden="true"></div>
@@ -62,6 +62,17 @@
         </header>
 
         <form class="story-form" id="story-form">
+          <aside class="builder-account-notice" id="builder-account-notice" role="status" hidden>
+            <div>
+              <strong>Create a free account first</strong>
+              <span>DreamScapes saves your stories, profiles, audio and package to your account, so you need to sign in before generating a story.</span>
+            </div>
+            <div class="builder-account-actions">
+              <button class="button primary-button compact-button" id="builder-create-account-button" type="button">Create Account</button>
+              <button class="button secondary-button compact-button" id="builder-sign-in-button" type="button">Sign In</button>
+            </div>
+          </aside>
+
           <div class="builder-progress" aria-label="Story builder progress">
             <div class="builder-progress-heading"><span id="builder-step-count">Step 1 of 4</span><strong id="builder-step-title">Basics</strong></div>
             <div class="builder-progress-track" aria-hidden="true"><span id="builder-progress-fill"></span></div>
@@ -948,6 +959,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026080101"></script>
+    <script src="./app.js?v=2026082101"></script>
   </body>
 </html>
