@@ -3761,7 +3761,7 @@ document.querySelector("#create-account-button")?.addEventListener("click", asyn
   if (signupPassword) signupPassword.value = "";
   if (signupPasswordConfirm) signupPasswordConfirm.value = "";
   showScreen("account");
-  setAuthStatus("Account created. Check your email to confirm your DreamScapes account.");
+  setAuthStatus("Account created. Check your inbox to confirm your DreamScapes account. If it is not there, check junk or spam and mark DreamScapes as safe.");
   trackEvent("account_signed_up");
 });
 
