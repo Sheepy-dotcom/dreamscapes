@@ -639,12 +639,6 @@ function validateBuilderStep(stepIndex) {
     }
   }
 
-  if (stepIndex === 2 && !storyIdea.value.trim()) {
-    planNote.textContent = "Add a short story idea to continue.";
-    storyIdea.focus();
-    return false;
-  }
-
   return true;
 }
 

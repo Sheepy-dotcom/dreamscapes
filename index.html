@@ -61,7 +61,7 @@
           </div>
         </header>
 
-        <form class="story-form" id="story-form">
+        <form class="story-form" id="story-form" novalidate>
           <aside class="builder-account-notice" id="builder-account-notice" role="status" hidden>
             <div>
               <strong>Create a free account first</strong>
@@ -184,8 +184,8 @@
               <label class="feature-toggle calm-toggle"><input name="calmMode" type="checkbox" /><span><strong>Bedtime calm mode</strong><small>Soft pacing and a peaceful ending</small></span></label>
             </fieldset>
             <label class="field story-idea-field builder-group builder-group-pink">
-              <span>Story idea</span>
-              <textarea id="story-idea" name="storyIdea" rows="4" required></textarea>
+              <span>Story idea <small>optional</small></span>
+              <textarea id="story-idea" name="storyIdea" rows="4"></textarea>
             </label>
           </section>
 
@@ -959,6 +959,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026082102"></script>
+    <script src="./app.js?v=2026082103"></script>
   </body>
 </html>
