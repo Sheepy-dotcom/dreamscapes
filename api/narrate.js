@@ -27,6 +27,23 @@ function cleanText(value) {
     .trim();
 }
 
+function getLanguageNarrationGuard(value) {
+  const language = cleanText(value || "en-GB");
+  if (language !== "en-GB") return "";
+
+  return [
+    "Use a natural UK/British English accent and British English pronunciation throughout.",
+    "Do not drift into an American accent or American pronunciation.",
+  ].join(" ");
+}
+
+function buildNarrationInstructions(body) {
+  const baseInstructions = cleanText(body.instructions).slice(0, 900);
+  const languageGuard = getLanguageNarrationGuard(body.storyLanguage);
+
+  return cleanText([baseInstructions, languageGuard].filter(Boolean).join(" ")).slice(0, 1200);
+}
+
 function splitText(text) {
   const clean = cleanText(text);
   if (clean.length <= MAX_CHUNK_LENGTH) return [clean];
@@ -123,7 +140,7 @@ module.exports = async function handler(request, response) {
     }
     const text = cleanText(body.text);
     const voice = SUPPORTED_VOICES.has(body.voice) ? body.voice : "cedar";
-    const instructions = cleanText(body.instructions).slice(0, 1000);
+    const instructions = buildNarrationInstructions(body);
 
     if (!text) return response.status(400).json({ error: "Story text is required" });
 

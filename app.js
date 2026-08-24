@@ -2613,6 +2613,10 @@ function getAiNarrationVoice(style) {
 function getAiNarrationInstructions(story) {
   const profile = AI_VOICE_PROFILES[story.voiceStyle] || AI_VOICE_PROFILES["female calm"];
   const language = getStoryLanguageDetails(story.storyLanguage);
+  const englishAccentDirection =
+    getStoryLanguage(story.storyLanguage) === "en-GB"
+      ? "For English stories, keep the spoken accent clearly UK/British English throughout and do not drift into American pronunciation."
+      : "";
   const bedtimeDirection =
     story.storyType === "bedtime"
       ? "For bedtime stories, add gentle natural pauses at sentence endings and let the final line settle peacefully."
@@ -2622,6 +2626,7 @@ function getAiNarrationInstructions(story) {
     `Read this children's story as ${profile.label}.`,
     profile.direction,
     language.narration,
+    englishAccentDirection,
     `Child age: ${getChildAgePrompt(story.childAge)}.`,
     bedtimeDirection,
     "Leave a little breathing space between phrases, and make each word feel clearly separated without sounding slow, broken, or robotic.",
@@ -3968,6 +3973,7 @@ async function playAiVoicePreview() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       text: VOICE_PREVIEW_TEXT,
+      storyLanguage: "en-GB",
       voice: getAiNarrationVoice(selectedVoiceStyle),
       chargeAudio: false,
       instructions: getAiNarrationInstructions({
@@ -5126,6 +5132,7 @@ async function startAiNarration() {
         requestAiNarrationPart({
           text: partText,
           duration: partDuration,
+          storyLanguage: currentStory.storyLanguage,
           voice: getAiNarrationVoice(currentStory.voiceStyle),
           instructions: getAiNarrationInstructions(currentStory),
         }),
