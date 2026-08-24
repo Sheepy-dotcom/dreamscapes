@@ -1,7 +1,7 @@
 const OPENAI_SPEECH_URL = "https://api.openai.com/v1/audio/speech";
 const { enforceNarrationAccess, handleCorsPreflight, incrementUsage, sendApiError } = require("./auth");
 const DEFAULT_SPEECH_MODEL = "gpt-4o-mini-tts";
-const MAX_CHUNK_LENGTH = 1400;
+const MAX_CHUNK_LENGTH = 3200;
 const MAX_CHUNKS = 20;
 const SPEECH_CONCURRENCY = 2;
 const SUPPORTED_VOICES = new Set([

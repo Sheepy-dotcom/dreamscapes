@@ -301,8 +301,8 @@ const SUPABASE_SCRIPT_URLS = [
   "https://unpkg.com/@supabase/supabase-js@2",
 ];
 const AUDIO_BUCKET = "story-audio";
-const AI_NARRATION_REQUEST_MAX_LENGTH = 1400;
-const AI_NARRATION_PART_TIMEOUT_MS = 90000;
+const AI_NARRATION_REQUEST_MAX_LENGTH = 3200;
+const AI_NARRATION_PART_TIMEOUT_MS = 120000;
 const AI_NARRATION_PART_CONCURRENCY = 2;
 const AUDIO_UPLOAD_CONCURRENCY = 3;
 const AUDIO_CREDIT_MAX_MINUTES = 10;
@@ -2082,7 +2082,7 @@ function splitAiNarrationRequestText(text) {
   return chunks;
 }
 
-async function requestAiNarrationPart({ text, duration, voice, instructions }) {
+async function requestAiNarrationPart({ text, duration, voice, instructions, storyLanguage }) {
   let lastError = null;
 
   for (let attempt = 0; attempt < 2; attempt += 1) {
@@ -2099,6 +2099,7 @@ async function requestAiNarrationPart({ text, duration, voice, instructions }) {
           duration,
           voice,
           instructions,
+          storyLanguage,
           chargeAudio: false,
         }),
       });
