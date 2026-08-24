@@ -1150,6 +1150,23 @@ function isIosNativeApp() {
   return getCapacitorPlatform() === "ios";
 }
 
+function isKeyboardRelevantElement(element) {
+  if (!(element instanceof HTMLElement)) return false;
+  return Boolean(element.closest("input, textarea, select"));
+}
+
+function updateKeyboardOpenState() {
+  const visualViewport = window.visualViewport;
+  const viewportOffset = visualViewport
+    ? Math.max(0, window.innerHeight - visualViewport.height - visualViewport.offsetTop)
+    : 0;
+  const focusedFormElement = isKeyboardRelevantElement(document.activeElement);
+  const keyboardOpen = focusedFormElement && viewportOffset > 80;
+
+  document.documentElement.style.setProperty("--keyboard-offset", keyboardOpen ? `${Math.round(viewportOffset)}px` : "0px");
+  document.body.classList.toggle("keyboard-open", keyboardOpen);
+}
+
 function canUseRedeemCodes() {
   return !isIosNativeApp();
 }
@@ -5365,6 +5382,12 @@ audioProgress.addEventListener("change", () => {
   statusNote.textContent = "Start the narration before moving through the story.";
   resetAudioProgress();
 });
+
+document.addEventListener("focusin", updateKeyboardOpenState);
+document.addEventListener("focusout", () => window.setTimeout(updateKeyboardOpenState, 80));
+window.addEventListener("resize", updateKeyboardOpenState);
+window.visualViewport?.addEventListener("resize", updateKeyboardOpenState);
+window.visualViewport?.addEventListener("scroll", updateKeyboardOpenState);
 
 updatePlanFeatures();
 updateAccountUI();
