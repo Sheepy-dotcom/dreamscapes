@@ -47,8 +47,10 @@ OPENAI_API_KEY=your_openai_api_key
 Optional story model override:
 
 ```txt
-OPENAI_STORY_MODEL=gpt-5.6-terra
+OPENAI_STORY_MODEL=gpt-5.6-sol
 ```
+
+`gpt-5.6-sol` gives the best story quality. Use `gpt-5.6-terra` if you want a lower-cost balance, or `gpt-5.6-luna` for high-volume testing.
 
 Optional narration model override:
 

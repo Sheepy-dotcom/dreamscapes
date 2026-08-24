@@ -3579,7 +3579,7 @@ function handleDurationChoiceChange(input) {
 
   keepDurationWithinPlan(plan);
   syncDurationChoiceHighlight();
-  planNote.textContent = `${plan.label} includes stories up to ${plan.maxDuration} minutes. Premier and Plus subscriptions are coming soon in the app stores.`;
+  planNote.textContent = `${plan.label} includes stories up to ${plan.maxDuration} minutes. Open Plans to choose Premier or DreamScapes Plus.`;
 }
 
 durationInputs.forEach((input) => {
@@ -4177,7 +4177,7 @@ form.addEventListener("submit", async (event) => {
   }
 
   if (selectedDuration > selectedPlan.maxDuration) {
-    planNote.textContent = `${selectedPlan.label} includes stories up to ${selectedPlan.maxDuration} minutes. App Store and Google Play subscriptions are coming soon for longer stories.`;
+    planNote.textContent = `${selectedPlan.label} includes stories up to ${selectedPlan.maxDuration} minutes. Open Plans to choose Premier or DreamScapes Plus.`;
     showScreen("upgrade");
     return;
   }

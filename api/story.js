@@ -144,12 +144,12 @@ function extractResponseText(data) {
 }
 
 function getStoryModel() {
-  return cleanText(process.env.OPENAI_STORY_MODEL, "gpt-5.6-terra");
+  return cleanText(process.env.OPENAI_STORY_MODEL, "gpt-5.6-sol");
 }
 
 function getStoryModelCandidates() {
   const configuredModel = getStoryModel();
-  const fallbackModels = ["gpt-4.1", "gpt-4o", "gpt-4o-mini"];
+  const fallbackModels = ["gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna", "gpt-4.1", "gpt-4o", "gpt-4o-mini"];
 
   return [configuredModel, ...fallbackModels].filter(
     (model, index, models) => model && models.indexOf(model) === index
