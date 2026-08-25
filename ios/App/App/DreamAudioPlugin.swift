@@ -1,5 +1,6 @@
 import AVFoundation
 import Capacitor
+import Foundation
 import MediaPlayer
 import UIKit
 
@@ -17,6 +18,7 @@ public class DreamAudioPlugin: CAPPlugin, CAPBridgedPlugin {
 
     private var player: AVQueuePlayer?
     private var trackSources: [String] = []
+    private var preparedTrackUrls: [URL] = []
     private var trackDurations: [Double] = []
     private var tempFiles: [URL] = []
     private var currentIndex = 0
@@ -25,6 +27,7 @@ public class DreamAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private var artist = "DreamScapes"
     private var album = "Story"
     private var timeObserver: Any?
+    private var playbackToken = UUID()
 
     public override func load() {
         configureAudioSession()
@@ -49,11 +52,41 @@ public class DreamAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         artist = call.getString("artist") ?? "DreamScapes"
         album = call.getString("album") ?? "Story"
         totalDuration = call.getDouble("duration") ?? trackDurations.reduce(0, +)
+        let token = UUID()
+        playbackToken = token
 
         configureAudioSession()
         updateNowPlayingInfo(state: .playing)
-        startPlayback(at: 0, offset: 0)
-        call.resolve()
+
+        Task { [weak self] in
+            guard let self else { return }
+
+            do {
+                let urls = try await self.prepareTrackUrls(tracks)
+                DispatchQueue.main.async { [weak self] in
+                    guard let self else { return }
+                    guard self.playbackToken == token else {
+                        self.removeTempFiles(urls)
+                        call.resolve()
+                        return
+                    }
+
+                    self.preparedTrackUrls = urls
+                    if self.startPlayback(at: 0, offset: 0) {
+                        call.resolve()
+                    } else {
+                        call.reject("iOS audio playback failed.")
+                    }
+                }
+            } catch {
+                DispatchQueue.main.async { [weak self] in
+                    guard let self, self.playbackToken == token else { return }
+                    self.notifyError("iOS audio could not be prepared.")
+                    self.stopInternal(emitStopped: false)
+                    call.reject("iOS audio could not be prepared.")
+                }
+            }
+        }
     }
 
     @objc func pause(_ call: CAPPluginCall) {
@@ -88,12 +121,12 @@ public class DreamAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
 
-    private func startPlayback(at index: Int, offset: Double) {
+    private func startPlayback(at index: Int, offset: Double) -> Bool {
         releasePlayer()
         currentIndex = max(0, min(index, trackSources.count - 1))
 
         do {
-            let urls = try trackSources[currentIndex...].map(resolveTrackUrl)
+            let urls = try resolvedPlaybackUrls(from: currentIndex)
             let items = urls.map { AVPlayerItem(url: $0) }
             player = AVQueuePlayer(items: items)
             player?.actionAtItemEnd = .advance
@@ -108,9 +141,11 @@ public class DreamAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             }
 
             updateNowPlayingInfo(state: .playing)
+            return true
         } catch {
             notifyError("iOS audio playback failed.")
             stopInternal(emitStopped: false)
+            return false
         }
     }
 
@@ -160,7 +195,7 @@ public class DreamAudioPlugin: CAPPlugin, CAPBridgedPlugin {
             remaining -= duration
         }
 
-        startPlayback(at: targetIndex, offset: remaining)
+        _ = startPlayback(at: targetIndex, offset: remaining)
     }
 
     private func setupRemoteCommands() {
@@ -249,6 +284,8 @@ public class DreamAudioPlugin: CAPPlugin, CAPBridgedPlugin {
     private func stopInternal(emitStopped: Bool) {
         releasePlayer()
         currentIndex = 0
+        playbackToken = UUID()
+        preparedTrackUrls.removeAll()
         updateNowPlayingInfo(state: .stopped)
         clearTempFiles()
         if emitStopped {
@@ -256,7 +293,39 @@ public class DreamAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
 
-    private func resolveTrackUrl(_ source: String) throws -> URL {
+    private func resolvedPlaybackUrls(from index: Int) throws -> [URL] {
+        if preparedTrackUrls.count == trackSources.count {
+            return Array(preparedTrackUrls[index...])
+        }
+
+        return try trackSources[index...].map(resolveInlineOrLocalTrackUrl)
+    }
+
+    private func prepareTrackUrls(_ sources: [String]) async throws -> [URL] {
+        var urls: [URL] = []
+        for source in sources {
+            urls.append(try await resolveTrackUrl(source))
+        }
+        return urls
+    }
+
+    private func resolveTrackUrl(_ source: String) async throws -> URL {
+        if source.hasPrefix("data:audio") {
+            return try resolveInlineOrLocalTrackUrl(source)
+        }
+
+        guard let url = URL(string: source) else {
+            throw NSError(domain: "DreamAudio", code: 3)
+        }
+
+        guard url.scheme == "http" || url.scheme == "https" else {
+            return url
+        }
+
+        return try await downloadTrack(url)
+    }
+
+    private func resolveInlineOrLocalTrackUrl(_ source: String) throws -> URL {
         if source.hasPrefix("data:audio") {
             guard let commaIndex = source.firstIndex(of: ",") else {
                 throw NSError(domain: "DreamAudio", code: 1)
@@ -278,9 +347,34 @@ public class DreamAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         return url
     }
 
+    private func downloadTrack(_ url: URL) async throws -> URL {
+        let (downloadedUrl, response) = try await URLSession.shared.download(from: url)
+        if let httpResponse = response as? HTTPURLResponse,
+           !(200...299).contains(httpResponse.statusCode) {
+            throw NSError(domain: "DreamAudio", code: httpResponse.statusCode)
+        }
+
+        let localUrl = FileManager.default.temporaryDirectory
+            .appendingPathComponent("dreamscapes-audio-\(UUID().uuidString).mp3")
+        try FileManager.default.moveItem(at: downloadedUrl, to: localUrl)
+        tempFiles.append(localUrl)
+        return localUrl
+    }
+
     private func clearTempFiles() {
-        tempFiles.forEach { try? FileManager.default.removeItem(at: $0) }
+        removeTempFiles(tempFiles)
         tempFiles.removeAll()
+    }
+
+    private func removeTempFiles(_ urls: [URL]) {
+        urls.forEach { url in
+            if url.path.hasPrefix(FileManager.default.temporaryDirectory.path) {
+                try? FileManager.default.removeItem(at: url)
+            }
+        }
+        tempFiles.removeAll { tempUrl in
+            urls.contains(tempUrl)
+        }
     }
 
     private func notifyError(_ message: String) {
