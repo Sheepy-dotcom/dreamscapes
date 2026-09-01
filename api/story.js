@@ -368,6 +368,15 @@ const storySchema = {
   },
 };
 
+function logModelFallback(failedModel, candidates, reason) {
+  const nextModel = candidates[candidates.indexOf(failedModel) + 1];
+  const detail = String(reason || "unknown").replace(/\s+/g, " ").slice(0, 300);
+
+  console.warn(
+    `[story] Model "${failedModel}" failed; falling back to "${nextModel || "none"}". Reason: ${detail}`
+  );
+}
+
 async function requestStoryWithPrompt(data, prompt) {
   const modelCandidates = getStoryModelCandidates();
   let lastError = null;
@@ -417,6 +426,7 @@ async function requestStoryWithPrompt(data, prompt) {
       lastError = new Error(message || "Story request failed");
 
       if (shouldTryNextStoryModel(response.status, message)) {
+        logModelFallback(model, modelCandidates, `HTTP ${response.status}: ${message}`);
         continue;
       }
 
@@ -428,6 +438,7 @@ async function requestStoryWithPrompt(data, prompt) {
 
     if (!text) {
       lastError = new Error(`Story model returned no text. Status: ${result.status || "unknown"}`);
+      logModelFallback(model, modelCandidates, lastError.message);
       continue;
     }
 
@@ -436,10 +447,17 @@ async function requestStoryWithPrompt(data, prompt) {
       story = JSON.parse(text);
     } catch {
       lastError = new Error("Story model returned an unreadable draft. Please try generating again.");
+      logModelFallback(model, modelCandidates, lastError.message);
       continue;
     }
 
     const paragraphs = story.paragraphs.map((paragraph) => cleanText(paragraph)).filter(Boolean);
+
+    if (model !== modelCandidates[0]) {
+      console.warn(
+        `[story] Story served by fallback model "${model}" instead of "${modelCandidates[0]}".`
+      );
+    }
 
     return {
       title: cleanText(story.title, "A DreamScapes Story"),
@@ -447,8 +465,15 @@ async function requestStoryWithPrompt(data, prompt) {
       nextIdeas: cleanList(story.nextIdeas).slice(0, 2),
       paragraphs,
       wordCount: countWords(paragraphs),
+      model,
     };
   }
+
+  console.error(
+    `[story] All ${modelCandidates.length} story models failed (${modelCandidates.join(", ")}). Last error: ${
+      lastError ? lastError.message : "unknown"
+    }`
+  );
 
   throw lastError || new Error("Story request failed");
 }
