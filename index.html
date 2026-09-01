@@ -22,7 +22,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026090118" />
+    <link rel="stylesheet" href="./styles.css?v=2026090129" />
   </head>
   <body class="home-active night-mode">
     <div class="stars" aria-hidden="true"></div>
@@ -634,8 +634,8 @@
             </div>
           </article>
 
-          <article class="auth-card redeem-card" id="redeem-card" hidden>
-            <h3>Redeem code</h3>
+          <details class="auth-card account-section redeem-card" id="redeem-card" hidden>
+            <summary>Redeem code</summary>
             <form class="auth-form redeem-form" id="redeem-form">
               <label class="field">
                 <span>Code</span>
@@ -646,12 +646,12 @@
               </div>
             </form>
             <p class="helper-text" id="redeem-status" role="status"></p>
-          </article>
+          </details>
 
-          <article class="auth-card child-profiles-card" id="child-profiles-card" hidden>
+          <details class="auth-card account-section child-profiles-card" id="child-profiles-card" hidden>
+            <summary>Child profiles</summary>
             <div class="profile-card-header">
               <div>
-                <h3>Child profiles</h3>
                 <p>Add optional details for personalised stories.</p>
               </div>
               <button class="button secondary-button compact-button" id="toggle-profile-form" type="button">
@@ -710,15 +710,15 @@
               </div>
             </form>
             <div class="child-profile-list" id="child-profile-list"></div>
-          </article>
+          </details>
 
-          <article class="auth-card story-memories-card" id="story-memories-card" hidden>
-            <h3>Story memories</h3>
+          <details class="auth-card account-section story-memories-card" id="story-memories-card" hidden>
+            <summary>Story memories</summary>
             <div class="memory-grid" id="story-memory-grid"></div>
-          </article>
+          </details>
 
-          <article class="auth-card reminder-card" id="reminder-card" hidden>
-            <h3>Bedtime reminder</h3>
+          <details class="auth-card account-section reminder-card" id="reminder-card" hidden>
+            <summary>Bedtime reminder</summary>
             <p>Choose an optional daily time for the next DreamScapes adventure.</p>
             <form class="reminder-form" id="reminder-form">
               <label class="field">
@@ -732,7 +732,7 @@
               <button class="button primary-button" type="submit">Save Reminder</button>
             </form>
             <p class="helper-text" id="reminder-status" role="status"></p>
-          </article>
+          </details>
 
           <div class="account-danger-zone" id="account-danger-zone" hidden>
             <button class="button danger-link" id="delete-account-button" type="button">Delete account</button>

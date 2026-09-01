@@ -95,7 +95,11 @@ button {
 .screen {
   display: none;
   width: 100%;
-  min-height: calc(100vh - 120px);
+  /* .app-shell adds 18px above and 118px below, plus the safe areas. Reserving
+     only 120px here made every screen 16px taller than the viewport, so even an
+     almost empty screen scrolled. */
+  min-height: calc(100vh - 136px);
+  min-height: calc(100dvh - 136px - var(--safe-top) - var(--safe-bottom));
   border: 1px solid rgba(255, 255, 255, 0.42);
   border-radius: 8px;
   background:
@@ -124,7 +128,10 @@ body.home-active .app-shell {
 }
 
 body.home-active .welcome-screen {
-  min-height: calc(100vh - 98px);
+  /* Matches the 12px/108px shell padding above; a smaller figure here made the
+     home screen taller than the viewport. */
+  min-height: calc(100vh - 120px);
+  min-height: calc(100dvh - 120px - var(--safe-top) - var(--safe-bottom));
 }
 
 body.home-active .welcome-screen.active {
@@ -594,13 +601,17 @@ textarea:focus-visible {
   display: none;
 }
 
+/* Label beside the plan rather than stacked above it: the panel was 158px tall
+   for one line of information. */
 .package-panel {
   display: grid;
-  gap: 14px;
-  margin-bottom: 28px;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
   border: 1px solid rgba(123, 78, 216, 0.16);
   border-radius: 8px;
-  padding: 16px;
+  padding: 12px;
   background: rgba(255, 255, 255, 0.58);
 }
 
@@ -1979,6 +1990,82 @@ body.night-mode .story-path-button.active {
   margin-bottom: 6px;
 }
 
+/* The secondary account sections are collapsed by default. Five stacked cards
+   made the signed-in account screen roughly three screenfuls tall; as
+   disclosures the screen opens on the summary and the rest is one tap away. */
+.account-section > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 1.02rem;
+  font-weight: 900;
+}
+
+.account-section > summary::-webkit-details-marker {
+  display: none;
+}
+
+.account-section > summary::after {
+  content: "";
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  opacity: 0.55;
+  transform: rotate(45deg) translate(-2px, -2px);
+  transition: transform 140ms ease;
+}
+
+.account-section[open] > summary::after {
+  transform: rotate(-135deg);
+}
+
+.account-section[open] > summary {
+  margin-bottom: 12px;
+}
+
+.account-section > summary:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Two buttons stacked full width cost 108px of the signed-in card; side by side
+   they cost 52px and still clear the 44px touch target. */
+#auth-signed-in .auth-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+#auth-signed-in .auth-actions .button {
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 12px;
+  font-size: 0.9rem;
+}
+
+/* Admins get a third button, which would otherwise sit alone beside a gap. */
+#auth-signed-in .auth-actions .button:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+#account-cloud-status {
+  margin: 0 0 10px;
+  font-size: 0.84rem;
+  opacity: 0.72;
+}
+
+/* Five stats in two columns leave the last one alone on its own row; let it use
+   the full width instead of sitting beside a gap. The credits stat is hidden on
+   iOS, which leaves an even four, so this only applies when it is shown. */
+.account-summary > span:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
 .plan-price {
   margin: 0 0 10px;
   color: #241f52;
@@ -2212,8 +2299,8 @@ body.night-mode .story-path-button.active {
 .account-summary {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
-  gap: 10px;
-  margin: 14px 0;
+  gap: 8px;
+  margin: 10px 0;
 }
 
 .account-summary span {
@@ -2221,12 +2308,12 @@ body.night-mode .story-path-button.active {
   overflow: hidden;
   display: grid;
   align-content: start;
-  gap: 5px;
-  min-height: 82px;
+  gap: 3px;
+  min-height: 54px;
   min-width: 0;
   border: 1px solid rgba(123, 78, 216, 0.16);
   border-radius: 8px;
-  padding: 12px 14px;
+  padding: 9px 12px;
   color: #5e5f80;
   background:
     linear-gradient(145deg, rgba(255, 248, 220, 0.76), rgba(255, 228, 238, 0.64)),
@@ -3263,7 +3350,7 @@ body.night-mode .loading-steps span {
 .plan-comparison-table th,
 .plan-comparison-table td {
   border-bottom: 1px solid rgba(123, 78, 216, 0.14);
-  padding: 13px 14px;
+  padding: 9px 12px;
   text-align: center;
   vertical-align: middle;
 }
@@ -3384,8 +3471,9 @@ body.night-mode .loading-steps span {
 }
 
 .trust-links {
-  grid-template-columns: minmax(0, 1fr);
-  margin-top: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
 }
 
 .upgrade-grid ul {
@@ -3642,7 +3730,9 @@ body.night-mode .loading-steps span {
   }
 
   .welcome-screen {
-    min-height: calc(100vh - 118px);
+    /* Matches this breakpoint's 10px/122px shell padding. */
+    min-height: calc(100vh - 132px);
+    min-height: calc(100dvh - 132px - var(--safe-top) - var(--safe-bottom));
   }
 
   .builder-screen.active {
@@ -3873,7 +3963,6 @@ body.night-mode .loading-steps span {
   .profile-grid,
   .safety-grid,
   .upgrade-grid,
-  .trust-links,
   .audio-settings,
   .segmented-control,
   .mood-grid,
@@ -4188,7 +4277,7 @@ body.night-mode .loading-steps span {
   }
 
   .account-summary {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .redeem-form .auth-actions {
