@@ -346,6 +346,11 @@ const AI_VOICE_PROFILES = {
 };
 const MAX_LOCAL_SAVED_STORIES = 30;
 const MAX_LIBRARY_RENDER_ITEMS = 30;
+// Fetch with headroom above the render cap. The cloud query sorts favourites
+// first, so fetching exactly MAX_LIBRARY_RENDER_ITEMS meant a library of 30
+// favourites starved every newer story out of the result and new stories
+// silently never appeared. Rendering is still capped when the list is sliced.
+const CLOUD_LIBRARY_FETCH_LIMIT = MAX_LIBRARY_RENDER_ITEMS * 3;
 const STORY_FAVOURITES_KEY = "dreamscapesStoryFavourites";
 const ADMIN_EMAILS = ["shaunrussett@gmail.com"];
 const ADMIN_LAST_SEEN_KEY = "dreamscapesAdminLastSeenAt";
@@ -2810,6 +2815,12 @@ function getStoryStorageSize(story) {
   return JSON.stringify(story).length;
 }
 
+// Set by saveStoryLocally so the caller can report what the save actually did.
+// removedCount: stories dropped to stay within the plan limit.
+// keptNewStory: false when the library was full of protected stories and the
+// new story itself was the one dropped.
+let lastSaveEviction = null;
+
 function saveStoryLocally(story, plan, { silent = false } = {}) {
   const existingStory = getSavedStories().find((savedStory) => storiesMatch(savedStory, story) || savedStory.id === story.id);
   const storyToSave = {
@@ -2821,8 +2832,16 @@ function saveStoryLocally(story, plan, { silent = false } = {}) {
   const savedStories = getSavedStories().filter((savedStory) => !storiesMatch(savedStory, storyToSave) && savedStory.id !== storyToSave.id);
   savedStories.unshift(storyToSave);
 
+  const effectiveLimit = Math.min(plan.savedLimit, MAX_LOCAL_SAVED_STORIES);
+  lastSaveEviction = null;
+
   try {
-    setSavedStories(trimSavedStoriesForLimit(savedStories, Math.min(plan.savedLimit, MAX_LOCAL_SAVED_STORIES)));
+    const trimmedStories = trimSavedStoriesForLimit(savedStories, effectiveLimit);
+    lastSaveEviction = {
+      removedCount: Math.max(0, savedStories.length - trimmedStories.length),
+      keptNewStory: trimmedStories.some((savedStory) => savedStory.id === storyToSave.id),
+    };
+    setSavedStories(trimmedStories);
   } catch {
     const withoutAudio = {
       ...storyToSave,
@@ -3020,14 +3039,14 @@ async function loadCloudStories() {
     .select("*")
     .order("is_favourite", { ascending: false })
     .order("created_at", { ascending: false })
-    .limit(MAX_LIBRARY_RENDER_ITEMS);
+    .limit(CLOUD_LIBRARY_FETCH_LIMIT);
 
   if (error && String(error.message || "").includes("is_favourite")) {
     ({ data, error } = await supabaseClient
       .from("stories")
       .select("*")
       .order("created_at", { ascending: false })
-      .limit(MAX_LIBRARY_RENDER_ITEMS));
+      .limit(CLOUD_LIBRARY_FETCH_LIMIT));
   }
 
   if (error) throw error;
@@ -3279,7 +3298,14 @@ function saveStoryToLibrary(story, { silent = false } = {}) {
   if (!saved) return false;
 
   if (!silent) {
-    statusNote.textContent = `Story saved to this device. ${plan.label} keeps up to ${plan.savedLimit} saved stories here.`;
+    if (lastSaveEviction && !lastSaveEviction.keptNewStory) {
+      statusNote.textContent = `Your library is full at ${plan.savedLimit} protected stories, so this one could not be kept on this device. Unprotect or delete a story in your Library, then save again.`;
+    } else if (lastSaveEviction && lastSaveEviction.removedCount > 0) {
+      const removed = lastSaveEviction.removedCount;
+      statusNote.textContent = `Story saved. Your library was full at ${plan.savedLimit}, so the ${removed === 1 ? "oldest unprotected story was" : `${removed} oldest unprotected stories were`} removed to make room. Tap Save on a story to protect it.`;
+    } else {
+      statusNote.textContent = `Story saved to this device. ${plan.label} keeps up to ${plan.savedLimit} saved stories here.`;
+    }
   }
 
   trackEvent("story_saved", {
@@ -4366,7 +4392,9 @@ async function renderLibrary() {
   }
 
   if (libraryStatus && !libraryNotice) {
-    const shownCount = filteredStories.length;
+    // Count what is actually rendered, not what passed the filter. These used to
+    // be equal only because the cloud fetch limit matched the render cap.
+    const shownCount = visibleStories.length;
     libraryStatus.textContent =
       currentLibraryFilter === "favourites"
         ? `${shownCount} saved and protected ${shownCount === 1 ? "story" : "stories"} shown from ${savedStories.length} in your library.`
