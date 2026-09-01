@@ -78,7 +78,16 @@ premier
 plus
 ```
 
-The current web plan buttons are preview-only and switch the local prototype plan. Before launch, connect the mobile app to RevenueCat/App Store/Google Play entitlements and move usage limits to the backend.
+RevenueCat is wired up in the mobile apps and usage limits are enforced server-side.
+The plan buttons on the web build do not sell anything: they prompt for sign-in when
+signed out, and otherwise report that subscriptions are handled in the iOS and Android
+apps. Real purchases go through `purchasePlan()` in `app.js`, which requires a native
+Capacitor platform.
+
+Entitlements are authoritative on the server, not the client. `api/revenuecat-webhook.js`
+maps the purchased entitlement to a plan and writes `profiles.plan` in Supabase, and
+`getAccountContext()` in `api/auth.js` reads that column back on every request. A modified
+client cannot grant itself a paid plan.
 
 ## DNS Records
 

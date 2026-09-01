@@ -3935,6 +3935,12 @@ body.night-mode .loading-steps span {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  /* An odd number of filters leaves the last one alone in a half-width column.
+     Let it span the row instead. Self-correcting if a filter is added/removed. */
+  .library-filter button:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+
   .library-sort {
     justify-content: space-between;
   }
