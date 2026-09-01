@@ -133,6 +133,10 @@ let currentAudio = null;
 let currentAudioTracks = [];
 let currentAudioIndex = 0;
 let currentAudioTrackDurations = [];
+// Which story the loaded narration belongs to. Playback state outlives the
+// screen, so without this, opening a second story left the first one playing
+// and the play button resumed it instead of the story on screen.
+let currentAudioStoryId = "";
 let aiAudioPausedBetweenTracks = false;
 let nativeAudioActive = false;
 let nativeAudioListenersReady = false;
@@ -2042,6 +2046,12 @@ async function createStory(data) {
 }
 
 function renderStory(story) {
+  // Narration keeps running when the screen changes, so a story opened while
+  // another is playing would otherwise sit behind the previous one's audio.
+  if (currentAudioStoryId && currentAudioStoryId !== getStoryIdentity(story)) {
+    stopNarration();
+  }
+
   const selectedMoods = getSelectedMoods(story.moods);
   const plan = getPlan(story.plan);
   const savedAudioDuration = getSavedAudioDurationSeconds(story);
@@ -4977,6 +4987,7 @@ function stopNarration({ clearTimer = true } = {}) {
   currentAudioTrackDurations = [];
   aiAudioPausedBetweenTracks = false;
   nativeAudioActive = false;
+  currentAudioStoryId = "";
   resetAudioProgress();
   clearMediaSession();
 }
@@ -5097,6 +5108,7 @@ async function saveAudioStoryUpdate(story) {
 }
 
 async function startAiNarration() {
+  currentAudioStoryId = getStoryIdentity(currentStory);
   if (Array.isArray(currentStory.aiAudioTracks) && currentStory.aiAudioTracks.length > 0) {
     currentAudioTracks = currentStory.aiAudioTracks;
     currentAudioTrackDurations = Array.isArray(currentStory.aiAudioTrackDurations)
@@ -5230,6 +5242,7 @@ function startDeviceNarration() {
   }
 
   setupMediaSession(currentStory);
+  currentAudioStoryId = getStoryIdentity(currentStory);
   currentNarrationSegments = storyAsNarrationSegments(currentStory);
   currentNarrationIndex = 0;
   speakNarrationSegment();
