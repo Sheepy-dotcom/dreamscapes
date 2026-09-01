@@ -601,14 +601,13 @@ textarea:focus-visible {
   display: none;
 }
 
-/* Label beside the plan rather than stacked above it: the panel was 158px tall
-   for one line of information. */
+/* A heading, a subheading and a bordered card cost about 200px to say which
+   plan is active - which the Choose plan row of the table below already marks.
+   One compact strip instead. */
 .package-panel {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: 2px;
+  margin-bottom: 6px;
   border: 1px solid rgba(123, 78, 216, 0.16);
   border-radius: 8px;
   padding: 12px;
@@ -784,12 +783,23 @@ textarea:focus-visible {
 }
 
 .subscription-card {
-  display: grid;
-  gap: 4px;
-  border: 1px solid rgba(123, 78, 216, 0.18);
-  border-radius: 8px;
-  padding: 14px;
-  background: linear-gradient(135deg, #fff8dc, #ffe4ee 50%, #d8c6ff);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  margin: 0;
+  border: 0;
+  padding: 0;
+  background: none;
+}
+
+.subscription-card strong {
+  font-size: 1.05rem;
+}
+
+.subscription-card span {
+  font-size: 0.86rem;
+  opacity: 0.76;
 }
 
 .subscription-card strong,
@@ -1519,13 +1529,17 @@ body.keyboard-open .app-tabbar {
 }
 
 .library-status {
-  margin: 0 0 14px;
-  border: 1px solid rgba(138, 215, 189, 0.42);
-  border-radius: 8px;
-  padding: 10px 12px;
-  background: rgba(232, 255, 247, 0.82);
-  color: #244f48;
+  margin: 0 0 8px;
+  border: 0;
+  padding: 0;
+  background: none;
+  font-size: 0.84rem;
+  opacity: 0.72;
   text-align: left;
+}
+
+.library-status:empty {
+  display: none;
 }
 
 .story-spark-panel {
@@ -1850,10 +1864,11 @@ body.night-mode .story-path-button.active {
 
 .library-toolbar {
   display: flex;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
   align-items: center;
   justify-content: space-between;
-  margin: 0 0 14px;
+  margin: 0 0 10px;
 }
 
 .library-filter {
@@ -2452,13 +2467,20 @@ body.night-mode .story-path-button.active {
 .library-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  gap: 6px;
+}
+
+.library-actions .library-open-button {
+  grid-column: 1 / -1;
+  min-height: 46px;
 }
 
 .library-actions .button {
   min-width: 0;
   width: 100%;
+  min-height: 40px;
   padding-inline: 10px;
+  font-size: 0.88rem;
   white-space: normal;
 }
 
@@ -2913,8 +2935,8 @@ body.night-mode .plan-check {
 body.night-mode .result-screen > .status-note,
 body.night-mode .library-status {
   color: #fff8dc;
-  border-color: rgba(255, 217, 106, 0.26);
-  background: rgba(255, 217, 106, 0.12);
+  border: 0;
+  background: none;
 }
 
 body.night-mode .app-tabbar {
@@ -3440,8 +3462,8 @@ body.night-mode .loading-steps span {
 
 .plan-check {
   display: inline-grid;
-  width: 28px;
-  height: 28px;
+  width: 22px;
+  height: 22px;
   place-items: center;
   border: 1px solid rgba(92, 225, 169, 0.72);
   border-radius: 999px;
@@ -3473,7 +3495,13 @@ body.night-mode .loading-steps span {
 .trust-links {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
-  margin-top: 12px;
+  margin-top: 6px;
+}
+
+.trust-links .button {
+  min-height: 42px;
+  padding: 9px 10px;
+  font-size: 0.86rem;
 }
 
 .upgrade-grid ul {
@@ -4096,21 +4124,17 @@ body.night-mode .loading-steps span {
   }
 
   .library-filter {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
   }
 
-  /* An odd number of filters leaves the last one alone in a half-width column.
-     Let it span the row instead. Self-correcting if a filter is added/removed. */
-  .library-filter button:last-child:nth-child(odd) {
-    grid-column: 1 / -1;
-  }
-
-  .library-sort {
-    justify-content: space-between;
+  .library-filter button {
+    min-height: 32px;
+    padding: 6px 4px;
+    font-size: 0.76rem;
   }
 
   .library-sort select {
-    min-width: 150px;
+    min-width: 118px;
   }
 
   .child-profile-item {
@@ -4313,4 +4337,36 @@ body.night-mode .loading-steps span {
   .builder-screen .story-form > .builder-step {
     gap: 10px;
   }
+}
+
+/* Plans is the one screen that has to show a full comparison table, a required
+   set of store links and the current plan at once. On a notched phone the safe
+   areas take about 93px of the height, so this screen gets tighter chrome than
+   the rest to fit without scrolling. */
+.upgrade-screen {
+  padding: 14px;
+}
+
+.upgrade-screen .top-bar {
+  margin-bottom: 8px;
+}
+
+.upgrade-screen .top-bar h2 {
+  font-size: 1.4rem;
+}
+
+.upgrade-screen .mini-logo {
+  width: 44px;
+  height: 44px;
+}
+
+.upgrade-screen .trust-links .button {
+  min-height: 36px;
+  padding: 7px 8px;
+  font-size: 0.82rem;
+}
+
+.upgrade-screen .plan-comparison-table th,
+.upgrade-screen .plan-comparison-table td {
+  padding: 6px 8px;
 }
