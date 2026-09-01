@@ -246,12 +246,21 @@ h3 {
 }
 
 .button {
+  /* A <button> centres its own label, an <a class="button"> does not, which left
+     the Privacy Policy and Terms of Use links reading left-aligned beside the
+     centred Legal & Support and Restore Purchases buttons. Centre both here so
+     the element type cannot change how a control looks. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 48px;
   border: 0;
   border-radius: 8px;
   padding: 13px 20px;
   cursor: pointer;
   font-weight: 900;
+  text-align: center;
+  text-decoration: none;
   transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
 }
 
