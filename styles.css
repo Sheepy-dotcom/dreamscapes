@@ -522,10 +522,6 @@ textarea:focus-visible {
   text-align: center;
 }
 
-.builder-step > .builder-step-hint {
-  text-align: center;
-}
-
 .builder-screen .builder-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -546,23 +542,6 @@ textarea:focus-visible {
   line-height: 1.15;
 }
 
-/* Create can appear from the first step onward, so it sits full width above the
-   Back/Next pair rather than competing with them for a column. */
-.builder-screen .builder-actions {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-.builder-actions-row {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.builder-screen .builder-actions .builder-create-button {
-  min-height: 50px;
-  font-size: 1rem;
-}
-
 /* One question per step, so the options get room to breathe. */
 .choice-stack {
   display: grid;
@@ -580,13 +559,6 @@ textarea:focus-visible {
 .choice-stack span small {
   font-weight: 800;
   opacity: 0.78;
-}
-
-.builder-step-hint {
-  margin: -2px 0 14px;
-  font-size: 0.9rem;
-  font-weight: 700;
-  opacity: 0.76;
 }
 
 .visually-hidden {
@@ -1557,6 +1529,20 @@ body.keyboard-open .app-tabbar {
   gap: 8px;
 }
 
+/* Match the stacked tiles the other single-choice steps use, rather than a
+   two-column row of short buttons. */
+.builder-step .story-path-button {
+  display: grid;
+  gap: 2px;
+  min-height: 64px;
+  align-content: center;
+}
+
+.builder-step .story-path-button small {
+  font-weight: 800;
+  opacity: 0.78;
+}
+
 .story-path-button.active {
   color: #3b205f;
   border-color: rgba(255, 176, 208, 0.92);
@@ -2117,14 +2103,7 @@ body.night-mode .story-path-button.active {
   padding: 12px;
 }
 
-.feedback-card {
-  grid-column: 1 / -1;
-}
 
-.feedback-card textarea {
-  min-height: 96px;
-  resize: vertical;
-}
 
 .redeem-card h3 {
   margin-bottom: 10px;
@@ -2301,27 +2280,31 @@ body.night-mode .story-path-button.active {
 
 .account-danger-zone {
   display: grid;
-  gap: 8px;
-  margin-top: 14px;
-  border: 1px solid rgba(255, 143, 183, 0.34);
-  border-radius: 8px;
-  padding: 12px;
-  background: rgba(255, 228, 238, 0.42);
+  justify-items: center;
+  gap: 4px;
+  margin: 4px 0 8px;
+  padding: 0;
 }
 
-.account-danger-zone strong {
-  color: #653052;
+.danger-link {
+  min-height: 0;
+  border: 0;
+  padding: 6px 10px;
+  color: rgba(248, 244, 255, 0.5);
+  background: none;
+  box-shadow: none;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-decoration: underline;
+}
+
+.danger-link:hover,
+.danger-link:focus-visible {
+  color: rgba(255, 176, 208, 0.92);
 }
 
 .account-danger-zone p {
   margin: 0;
-}
-
-.danger-button {
-  color: #fff;
-  border-color: rgba(191, 45, 93, 0.42);
-  background: linear-gradient(135deg, #bf2d5d, #7b4ed8);
-  box-shadow: 0 12px 24px rgba(191, 45, 93, 0.18);
 }
 
 .account-status.error {
@@ -4213,5 +4196,31 @@ body.night-mode .loading-steps span {
 
   .redeem-form .button {
     width: 100%;
+  }
+}
+
+/* Short screens (iPhone SE and similar) leave roughly 355px for a step, which is
+   not quite enough for the busiest one. Tighten the field chrome so every step
+   still fits without scrolling. Placed last so it outranks the width-based
+   media queries above, which set a taller textarea and wider gaps. */
+@media (max-height: 700px) {
+  .builder-step {
+    gap: 10px;
+  }
+
+  .builder-step .field input,
+  .builder-step .field select,
+  .builder-step .field textarea {
+    padding: 10px 12px;
+  }
+
+  .builder-step .field textarea,
+  .builder-step .story-idea-field textarea {
+    min-height: 66px;
+    max-height: 66px;
+  }
+
+  .builder-screen .story-form > .builder-step {
+    gap: 10px;
   }
 }

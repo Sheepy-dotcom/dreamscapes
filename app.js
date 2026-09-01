@@ -106,11 +106,7 @@ const toggleProfileFormButton = document.querySelector("#toggle-profile-form");
 const builderChildProfiles = document.querySelector("#builder-child-profiles");
 const builderProfileList = document.querySelector("#builder-profile-list");
 const clearProfileSelectionButton = document.querySelector("#clear-profile-selection");
-const feedbackCard = document.querySelector("#feedback-card");
-const feedbackForm = document.querySelector("#feedback-form");
-const feedbackCategory = document.querySelector("#feedback-category");
-const feedbackMessage = document.querySelector("#feedback-message");
-const feedbackStatus = document.querySelector("#feedback-status");
+const accountDangerZone = document.querySelector("#account-danger-zone");
 const storyMemoriesCard = document.querySelector("#story-memories-card");
 const storyMemoryGrid = document.querySelector("#story-memory-grid");
 const reminderCard = document.querySelector("#reminder-card");
@@ -605,8 +601,9 @@ function queueAutoAdvance() {
 function updateBuilderActions() {
   if (!generateStoryButton) return;
   const isLastStep = currentBuilderStep === builderSteps.length - 1;
-  generateStoryButton.hidden = false;
-  generateStoryButton.disabled = !isLastStep;
+  // Only the final step offers Create, which also keeps the action bar to a
+  // single row so every step fits without scrolling.
+  generateStoryButton.hidden = !isLastStep;
   generateStoryButton.textContent = currentUser ? "Create Story" : "Sign In to Create";
 }
 
@@ -636,10 +633,7 @@ function setBuilderStep(stepIndex, announce = true) {
     builderProgressFill.style.width = `${((currentBuilderStep + 1) / builderSteps.length) * 100}%`;
   }
   if (builderStepBackButton) builderStepBackButton.textContent = currentBuilderStep === 0 ? "Home" : "Back";
-  if (builderStepNextButton) {
-    builderStepNextButton.hidden = isLastStep;
-    builderStepNextButton.textContent = activeStep?.dataset.optional === "true" ? "Skip" : "Next";
-  }
+  if (builderStepNextButton) builderStepNextButton.hidden = isLastStep;
   updateBuilderActions();
   updateBuilderAccountNotice();
 
@@ -788,7 +782,7 @@ function updateAccountUI() {
     authSignedIn.classList.toggle("plan-plus", plan.key === "plus");
   }
   if (redeemCard) redeemCard.hidden = !signedIn || !canUseRedeemCodes();
-  if (feedbackCard) feedbackCard.hidden = !signedIn;
+  if (accountDangerZone) accountDangerZone.hidden = !signedIn;
   if (childProfilesCard) childProfilesCard.hidden = !signedIn;
   if (storyMemoriesCard) storyMemoriesCard.hidden = !signedIn;
   if (reminderCard) reminderCard.hidden = !signedIn;
@@ -3225,70 +3219,6 @@ async function reportAudioIssue(story, source = "result") {
   }
 }
 
-function getFeedbackReports() {
-  try {
-    const reports = JSON.parse(localStorage.getItem("dreamscapesFeedbackReports") || "[]");
-    return Array.isArray(reports) ? reports : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveFeedbackReportLocally(report) {
-  const reports = getFeedbackReports();
-  reports.unshift({ ...report, localId: createStoryId(), createdAt: new Date().toISOString() });
-  localStorage.setItem("dreamscapesFeedbackReports", JSON.stringify(reports.slice(0, 30)));
-}
-
-async function sendTesterFeedback() {
-  const message = feedbackMessage?.value.trim() || "";
-  const category = feedbackCategory?.value || "bug";
-
-  if (!message) {
-    if (feedbackStatus) feedbackStatus.textContent = "Add a short message before sending.";
-    return false;
-  }
-
-  const report = {
-    user_id: currentUser?.id || null,
-    user_email: currentUser?.email || null,
-    category,
-    message,
-    app_screen: Object.entries(screens).find(([, screen]) => screen.classList.contains("active"))?.[0] || "account",
-    story_id: currentStory?.cloudId || null,
-    story_title: currentStory?.title || null,
-    device_info: {
-      platform: getCapacitorPlatform(),
-      native: isNativeMobileApp(),
-      userAgent: navigator.userAgent,
-      width: window.innerWidth,
-      height: window.innerHeight,
-    },
-    status: "open",
-  };
-
-  if (!canUseCloudLibrary()) {
-    saveFeedbackReportLocally(report);
-    if (feedbackStatus) feedbackStatus.textContent = "Feedback saved on this device. Thank you.";
-    return true;
-  }
-
-  try {
-    const { error } = await supabaseClient.from("feedback_reports").insert(report);
-    if (error) throw error;
-    if (feedbackMessage) feedbackMessage.value = "";
-    if (feedbackStatus) feedbackStatus.textContent = "Feedback sent. Thank you.";
-    trackEvent("tester_feedback_sent", { category });
-    return true;
-  } catch {
-    saveFeedbackReportLocally(report);
-    if (feedbackStatus) {
-      feedbackStatus.textContent = "Feedback saved on this device. Run the feedback SQL to store it in Supabase.";
-    }
-    return false;
-  }
-}
-
 function saveStoryToLibrary(story, { silent = false } = {}) {
   const plan = getPlan(story.plan);
 
@@ -3750,18 +3680,6 @@ redeemForm?.addEventListener("submit", async (event) => {
     if (redeemStatus) redeemStatus.textContent = getFriendlyFaultMessage(error, "Code could not be redeemed.");
     trackEvent("redeem_code_failed");
   }
-});
-
-feedbackForm?.addEventListener("submit", async (event) => {
-  event.preventDefault();
-
-  if (!currentUser) {
-    if (feedbackStatus) feedbackStatus.textContent = "Sign in before sending feedback.";
-    return;
-  }
-
-  if (feedbackStatus) feedbackStatus.textContent = "Sending feedback...";
-  await sendTesterFeedback();
 });
 
 openAdminButton?.addEventListener("click", () => {

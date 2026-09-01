@@ -22,7 +22,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026090104" />
+    <link rel="stylesheet" href="./styles.css?v=2026090113" />
   </head>
   <body class="home-active night-mode">
     <div class="stars" aria-hidden="true"></div>
@@ -81,14 +81,14 @@
           <section class="builder-step active" data-builder-step="0" data-step-title="Who it's for" aria-labelledby="builder-step-child-title">
             <h3 id="builder-step-child-title">Who is this story for?</h3>
             <fieldset class="choice-group child-profile-picker builder-group builder-group-lilac" id="builder-child-profiles" hidden>
-              <legend>Tap a child to start <small>optional</small></legend>
+              <legend>Tap a child to start</legend>
               <div class="profile-choice-list" id="builder-profile-list"></div>
               <button class="button secondary-button compact-button" id="clear-profile-selection" type="button">Clear Profiles</button>
             </fieldset>
             <div class="builder-group builder-group-sky builder-fields-block">
               <div class="form-grid child-basics-grid">
-                <label class="field"><span>Child name <small>or pick a profile</small></span><input id="child-name" name="childName" type="text" placeholder="Rosie" /></label>
-                <label class="field"><span>Age <small>optional</small></span><input id="child-age" name="childAge" type="number" min="1" max="12" /></label>
+                <label class="field"><span>Child name <small>or pick a profile</small></span><input id="child-name" name="childName" type="text" /></label>
+                <label class="field"><span>Age</span><input id="child-age" name="childAge" type="number" min="1" max="12" /></label>
               </div>
             </div>
           </section>
@@ -98,8 +98,8 @@
             <fieldset class="choice-group story-spark-panel builder-group builder-group-pink">
               <legend class="visually-hidden">Story path</legend>
               <div class="story-spark-actions">
-                <button class="button secondary-button story-path-button active" id="tonights-story-button" type="button" aria-pressed="true">Tonight's Story</button>
-                <button class="button secondary-button story-path-button" id="weekly-journey-button" type="button" aria-pressed="false">7-Night Journey</button>
+                <button class="button secondary-button story-path-button active" id="tonights-story-button" type="button" aria-pressed="true"><strong>Tonight's Story</strong><small>One story, ready now</small></button>
+                <button class="button secondary-button story-path-button" id="weekly-journey-button" type="button" aria-pressed="false"><strong>7-Night Journey</strong><small>A chapter each night for a week</small></button>
               </div>
               <div class="continuation-banner" id="continuation-banner" hidden>
                 <div><strong id="continuation-title">Continuing an adventure</strong><span id="continuation-note"></span></div>
@@ -151,37 +151,39 @@
             </fieldset>
           </section>
 
-          <section class="builder-step" data-builder-step="5" data-step-title="Tonight" data-optional="true" aria-labelledby="builder-step-idea-title" hidden>
+          <section class="builder-step" data-builder-step="5" data-step-title="Tonight" aria-labelledby="builder-step-idea-title" hidden>
             <h3 id="builder-step-idea-title">Anything special about tonight?</h3>
-            <p class="builder-step-hint">All optional — skip straight past if nothing springs to mind.</p>
             <label class="field story-idea-field builder-group builder-group-pink">
-              <span>Story idea <small>optional</small></span>
-              <textarea id="story-idea" name="storyIdea" rows="3" placeholder="A brave little fox who is scared of the dark"></textarea>
+              <span>Story idea</span>
+              <textarea id="story-idea" name="storyIdea" rows="3"></textarea>
             </label>
             <div class="builder-group builder-group-sky builder-fields-block">
-              <div class="form-grid basics-details-grid">
-                <label class="field"><span>Interests</span><input name="interests" type="text" placeholder="dinosaurs, football" /></label>
-                <label class="field">
-                  <span>Special occasion</span>
-                  <select id="story-occasion" name="occasion">
-                    <option value="">None</option><option value="birthday">Birthday</option><option value="first day at school">First day at school</option>
-                    <option value="holiday">Holiday</option><option value="lost tooth">Lost tooth</option><option value="new sibling">Welcoming a new sibling</option>
-                    <option value="confidence">Building confidence</option><option value="friendship">Friendship</option>
-                  </select>
-                </label>
-              </div>
+              <label class="field"><span>Interests</span><input name="interests" type="text" /></label>
+              <label class="field">
+                <span>Special occasion</span>
+                <select id="story-occasion" name="occasion">
+                  <option value="">None</option><option value="birthday">Birthday</option><option value="first day at school">First day at school</option>
+                  <option value="holiday">Holiday</option><option value="lost tooth">Lost tooth</option><option value="new sibling">Welcoming a new sibling</option>
+                  <option value="confidence">Building confidence</option><option value="friendship">Friendship</option>
+                </select>
+              </label>
             </div>
           </section>
 
-          <section class="builder-step" data-builder-step="6" data-step-title="Parent controls" data-optional="true" aria-labelledby="builder-step-details-title" hidden>
+          <section class="builder-step" data-builder-step="6" data-step-title="Parent controls" aria-labelledby="builder-step-details-title" hidden>
             <h3 id="builder-step-details-title">Parent controls</h3>
-            <p class="builder-step-hint">All optional — these carry over to your next story.</p>
             <fieldset class="choice-group safety-grid compact-safety-grid builder-group builder-group-mint">
               <legend class="visually-hidden">Parent controls</legend>
-              <label class="field"><span>Avoid topics</span><input name="avoidTopics" type="text" placeholder="thunderstorms" /></label>
-              <label class="field"><span>Gentle lesson</span><input name="preferredLesson" type="text" placeholder="sharing with friends" /></label>
-              <label class="feature-toggle calm-toggle"><input name="calmMode" type="checkbox" /><span><strong>Bedtime calm mode</strong><small>Soft pacing and a peaceful ending</small></span></label>
+              <label class="field"><span>Avoid topics</span><input name="avoidTopics" type="text" /></label>
+              <label class="field"><span>Gentle lesson</span><input name="preferredLesson" type="text" /></label>
             </fieldset>
+          </section>
+
+          <section class="builder-step" data-builder-step="7" data-step-title="Story settings" aria-labelledby="builder-step-settings-title" hidden>
+            <h3 id="builder-step-settings-title">How should it be told?</h3>
+            <div class="builder-group builder-group-mint">
+              <label class="feature-toggle calm-toggle"><input name="calmMode" type="checkbox" /><span><strong>Bedtime calm mode</strong><small>Soft pacing and a peaceful ending</small></span></label>
+            </div>
             <label class="field builder-group builder-group-sky language-field">
               <span>Story language</span>
               <select id="story-language" name="storyLanguage">
@@ -204,7 +206,7 @@
             </label>
           </section>
 
-          <section class="builder-step" data-builder-step="7" data-step-title="Narration" data-optional="true" aria-labelledby="builder-step-audio-title" hidden>
+          <section class="builder-step" data-builder-step="8" data-step-title="Narration" aria-labelledby="builder-step-audio-title" hidden>
             <h3 id="builder-step-audio-title">Add narration?</h3>
             <div class="builder-group builder-group-gold narration-group">
               <label class="feature-toggle"><input id="audio-narration" name="audioNarration" type="checkbox" /><span><strong>Add audio narration</strong><small>Selecting audio uses DreamScapes Plus</small></span></label>
@@ -221,11 +223,9 @@
           </section>
 
           <div class="builder-actions">
-            <button class="button primary-button builder-create-button" id="generate-story-button" type="submit" hidden>Create Story</button>
-            <div class="builder-actions-row">
-              <button class="button secondary-button" id="builder-step-back" type="button">Back</button>
-              <button class="button primary-button" id="builder-step-next" type="button">Next</button>
-            </div>
+            <button class="button secondary-button" id="builder-step-back" type="button">Back</button>
+            <button class="button primary-button" id="builder-step-next" type="button">Next</button>
+            <button class="button primary-button" id="generate-story-button" type="submit" hidden>Create Story</button>
           </div>
           <p class="plan-note" id="plan-note" role="status"></p>
         </form>
@@ -632,14 +632,6 @@
               <button class="button secondary-button" id="open-admin-button" type="button" hidden>Open Admin</button>
               <button class="button secondary-button" id="sign-out-button" type="button">Sign Out</button>
             </div>
-            <div class="account-danger-zone">
-              <strong>Delete account</strong>
-              <p>Delete your DreamScapes account, saved stories, child profiles, generated audio, and account data.</p>
-              <button class="button danger-button compact-button" id="delete-account-button" type="button">
-                Delete Account
-              </button>
-              <p class="helper-text" id="delete-account-status" role="status"></p>
-            </div>
           </article>
 
           <article class="auth-card redeem-card" id="redeem-card" hidden>
@@ -654,30 +646,6 @@
               </div>
             </form>
             <p class="helper-text" id="redeem-status" role="status"></p>
-          </article>
-
-          <article class="auth-card feedback-card" id="feedback-card" hidden>
-            <h3>Tester feedback</h3>
-            <p>Send a quick note if something feels broken, confusing, too slow, or not quite ready for the app.</p>
-            <form class="auth-form feedback-form" id="feedback-form">
-              <label class="field">
-                <span>Type</span>
-                <select id="feedback-category">
-                  <option value="bug">Bug or fault</option>
-                  <option value="audio">Audio problem</option>
-                  <option value="story-length">Story length</option>
-                  <option value="idea">Idea or improvement</option>
-                </select>
-              </label>
-              <label class="field">
-                <span>Message</span>
-                <textarea id="feedback-message" rows="3" placeholder="Tell us what happened."></textarea>
-              </label>
-              <div class="auth-actions">
-                <button class="button primary-button" id="send-feedback-button" type="submit">Send Feedback</button>
-              </div>
-            </form>
-            <p class="helper-text" id="feedback-status" role="status"></p>
           </article>
 
           <article class="auth-card child-profiles-card" id="child-profiles-card" hidden>
@@ -765,6 +733,11 @@
             </form>
             <p class="helper-text" id="reminder-status" role="status"></p>
           </article>
+
+          <div class="account-danger-zone" id="account-danger-zone" hidden>
+            <button class="button danger-link" id="delete-account-button" type="button">Delete account</button>
+            <p class="helper-text" id="delete-account-status" role="status"></p>
+          </div>
         </div>
 
         <p class="status-note account-status" id="auth-status" role="status"></p>
@@ -976,6 +949,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026090104"></script>
+    <script src="./app.js?v=2026090113"></script>
   </body>
 </html>
