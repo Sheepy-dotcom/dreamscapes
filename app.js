@@ -602,20 +602,12 @@ function queueAutoAdvance() {
   }, AUTO_ADVANCE_DELAY);
 }
 
-// The only thing a story genuinely needs is who it is for; everything else has a
-// usable default, so Create is offered as soon as that one answer exists.
-function canCreateStoryNow() {
-  if (!form?.elements?.childName) return false;
-  return Boolean(cleanProfileValue(form.elements.childName.value)) || getSelectedChildProfiles().length > 0;
-}
-
 function updateBuilderActions() {
   if (!generateStoryButton) return;
   const isLastStep = currentBuilderStep === builderSteps.length - 1;
-  generateStoryButton.hidden = !(canCreateStoryNow() || isLastStep);
-  if (!generateStoryButton.hidden) {
-    generateStoryButton.textContent = currentUser ? "Create Story" : "Sign In to Create";
-  }
+  generateStoryButton.hidden = false;
+  generateStoryButton.disabled = !isLastStep;
+  generateStoryButton.textContent = currentUser ? "Create Story" : "Sign In to Create";
 }
 
 function setBuilderStep(stepIndex, announce = true) {
@@ -3600,9 +3592,6 @@ builderStepNextButton?.addEventListener("click", () => {
 form?.addEventListener("change", (event) => {
   const target = event.target;
   if (!(target instanceof HTMLInputElement)) return;
-  // Ticking a child profile also unlocks Create, so refresh on any change rather
-  // than only for the name field.
-  updateBuilderActions();
   const activeStep = builderSteps[currentBuilderStep];
   if (!activeStep || activeStep.dataset.autoadvance !== "true") return;
   if (target.type !== "radio" || !activeStep.contains(target)) return;
@@ -3621,8 +3610,6 @@ form?.addEventListener("click", (event) => {
   queueAutoAdvance();
 });
 
-// The name field gates Create, so react as it is typed rather than only on blur.
-form?.elements?.childName?.addEventListener("input", updateBuilderActions);
 
 // The story-path options are buttons rather than radios, so they advance explicitly.
 [tonightsStoryButton, weeklyJourneyButton].forEach((button) => {
