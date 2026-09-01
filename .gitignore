@@ -9,3 +9,10 @@ node_modules/
 dist/
 www/
 ios/build/
+
+# Release build artifacts
+*.aab
+*.apk
+
+# Python bytecode from scripts/
+__pycache__/
