@@ -583,12 +583,28 @@ textarea:focus-visible {
 .field textarea,
 .field select {
   width: 100%;
+  /* .field is a grid container, so these are grid items; min-width:0 lets them
+     shrink instead of holding their min-content width. See the appearance rule
+     below for the iOS date/time overflow this alone does not fix. */
+  min-width: 0;
   border: 1px solid rgba(36, 48, 84, 0.16);
   border-radius: 8px;
   padding: 14px 15px;
   color: var(--ink);
   background: rgba(255, 255, 255, 0.82);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* WebKit keeps native date/time controls on content-box sizing and ignores both
+   the `*` border-box reset and an explicit box-sizing on the element, so on iOS
+   this input's 30px padding and 2px border were added on top of width:100% and
+   it overflowed its card by 32px while every sibling lined up. Dropping the
+   native appearance is what actually lets the box model apply; the field is
+   already fully styled, and tapping still opens the iOS time picker. */
+.field input[type="time"],
+.field input[type="date"] {
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .field select {
