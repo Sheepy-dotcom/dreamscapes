@@ -22,7 +22,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026090102" />
+    <link rel="stylesheet" href="./styles.css?v=2026090103" />
   </head>
   <body class="home-active night-mode">
     <div class="stars" aria-hidden="true"></div>
@@ -74,20 +74,14 @@
           </aside>
 
           <div class="builder-progress" aria-label="Story builder progress">
-            <div class="builder-progress-heading"><span id="builder-step-count">Step 1 of 4</span><strong id="builder-step-title">Basics</strong></div>
+            <div class="builder-progress-heading"><span id="builder-step-count">Step 1 of 8</span><strong id="builder-step-title">Who it's for</strong></div>
             <div class="builder-progress-track" aria-hidden="true"><span id="builder-progress-fill"></span></div>
-            <ol class="builder-step-list" aria-hidden="true">
-              <li class="active" data-builder-step-marker="0"><span>1</span>Basics</li>
-              <li data-builder-step-marker="1"><span>2</span>Style</li>
-              <li data-builder-step-marker="2"><span>3</span>Details</li>
-              <li data-builder-step-marker="3"><span>4</span>Audio</li>
-            </ol>
           </div>
 
-          <section class="builder-step active" data-builder-step="0" aria-labelledby="builder-step-child-title">
+          <section class="builder-step active" data-builder-step="0" data-step-title="Who it's for" aria-labelledby="builder-step-child-title">
             <h3 id="builder-step-child-title">Who is this story for?</h3>
             <fieldset class="choice-group child-profile-picker builder-group builder-group-lilac" id="builder-child-profiles" hidden>
-              <legend>Child profiles <small>optional</small></legend>
+              <legend>Tap a child to start <small>optional</small></legend>
               <div class="profile-choice-list" id="builder-profile-list"></div>
               <button class="button secondary-button compact-button" id="clear-profile-selection" type="button">Clear Profiles</button>
             </fieldset>
@@ -96,8 +90,77 @@
                 <label class="field"><span>Child name <small>or pick a profile</small></span><input id="child-name" name="childName" type="text" placeholder="Rosie" /></label>
                 <label class="field"><span>Age <small>optional</small></span><input id="child-age" name="childAge" type="number" min="1" max="12" /></label>
               </div>
+            </div>
+          </section>
+
+          <section class="builder-step" data-builder-step="1" data-step-title="Story path" data-autoadvance="true" aria-labelledby="builder-step-path-title" hidden>
+            <h3 id="builder-step-path-title">One story, or a journey?</h3>
+            <fieldset class="choice-group story-spark-panel builder-group builder-group-pink">
+              <legend class="visually-hidden">Story path</legend>
+              <div class="story-spark-actions">
+                <button class="button secondary-button story-path-button active" id="tonights-story-button" type="button" aria-pressed="true">Tonight's Story</button>
+                <button class="button secondary-button story-path-button" id="weekly-journey-button" type="button" aria-pressed="false">7-Night Journey</button>
+              </div>
+              <div class="continuation-banner" id="continuation-banner" hidden>
+                <div><strong id="continuation-title">Continuing an adventure</strong><span id="continuation-note"></span></div>
+                <button class="button secondary-button compact-button" id="cancel-continuation-button" type="button">Cancel</button>
+              </div>
+            </fieldset>
+          </section>
+
+          <section class="builder-step" data-builder-step="2" data-step-title="Time of day" data-autoadvance="true" aria-labelledby="builder-step-when-title" hidden>
+            <h3 id="builder-step-when-title">Bedtime, or anytime?</h3>
+            <fieldset class="choice-group builder-group builder-group-mint story-type-group">
+              <legend class="visually-hidden">Story time</legend>
+              <div class="choice-stack" role="radiogroup" aria-label="Story type">
+                <label class="choice-tile"><input type="radio" name="storyType" value="bedtime" checked /><span><strong>Bedtime story</strong><small>Winds down towards sleep</small></span></label>
+                <label class="choice-tile"><input type="radio" name="storyType" value="anytime" /><span><strong>Anytime story</strong><small>Good for any time of day</small></span></label>
+              </div>
+            </fieldset>
+          </section>
+
+          <section class="builder-step" data-builder-step="3" data-step-title="Length" data-autoadvance="true" aria-labelledby="builder-step-length-title" hidden>
+            <h3 id="builder-step-length-title">How long should it be?</h3>
+            <fieldset class="choice-group builder-group builder-group-gold duration-group">
+              <legend class="visually-hidden">Story duration</legend>
+              <div class="duration-grid" role="radiogroup" aria-label="Story duration">
+                <label><input type="radio" name="durationChoice" value="5" checked /><span>5 min <small>Free</small></span></label>
+                <label><input type="radio" name="durationChoice" value="10" /><span>10 min <small>Free</small></span></label>
+                <label><input type="radio" name="durationChoice" value="15" /><span>15 min <small>Premier</small></span></label>
+                <label><input type="radio" name="durationChoice" value="20" /><span>20 min <small>Premier</small></span></label>
+                <label><input type="radio" name="durationChoice" value="30" /><span>30 min <small>Plus</small></span></label>
+              </div>
+              <p class="helper-text">Times are a guide; narration may vary.</p>
+            </fieldset>
+          </section>
+
+          <section class="builder-step" data-builder-step="4" data-step-title="Mood" aria-labelledby="builder-step-mood-title" hidden>
+            <h3 id="builder-step-mood-title">What should it feel like?</h3>
+            <fieldset class="choice-group builder-group builder-group-lilac mood-group">
+              <legend class="visually-hidden">Moods</legend>
+              <p class="helper-text">Pick as many as you like.</p>
+              <div class="mood-grid" aria-label="Story moods">
+                <label><input type="checkbox" name="moods" value="relaxing" checked /><span>Relaxing</span></label>
+                <label><input type="checkbox" name="moods" value="magical" /><span>Magical</span></label>
+                <label><input type="checkbox" name="moods" value="funny" /><span>Funny</span></label>
+                <label><input type="checkbox" name="moods" value="adventurous" /><span>Adventurous</span></label>
+                <label><input type="checkbox" name="moods" value="energetic" /><span>Energetic</span></label>
+                <label><input type="checkbox" name="moods" value="sleepy bedtime" /><span>Sleepy bedtime</span></label>
+                <label><input type="checkbox" name="moods" value="educational" /><span>Educational</span></label>
+              </div>
+            </fieldset>
+          </section>
+
+          <section class="builder-step" data-builder-step="5" data-step-title="Tonight" data-optional="true" aria-labelledby="builder-step-idea-title" hidden>
+            <h3 id="builder-step-idea-title">Anything special about tonight?</h3>
+            <p class="builder-step-hint">All optional — skip straight past if nothing springs to mind.</p>
+            <label class="field story-idea-field builder-group builder-group-pink">
+              <span>Story idea <small>optional</small></span>
+              <textarea id="story-idea" name="storyIdea" rows="3" placeholder="A brave little fox who is scared of the dark"></textarea>
+            </label>
+            <div class="builder-group builder-group-sky builder-fields-block">
               <div class="form-grid basics-details-grid">
-                <label class="field"><span>Interests</span><input name="interests" type="text" /></label>
+                <label class="field"><span>Interests</span><input name="interests" type="text" placeholder="dinosaurs, football" /></label>
                 <label class="field">
                   <span>Special occasion</span>
                   <select id="story-occasion" name="occasion">
@@ -108,27 +171,16 @@
                 </label>
               </div>
             </div>
-            <fieldset class="choice-group builder-group builder-group-mint story-type-group">
-              <legend>Story time</legend>
-              <div class="segmented-control" role="radiogroup" aria-label="Story type">
-                <label><input type="radio" name="storyType" value="bedtime" checked /><span>Bedtime story</span></label>
-                <label><input type="radio" name="storyType" value="anytime" /><span>Anytime story</span></label>
-              </div>
-            </fieldset>
           </section>
 
-          <section class="builder-step" data-builder-step="1" aria-labelledby="builder-step-style-title" hidden>
-            <h3 id="builder-step-style-title">Choose the style</h3>
-            <fieldset class="choice-group story-spark-panel builder-group builder-group-pink">
-              <legend>Story path</legend>
-              <div class="story-spark-actions">
-                <button class="button secondary-button story-path-button active" id="tonights-story-button" type="button" aria-pressed="true">Tonight's Story</button>
-                <button class="button secondary-button story-path-button" id="weekly-journey-button" type="button" aria-pressed="false">7-Night Journey</button>
-              </div>
-              <div class="continuation-banner" id="continuation-banner" hidden>
-                <div><strong id="continuation-title">Continuing an adventure</strong><span id="continuation-note"></span></div>
-                <button class="button secondary-button compact-button" id="cancel-continuation-button" type="button">Cancel</button>
-              </div>
+          <section class="builder-step" data-builder-step="6" data-step-title="Parent controls" data-optional="true" aria-labelledby="builder-step-details-title" hidden>
+            <h3 id="builder-step-details-title">Parent controls</h3>
+            <p class="builder-step-hint">All optional — these carry over to your next story.</p>
+            <fieldset class="choice-group safety-grid compact-safety-grid builder-group builder-group-mint">
+              <legend class="visually-hidden">Parent controls</legend>
+              <label class="field"><span>Avoid topics</span><input name="avoidTopics" type="text" placeholder="thunderstorms" /></label>
+              <label class="field"><span>Gentle lesson</span><input name="preferredLesson" type="text" placeholder="sharing with friends" /></label>
+              <label class="feature-toggle calm-toggle"><input name="calmMode" type="checkbox" /><span><strong>Bedtime calm mode</strong><small>Soft pacing and a peaceful ending</small></span></label>
             </fieldset>
             <label class="field builder-group builder-group-sky language-field">
               <span>Story language</span>
@@ -150,47 +202,10 @@
                 <option value="nl-NL">Dutch</option>
               </select>
             </label>
-            <fieldset class="choice-group builder-group builder-group-gold duration-group">
-              <legend>Story duration</legend>
-              <div class="duration-grid" role="radiogroup" aria-label="Story duration">
-                <label><input type="radio" name="durationChoice" value="5" checked /><span>5 min <small>Free</small></span></label>
-                <label><input type="radio" name="durationChoice" value="10" /><span>10 min <small>Free</small></span></label>
-                <label><input type="radio" name="durationChoice" value="15" /><span>15 min <small>Premier</small></span></label>
-                <label><input type="radio" name="durationChoice" value="20" /><span>20 min <small>Premier</small></span></label>
-                <label><input type="radio" name="durationChoice" value="30" /><span>30 min <small>Plus</small></span></label>
-              </div>
-              <p class="helper-text">Times are a guide; narration may vary.</p>
-            </fieldset>
-            <fieldset class="choice-group builder-group builder-group-lilac mood-group">
-              <legend>Moods <small>choose more than one</small></legend>
-              <div class="mood-grid" aria-label="Story moods">
-                <label><input type="checkbox" name="moods" value="relaxing" checked /><span>Relaxing</span></label>
-                <label><input type="checkbox" name="moods" value="magical" /><span>Magical</span></label>
-                <label><input type="checkbox" name="moods" value="funny" /><span>Funny</span></label>
-                <label><input type="checkbox" name="moods" value="adventurous" /><span>Adventurous</span></label>
-                <label><input type="checkbox" name="moods" value="energetic" /><span>Energetic</span></label>
-                <label><input type="checkbox" name="moods" value="sleepy bedtime" /><span>Sleepy bedtime</span></label>
-                <label><input type="checkbox" name="moods" value="educational" /><span>Educational</span></label>
-              </div>
-            </fieldset>
           </section>
 
-          <section class="builder-step" data-builder-step="2" aria-labelledby="builder-step-details-title" hidden>
-            <h3 id="builder-step-details-title">Add the details</h3>
-            <fieldset class="choice-group safety-grid compact-safety-grid builder-group builder-group-mint">
-              <legend>Parent controls</legend>
-              <label class="field"><span>Avoid topics</span><input name="avoidTopics" type="text" /></label>
-              <label class="field"><span>Gentle lesson</span><input name="preferredLesson" type="text" /></label>
-              <label class="feature-toggle calm-toggle"><input name="calmMode" type="checkbox" /><span><strong>Bedtime calm mode</strong><small>Soft pacing and a peaceful ending</small></span></label>
-            </fieldset>
-            <label class="field story-idea-field builder-group builder-group-pink">
-              <span>Story idea <small>optional</small></span>
-              <textarea id="story-idea" name="storyIdea" rows="4"></textarea>
-            </label>
-          </section>
-
-          <section class="builder-step" data-builder-step="3" aria-labelledby="builder-step-audio-title" hidden>
-            <h3 id="builder-step-audio-title">Add narration</h3>
+          <section class="builder-step" data-builder-step="7" data-step-title="Narration" data-optional="true" aria-labelledby="builder-step-audio-title" hidden>
+            <h3 id="builder-step-audio-title">Add narration?</h3>
             <div class="builder-group builder-group-gold narration-group">
               <label class="feature-toggle"><input id="audio-narration" name="audioNarration" type="checkbox" /><span><strong>Add audio narration</strong><small>Selecting audio uses DreamScapes Plus</small></span></label>
               <label class="field voice-field">
@@ -206,9 +221,11 @@
           </section>
 
           <div class="builder-actions">
-            <button class="button secondary-button" id="builder-step-back" type="button">Back</button>
-            <button class="button primary-button" id="builder-step-next" type="button">Next</button>
-            <button class="button primary-button" id="generate-story-button" type="submit" hidden>Generate Story</button>
+            <button class="button primary-button builder-create-button" id="generate-story-button" type="submit" hidden>Create Story</button>
+            <div class="builder-actions-row">
+              <button class="button secondary-button" id="builder-step-back" type="button">Back</button>
+              <button class="button primary-button" id="builder-step-next" type="button">Next</button>
+            </div>
           </div>
           <p class="plan-note" id="plan-note" role="status"></p>
         </form>
@@ -959,6 +976,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026090101"></script>
+    <script src="./app.js?v=2026090103"></script>
   </body>
 </html>

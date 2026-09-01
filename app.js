@@ -582,10 +582,45 @@ function stopLoadingMessages() {
   loadingMessageTimer = null;
 }
 
-const BUILDER_STEP_TITLES = ["Basics", "Style", "Details", "Audio"];
+// Tapping a single-choice option moves the builder on by itself. The short delay
+// lets the selection register visually before the step changes.
+const AUTO_ADVANCE_DELAY = 280;
+let autoAdvanceTimer = null;
+
+function cancelAutoAdvance() {
+  window.clearTimeout(autoAdvanceTimer);
+  autoAdvanceTimer = null;
+}
+
+function queueAutoAdvance() {
+  cancelAutoAdvance();
+  autoAdvanceTimer = window.setTimeout(() => {
+    autoAdvanceTimer = null;
+    if (currentBuilderStep >= builderSteps.length - 1) return;
+    if (!validateBuilderStep(currentBuilderStep)) return;
+    setBuilderStep(currentBuilderStep + 1);
+  }, AUTO_ADVANCE_DELAY);
+}
+
+// The only thing a story genuinely needs is who it is for; everything else has a
+// usable default, so Create is offered as soon as that one answer exists.
+function canCreateStoryNow() {
+  if (!form?.elements?.childName) return false;
+  return Boolean(cleanProfileValue(form.elements.childName.value)) || getSelectedChildProfiles().length > 0;
+}
+
+function updateBuilderActions() {
+  if (!generateStoryButton) return;
+  const isLastStep = currentBuilderStep === builderSteps.length - 1;
+  generateStoryButton.hidden = !(canCreateStoryNow() || isLastStep);
+  if (!generateStoryButton.hidden) {
+    generateStoryButton.textContent = currentUser ? "Create Story" : "Sign In to Create";
+  }
+}
 
 function setBuilderStep(stepIndex, announce = true) {
   if (!builderSteps.length) return;
+  cancelAutoAdvance();
   currentBuilderStep = Math.max(0, Math.min(Number(stepIndex) || 0, builderSteps.length - 1));
 
   builderSteps.forEach((step, index) => {
@@ -601,18 +636,19 @@ function setBuilderStep(stepIndex, announce = true) {
     marker.classList.toggle("complete", index < currentBuilderStep);
   });
 
+  const activeStep = builderSteps[currentBuilderStep];
   const isLastStep = currentBuilderStep === builderSteps.length - 1;
   if (builderStepCount) builderStepCount.textContent = `Step ${currentBuilderStep + 1} of ${builderSteps.length}`;
-  if (builderStepTitle) builderStepTitle.textContent = BUILDER_STEP_TITLES[currentBuilderStep];
+  if (builderStepTitle) builderStepTitle.textContent = activeStep?.dataset.stepTitle || "";
   if (builderProgressFill) {
     builderProgressFill.style.width = `${((currentBuilderStep + 1) / builderSteps.length) * 100}%`;
   }
   if (builderStepBackButton) builderStepBackButton.textContent = currentBuilderStep === 0 ? "Home" : "Back";
-  if (builderStepNextButton) builderStepNextButton.hidden = isLastStep;
-  if (generateStoryButton) {
-    generateStoryButton.hidden = !isLastStep;
-    generateStoryButton.textContent = currentUser ? "Generate Story" : "Sign In to Generate";
+  if (builderStepNextButton) {
+    builderStepNextButton.hidden = isLastStep;
+    builderStepNextButton.textContent = activeStep?.dataset.optional === "true" ? "Skip" : "Next";
   }
+  updateBuilderActions();
   updateBuilderAccountNotice();
 
   if (announce) {
@@ -630,7 +666,7 @@ function setBuilderStep(stepIndex, announce = true) {
 function updateBuilderAccountNotice() {
   if (builderAccountNotice) builderAccountNotice.hidden = Boolean(currentUser);
   if (generateStoryButton && !generateStoryButton.hidden) {
-    generateStoryButton.textContent = currentUser ? "Generate Story" : "Sign In to Generate";
+    generateStoryButton.textContent = currentUser ? "Create Story" : "Sign In to Create";
   }
 }
 
@@ -3556,8 +3592,41 @@ builderStepBackButton?.addEventListener("click", () => {
   setBuilderStep(currentBuilderStep - 1);
 });
 builderStepNextButton?.addEventListener("click", () => {
+  cancelAutoAdvance();
   if (!validateBuilderStep(currentBuilderStep)) return;
   setBuilderStep(currentBuilderStep + 1);
+});
+
+form?.addEventListener("change", (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLInputElement)) return;
+  // Ticking a child profile also unlocks Create, so refresh on any change rather
+  // than only for the name field.
+  updateBuilderActions();
+  const activeStep = builderSteps[currentBuilderStep];
+  if (!activeStep || activeStep.dataset.autoadvance !== "true") return;
+  if (target.type !== "radio" || !activeStep.contains(target)) return;
+  queueAutoAdvance();
+});
+
+// A radio fires no change event when it is already the selected option, so
+// confirming the default choice would otherwise be a dead tap. Clicks cover
+// that; both paths share one debounced timer, so a double fire is harmless.
+form?.addEventListener("click", (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLInputElement) || target.type !== "radio") return;
+  const activeStep = builderSteps[currentBuilderStep];
+  if (!activeStep || activeStep.dataset.autoadvance !== "true") return;
+  if (!activeStep.contains(target)) return;
+  queueAutoAdvance();
+});
+
+// The name field gates Create, so react as it is typed rather than only on blur.
+form?.elements?.childName?.addEventListener("input", updateBuilderActions);
+
+// The story-path options are buttons rather than radios, so they advance explicitly.
+[tonightsStoryButton, weeklyJourneyButton].forEach((button) => {
+  button?.addEventListener("click", queueAutoAdvance);
 });
 document.querySelectorAll("[data-screen-target]").forEach((button) => {
   button.addEventListener("click", () => showScreen(button.dataset.screenTarget));
