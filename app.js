@@ -614,7 +614,35 @@ function getPreviewAudioSource(source) {
   return source.includes("?") ? `${source}&v=${VOICE_PREVIEW_CACHE_VERSION}` : `${source}?v=${VOICE_PREVIEW_CACHE_VERSION}`;
 }
 
+// Whatever a preview is currently playing through, so the next one can stop it.
+// Without this, previewing several voices left them talking over each other.
+let currentPreviewPlayback = null;
+
+function stopPreviewAudio() {
+  const playback = currentPreviewPlayback;
+  currentPreviewPlayback = null;
+  if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+  if (!playback) return;
+
+  try {
+    playback.source?.stop();
+  } catch {
+    // Already finished; nothing to stop.
+  }
+  try {
+    playback.context?.close();
+  } catch {
+    // Already closed.
+  }
+  if (playback.element) {
+    playback.element.pause();
+    playback.element.removeAttribute("src");
+    playback.element.load();
+  }
+}
+
 async function playPreviewAudio(source, gain = VOICE_PREVIEW_GAIN) {
+  stopPreviewAudio();
   const previewSource = getPreviewAudioSource(source);
   try {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
@@ -632,11 +660,22 @@ async function playPreviewAudio(source, gain = VOICE_PREVIEW_GAIN) {
     bufferSource.buffer = audioBuffer;
     bufferSource.connect(gainNode);
     gainNode.connect(audioContext.destination);
+    // A slow decode can finish after another preview has started; do not let a
+    // stale clip claim the slot or play over the newer one.
     bufferSource.start(0);
+    currentPreviewPlayback = { context: audioContext, source: bufferSource };
+    bufferSource.onended = () => {
+      if (currentPreviewPlayback?.source === bufferSource) currentPreviewPlayback = null;
+      audioContext.close().catch(() => {});
+    };
     return "web-audio";
   } catch {
     const previewAudio = new Audio(previewSource);
     previewAudio.volume = Math.min(Math.max(gain, 0), 1);
+    currentPreviewPlayback = { element: previewAudio };
+    previewAudio.onended = () => {
+      if (currentPreviewPlayback?.element === previewAudio) currentPreviewPlayback = null;
+    };
     await previewAudio.play();
     return "html-audio";
   }
@@ -806,6 +845,7 @@ function validateBuilderStep(stepIndex) {
 }
 
 function showScreen(name) {
+  stopPreviewAudio();
   Object.values(screens).forEach((screen) => screen.classList.remove("active"));
   screens[name].classList.add("active");
   if (name === "builder") {
@@ -4201,7 +4241,7 @@ function playDeviceVoicePreview() {
     return false;
   }
 
-  window.speechSynthesis.cancel();
+  stopPreviewAudio();
   const preview = new SpeechSynthesisUtterance(VOICE_PREVIEW_TEXT);
   applyNarrationSettings(preview, {
     voiceStyle: voiceStyle.value,
@@ -5140,6 +5180,7 @@ function setSleepTimer(minutes) {
 }
 
 function stopNarration({ clearTimer = true } = {}) {
+  stopPreviewAudio();
   if (clearTimer) clearSleepTimer({ silent: true });
   window.clearTimeout(currentNarrationTimer);
   currentNarrationTimer = null;
