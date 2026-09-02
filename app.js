@@ -308,6 +308,12 @@ const AUDIO_UPLOAD_CONCURRENCY = 3;
 const AUDIO_CREDIT_MAX_MINUTES = 10;
 const VOICE_PREVIEW_TEXT = "Hello from DreamScapes. Settle in, take a gentle breath, and let the story begin.";
 const VOICE_PREVIEW_CACHE_VERSION = "2026061529";
+// Generated previews are kept so a voice is only ever synthesised once. Saved
+// stories compete for the same localStorage budget, so the cache is capped and
+// every write is allowed to fail without breaking playback.
+const VOICE_PREVIEW_STORAGE_KEY = "dreamscapesVoicePreviews";
+const MAX_STORED_VOICE_PREVIEWS = 8;
+const MAX_VOICE_PREVIEW_BYTES = 400000;
 const VOICE_PREVIEW_GAIN = 0.82;
 const VOICE_PREVIEW_GAINS = {
   "female sage calm": 3.4,
@@ -576,6 +582,47 @@ async function playPreviewAudio(source, gain = VOICE_PREVIEW_GAIN) {
     previewAudio.volume = Math.min(Math.max(gain, 0), 1);
     await previewAudio.play();
     return "html-audio";
+  }
+}
+
+function getStoredVoicePreviews() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(VOICE_PREVIEW_STORAGE_KEY) || "{}");
+    return stored && typeof stored === "object" && !Array.isArray(stored) ? stored : {};
+  } catch {
+    return {};
+  }
+}
+
+function getStoredVoicePreview(voiceStyle) {
+  const stored = getStoredVoicePreviews()[voiceStyle];
+  return typeof stored === "string" && stored.startsWith("data:audio") ? stored : "";
+}
+
+function storeVoicePreview(voiceStyle, source) {
+  if (typeof source !== "string" || !source.startsWith("data:audio")) return;
+  if (source.length > MAX_VOICE_PREVIEW_BYTES) return;
+
+  try {
+    const stored = getStoredVoicePreviews();
+    // Re-inserting keeps the newest last, so the oldest is the one trimmed.
+    delete stored[voiceStyle];
+    stored[voiceStyle] = source;
+    const trimmed = Object.fromEntries(Object.entries(stored).slice(-MAX_STORED_VOICE_PREVIEWS));
+    localStorage.setItem(VOICE_PREVIEW_STORAGE_KEY, JSON.stringify(trimmed));
+  } catch {
+    // Storage full or unavailable: the preview simply regenerates next time.
+  }
+}
+
+function forgetVoicePreview(voiceStyle) {
+  try {
+    const stored = getStoredVoicePreviews();
+    if (!(voiceStyle in stored)) return;
+    delete stored[voiceStyle];
+    localStorage.setItem(VOICE_PREVIEW_STORAGE_KEY, JSON.stringify(stored));
+  } catch {
+    // Nothing to do; a bad entry is replaced on the next successful preview.
   }
 }
 
@@ -4024,6 +4071,17 @@ async function playAiVoicePreview() {
     return `fixed-file-${await playPreviewAudio(previewFile, previewGain)}`;
   }
 
+  const savedPreview = getStoredVoicePreview(selectedVoiceStyle);
+  if (savedPreview) {
+    try {
+      return `saved-${await playPreviewAudio(savedPreview, previewGain)}`;
+    } catch {
+      // A stored clip that will not decode is worse than none; drop it and
+      // fall through to generating a fresh one.
+      forgetVoicePreview(selectedVoiceStyle);
+    }
+  }
+
   // The narration endpoint needs the signed-in caller, the same as every other
   // call to it. Without this a voice with no pre-recorded sample gets a 401 and
   // silently falls back to the device voice, which sounds nothing like it.
@@ -4051,6 +4109,8 @@ async function playAiVoicePreview() {
 
   const data = await response.json();
   if (!Array.isArray(data.audio) || !data.audio[0]) return false;
+
+  storeVoicePreview(selectedVoiceStyle, data.audio[0]);
 
   return `new-ai-${await playPreviewAudio(data.audio[0], previewGain)}`;
 }
