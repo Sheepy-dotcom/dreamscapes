@@ -1,11 +1,12 @@
 const OPENAI_SPEECH_URL = "https://api.openai.com/v1/audio/speech";
 const { enforceNarrationAccess, handleCorsPreflight, incrementUsage, sendApiError } = require("./auth");
 const DEFAULT_SPEECH_MODEL = "gpt-4o-mini-tts";
-// Asking for pace in the instructions alone was not enough - measured output
-// still ran near 156 words a minute against a request for 100 - so a light
-// stretch tops it up. 0.9 was audibly crackly; 0.95 is half that adjustment.
+// Natural speed. Every stretch value tried was audible - 0.9 crackled, 0.95 was
+// still fuzzy - because the parameter resamples the finished audio rather than
+// making the model read slower. The pace comes from the line breaks the app
+// sends between sentences instead, which are silence rather than processing.
 // Overridable with OPENAI_TTS_SPEED; the API accepts 0.25 to 4.0.
-const DEFAULT_SPEECH_SPEED = 0.95;
+const DEFAULT_SPEECH_SPEED = 1;
 const MIN_SPEECH_SPEED = 0.25;
 const MAX_SPEECH_SPEED = 4;
 

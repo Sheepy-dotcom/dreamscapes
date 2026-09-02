@@ -2006,10 +2006,16 @@ function formatParagraphForDisplay(paragraph) {
     .join("");
 }
 
+// Sentence and paragraph gaps sound natural. A break every few words slows the
+// reading further but risks sounding clipped, so it is off until the gentler
+// pauses have been heard.
+const NARRATION_WORD_BREATHING = false;
+
 function addNarrationSentenceBreaks(text) {
+  const breathe = NARRATION_WORD_BREATHING ? addNarrationWordBreathing : (value) => String(value || "");
   const sentences = splitIntoSentences(text);
-  if (sentences.length <= 1) return addNarrationWordBreathing(text);
-  return sentences.map(addNarrationWordBreathing).join("\n\n\n");
+  if (sentences.length <= 1) return breathe(text);
+  return sentences.map(breathe).join("\n\n\n");
 }
 
 function addNarrationWordBreathing(text) {
@@ -2327,8 +2333,14 @@ async function updateAudioUsage(action, audioSeconds, options = {}) {
 }
 
 function cleanNarrationText(text) {
+  // Collapse runs of spaces and tabs but keep the line breaks: they are the
+  // deliberate pauses added by addNarrationWordBreathing, addNarrationSentence-
+  // Breaks and storyAsText, and flattening them here removed every gap the
+  // narration was meant to have.
   return text
-    .replace(/\s+/g, " ")
+    .replace(/[ \t]+/g, " ")
+    .replace(/ ?\n ?/g, "\n")
+    .replace(/\n{4,}/g, "\n\n\n")
     .replace(/DreamScape/g, "Dream Scape")
     .replace(/DreamScapes/g, "Dream Scapes")
     .trim();
