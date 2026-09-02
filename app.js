@@ -343,6 +343,30 @@ const AI_VOICE_PROFILES = {
     direction:
       "Use the same consistent voice every time: a calm British male storyteller, clear, gentle, expressive, and reassuring. Keep a natural bedtime story pace with soft warmth and calm character. Do not sound robotic, theatrical, American, sales-like, or like an announcer. Do not drag words or change voice style between paragraphs.",
   },
+  "coral warm": {
+    voice: "coral",
+    label: "a warm British English woman reading at bedtime",
+    direction:
+      "Use the same consistent voice every time: a warm, rounded British female voice with a soft smile in it, close and comfortable like a favourite aunt at the end of the bed. Keep it low and easy throughout, letting each sentence fall away gently rather than lifting. Stay calm and cosy rather than bright or chatty. Do not sound robotic, theatrical, American, sales-like, or like an announcer. Do not overact character voices, drag words, or change voice style between paragraphs.",
+  },
+  "onyx deep": {
+    voice: "onyx",
+    label: "a deep, slow British English male storyteller",
+    direction:
+      "Use the same consistent voice every time: a deep, low, unhurried British male voice, grounded and safe, the kind that settles a room. Stay in the lower register with plenty of weight and space, warm rather than stern or gloomy, and let the volume drop softly towards the end of every sentence. Do not sound robotic, theatrical, American, sales-like, or like an announcer. Do not overact character voices, drag words, or change voice style between paragraphs.",
+  },
+  "echo gentle": {
+    voice: "echo",
+    label: "a gentle, understated British English male storyteller",
+    direction:
+      "Use the same consistent voice every time: a gentle, even British male voice, quiet and unshowy, letting the story carry itself without performance. Keep the tone level and soothing with no bright peaks, as if talking softly in a darkened room. Do not sound robotic, theatrical, American, sales-like, or like an announcer. Do not overact character voices, drag words, or change voice style between paragraphs.",
+  },
+  "shimmer soft": {
+    voice: "shimmer",
+    label: "a soft-spoken British English woman settling a child to sleep",
+    direction:
+      "Use the same consistent voice every time: a soft, light, hushed British female voice, quiet and close to the microphone, as if not to wake anyone else in the house. This is the most relaxing voice in the app and should feel like the last thing heard before sleep: low volume, airy, tender, and completely unhurried. Let the energy drop gently towards the end of every sentence. Keep it flat and soothing rather than bright or animated, and do not lift into an excited or questioning tone. Do not sound robotic, theatrical, American, sales-like, or like an announcer. Do not overact character voices, drag words, or change voice style between paragraphs.",
+  },
 };
 const MAX_LOCAL_SAVED_STORIES = 30;
 const MAX_LIBRARY_RENDER_ITEMS = 30;
@@ -516,6 +540,10 @@ const voiceStyles = {
   "ash storyteller": { rate: 0.64, pitch: 0.94, volume: 0.86, pause: 1150 },
   "male default": { rate: 0.64, pitch: 0.88, volume: 0.86, pause: 1150 },
   "male cheerful": { rate: 0.64, pitch: 0.88, volume: 0.86, pause: 1150 },
+  "shimmer soft": { rate: 0.6, pitch: 1.04, volume: 0.8, pause: 1250 },
+  "coral warm": { rate: 0.62, pitch: 1, volume: 0.84, pause: 1200 },
+  "onyx deep": { rate: 0.6, pitch: 0.78, volume: 0.88, pause: 1250 },
+  "echo gentle": { rate: 0.62, pitch: 0.9, volume: 0.84, pause: 1200 },
 };
 
 function getPreviewAudioSource(source) {
@@ -3996,9 +4024,13 @@ async function playAiVoicePreview() {
     return `fixed-file-${await playPreviewAudio(previewFile, previewGain)}`;
   }
 
+  // The narration endpoint needs the signed-in caller, the same as every other
+  // call to it. Without this a voice with no pre-recorded sample gets a 401 and
+  // silently falls back to the device voice, which sounds nothing like it.
+  // chargeAudio:false below keeps previews off the monthly audio allowance.
   const response = await fetch(NARRATION_ENDPOINT, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: await getApiHeaders(),
     body: JSON.stringify({
       text: VOICE_PREVIEW_TEXT,
       storyLanguage: "en-GB",
