@@ -13,6 +13,7 @@ ios/build/
 # Release build artifacts
 *.aab
 *.apk
+*.ipa
 
 # Python bytecode from scripts/
 __pycache__/
