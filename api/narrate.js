@@ -1,9 +1,12 @@
 const OPENAI_SPEECH_URL = "https://api.openai.com/v1/audio/speech";
 const { enforceNarrationAccess, handleCorsPreflight, incrementUsage, sendApiError } = require("./auth");
 const DEFAULT_SPEECH_MODEL = "gpt-4o-mini-tts";
-// A little under natural pace, which suits reading a child to sleep. The API
-// accepts 0.25 to 4.0; anything outside that is rejected, so clamp it.
-const DEFAULT_SPEECH_SPEED = 0.9;
+// Left at natural speed on purpose. The speed parameter time-stretches the
+// finished audio rather than making the model read slower, and resampling it
+// added an audible crackle to the narration. The pace is asked for in the
+// instructions instead, which the model performs cleanly. Still overridable
+// with OPENAI_TTS_SPEED for experiments; the API accepts 0.25 to 4.0.
+const DEFAULT_SPEECH_SPEED = 1;
 const MIN_SPEECH_SPEED = 0.25;
 const MAX_SPEECH_SPEED = 4;
 
@@ -52,7 +55,8 @@ function getLanguageNarrationGuard(value) {
 // takes its pacing from the instructions instead - so the pace is asked for in
 // both places. Whichever the model listens to, the narration comes out slower.
 const PACE_INSTRUCTION = [
-  "Read slowly and unhurriedly, a little slower than natural speech.",
+  "Read slowly and unhurriedly, noticeably slower than natural speech.",
+  "Take your time over every sentence; never rush a line.",
   "Leave a gentle pause at commas and a longer one at full stops, as if reading a child to sleep.",
 ].join(" ");
 
