@@ -1,6 +1,17 @@
 const OPENAI_SPEECH_URL = "https://api.openai.com/v1/audio/speech";
 const { enforceNarrationAccess, handleCorsPreflight, incrementUsage, sendApiError } = require("./auth");
 const DEFAULT_SPEECH_MODEL = "gpt-4o-mini-tts";
+// A little under natural pace, which suits reading a child to sleep. The API
+// accepts 0.25 to 4.0; anything outside that is rejected, so clamp it.
+const DEFAULT_SPEECH_SPEED = 0.9;
+const MIN_SPEECH_SPEED = 0.25;
+const MAX_SPEECH_SPEED = 4;
+
+function getSpeechSpeed() {
+  const configured = Number(process.env.OPENAI_TTS_SPEED);
+  if (!Number.isFinite(configured) || configured <= 0) return DEFAULT_SPEECH_SPEED;
+  return Math.min(MAX_SPEECH_SPEED, Math.max(MIN_SPEECH_SPEED, configured));
+}
 const MAX_CHUNK_LENGTH = 3200;
 const MAX_CHUNKS = 20;
 const SPEECH_CONCURRENCY = 2;
@@ -37,11 +48,21 @@ function getLanguageNarrationGuard(value) {
   ].join(" ");
 }
 
+// The speed parameter is not honoured by every speech model - gpt-4o-mini-tts
+// takes its pacing from the instructions instead - so the pace is asked for in
+// both places. Whichever the model listens to, the narration comes out slower.
+const PACE_INSTRUCTION = [
+  "Read slowly and unhurriedly, a little slower than natural speech.",
+  "Leave a gentle pause at commas and a longer one at full stops, as if reading a child to sleep.",
+].join(" ");
+
 function buildNarrationInstructions(body) {
   const baseInstructions = cleanText(body.instructions).slice(0, 900);
   const languageGuard = getLanguageNarrationGuard(body.storyLanguage);
 
-  return cleanText([baseInstructions, languageGuard].filter(Boolean).join(" ")).slice(0, 1200);
+  return cleanText(
+    [baseInstructions, PACE_INSTRUCTION, languageGuard].filter(Boolean).join(" ")
+  ).slice(0, 1400);
 }
 
 function splitText(text) {
@@ -94,6 +115,7 @@ async function createSpeech({ input, voice, instructions, index = 0, total = 1 }
       voice,
       input,
       instructions: chunkInstructions,
+      speed: getSpeechSpeed(),
       response_format: "mp3",
     }),
   });
