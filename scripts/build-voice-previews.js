@@ -31,6 +31,26 @@ function readConst(name) {
 }
 
 const previewText = readConst("VOICE_PREVIEW_TEXT");
+
+// Mirror the pauses the app puts into a real story, so a preview sounds like
+// the narration it is previewing rather than a faster, gapless version.
+const wordBreathing = /const NARRATION_WORD_BREATHING = true/.test(appJs);
+
+function withNarrationPauses(text) {
+  const sentences = text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [text];
+  const shaped = sentences.map((sentence) => {
+    const trimmed = sentence.trim();
+    if (!wordBreathing) return trimmed;
+    const words = trimmed.split(/\s+/).filter(Boolean);
+    if (words.length <= 4) return trimmed;
+    const groups = [];
+    for (let i = 0; i < words.length; i += 4) groups.push(words.slice(i, i + 4).join(" "));
+    return groups.join("\n");
+  });
+  return shaped.join("\n\n\n");
+}
+
+const previewInput = withNarrationPauses(previewText);
 const model = process.env.OPENAI_TTS_MODEL || "gpt-4o-mini-tts";
 const speed = Number(process.env.OPENAI_TTS_SPEED || 0.95);
 
@@ -79,7 +99,7 @@ async function generate(profile) {
     body: JSON.stringify({
       model,
       voice: profile.voice,
-      input: previewText,
+      input: previewInput,
       instructions: buildInstructions(profile),
       speed,
       response_format: "mp3",
@@ -123,6 +143,12 @@ async function generate(profile) {
   );
 
   if (updated === appJs) {
+    // Either the mapping already matches, or the block could not be found.
+    if (written.every((p) => appJs.includes(`./assets/${p.file}`))) {
+      console.log(`\nVOICE_PREVIEW_FILES already points at all ${written.length} clips.`);
+      console.log("Now bump app.js?v= in index.html and run: npm run mobile:sync");
+      return;
+    }
     console.error("\nCould not rewrite VOICE_PREVIEW_FILES; add the entries below by hand:\n" + mapping);
     process.exit(1);
   }

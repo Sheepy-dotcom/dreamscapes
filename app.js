@@ -2006,10 +2006,10 @@ function formatParagraphForDisplay(paragraph) {
     .join("");
 }
 
-// Sentence and paragraph gaps sound natural. A break every few words slows the
-// reading further but risks sounding clipped, so it is off until the gentler
-// pauses have been heard.
-const NARRATION_WORD_BREATHING = false;
+// Sentence and paragraph gaps alone left the reading a little quick, so the
+// short break between phrases is on as well. Set to false to go back to
+// sentence and paragraph pauses only.
+const NARRATION_WORD_BREATHING = true;
 
 function addNarrationSentenceBreaks(text) {
   const breathe = NARRATION_WORD_BREATHING ? addNarrationWordBreathing : (value) => String(value || "");
