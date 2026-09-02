@@ -1,12 +1,11 @@
 const OPENAI_SPEECH_URL = "https://api.openai.com/v1/audio/speech";
 const { enforceNarrationAccess, handleCorsPreflight, incrementUsage, sendApiError } = require("./auth");
 const DEFAULT_SPEECH_MODEL = "gpt-4o-mini-tts";
-// Left at natural speed on purpose. The speed parameter time-stretches the
-// finished audio rather than making the model read slower, and resampling it
-// added an audible crackle to the narration. The pace is asked for in the
-// instructions instead, which the model performs cleanly. Still overridable
-// with OPENAI_TTS_SPEED for experiments; the API accepts 0.25 to 4.0.
-const DEFAULT_SPEECH_SPEED = 1;
+// Asking for pace in the instructions alone was not enough - measured output
+// still ran near 156 words a minute against a request for 100 - so a light
+// stretch tops it up. 0.9 was audibly crackly; 0.95 is half that adjustment.
+// Overridable with OPENAI_TTS_SPEED; the API accepts 0.25 to 4.0.
+const DEFAULT_SPEECH_SPEED = 0.95;
 const MIN_SPEECH_SPEED = 0.25;
 const MAX_SPEECH_SPEED = 4;
 
@@ -55,11 +54,12 @@ function getLanguageNarrationGuard(value) {
 // takes its pacing from the instructions instead - so the pace is asked for in
 // both places. Whichever the model listens to, the narration comes out slower.
 const PACE_INSTRUCTION = [
-  "Pace is the most important instruction: read this much more slowly than ordinary speech,",
-  "at roughly 100 words per minute, the unhurried pace of a parent reading a child to sleep.",
-  "Draw each sentence out and let it settle before starting the next.",
-  "Pause briefly at every comma, and for about a full second at every full stop and paragraph break.",
-  "Never speed up, even during exciting moments. A slow, steady, sleepy delivery is wanted throughout.",
+  "Pace is the single most important instruction and matters more than anything else here.",
+  "Read far more slowly than ordinary speech or an audiobook, at about 90 words per minute.",
+  "This should feel almost too slow to read aloud: a tired parent murmuring a child to sleep.",
+  "Draw every sentence out, and let each one settle in silence before starting the next.",
+  "Pause for half a second at every comma, and a full second at every full stop and paragraph break.",
+  "Never speed up, not even during exciting or urgent moments. Stay slow, soft and steady to the last word.",
 ].join(" ");
 
 // The app asks for words to be clearly separated "without sounding slow", which
@@ -85,9 +85,12 @@ function buildNarrationInstructions(body) {
   const baseInstructions = stripContradictoryPacing(cleanText(body.instructions)).slice(0, 700);
   const languageGuard = getLanguageNarrationGuard(body.storyLanguage);
 
+  // 556 (pace) + 700 (caller) + 149 (accent guard) + separators needs 1407, so
+  // the cap sits above that: at 1400 a long caller instruction clipped the
+  // accent guard off the end.
   return cleanText(
     [PACE_INSTRUCTION, baseInstructions, languageGuard].filter(Boolean).join(" ")
-  ).slice(0, 1400);
+  ).slice(0, 1500);
 }
 
 function splitText(text) {
