@@ -2674,7 +2674,7 @@ function getAiNarrationInstructions(story) {
       : "";
   const bedtimeDirection =
     story.storyType === "bedtime"
-      ? "For bedtime stories, add gentle natural pauses at sentence endings and let the final line settle peacefully."
+      ? "For bedtime stories, read especially slowly, add gentle natural pauses at sentence endings, and let the final line settle peacefully."
       : "For anytime stories, keep the same voice but use a little more brightness while staying calm and natural.";
 
   return [
@@ -2684,7 +2684,7 @@ function getAiNarrationInstructions(story) {
     englishAccentDirection,
     `Child age: ${getChildAgePrompt(story.childAge)}.`,
     bedtimeDirection,
-    "Leave a little breathing space between phrases, and make each word feel clearly separated without sounding slow, broken, or robotic.",
+    "Leave clear breathing space between phrases, and make each word feel distinct and unhurried without sounding broken or robotic.",
     "Sound close, human, and reassuring, like a parent calmly reading beside the bed.",
     "Keep the same narrator voice, accent, warmth, and pace for the whole story, even when the audio is created in separate parts.",
     "Do not add extra words that are not in the story.",

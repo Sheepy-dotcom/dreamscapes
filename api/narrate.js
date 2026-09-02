@@ -55,17 +55,38 @@ function getLanguageNarrationGuard(value) {
 // takes its pacing from the instructions instead - so the pace is asked for in
 // both places. Whichever the model listens to, the narration comes out slower.
 const PACE_INSTRUCTION = [
-  "Read slowly and unhurriedly, noticeably slower than natural speech.",
-  "Take your time over every sentence; never rush a line.",
-  "Leave a gentle pause at commas and a longer one at full stops, as if reading a child to sleep.",
+  "Pace is the most important instruction: read this much more slowly than ordinary speech,",
+  "at roughly 100 words per minute, the unhurried pace of a parent reading a child to sleep.",
+  "Draw each sentence out and let it settle before starting the next.",
+  "Pause briefly at every comma, and for about a full second at every full stop and paragraph break.",
+  "Never speed up, even during exciting moments. A slow, steady, sleepy delivery is wanted throughout.",
 ].join(" ");
 
+// The app asks for words to be clearly separated "without sounding slow", which
+// directly contradicts the pace above. Older app builds keep sending it, so it
+// is neutralised here rather than only being fixed in the client.
+const CONTRADICTORY_PACE_PHRASES = [
+  "without sounding slow, broken, or robotic",
+  "without sounding slow, broken or robotic",
+  "without sounding slow",
+];
+
+function stripContradictoryPacing(text) {
+  return CONTRADICTORY_PACE_PHRASES.reduce(
+    (result, phrase) => result.split(phrase).join("without sounding broken or robotic"),
+    text
+  );
+}
+
 function buildNarrationInstructions(body) {
-  const baseInstructions = cleanText(body.instructions).slice(0, 900);
+  // Pace leads, and the caller's own direction is trimmed rather than the pace
+  // or the accent guard: at the old sizes a long caller instruction pushed the
+  // total to the cap and truncated the accent guard off the end.
+  const baseInstructions = stripContradictoryPacing(cleanText(body.instructions)).slice(0, 700);
   const languageGuard = getLanguageNarrationGuard(body.storyLanguage);
 
   return cleanText(
-    [baseInstructions, PACE_INSTRUCTION, languageGuard].filter(Boolean).join(" ")
+    [PACE_INSTRUCTION, baseInstructions, languageGuard].filter(Boolean).join(" ")
   ).slice(0, 1400);
 }
 
