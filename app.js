@@ -327,51 +327,94 @@ const VOICE_PREVIEW_FILES = {
 const AI_VOICE_PROFILES = {
   "female calm": {
     voice: "nova",
-    label: "a British English female storyteller",
+    accent: "neutral",
+    label: "a warm female storyteller",
     direction:
-      "Use the same consistent voice every time: a warm British female storyteller, natural, expressive, clear, and reassuring. Keep a steady storybook pace with gentle emotion and a friendly bedtime feel.",
+      "Use the same consistent voice every time: a warm female storyteller, natural, expressive, clear, and reassuring. Keep a steady storybook pace with gentle emotion and a friendly bedtime feel.",
   },
   "female sage calm": {
     voice: "sage",
-    label: "a calm British English woman reading softly at bedtime",
+    accent: "neutral",
+    label: "a calm woman reading softly at bedtime",
     direction:
-      "Use the same consistent voice every time: a very calm British bedtime storyteller with a soft, close, reassuring tone. Sound gentle, cosy, natural, warm, and quietly expressive, like a parent reading slowly beside the bed. Keep the pace unhurried with light pauses at commas and longer pauses at full stops.",
+      "Use the same consistent voice every time: a very calm bedtime storyteller with a soft, close, reassuring tone. Sound gentle, cosy, natural, warm, and quietly expressive, like a parent reading slowly beside the bed. Keep the pace unhurried with light pauses at commas and longer pauses at full stops.",
   },
   "male calm": {
     voice: "fable",
-    label: "a British English male storyteller",
+    accent: "british",
+    label: "a British male storyteller",
     direction:
       "Use the same consistent voice every time: a warm British male storyteller, steady, natural, clear, and reassuring. Keep a gentle storybook pace with enough character to feel engaging without overacting.",
   },
   "ash storyteller": {
     voice: "ash",
-    label: "a calm British English male storyteller",
+    accent: "neutral",
+    label: "a calm male storyteller",
     direction:
-      "Use the same consistent voice every time: a calm British male storyteller, clear, gentle, expressive, and reassuring. Keep a natural bedtime story pace with soft warmth and calm character.",
+      "Use the same consistent voice every time: a calm male storyteller, clear, gentle, expressive, and reassuring. Keep a natural bedtime story pace with soft warmth and calm character.",
   },
   "coral warm": {
     voice: "coral",
-    label: "a warm British English woman reading at bedtime",
+    accent: "neutral",
+    label: "a warm woman reading at bedtime",
     direction:
-      "Use the same consistent voice every time: a warm, rounded British female voice with a soft smile in it, close and comfortable like a favourite aunt at the end of the bed. Keep it low and easy throughout, letting each sentence fall away gently rather than lifting. Stay calm and cosy rather than bright or chatty.",
+      "Use the same consistent voice every time: a warm, rounded female voice with a soft smile in it, close and comfortable like a favourite aunt at the end of the bed. Keep it low and easy throughout, letting each sentence fall away gently rather than lifting. Stay calm and cosy rather than bright or chatty.",
   },
   "onyx deep": {
     voice: "onyx",
-    label: "a deep, slow British English male storyteller",
+    accent: "neutral",
+    label: "a deep, slow male storyteller",
     direction:
-      "Use the same consistent voice every time: a deep, low, unhurried British male voice, grounded and safe, the kind that settles a room. Stay in the lower register with plenty of weight and space, warm rather than stern or gloomy, and let the volume drop softly towards the end of every sentence.",
+      "Use the same consistent voice every time: a deep, low, unhurried male voice, grounded and safe, the kind that settles a room. Stay in the lower register with plenty of weight and space, warm rather than stern or gloomy, and let the volume drop softly towards the end of every sentence.",
   },
   "echo gentle": {
     voice: "echo",
-    label: "a gentle, understated British English male storyteller",
+    accent: "neutral",
+    label: "a gentle, understated male storyteller",
     direction:
-      "Use the same consistent voice every time: a gentle, even British male voice, quiet and unshowy, letting the story carry itself without performance. Keep the tone level and soothing with no bright peaks, as if talking softly in a darkened room.",
+      "Use the same consistent voice every time: a gentle, even male voice, quiet and unshowy, letting the story carry itself without performance. Keep the tone level and soothing with no bright peaks, as if talking softly in a darkened room.",
+  },
+  "ballad audition": {
+    voice: "ballad",
+    accent: "neutral",
+    label: "an expressive storyteller with a little lilt and colour",
+    direction:
+      "Read in your own natural voice and accent, calm and warm, at a slow bedtime pace. Let the volume fall away gently at the end of each sentence.",
+  },
+  "cedar audition": {
+    voice: "cedar",
+    accent: "neutral",
+    label: "a calm, even storyteller",
+    direction:
+      "Read in your own natural voice and accent, calm and warm, at a slow bedtime pace. Let the volume fall away gently at the end of each sentence.",
+  },
+  "marin audition": {
+    voice: "marin",
+    accent: "neutral",
+    label: "a soft, easy storyteller",
+    direction:
+      "Read in your own natural voice and accent, calm and warm, at a slow bedtime pace. Let the volume fall away gently at the end of each sentence.",
+  },
+  "verse audition": {
+    voice: "verse",
+    accent: "neutral",
+    label: "a measured, characterful storyteller",
+    direction:
+      "Read in your own natural voice and accent, calm and warm, at a slow bedtime pace. Let the volume fall away gently at the end of each sentence.",
+  },
+  "alloy audition": {
+    voice: "alloy",
+    accent: "neutral",
+    label: "a plain, neutral storyteller",
+    direction:
+      "Read in your own natural voice and accent, calm and warm, at a slow bedtime pace. Let the volume fall away gently at the end of each sentence.",
   },
   "shimmer soft": {
     voice: "shimmer",
-    label: "a soft-spoken British English woman settling a child to sleep",
+    accent: "neutral",
+    label: "a soft-spoken woman settling a child to sleep",
     direction:
-      "Use the same consistent voice every time: a soft, light, hushed British female voice, quiet and close to the microphone, as if not to wake anyone else in the house. This is the most relaxing voice in the app and should feel like the last thing heard before sleep: low volume, airy, tender, and completely unhurried. Let the energy drop gently towards the end of every sentence. Keep it flat and soothing rather than bright or animated, and do not lift into an excited or questioning tone.",
+      "Use the same consistent voice every time: a soft, light, hushed female voice, quiet and close to the microphone, as if not to wake anyone else in the house. This is the most relaxing voice in the app and should feel like the last thing heard before sleep: low volume, airy, tender, and completely unhurried. Let the energy drop gently towards the end of every sentence. Keep it flat and soothing rather than bright or animated, and do not lift into an excited or questioning tone.",
   },
 };
 const MAX_LOCAL_SAVED_STORIES = 30;
@@ -550,6 +593,11 @@ const voiceStyles = {
   "coral warm": { rate: 0.62, pitch: 1, volume: 0.84, pause: 1200 },
   "onyx deep": { rate: 0.6, pitch: 0.78, volume: 0.88, pause: 1250 },
   "echo gentle": { rate: 0.62, pitch: 0.9, volume: 0.84, pause: 1200 },
+  "ballad audition": { rate: 0.62, pitch: 0.96, volume: 0.86, pause: 1150 },
+  "cedar audition": { rate: 0.62, pitch: 0.94, volume: 0.86, pause: 1150 },
+  "marin audition": { rate: 0.62, pitch: 1, volume: 0.84, pause: 1150 },
+  "verse audition": { rate: 0.62, pitch: 0.92, volume: 0.86, pause: 1150 },
+  "alloy audition": { rate: 0.62, pitch: 0.96, volume: 0.86, pause: 1150 },
 };
 
 function getPreviewAudioSource(source) {
@@ -2752,9 +2800,12 @@ const AI_VOICE_SHARED_DIRECTION = [
 function getAiNarrationInstructions(story) {
   const profile = AI_VOICE_PROFILES[story.voiceStyle] || AI_VOICE_PROFILES["female calm"];
   const language = getStoryLanguageDetails(story.storyLanguage);
+  // Only ask for a British accent from a voice that natively has one. Telling an
+  // American-sounding voice to hold a British accent for a whole story makes it
+  // strain, which reads as robotic and still does not sound British.
   const englishAccentDirection =
-    getStoryLanguage(story.storyLanguage) === "en-GB"
-      ? "For English stories, keep the spoken accent clearly UK/British English throughout and do not drift into American pronunciation."
+    getStoryLanguage(story.storyLanguage) === "en-GB" && profile.accent === "british"
+      ? "Keep the spoken accent clearly UK/British English throughout and do not drift into American pronunciation."
       : "";
   const bedtimeDirection =
     story.storyType === "bedtime"
