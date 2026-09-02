@@ -53,14 +53,11 @@ function getLanguageNarrationGuard(value) {
 // The speed parameter is not honoured by every speech model - gpt-4o-mini-tts
 // takes its pacing from the instructions instead - so the pace is asked for in
 // both places. Whichever the model listens to, the narration comes out slower.
-const PACE_INSTRUCTION = [
-  "Pace is the single most important instruction and matters more than anything else here.",
-  "Read far more slowly than ordinary speech or an audiobook, at about 90 words per minute.",
-  "This should feel almost too slow to read aloud: a tired parent murmuring a child to sleep.",
-  "Draw every sentence out, and let each one settle in silence before starting the next.",
-  "Pause for half a second at every comma, and a full second at every full stop and paragraph break.",
-  "Never speed up, not even during exciting or urgent moments. Stay slow, soft and steady to the last word.",
-].join(" ");
+// Measured against real output, a stated words-per-minute target moved the pace
+// not at all - only the speed parameter did. So this stays to one short line
+// about delivery, and the budget goes to the caller's voice direction instead.
+const PACE_INSTRUCTION =
+  "Read slowly and softly, letting each sentence settle before the next, with a gentle pause at commas and a longer one at full stops.";
 
 // The app asks for words to be clearly separated "without sounding slow", which
 // directly contradicts the pace above. Older app builds keep sending it, so it
@@ -79,18 +76,15 @@ function stripContradictoryPacing(text) {
 }
 
 function buildNarrationInstructions(body) {
-  // Pace leads, and the caller's own direction is trimmed rather than the pace
-  // or the accent guard: at the old sizes a long caller instruction pushed the
-  // total to the cap and truncated the accent guard off the end.
-  const baseInstructions = stripContradictoryPacing(cleanText(body.instructions)).slice(0, 700);
+  // The caller's direction is what makes one voice sound different from another,
+  // so it gets the room. Trimming it to 700 was cutting 450-840 characters off
+  // every voice - the age, the bedtime pacing and the accent guard all went.
+  const baseInstructions = stripContradictoryPacing(cleanText(body.instructions)).slice(0, 1500);
   const languageGuard = getLanguageNarrationGuard(body.storyLanguage);
 
-  // 556 (pace) + 700 (caller) + 149 (accent guard) + separators needs 1407, so
-  // the cap sits above that: at 1400 a long caller instruction clipped the
-  // accent guard off the end.
   return cleanText(
-    [PACE_INSTRUCTION, baseInstructions, languageGuard].filter(Boolean).join(" ")
-  ).slice(0, 1500);
+    [baseInstructions, PACE_INSTRUCTION, languageGuard].filter(Boolean).join(" ")
+  ).slice(0, 1900);
 }
 
 function splitText(text) {

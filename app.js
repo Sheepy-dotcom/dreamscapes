@@ -329,49 +329,49 @@ const AI_VOICE_PROFILES = {
     voice: "nova",
     label: "a British English female storyteller",
     direction:
-      "Use the same consistent voice every time: a warm British female storyteller, natural, expressive, clear, and reassuring. Keep a steady storybook pace with gentle emotion and a friendly bedtime feel. Do not sound robotic, theatrical, American, sales-like, or like an announcer. Do not drag words.",
+      "Use the same consistent voice every time: a warm British female storyteller, natural, expressive, clear, and reassuring. Keep a steady storybook pace with gentle emotion and a friendly bedtime feel.",
   },
   "female sage calm": {
     voice: "sage",
     label: "a calm British English woman reading softly at bedtime",
     direction:
-      "Use the same consistent voice every time: a very calm British bedtime storyteller with a soft, close, reassuring tone. Sound gentle, cosy, natural, warm, and quietly expressive, like a parent reading slowly beside the bed. Keep the pace unhurried with light pauses at commas and longer pauses at full stops. Do not sound robotic, theatrical, American, bright, sales-like, or like an announcer. Do not overact character voices, drag words, or change voice style between paragraphs.",
+      "Use the same consistent voice every time: a very calm British bedtime storyteller with a soft, close, reassuring tone. Sound gentle, cosy, natural, warm, and quietly expressive, like a parent reading slowly beside the bed. Keep the pace unhurried with light pauses at commas and longer pauses at full stops.",
   },
   "male calm": {
     voice: "fable",
     label: "a British English male storyteller",
     direction:
-      "Use the same consistent voice every time: a warm British male storyteller, steady, natural, clear, and reassuring. Keep a gentle storybook pace with enough character to feel engaging without overacting. Do not sound robotic, theatrical, American, sales-like, or like an announcer. Do not drag words.",
+      "Use the same consistent voice every time: a warm British male storyteller, steady, natural, clear, and reassuring. Keep a gentle storybook pace with enough character to feel engaging without overacting.",
   },
   "ash storyteller": {
     voice: "ash",
     label: "a calm British English male storyteller",
     direction:
-      "Use the same consistent voice every time: a calm British male storyteller, clear, gentle, expressive, and reassuring. Keep a natural bedtime story pace with soft warmth and calm character. Do not sound robotic, theatrical, American, sales-like, or like an announcer. Do not drag words or change voice style between paragraphs.",
+      "Use the same consistent voice every time: a calm British male storyteller, clear, gentle, expressive, and reassuring. Keep a natural bedtime story pace with soft warmth and calm character.",
   },
   "coral warm": {
     voice: "coral",
     label: "a warm British English woman reading at bedtime",
     direction:
-      "Use the same consistent voice every time: a warm, rounded British female voice with a soft smile in it, close and comfortable like a favourite aunt at the end of the bed. Keep it low and easy throughout, letting each sentence fall away gently rather than lifting. Stay calm and cosy rather than bright or chatty. Do not sound robotic, theatrical, American, sales-like, or like an announcer. Do not overact character voices, drag words, or change voice style between paragraphs.",
+      "Use the same consistent voice every time: a warm, rounded British female voice with a soft smile in it, close and comfortable like a favourite aunt at the end of the bed. Keep it low and easy throughout, letting each sentence fall away gently rather than lifting. Stay calm and cosy rather than bright or chatty.",
   },
   "onyx deep": {
     voice: "onyx",
     label: "a deep, slow British English male storyteller",
     direction:
-      "Use the same consistent voice every time: a deep, low, unhurried British male voice, grounded and safe, the kind that settles a room. Stay in the lower register with plenty of weight and space, warm rather than stern or gloomy, and let the volume drop softly towards the end of every sentence. Do not sound robotic, theatrical, American, sales-like, or like an announcer. Do not overact character voices, drag words, or change voice style between paragraphs.",
+      "Use the same consistent voice every time: a deep, low, unhurried British male voice, grounded and safe, the kind that settles a room. Stay in the lower register with plenty of weight and space, warm rather than stern or gloomy, and let the volume drop softly towards the end of every sentence.",
   },
   "echo gentle": {
     voice: "echo",
     label: "a gentle, understated British English male storyteller",
     direction:
-      "Use the same consistent voice every time: a gentle, even British male voice, quiet and unshowy, letting the story carry itself without performance. Keep the tone level and soothing with no bright peaks, as if talking softly in a darkened room. Do not sound robotic, theatrical, American, sales-like, or like an announcer. Do not overact character voices, drag words, or change voice style between paragraphs.",
+      "Use the same consistent voice every time: a gentle, even British male voice, quiet and unshowy, letting the story carry itself without performance. Keep the tone level and soothing with no bright peaks, as if talking softly in a darkened room.",
   },
   "shimmer soft": {
     voice: "shimmer",
     label: "a soft-spoken British English woman settling a child to sleep",
     direction:
-      "Use the same consistent voice every time: a soft, light, hushed British female voice, quiet and close to the microphone, as if not to wake anyone else in the house. This is the most relaxing voice in the app and should feel like the last thing heard before sleep: low volume, airy, tender, and completely unhurried. Let the energy drop gently towards the end of every sentence. Keep it flat and soothing rather than bright or animated, and do not lift into an excited or questioning tone. Do not sound robotic, theatrical, American, sales-like, or like an announcer. Do not overact character voices, drag words, or change voice style between paragraphs.",
+      "Use the same consistent voice every time: a soft, light, hushed British female voice, quiet and close to the microphone, as if not to wake anyone else in the house. This is the most relaxing voice in the app and should feel like the last thing heard before sleep: low volume, airy, tender, and completely unhurried. Let the energy drop gently towards the end of every sentence. Keep it flat and soothing rather than bright or animated, and do not lift into an excited or questioning tone.",
   },
 };
 const MAX_LOCAL_SAVED_STORIES = 30;
@@ -2740,6 +2740,15 @@ function getAiNarrationVoice(style) {
   return AI_VOICE_PROFILES[style]?.voice || AI_VOICE_PROFILES["female calm"].voice;
 }
 
+// Said once rather than repeated inside every voice profile, which used up the
+// budget the server allows for caller instructions and left the voices reading
+// alike once the tail was truncated.
+const AI_VOICE_SHARED_DIRECTION = [
+  "Keep this exact voice for the whole story, including when the audio is made in separate parts.",
+  "Do not sound robotic, theatrical, American, sales-like, or like an announcer.",
+  "Do not overact character voices or change voice style between paragraphs.",
+].join(" ");
+
 function getAiNarrationInstructions(story) {
   const profile = AI_VOICE_PROFILES[story.voiceStyle] || AI_VOICE_PROFILES["female calm"];
   const language = getStoryLanguageDetails(story.storyLanguage);
@@ -2752,16 +2761,16 @@ function getAiNarrationInstructions(story) {
       ? "For bedtime stories, read especially slowly, add gentle natural pauses at sentence endings, and let the final line settle peacefully."
       : "For anytime stories, keep the same voice but use a little more brightness while staying calm and natural.";
 
+  // Voice character first, so it survives if anything is ever trimmed.
   return [
     `Read this children's story as ${profile.label}.`,
     profile.direction,
+    AI_VOICE_SHARED_DIRECTION,
+    "Sound close, human, and reassuring, like a parent calmly reading beside the bed.",
+    bedtimeDirection,
+    `Child age: ${getChildAgePrompt(story.childAge)}.`,
     language.narration,
     englishAccentDirection,
-    `Child age: ${getChildAgePrompt(story.childAge)}.`,
-    bedtimeDirection,
-    "Leave clear breathing space between phrases, and make each word feel distinct and unhurried without sounding broken or robotic.",
-    "Sound close, human, and reassuring, like a parent calmly reading beside the bed.",
-    "Keep the same narrator voice, accent, warmth, and pace for the whole story, even when the audio is created in separate parts.",
     "Do not add extra words that are not in the story.",
     "Do not add farewell sign-offs such as ta-ta, ta ta for now, bye, or goodbye.",
   ].join(" ");
