@@ -319,10 +319,19 @@ const VOICE_PREVIEW_GAINS = {
   "female sage calm": 3.4,
 };
 const VOICE_PREVIEW_FILES = {
-  "female calm": "./assets/voice-preview-female-british-calm.mp3",
-  "female sage calm": "./assets/voice-preview-female-sage-calm-v3.mp3",
-  "male calm": "./assets/voice-preview-male-british-calm.mp3",
+  "female calm": "./assets/voice-preview-female-calm.mp3",
+  "female sage calm": "./assets/voice-preview-female-sage-calm.mp3",
+  "male calm": "./assets/voice-preview-male-calm.mp3",
   "ash storyteller": "./assets/voice-preview-ash-storyteller.mp3",
+  "coral warm": "./assets/voice-preview-coral-warm.mp3",
+  "onyx deep": "./assets/voice-preview-onyx-deep.mp3",
+  "echo gentle": "./assets/voice-preview-echo-gentle.mp3",
+  "ballad audition": "./assets/voice-preview-ballad-audition.mp3",
+  "cedar audition": "./assets/voice-preview-cedar-audition.mp3",
+  "marin audition": "./assets/voice-preview-marin-audition.mp3",
+  "verse audition": "./assets/voice-preview-verse-audition.mp3",
+  "alloy audition": "./assets/voice-preview-alloy-audition.mp3",
+  "shimmer soft": "./assets/voice-preview-shimmer-soft.mp3",
 };
 const AI_VOICE_PROFILES = {
   "female calm": {
