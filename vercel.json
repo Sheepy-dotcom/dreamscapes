@@ -11,5 +11,23 @@
         }
       ]
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/app",
+      "destination": "/api/app"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/ios",
+      "destination": "https://apps.apple.com/app/id6784545562?mt=8",
+      "permanent": false
+    },
+    {
+      "source": "/android",
+      "destination": "https://play.google.com/store/apps/details?id=cloud.dreamscapes.app",
+      "permanent": false
+    }
   ]
 }
