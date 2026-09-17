@@ -4428,3 +4428,9 @@ body.night-mode .loading-steps span {
 .duration-grid.preview-durations label.locked-choice span::after {
   content: "Account needed";
 }
+
+/* These carry their own `display`, which outranks the browser's [hidden], so
+   the preview builder cannot hide them without saying so. */
+[data-full-builder-only][hidden] {
+  display: none;
+}

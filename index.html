@@ -22,7 +22,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026091703" />
+    <link rel="stylesheet" href="./styles.css?v=2026091706" />
   </head>
   <body class="home-active night-mode">
     <div class="stars" aria-hidden="true"></div>
@@ -140,15 +140,18 @@
             </fieldset>
           </section>
 
-          <section class="builder-step" data-builder-step="5" data-step-title="Tonight" aria-labelledby="builder-step-idea-title" hidden>
-            <h3 id="builder-step-idea-title">Anything special about tonight?</h3>
-            <label class="field story-idea-field builder-group builder-group-pink">
+          <section class="builder-step" data-builder-step="5" data-step-title="Tonight" data-preview-step-title="Interests" aria-labelledby="builder-step-idea-title" hidden>
+            <h3 id="builder-step-idea-title" data-preview-title="What do they love?">Anything special about tonight?</h3>
+            <label class="field story-idea-field builder-group builder-group-pink" data-full-builder-only>
               <span>Story idea</span>
               <textarea id="story-idea" name="storyIdea" rows="3"></textarea>
             </label>
             <div class="builder-group builder-group-sky builder-fields-block">
-              <label class="field"><span>Interests</span><input name="interests" type="text" /></label>
               <label class="field">
+                <span>Interests</span>
+                <input name="interests" type="text" placeholder="Dinosaurs, space, baking..." />
+              </label>
+              <label class="field" data-full-builder-only>
                 <span>Special occasion</span>
                 <select id="story-occasion" name="occasion">
                   <option value="">None</option><option value="birthday">Birthday</option><option value="first day at school">First day at school</option>
@@ -975,6 +978,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026091703"></script>
+    <script src="./app.js?v=2026091706"></script>
   </body>
 </html>

@@ -193,6 +193,44 @@ const PENDING_PREVIEW_KEY = "dreamscapesPendingPreview";
 // this regardless of what is asked for, so the picker must not offer a length
 // that would be silently shortened.
 const PREVIEW_MAX_DURATION_MINUTES = 5;
+// Signed-out visitors answer two questions before their free story: who it is
+// for, and what they love. The seven left out either need an account (journeys,
+// narration), are fixed server side for a preview (length), or are refinements
+// worth asking only once someone has seen a story work. Nine questions from an
+// app a parent has never used, before any evidence it is good, is a lot to ask.
+const PREVIEW_BUILDER_STEP_INDEXES = [0, 5];
+
+function getActiveBuilderSteps() {
+  if (currentUser) return builderSteps.map((_, index) => index);
+  const preview = PREVIEW_BUILDER_STEP_INDEXES.filter((index) => index < builderSteps.length);
+  return preview.length ? preview : builderSteps.map((_, index) => index);
+}
+
+// Fields the preview does not ask for, and the heading that changes with them.
+function applyPreviewFieldVisibility() {
+  const isPreview = !currentUser;
+
+  document.querySelectorAll("[data-full-builder-only]").forEach((element) => {
+    element.hidden = isPreview;
+  });
+
+  document.querySelectorAll("[data-preview-title]").forEach((heading) => {
+    if (!heading.dataset.fullTitle) heading.dataset.fullTitle = heading.textContent.trim();
+    heading.textContent = isPreview ? heading.dataset.previewTitle : heading.dataset.fullTitle;
+  });
+}
+
+function getActiveStepPosition(stepIndex = currentBuilderStep) {
+  const active = getActiveBuilderSteps();
+  const position = active.indexOf(stepIndex);
+  return position === -1 ? 0 : position;
+}
+
+function goToActiveStep(position, announce = true) {
+  const active = getActiveBuilderSteps();
+  const clamped = Math.max(0, Math.min(position, active.length - 1));
+  setBuilderStep(active[clamped], announce);
+}
 const NARRATION_ENDPOINT = resolveApiEndpoint(window.DREAMSCAPES_NARRATION_ENDPOINT, "/api/narrate");
 const AUDIO_USAGE_ENDPOINT = resolveApiEndpoint(window.DREAMSCAPES_AUDIO_USAGE_ENDPOINT, "/api/audio-usage");
 const REDEEM_CODE_ENDPOINT = resolveApiEndpoint(window.DREAMSCAPES_REDEEM_CODE_ENDPOINT, "/api/redeem-code");
@@ -778,15 +816,15 @@ function queueAutoAdvance() {
   cancelAutoAdvance();
   autoAdvanceTimer = window.setTimeout(() => {
     autoAdvanceTimer = null;
-    if (currentBuilderStep >= builderSteps.length - 1) return;
+    if (getActiveStepPosition() >= getActiveBuilderSteps().length - 1) return;
     if (!validateBuilderStep(currentBuilderStep)) return;
-    setBuilderStep(currentBuilderStep + 1);
+    goToActiveStep(getActiveStepPosition() + 1);
   }, AUTO_ADVANCE_DELAY);
 }
 
 function updateBuilderActions() {
   if (!generateStoryButton) return;
-  const isLastStep = currentBuilderStep === builderSteps.length - 1;
+  const isLastStep = getActiveStepPosition() === getActiveBuilderSteps().length - 1;
   // Only the final step offers Create, which also keeps the action bar to a
   // single row so every step fits without scrolling.
   generateStoryButton.hidden = !isLastStep;
@@ -797,6 +835,18 @@ function setBuilderStep(stepIndex, announce = true) {
   if (!builderSteps.length) return;
   cancelAutoAdvance();
   currentBuilderStep = Math.max(0, Math.min(Number(stepIndex) || 0, builderSteps.length - 1));
+
+  // A step that is not on the active list snaps forward to the next one that
+  // is, so a stale index from a previous session cannot strand the builder on
+  // a step the visitor is not meant to see.
+  applyPreviewFieldVisibility();
+
+  const activeSteps = getActiveBuilderSteps();
+  if (!activeSteps.includes(currentBuilderStep)) {
+    currentBuilderStep =
+      activeSteps.find((index) => index >= currentBuilderStep) ?? activeSteps[activeSteps.length - 1];
+  }
+  const stepPosition = activeSteps.indexOf(currentBuilderStep);
 
   builderSteps.forEach((step, index) => {
     const isActive = index === currentBuilderStep;
@@ -812,13 +862,18 @@ function setBuilderStep(stepIndex, announce = true) {
   });
 
   const activeStep = builderSteps[currentBuilderStep];
-  const isLastStep = currentBuilderStep === builderSteps.length - 1;
-  if (builderStepCount) builderStepCount.textContent = `Step ${currentBuilderStep + 1} of ${builderSteps.length}`;
-  if (builderStepTitle) builderStepTitle.textContent = activeStep?.dataset.stepTitle || "";
-  if (builderProgressFill) {
-    builderProgressFill.style.width = `${((currentBuilderStep + 1) / builderSteps.length) * 100}%`;
+  const isLastStep = stepPosition === activeSteps.length - 1;
+  if (builderStepCount) {
+    builderStepCount.textContent = `Step ${stepPosition + 1} of ${activeSteps.length}`;
   }
-  if (builderStepBackButton) builderStepBackButton.textContent = currentBuilderStep === 0 ? "Home" : "Back";
+  if (builderStepTitle) {
+    builderStepTitle.textContent =
+      (!currentUser && activeStep?.dataset.previewStepTitle) || activeStep?.dataset.stepTitle || "";
+  }
+  if (builderProgressFill) {
+    builderProgressFill.style.width = `${((stepPosition + 1) / activeSteps.length) * 100}%`;
+  }
+  if (builderStepBackButton) builderStepBackButton.textContent = stepPosition === 0 ? "Home" : "Back";
   if (builderStepNextButton) builderStepNextButton.hidden = isLastStep;
   updateBuilderActions();
   updateBuilderAccountNotice();
@@ -3915,16 +3970,16 @@ function renderStoryMemories() {
 
 document.querySelector("#start-button").addEventListener("click", () => showScreen("builder"));
 builderStepBackButton?.addEventListener("click", () => {
-  if (currentBuilderStep === 0) {
+  if (getActiveStepPosition() === 0) {
     showScreen("welcome");
     return;
   }
-  setBuilderStep(currentBuilderStep - 1);
+  goToActiveStep(getActiveStepPosition() - 1);
 });
 builderStepNextButton?.addEventListener("click", () => {
   cancelAutoAdvance();
   if (!validateBuilderStep(currentBuilderStep)) return;
-  setBuilderStep(currentBuilderStep + 1);
+  goToActiveStep(getActiveStepPosition() + 1);
 });
 
 form?.addEventListener("change", (event) => {
