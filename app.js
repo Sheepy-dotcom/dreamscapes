@@ -197,6 +197,14 @@ const ANALYTICS_FLUSH_DELAY = 4000;
 // this regardless of what is asked for, so the picker must not offer a length
 // that would be silently shortened.
 const PREVIEW_MAX_DURATION_MINUTES = 5;
+// The fair limit for an ordinary visitor. The server's per-address limit is
+// deliberately looser, because an address is shared by a household, an office,
+// or thousands of people behind a mobile carrier's NAT. This one is per device,
+// so a couple both trying DreamScapes get three each rather than three between
+// them. It is clearable, which is fine - anyone clearing storage for a fourth
+// free story is not what the ceilings are defending against.
+const PREVIEW_DEVICE_DAILY_LIMIT = 3;
+const PREVIEW_DEVICE_COUNT_KEY = "dreamscapesPreviewCount";
 // Signed-out visitors answer two questions before their free story: who it is
 // for, and what they love. The seven left out either need an account (journeys,
 // narration), are fixed server side for a preview (length), or are refinements
@@ -3528,8 +3536,47 @@ function setPreviewCtaVisible(story) {
   }
 }
 
+function getPreviewDayKey() {
+  // UTC, to match the server's current_date so the two agree on when a day ends.
+  return new Date().toISOString().slice(0, 10);
+}
+
+function readPreviewDeviceCount() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(PREVIEW_DEVICE_COUNT_KEY) || "null");
+    return stored && stored.day === getPreviewDayKey() ? Number(stored.count) || 0 : 0;
+  } catch {
+    // No storage means no count, so the server's limits are the only ones. That
+    // is the right way round: a private window should not be locked out.
+    return 0;
+  }
+}
+
+function recordPreviewOnDevice() {
+  try {
+    localStorage.setItem(
+      PREVIEW_DEVICE_COUNT_KEY,
+      JSON.stringify({ day: getPreviewDayKey(), count: readPreviewDeviceCount() + 1 })
+    );
+  } catch {
+    // Same as above - the ceilings still hold without it.
+  }
+}
+
+function getPreviewsLeftOnDevice() {
+  return Math.max(0, PREVIEW_DEVICE_DAILY_LIMIT - readPreviewDeviceCount());
+}
+
 async function createPreviewStory(data) {
   if (!PREVIEW_ENDPOINT) throw new Error("Free stories are not available here.");
+
+  if (getPreviewsLeftOnDevice() <= 0) {
+    const limitError = new Error(
+      "You have used all of today's free stories. Create a free account to keep going."
+    );
+    limitError.previewLimitReached = true;
+    throw limitError;
+  }
 
   const response = await fetch(PREVIEW_ENDPOINT, {
     method: "POST",
@@ -3578,7 +3625,7 @@ async function createPreviewStory(data) {
     duration: 5,
     audioNarration: false,
     isPreview: true,
-    previewsLeft: Number(preview.previewsLeft || 0),
+    previewsLeft: Math.min(Number(preview.previewsLeft || 0), getPreviewsLeftOnDevice() - 1),
     createdAt: new Date().toISOString(),
   };
 }
@@ -3619,6 +3666,7 @@ async function generatePreviewStory() {
     aiAudioPaths: [],
     aiAudioGeneratedAt: "",
   };
+  recordPreviewOnDevice();
   storePendingPreview(currentStory);
   renderStory(currentStory);
   setPreviewCtaVisible(currentStory);

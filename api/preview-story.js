@@ -11,7 +11,13 @@ const { handleCorsPreflight, sendApiError, supabaseServiceRequest, ApiError } = 
 const { requestStory } = require("./story");
 
 const PREVIEW_DURATION_MINUTES = 5;
-const PREVIEW_IP_DAILY_LIMIT = 3;
+// Deliberately loose. An address is not a person: a household shares one, an
+// office shares one, and UK mobile carriers put thousands of subscribers behind
+// a single address through carrier-grade NAT - so a parent tapping a link on
+// mobile data can be refused for what three strangers on the same carrier did.
+// This exists to stop scripted abuse; the global ceiling below is what actually
+// bounds the bill, and the client keeps a per-device count for ordinary use.
+const PREVIEW_IP_DAILY_LIMIT = 10;
 const PREVIEW_GLOBAL_DAILY_LIMIT = 200;
 
 // Addresses are hashed before they are stored. The salt only has to stop the
