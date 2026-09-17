@@ -4434,3 +4434,20 @@ body.night-mode .loading-steps span {
 [data-full-builder-only][hidden] {
   display: none;
 }
+
+/* The free-story offer on the home screen. Sits tighter to the button than the
+   tagline above it, so it reads as part of the call to action. */
+.welcome-copy p.welcome-offer {
+  margin: 0 auto 16px;
+  color: var(--gold);
+  font-size: 0.98rem;
+  font-weight: 800;
+}
+.welcome-copy p.welcome-offer[hidden] {
+  display: none;
+}
+/* Night mode restyles every paragraph in this block at equal specificity, so
+   the offer has to claim its colour back explicitly. */
+body.night-mode .welcome-copy p.welcome-offer {
+  color: var(--gold);
+}

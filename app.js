@@ -890,11 +890,23 @@ function setBuilderStep(stepIndex, announce = true) {
   }
 }
 
+// The home screen states the offer, because it is the first thing a stranger
+// sees and the only place to say it before they have spent any effort.
+function updateWelcomeOffer() {
+  const startButton = document.querySelector("#start-button");
+  const welcomeOffer = document.querySelector("#welcome-offer");
+  if (startButton) {
+    startButton.textContent = currentUser ? "Create a Story" : "Create a Free Story";
+  }
+  if (welcomeOffer) welcomeOffer.hidden = Boolean(currentUser);
+}
+
 function updateBuilderAccountNotice() {
   // Signed-out visitors get one real story before being asked for anything. The
   // lock stays in the markup for the states that still need it, but the builder
   // itself is open - a parent who has never seen a DreamScapes story has no
   // reason to hand over an email first.
+  updateWelcomeOffer();
   if (builderAccountNotice) builderAccountNotice.hidden = true;
   if (generateStoryButton && !generateStoryButton.hidden) {
     generateStoryButton.textContent = currentUser ? "Create Story" : "Create My Free Story";
