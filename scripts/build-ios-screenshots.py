@@ -45,10 +45,10 @@ SCREENS = [
     ),
     (
         "04-parent-friendly-account.png",
-        "04-parent-account.png",
+        "04-parent-controls.png",
         "You are always\nin control",
         "Set topics to avoid, read every story first, and manage plans in one calm place.",
-        "Parent account",
+        "Parent controls",
     ),
 ]
 

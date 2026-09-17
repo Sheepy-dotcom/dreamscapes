@@ -39,7 +39,7 @@ SCREENS = [
     ),
     (
         "04-parent-account.jpg",
-        "04-parent-account.png",
+        "04-parent-controls.png",
         "You are always\nin control",
         "Set topics to avoid and read every story first",
         620,
