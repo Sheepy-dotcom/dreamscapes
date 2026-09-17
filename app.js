@@ -182,6 +182,13 @@ function resolveApiEndpoint(value, fallbackPath) {
 }
 
 const AI_ENDPOINT = resolveApiEndpoint(window.DREAMSCAPES_AI_ENDPOINT, "/api/story");
+const PREVIEW_ENDPOINT = resolveApiEndpoint(
+  window.DREAMSCAPES_PREVIEW_ENDPOINT,
+  "/api/preview-story"
+);
+// A preview story only exists on this device until the visitor makes an account,
+// at which point it is claimed into their library rather than thrown away.
+const PENDING_PREVIEW_KEY = "dreamscapesPendingPreview";
 const NARRATION_ENDPOINT = resolveApiEndpoint(window.DREAMSCAPES_NARRATION_ENDPOINT, "/api/narrate");
 const AUDIO_USAGE_ENDPOINT = resolveApiEndpoint(window.DREAMSCAPES_AUDIO_USAGE_ENDPOINT, "/api/audio-usage");
 const REDEEM_CODE_ENDPOINT = resolveApiEndpoint(window.DREAMSCAPES_REDEEM_CODE_ENDPOINT, "/api/redeem-code");
@@ -779,7 +786,7 @@ function updateBuilderActions() {
   // Only the final step offers Create, which also keeps the action bar to a
   // single row so every step fits without scrolling.
   generateStoryButton.hidden = !isLastStep;
-  generateStoryButton.textContent = currentUser ? "Create Story" : "Sign In to Create";
+  generateStoryButton.textContent = currentUser ? "Create Story" : "Create My Free Story";
 }
 
 function setBuilderStep(stepIndex, announce = true) {
@@ -825,9 +832,13 @@ function setBuilderStep(stepIndex, announce = true) {
 }
 
 function updateBuilderAccountNotice() {
-  if (builderAccountNotice) builderAccountNotice.hidden = Boolean(currentUser);
+  // Signed-out visitors get one real story before being asked for anything. The
+  // lock stays in the markup for the states that still need it, but the builder
+  // itself is open - a parent who has never seen a DreamScapes story has no
+  // reason to hand over an email first.
+  if (builderAccountNotice) builderAccountNotice.hidden = true;
   if (generateStoryButton && !generateStoryButton.hidden) {
-    generateStoryButton.textContent = currentUser ? "Create Story" : "Sign In to Create";
+    generateStoryButton.textContent = currentUser ? "Create Story" : "Create My Free Story";
   }
 }
 
@@ -1616,6 +1627,7 @@ async function initSupabase() {
       setAuthStatus("Choose a new password to finish resetting your account.");
     }
     if (session?.user) refreshAccountSummary();
+    if (session?.user) claimPendingPreview();
     if (screens.library.classList.contains("active")) renderLibrary();
   });
 
@@ -2268,6 +2280,9 @@ function renderStory(story) {
   renderNextAdventureChoices(story);
   resetAudioProgress();
   setAudioProgressVisible(Boolean(story.audioNarration));
+
+  // Last, so it overrides the account-only controls this function just set up.
+  setPreviewCtaVisible(story);
 }
 
 function storyAsText(story) {
@@ -3210,6 +3225,170 @@ async function saveStoryToCloud(story) {
   return currentStory;
 }
 
+const previewCta = document.querySelector("#preview-cta");
+const previewCtaNote = document.querySelector("#preview-cta-note");
+
+function storePendingPreview(story) {
+  try {
+    localStorage.setItem(PENDING_PREVIEW_KEY, JSON.stringify(story));
+  } catch {
+    // A preview that cannot be stored is still worth reading; it just will not
+    // survive into the new account.
+  }
+}
+
+function readPendingPreview() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(PENDING_PREVIEW_KEY) || "null");
+    return stored && stored.title ? stored : null;
+  } catch {
+    return null;
+  }
+}
+
+function clearPendingPreview() {
+  try {
+    localStorage.removeItem(PENDING_PREVIEW_KEY);
+  } catch {
+    // Nothing to do - the claim below is best effort either way.
+  }
+}
+
+// Called once a visitor signs in, so the story that persuaded them to sign up
+// is waiting in their library rather than lost to the account screen.
+async function claimPendingPreview() {
+  if (!currentUser) return;
+  const pending = readPendingPreview();
+  if (!pending) return;
+  clearPendingPreview();
+
+  try {
+    await saveGeneratedStoryToLibrary({ ...pending, isPreview: false });
+    trackEvent("preview_story_claimed");
+  } catch (error) {
+    console.error("Could not save the preview story to the new account", error);
+  }
+}
+
+// Everything on the result screen that needs an account is hidden for a preview.
+// Leaving "Continue Adventure" or "Share with Family" in front of a signed-out
+// parent just walks them into a wall straight after the story won them over.
+const PREVIEW_HIDDEN_SELECTORS = [
+  "#view-library-button",
+  "#continue-adventure-button",
+  "#share-family-button",
+  "#next-adventure-panel",
+  ".sleep-timer-panel",
+  ".narration-panel",
+];
+
+function setPreviewCtaVisible(story) {
+  if (!previewCta) return;
+  const isPreview = Boolean(story && story.isPreview) && !currentUser;
+  previewCta.hidden = !isPreview;
+
+  PREVIEW_HIDDEN_SELECTORS.forEach((selector) => {
+    document.querySelectorAll(selector).forEach((element) => {
+      if (isPreview) {
+        element.dataset.previewHidden = "true";
+        element.hidden = true;
+      } else if (element.dataset.previewHidden) {
+        delete element.dataset.previewHidden;
+        element.hidden = false;
+      }
+    });
+  });
+
+  if (isPreview && previewCtaNote) {
+    const left = Number(story.previewsLeft || 0);
+    previewCtaNote.textContent = left
+      ? `Create a free account to save this story, add calm audio narration, and turn it into a seven-night adventure. You have ${left} more free ${left === 1 ? "story" : "stories"} today.`
+      : "Create a free account to save this story, add calm audio narration, and turn it into a seven-night adventure.";
+  }
+}
+
+async function createPreviewStory(data) {
+  if (!PREVIEW_ENDPOINT) throw new Error("Free stories are not available here.");
+
+  const response = await fetch(PREVIEW_ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      childName: data.childName,
+      childAge: data.childAge,
+      interests: data.interests,
+      storyIdea: data.storyIdea,
+      avoidTopics: data.avoidTopics,
+      storyType: data.storyType,
+      storyLanguage: data.storyLanguage,
+      moods: data.moods,
+      calmMode: data.calmMode,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(await readApiError(response, "Free story unavailable"));
+  }
+
+  const preview = await response.json();
+  if (!preview.title || !Array.isArray(preview.paragraphs)) {
+    throw new Error("Free story endpoint returned an unexpected shape");
+  }
+
+  return {
+    ...data,
+    title: preview.title,
+    text: preview.paragraphs,
+    summary: preview.summary || "",
+    nextIdeas: [],
+    wordCount: preview.wordCount || 0,
+    duration: 5,
+    audioNarration: false,
+    isPreview: true,
+    previewsLeft: Number(preview.previewsLeft || 0),
+    createdAt: new Date().toISOString(),
+  };
+}
+
+// The signed-out path. Deliberately skips the plan, quota and audio checks the
+// signed-in flow runs - none of them apply to a story that is capped server
+// side and never billed to an account.
+async function generatePreviewStory() {
+  const planKey = getCurrentPlanKey();
+  const storyData = buildProfileAwareStoryData(getPlan(planKey), planKey);
+
+  if (!storyData.childName) {
+    planNote.textContent = "Add a child name before creating your story.";
+    return;
+  }
+
+  showScreen("loading");
+
+  let story = null;
+  try {
+    story = await createPreviewStory(storyData);
+  } catch (error) {
+    showScreen("builder");
+    setBuilderStep(builderSteps.length - 1, false);
+    planNote.textContent = getFriendlyFaultMessage(error, "Could not create that story. Try again.");
+    trackEvent("preview_story_failed", { message: String(error.message || "").slice(0, 200) });
+    return;
+  }
+
+  currentStory = {
+    ...story,
+    id: createStoryId(),
+    aiAudioTracks: [],
+    aiAudioPaths: [],
+    aiAudioGeneratedAt: "",
+  };
+  storePendingPreview(currentStory);
+  renderStory(currentStory);
+  setPreviewCtaVisible(currentStory);
+  showScreen("result");
+  trackEvent("preview_story_generated", { previewsLeft: story.previewsLeft });
+}
+
 async function saveGeneratedStoryToLibrary(story) {
   const plan = getPlan(story.plan);
 
@@ -3945,6 +4124,18 @@ planAuthSigninButton?.addEventListener("click", () => {
   showScreen("account");
 });
 
+document.querySelector("#preview-create-account-button")?.addEventListener("click", () => {
+  setSignupStatus("Create your free account and this story will be waiting in your library.");
+  showScreen("signup");
+  trackEvent("preview_account_create_selected");
+});
+
+document.querySelector("#preview-sign-in-button")?.addEventListener("click", () => {
+  setAuthStatus("Sign in and this story will be saved to your library.");
+  showScreen("account");
+  trackEvent("preview_account_signin_selected");
+});
+
 builderCreateAccountButton?.addEventListener("click", () => {
   setSignupStatus("Create your free account, then come back to make your story.");
   showScreen("signup");
@@ -4380,9 +4571,7 @@ form.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   if (!currentUser) {
-    planNote.textContent = "Create a free account or sign in before generating your story.";
-    updateBuilderAccountNotice();
-    showScreen("account");
+    await generatePreviewStory();
     return;
   }
 

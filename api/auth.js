@@ -317,6 +317,7 @@ function handleCorsPreflight(request, response, methods) {
 }
 
 module.exports = {
+  ApiError,
   enforceNarrationAccess,
   enforceStoryAccess,
   getAccountContext,

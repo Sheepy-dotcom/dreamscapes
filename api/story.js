@@ -556,3 +556,8 @@ module.exports = async function handler(request, response) {
     return sendApiError(response, error, "Could not create story");
   }
 };
+
+// Reused by api/preview-story.js, which needs a single generation call with no
+// retries or expansions so an anonymous request cannot cost five of them.
+module.exports.requestStory = requestStory;
+module.exports.createStory = createStory;
