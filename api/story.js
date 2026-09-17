@@ -168,6 +168,15 @@ function buildPrompt(data) {
   const moods = cleanList(data.moods);
   const childProfileSummary = cleanList(data.childProfileSummary);
   const language = getStoryLanguage(data.storyLanguage);
+  const interests = cleanText(data.interests, "");
+  // A parent who names an interest but no story idea has told us what the story
+  // should be about. Falling back to a generic adventure here buries that.
+  const storyIdea = cleanText(
+    data.storyIdea,
+    interests
+      ? `a gentle adventure built around ${interests}, with a kind positive ending`
+      : "a gentle adventure with a kind positive ending"
+  );
   const retryNote = data.enforceWordCount
     ? [
         "",
@@ -184,12 +193,13 @@ function buildPrompt(data) {
     `Story language: ${language.prompt}.`,
     `Child name: ${cleanText(data.childName, "the child")}.`,
     `Child age: ${cleanText(data.childAge, "not specified; use language suitable for a young child")}.`,
+    `Child interests: ${interests || "not specified"}.`,
     `Target duration: ${cleanText(data.duration, "5")} minutes of calm narrated audio.`,
     `Word count target: ${target.words} words. Acceptable range: ${target.minWords}-${target.maxWords} words.`,
     `Paragraph target: about ${target.paragraphs} short, readable paragraphs.`,
     "Timing rule: the selected duration is for slow narrated audio, so the story must be long enough when read aloud calmly with pauses.",
     `Mood blend: ${moods.length ? moods.join(", ") : "relaxing"}.`,
-    `Story idea from parent: ${cleanText(data.storyIdea, "a gentle adventure with a kind positive ending")}.`,
+    `Story idea from parent: ${storyIdea}.`,
     `Special occasion or life moment: ${cleanText(data.occasion, "none selected")}.`,
     `Recurring story characters: ${cleanText(data.recurringCharacters, "none selected")}.`,
     `Series title: ${cleanText(data.seriesTitle, "new standalone story")}.`,
@@ -198,7 +208,6 @@ function buildPrompt(data) {
     `Chosen direction for this chapter: ${cleanText(data.continuationChoice, "follow the parent's story idea")}.`,
     `Seven-night journey progress: ${data.journeyLength ? `night ${cleanText(data.journeyDay, "1")} of ${cleanText(data.journeyLength, "7")}` : "not part of a journey"}.`,
     `Selected child profile details: ${childProfileSummary.length ? childProfileSummary.join(" | ") : "not selected"}.`,
-    `Child interests: ${cleanText(data.interests, "not specified")}.`,
     `Friends who may appear naturally: ${cleanText(data.friends, "not specified")}.`,
     `Topics to avoid: ${cleanText(data.avoidTopics, "none specified")}.`,
     `Preferred lesson: ${cleanText(data.preferredLesson, "a gentle moral that fits naturally")}.`,
@@ -210,6 +219,7 @@ function buildPrompt(data) {
     "- Use warm, sensory, magical language with clear scenes and character moments.",
     "- Keep it age-appropriate, safe, non-frightening, and parent-friendly.",
     "- Give the child small choices, feelings, and discoveries.",
+    "- If interests are given, build the story around them. They should shape the setting, the characters, or the problem to solve, and be recognisable from the first paragraph. A passing mention is not enough - a child who loves dinosaurs should get a story about dinosaurs, not a generic adventure with one dinosaur in it.",
     "- If friends are provided, include them naturally only when it suits the story. Do not force every friend into every scene.",
     "- Use selected profile details naturally where helpful, but do not list physical details awkwardly or make appearance the focus.",
     "- If multiple child profiles are selected, include each child as an important character and give each a kind moment.",
