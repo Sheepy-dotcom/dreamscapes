@@ -121,7 +121,7 @@ module.exports = async function handler(request, response) {
       return response.status(429).json({
         error: reachedGlobal
           ? "DreamScapes has given away all of today's free stories. Create a free account to keep going."
-          : "That is all the free stories for today. Create a free account to keep going.",
+          : "You have used all of today's free stories. Create a free account to keep going.",
         limit: reachedGlobal ? "global" : "address",
       });
     }

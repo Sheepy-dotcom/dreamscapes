@@ -3404,6 +3404,18 @@ async function createPreviewStory(data) {
     }),
   });
 
+  if (response.status === 429) {
+    // Not a fault, so it skips getFriendlyFaultMessage entirely - that screens
+    // for stack traces, and any sentence containing "at " followed by a word
+    // looks like a stack frame to it.
+    const body = await response.json().catch(() => ({}));
+    const limitError = new Error(
+      body.error || "You have used all of today's free stories. Create a free account to keep going."
+    );
+    limitError.previewLimitReached = true;
+    throw limitError;
+  }
+
   if (!response.ok) {
     throw new Error(await readApiError(response, "Free story unavailable"));
   }
@@ -3448,8 +3460,12 @@ async function generatePreviewStory() {
   } catch (error) {
     showScreen("builder");
     setBuilderStep(builderSteps.length - 1, false);
-    planNote.textContent = getFriendlyFaultMessage(error, "Could not create that story. Try again.");
-    trackEvent("preview_story_failed", { message: String(error.message || "").slice(0, 200) });
+    planNote.textContent = error.previewLimitReached
+      ? error.message
+      : getFriendlyFaultMessage(error, "Could not create that story. Try again.");
+    trackEvent(error.previewLimitReached ? "preview_limit_reached" : "preview_story_failed", {
+      message: String(error.message || "").slice(0, 200),
+    });
     return;
   }
 
