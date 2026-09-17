@@ -189,6 +189,10 @@ const PREVIEW_ENDPOINT = resolveApiEndpoint(
 // A preview story only exists on this device until the visitor makes an account,
 // at which point it is claimed into their library rather than thrown away.
 const PENDING_PREVIEW_KEY = "dreamscapesPendingPreview";
+const ANALYTICS_ENDPOINT = resolveApiEndpoint(window.DREAMSCAPES_EVENTS_ENDPOINT, "/api/events");
+const ANALYTICS_VISIT_KEY = "dreamscapesVisitId";
+const ANALYTICS_BATCH_SIZE = 20;
+const ANALYTICS_FLUSH_DELAY = 4000;
 // Mirrors PREVIEW_DURATION_MINUTES in api/preview-story.js. The endpoint forces
 // this regardless of what is asked for, so the picker must not offer a length
 // that would be silently shortened.
@@ -1711,6 +1715,80 @@ async function initSupabase() {
   return supabaseClient;
 }
 
+// A random id for this browser visit, held in sessionStorage so it dies with
+// the tab. It is enough to join a free story to the account it produced, and
+// deliberately not enough to recognise anyone coming back tomorrow.
+function getAnalyticsVisitId() {
+  try {
+    const existing = sessionStorage.getItem(ANALYTICS_VISIT_KEY);
+    if (existing) return existing;
+    const created =
+      (window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`)
+        .replace(/[^A-Za-z0-9_-]/g, "")
+        .slice(0, 40);
+    sessionStorage.setItem(ANALYTICS_VISIT_KEY, created);
+    return created;
+  } catch {
+    // Private browsing, or storage refused. Events still send, just unjoined.
+    return "";
+  }
+}
+
+let analyticsQueue = [];
+let analyticsFlushTimer = null;
+
+function sendAnalyticsBatch(events, useBeacon = false) {
+  if (!events.length || !ANALYTICS_ENDPOINT) return;
+  const payload = JSON.stringify({ visitId: getAnalyticsVisitId(), events });
+
+  try {
+    if (useBeacon && navigator.sendBeacon) {
+      navigator.sendBeacon(ANALYTICS_ENDPOINT, new Blob([payload], { type: "application/json" }));
+      return;
+    }
+    // keepalive so a batch sent as the page goes away still completes.
+    fetch(ANALYTICS_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: payload,
+      keepalive: true,
+    }).catch(() => {});
+  } catch {
+    // Analytics never interrupt what the visitor is doing.
+  }
+}
+
+function flushAnalytics(useBeacon = false) {
+  if (analyticsFlushTimer) {
+    window.clearTimeout(analyticsFlushTimer);
+    analyticsFlushTimer = null;
+  }
+  if (!analyticsQueue.length) return;
+  const batch = analyticsQueue;
+  analyticsQueue = [];
+  sendAnalyticsBatch(batch, useBeacon);
+}
+
+function queueAnalyticsEvent(name, details) {
+  if (!ANALYTICS_ENDPOINT) return;
+  analyticsQueue.push({ name, details });
+
+  if (analyticsQueue.length >= ANALYTICS_BATCH_SIZE) {
+    flushAnalytics();
+    return;
+  }
+  if (!analyticsFlushTimer) {
+    analyticsFlushTimer = window.setTimeout(() => flushAnalytics(), ANALYTICS_FLUSH_DELAY);
+  }
+}
+
+// Leaving the page is the most likely moment to lose a batch, so it is sent
+// with a beacon that outlives the page rather than a request that will not.
+window.addEventListener("pagehide", () => flushAnalytics(true));
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") flushAnalytics(true);
+});
+
 function trackEvent(name, details = {}) {
   const event = {
     name,
@@ -1727,7 +1805,13 @@ function trackEvent(name, details = {}) {
   }
 
   events.unshift(event);
-  localStorage.setItem("dreamscapesAnalytics", JSON.stringify(events.slice(0, 80)));
+  try {
+    localStorage.setItem("dreamscapesAnalytics", JSON.stringify(events.slice(0, 80)));
+  } catch {
+    // Storage full, or refused in private browsing. The on-device copy is a
+    // convenience; the send below is the one that answers anything.
+  }
+  queueAnalyticsEvent(name, details);
 }
 
 function getValue(name) {
@@ -2666,6 +2750,52 @@ function renderAdminDashboard(data) {
     )
     .join("");
 
+  const funnel = data.previewFunnel || {};
+  const analytics = data.analytics || {};
+  const builderSteps = Array.isArray(analytics.builderSteps) ? analytics.builderSteps : [];
+  const firstStepVisits = Number(builderSteps[0]?.visits || 0);
+
+  const previewPanel = renderAdminSection(
+    `Free stories (last ${Number(analytics.windowDays) || 30} days)`,
+    `
+      <div class="admin-summary-grid">
+        ${[
+          ["Stories read", funnel.generated || 0],
+          ["Chose an account", `${funnel.choseAccount || 0} (${funnel.chosePercent || 0}%)`],
+          ["Signed up and kept it", `${funnel.claimed || 0} (${funnel.claimedPercent || 0}%)`],
+          ["Hit the daily limit", funnel.limitReached || 0],
+          ["Failed", funnel.failed || 0],
+        ]
+          .map(
+            ([label, value]) => `
+              <span>
+                <small>${escapeHtml(label)}</small>
+                <strong>${escapeHtml(value)}</strong>
+              </span>
+            `
+          )
+          .join("")}
+      </div>
+      ${
+        builderSteps.length
+          ? renderAdminList(builderSteps, "", (row) => {
+              const visits = Number(row.visits || 0);
+              const share = firstStepVisits ? Math.round((visits / firstStepVisits) * 100) : 0;
+              return `
+                <div class="admin-row">
+                  <strong>Builder step ${escapeHtml(row.step)}</strong>
+                  <span>${escapeHtml(visits)} visits${firstStepVisits ? ` &middot; ${share}% of step 1` : ""}</span>
+                </div>
+              `;
+            })
+          : ""
+      }
+    `,
+    funnel.generated
+      ? "Kept it is the number that matters: a free story that became an account."
+      : "No free stories yet in this window."
+  );
+
   const tableErrors = Array.isArray(data.tableErrors) ? data.tableErrors : [];
   const errorPanel = tableErrors.length
     ? renderAdminSection(
@@ -2681,6 +2811,7 @@ function renderAdminDashboard(data) {
 
   adminDashboard.innerHTML = [
     errorPanel,
+    previewPanel,
     renderAdminSection(
       "Recent Users",
       renderAdminList(tables.profiles, "No users found.", (profile) => `

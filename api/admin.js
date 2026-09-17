@@ -48,6 +48,35 @@ async function safeServiceRequestWithFallback(primaryPath, fallbackPath, tableEr
   }
 }
 
+async function safeServiceRpc(path, body, tableErrors, label) {
+  try {
+    return await supabaseServiceRequest(path, { method: "POST", body });
+  } catch (error) {
+    tableErrors.push({ label, message: error.message || "Could not load analytics" });
+    return [];
+  }
+}
+
+// The question the free-story work was a bet on: how many strangers who read a
+// story go on to make an account.
+function buildPreviewFunnel(eventCounts) {
+  const visits = (name) => Number(eventCounts.find((row) => row.name === name)?.visits || 0);
+  const generated = visits("preview_story_generated");
+  const chose = visits("preview_account_create_selected") + visits("preview_account_signin_selected");
+  const claimed = visits("preview_story_claimed");
+  const rate = (part) => (generated ? Math.round((part / generated) * 1000) / 10 : 0);
+
+  return {
+    generated,
+    limitReached: visits("preview_limit_reached"),
+    failed: visits("preview_story_failed"),
+    choseAccount: chose,
+    claimed,
+    chosePercent: rate(chose),
+    claimedPercent: rate(claimed),
+  };
+}
+
 function countBy(items, key) {
   return items.reduce((counts, item) => {
     const value = item?.[key] || "unknown";
@@ -144,7 +173,7 @@ module.exports = async function handler(request, response) {
 
     const tableErrors = [];
     const currentMonth = getCurrentMonthKey();
-    const [profiles, stories, usageRows, audioIssues, feedbackReports, redeemCodes, redemptions] =
+    const [profiles, stories, usageRows, audioIssues, feedbackReports, redeemCodes, redemptions, eventCounts, builderStepCounts] =
       await Promise.all([
         safeServiceRequest(
           "/rest/v1/profiles?select=id,email,plan,audio_story_credits,created_at,updated_at&order=created_at.desc&limit=500",
@@ -183,6 +212,8 @@ module.exports = async function handler(request, response) {
           tableErrors,
           "redemptions"
         ),
+        safeServiceRpc("/rest/v1/rpc/analytics_summary", { p_days: 30 }, tableErrors, "analytics"),
+        safeServiceRpc("/rest/v1/rpc/analytics_builder_steps", { p_days: 30 }, tableErrors, "builder steps"),
       ]);
 
     const currentUsage = usageRows.filter((row) => row.month_key === currentMonth);
@@ -203,6 +234,12 @@ module.exports = async function handler(request, response) {
         openAudioIssues: audioIssues.filter((issue) => issue.status === "open").length,
         openFeedback: feedbackReports.filter((report) => report.status === "open").length,
         redeemedCredits: sumBy(redemptions, "audio_story_credits"),
+      },
+      previewFunnel: buildPreviewFunnel(Array.isArray(eventCounts) ? eventCounts : []),
+      analytics: {
+        windowDays: 30,
+        events: Array.isArray(eventCounts) ? eventCounts.slice(0, 40) : [],
+        builderSteps: Array.isArray(builderStepCounts) ? builderStepCounts : [],
       },
       tables: {
         profiles: profiles.slice(0, 40),
