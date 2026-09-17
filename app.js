@@ -189,6 +189,10 @@ const PREVIEW_ENDPOINT = resolveApiEndpoint(
 // A preview story only exists on this device until the visitor makes an account,
 // at which point it is claimed into their library rather than thrown away.
 const PENDING_PREVIEW_KEY = "dreamscapesPendingPreview";
+// Mirrors PREVIEW_DURATION_MINUTES in api/preview-story.js. The endpoint forces
+// this regardless of what is asked for, so the picker must not offer a length
+// that would be silently shortened.
+const PREVIEW_MAX_DURATION_MINUTES = 5;
 const NARRATION_ENDPOINT = resolveApiEndpoint(window.DREAMSCAPES_NARRATION_ENDPOINT, "/api/narrate");
 const AUDIO_USAGE_ENDPOINT = resolveApiEndpoint(window.DREAMSCAPES_AUDIO_USAGE_ENDPOINT, "/api/audio-usage");
 const REDEEM_CODE_ENDPOINT = resolveApiEndpoint(window.DREAMSCAPES_REDEEM_CODE_ENDPOINT, "/api/redeem-code");
@@ -840,6 +844,12 @@ function updateBuilderAccountNotice() {
   if (generateStoryButton && !generateStoryButton.hidden) {
     generateStoryButton.textContent = currentUser ? "Create Story" : "Create My Free Story";
   }
+
+  // Signing in or out changes the longest story on offer, so the picker has to
+  // be re-locked here rather than only when a plan loads.
+  updateDurationLocks();
+  keepDurationWithinPlan();
+  syncDurationChoiceHighlight();
 }
 
 function validateBuilderStep(stepIndex) {
@@ -1986,20 +1996,33 @@ function showPlanAuthNotice(planKey) {
 function getHighestAllowedDuration(plan) {
   return durationInputs
     .map((input) => Number(input.value))
-    .filter((duration) => duration <= plan.maxDuration)
+    .filter((duration) => duration <= getEffectiveMaxDuration(plan))
     .sort((a, b) => b - a)[0] || 5;
 }
 
+function getEffectiveMaxDuration(plan) {
+  return currentUser ? plan.maxDuration : Math.min(plan.maxDuration, PREVIEW_MAX_DURATION_MINUTES);
+}
+
 function updateDurationLocks(plan = getPlan(getCurrentPlanKey())) {
+  // A signed-out visitor's locked lengths are not locked by their plan, so the
+  // grid says so differently - "Free" beside "Locked" reads as a contradiction.
+  durationInputs[0]
+    ?.closest(".duration-grid")
+    ?.classList.toggle("preview-durations", !currentUser);
+
   durationInputs.forEach((input) => {
     const duration = Number(input.value);
-    const locked = duration > plan.maxDuration;
+    const maxDuration = getEffectiveMaxDuration(plan);
+    const locked = duration > maxDuration;
     const label = input.closest("label");
     input.setAttribute("aria-disabled", String(locked));
     label?.classList.toggle("locked-choice", locked);
     if (label) {
       label.title = locked
-        ? `${plan.label} includes stories up to ${plan.maxDuration} minutes.`
+        ? currentUser
+          ? `${plan.label} includes stories up to ${plan.maxDuration} minutes.`
+          : `Free stories are ${PREVIEW_MAX_DURATION_MINUTES} minutes. Create a free account for longer ones.`
         : "";
     }
   });
@@ -2007,7 +2030,7 @@ function updateDurationLocks(plan = getPlan(getCurrentPlanKey())) {
 
 function keepDurationWithinPlan(plan = getPlan(getCurrentPlanKey())) {
   const selectedDuration = Number(getValue("durationChoice"));
-  if (selectedDuration <= plan.maxDuration) return false;
+  if (selectedDuration <= getEffectiveMaxDuration(plan)) return false;
 
   const fallback = getHighestAllowedDuration(plan);
   const fallbackInput = durationInputs.find((input) => Number(input.value) === fallback);
