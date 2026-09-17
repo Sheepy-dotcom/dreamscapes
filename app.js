@@ -4040,9 +4040,15 @@ function renderNextAdventureChoices(story) {
     .join("");
 }
 
+// Every shared story used to end at "Created with DreamScapes", which told a
+// parent what made it and gave them no way to get there. The tag lets installs
+// from shares be told apart from every other source in the store consoles.
+const STORY_SHARE_LINK = `${PRODUCTION_API_BASE}/app?s=share`;
+
 async function shareStoryWithFamily(story) {
   if (!story) return;
-  const fullText = `${story.title}\n\n${(story.text || []).join("\n\n")}\n\nCreated with DreamScapes`;
+  const shareFooter = `Created with DreamScapes - make one for your own child, free, no account needed: ${STORY_SHARE_LINK}`;
+  const fullText = `${story.title}\n\n${(story.text || []).join("\n\n")}\n\n${shareFooter}`;
   const safeTitle = String(story.title || "DreamScapes Story").replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "");
 
   try {
@@ -4051,7 +4057,11 @@ async function shareStoryWithFamily(story) {
       ? new File([fullText], `${safeTitle || "DreamScapes-Story"}.txt`, { type: "text/plain" })
       : null;
     const shareData = file && navigator.canShare?.({ files: [file] })
-      ? { title: story.title, text: "A personalised DreamScapes story for you.", files: [file] }
+      ? {
+          title: story.title,
+          text: `A personalised DreamScapes story for you.\n\n${shareFooter}`,
+          files: [file],
+        }
       : { title: story.title, text: fullText };
     await navigator.share(shareData);
     statusNote.textContent = "Story shared with family.";
