@@ -1305,6 +1305,22 @@ function getProfileSummary(profile) {
     .join(" · ");
 }
 
+// Races a request against a clock. The Supabase client can wait forever on its
+// auth lock - most often on an iPhone after the app has been in the background -
+// and a request that never settles looks, from the parent's side, exactly like
+// a button that does nothing.
+function withTimeout(promise, ms, code) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = window.setTimeout(() => {
+      const error = new Error("The request did not finish in time.");
+      error.code = code;
+      reject(error);
+    }, ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => window.clearTimeout(timer));
+}
+
 // The account screen's own status line sits at the very bottom of the screen,
 // which with the profiles section open is several hundred pixels below the
 // profile a parent just tapped - so a failed delete looked like nothing
@@ -4701,8 +4717,11 @@ childProfileList?.addEventListener("click", async (event) => {
       childProfiles.find((savedProfile) => savedProfile.id === deleteButton.dataset.deleteProfile)?.childName ||
       "That profile";
     deleteButton.disabled = true;
+    // Say something the moment it is pressed, so a slow or stuck request is
+    // visible as one rather than as a dead button.
+    setChildProfileStatus(`Deleting ${profileName}...`);
     try {
-      await deleteChildProfile(deleteButton.dataset.deleteProfile);
+      await withTimeout(deleteChildProfile(deleteButton.dataset.deleteProfile), 20000, "delete_timeout");
       setChildProfileStatus(`${profileName} has been deleted.`);
       trackEvent("child_profile_deleted");
     } catch (error) {
@@ -4714,7 +4733,9 @@ childProfileList?.addEventListener("click", async (event) => {
       setChildProfileStatus(
         error?.code === "delete_refused"
           ? `${profileName} could not be removed from your account. Please contact support@dreamscapes.cloud.`
-          : getFriendlyFaultMessage(error, `Could not delete ${profileName}. Check your connection and try again.`),
+          : error?.code === "delete_timeout"
+            ? `Deleting ${profileName} is taking too long. Close DreamScapes completely, open it again, and try once more.`
+            : getFriendlyFaultMessage(error, `Could not delete ${profileName}. Check your connection and try again.`),
         true
       );
     }
