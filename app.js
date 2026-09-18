@@ -1309,6 +1309,32 @@ function getProfileSummary(profile) {
 // auth lock - most often on an iPhone after the app has been in the background -
 // and a request that never settles looks, from the parent's side, exactly like
 // a button that does nothing.
+// Every Supabase request gets a deadline. A phone suspending the app can drop a
+// connection mid-request, and the browser's fetch will then wait on it forever.
+// An auth request that never settles keeps the session lock with it, so
+// everything queued behind it waits forever too. Uploads carry narration audio
+// and get far longer than the rest.
+const SUPABASE_REQUEST_DEADLINES = { auth: 20000, storage: 120000, other: 30000 };
+
+function createTimedFetch() {
+  return (input, init = {}) => {
+    const url = typeof input === "string" ? input : input?.url || String(input || "");
+    const ms = url.includes("/storage/v1/")
+      ? SUPABASE_REQUEST_DEADLINES.storage
+      : url.includes("/auth/v1/")
+        ? SUPABASE_REQUEST_DEADLINES.auth
+        : SUPABASE_REQUEST_DEADLINES.other;
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), ms);
+    const outer = init.signal;
+    if (outer) {
+      if (outer.aborted) controller.abort();
+      else outer.addEventListener("abort", () => controller.abort(), { once: true });
+    }
+    return fetch(input, { ...init, signal: controller.signal }).finally(() => window.clearTimeout(timer));
+  };
+}
+
 function withTimeout(promise, ms, code) {
   let timer;
   const timeout = new Promise((_, reject) => {
@@ -1752,6 +1778,17 @@ async function initSupabase() {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
+      // The default lock is navigator.locks, shared by every open copy of the
+      // site, and reading the session waits on it with no timeout. A tab left
+      // suspended in the background - or an app webview paused mid-refresh - can
+      // hold it indefinitely, and then every request in every other copy waits
+      // forever: the plan never loads, the library stays empty, deletes hang.
+      // processLock serialises auth work within this one page instead. The
+      // native app is a single webview, so it gives up nothing there.
+      ...(typeof supabaseBrowser.processLock === "function" ? { lock: supabaseBrowser.processLock } : {}),
+    },
+    global: {
+      fetch: createTimedFetch(),
     },
   });
 
@@ -1765,18 +1802,33 @@ async function initSupabase() {
   });
 
   supabaseClient.auth.onAuthStateChange((event, session) => {
+    const previousUserId = currentUser?.id || null;
     setCurrentUser(session?.user);
-    cloudStories = [];
-    cloudStoriesLoaded = false;
-    currentUsage = null;
-    currentProfile = null;
+
+    // This fires for every token refresh, roughly hourly, not just sign-in and
+    // sign-out. Clearing the plan and library on each one meant any reload that
+    // stalled left a Plus subscriber looking at "Free" and an empty library. The
+    // data only needs clearing when it belongs to someone else.
+    if ((session?.user?.id || null) !== previousUserId) {
+      cloudStories = [];
+      cloudStoriesLoaded = false;
+      currentUsage = null;
+      currentProfile = null;
+    }
+
     if (event === "PASSWORD_RECOVERY") {
       showPasswordResetCard();
       setAuthStatus("Choose a new password to finish resetting your account.");
     }
-    if (session?.user) refreshAccountSummary();
-    if (session?.user) claimPendingPreview();
-    if (screens.library.classList.contains("active")) renderLibrary();
+
+    // Supabase runs this callback while holding its auth lock and warns that
+    // calling back into the client from here can deadlock it, so anything that
+    // talks to Supabase waits until the callback has returned.
+    window.setTimeout(() => {
+      if (session?.user) refreshAccountSummary();
+      if (session?.user) claimPendingPreview();
+      if (screens.library.classList.contains("active")) renderLibrary();
+    }, 0);
   });
 
   return supabaseClient;
