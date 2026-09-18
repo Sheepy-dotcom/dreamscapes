@@ -2549,7 +2549,7 @@ function renderStory(story) {
     ${story.seriesTitle ? `<span>${escapeHtml(story.seriesTitle)} · Chapter ${Number(story.chapterNumber) || 1}</span>` : ""}
     ${story.journeyLength ? `<span>Night ${Number(story.journeyDay) || 1} of ${Number(story.journeyLength)}</span>` : ""}
     ${story.occasion ? `<span>${escapeHtml(sentenceCase(story.occasion))}</span>` : ""}
-    <span>${selectedMoods.map(sentenceCase).join(" + ")}</span>
+    ${selectedMoods.length ? `<span>${escapeHtml(selectedMoods.map(sentenceCase).join(" + "))}</span>` : ""}
     <span>${story.audioNarration ? "Audio narration" : "Text only"}</span>
     ${story.childAge ? `<span>Age ${story.childAge}</span>` : ""}
   `;
