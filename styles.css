@@ -4316,8 +4316,13 @@ body.night-mode .loading-steps span {
    still fits without scrolling. Placed last so it outranks the width-based
    media queries above, which set a taller textarea and wider gaps. */
 @media (max-height: 700px) {
+  /* Short phones (an iPhone SE is 667 tall) left the Tonight step 17px over and
+     Narration 5px over when signed in - the creation pages are meant never to
+     scroll. The bottom padding only keeps content off the action bar, which the
+     gap above that bar already does at this size. */
   .builder-step {
     gap: 10px;
+    padding-bottom: 6px;
   }
 
   .builder-step .field input,
@@ -4328,8 +4333,8 @@ body.night-mode .loading-steps span {
 
   .builder-step .field textarea,
   .builder-step .story-idea-field textarea {
-    min-height: 66px;
-    max-height: 66px;
+    min-height: 54px;
+    max-height: 54px;
   }
 
   .builder-screen .story-form > .builder-step {
@@ -4450,4 +4455,91 @@ body.night-mode .loading-steps span {
    the offer has to claim its colour back explicitly. */
 body.night-mode .welcome-copy p.welcome-offer {
   color: var(--gold);
+}
+
+/* Builder step illustrations.
+
+   Each step's art has its own grid row sized minmax(0, cap). Grid track sizing
+   grows that row into whatever height the step has spare, up to the cap, and
+   gives it nothing when the step is busy - so the art fills the empty space on
+   a light step and quietly shrinks on a heavy one, and is never the reason a
+   step scrolls. */
+.art-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.builder-step.has-art.active {
+  grid-template-rows: minmax(0, var(--step-art-max, 170px));
+}
+
+.step-art {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  pointer-events: none;
+  /* Lets the art ask how much room its row actually got. */
+  container-type: size;
+}
+
+.step-art svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* The art's row brings a grid gap with it even when the row has collapsed to
+   nothing, which on an already tight step is extra height it never asked for.
+   Pulling the heading back over that gap means the art can only give space
+   back, never take it. The drawings keep their own breathing room at the
+   bottom of the viewBox, so the heading still sits clear of them. */
+.builder-step.has-art > .step-art + h3 {
+  margin-top: -18px;
+}
+
+.step-art .twinkle {
+  animation: step-art-twinkle 3.4s ease-in-out infinite;
+}
+.step-art .twinkle:nth-of-type(2n) {
+  animation-delay: -1.2s;
+}
+.step-art .twinkle:nth-of-type(3n) {
+  animation-delay: -2.3s;
+}
+
+/* A busy step can squeeze the row down to a sliver, and a 26px bear reads as a
+   rendering fault rather than a picture. Below this it is better to show none. */
+@container (max-height: 64px) {
+  .step-art svg {
+    display: none;
+  }
+}
+
+@keyframes step-art-twinkle {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .step-art .twinkle {
+    animation: none;
+  }
+}
+
+@media (max-height: 700px) {
+  .builder-step.has-art.active {
+    --step-art-max: 110px;
+  }
+
+  /* The step gap drops to 10px on short screens. */
+  .builder-step.has-art > .step-art + h3 {
+    margin-top: -10px;
+  }
 }
