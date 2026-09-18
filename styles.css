@@ -4565,3 +4565,14 @@ body.night-mode .child-profile-status.error {
   background: rgba(255, 143, 183, 0.16);
   color: #ffd3e3;
 }
+
+/* The Tonight step is the busiest in the builder, and stacking Interests above
+   Occasion left it no spare height at all on an iPhone - Safari draws text
+   boxes and selects a little taller than Chrome, and its address bar takes
+   height of its own, so it scrolled. Side by side, the way name and age already
+   sit, removes a whole row. auto-fit lets Interests take the full width when
+   Occasion is hidden for a signed-out visitor. */
+.builder-step .tonight-grid {
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+}
