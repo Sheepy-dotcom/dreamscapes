@@ -1,252 +1,96 @@
+"""iPad App Store screenshots (13", 2064x2752).
+
+Sources are captured at an iPad viewport (1032x1376 at 2x) so the set shows the
+app as it actually lays out on a tablet - the library, for one, becomes a row of
+cards - rather than a phone screen stretched into a tablet frame. The design is
+shared with the iPhone set in store_screenshot_design.py.
+"""
+
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFilter, ImageFont
+from PIL import Image
 
+import store_screenshot_design as d
 
 ROOT = Path(__file__).resolve().parents[1]
-ANDROID_ASSETS = ROOT / "store-assets" / "android"
-SOURCE_DIR = ANDROID_ASSETS / "screenshots"
+SOURCE_DIR = ROOT / "store-assets" / "ios" / "ipad-13-sources"
 OUTPUT_DIR = ROOT / "store-assets" / "ios" / "ipad-13-screenshots"
-BACKGROUND = ANDROID_ASSETS / "promotional-screenshots" / "dreamscapes-promo-background.png"
-ICON = ANDROID_ASSETS / "play-store-icon-512.png"
 
-WIDTH = 2064
-HEIGHT = 2752
-TABLET_W = 1660
-TABLET_H = 1820
-TABLET_X = (WIDTH - TABLET_W) // 2
-TABLET_Y = 860
+WIDTH, HEIGHT = 2064, 2752
+SCREEN_W, BEZEL, RADIUS = 1560, 40, 90
+DEVICE_TOP = 880
 
-FONT_BOLD = "/System/Library/Fonts/Supplemental/Arial Rounded Bold.ttf"
-FONT_REGULAR = "/System/Library/Fonts/Avenir Next.ttc"
-
+# (output, source, accent, headline lines, subhead, callout region in source px,
+#  zoom, tilt, downward nudge so the callout clears the heading above it, badge)
+# Regions were measured from the live DOM at 1032x1376 and doubled for the 2x
+# capture, so each frames a real piece of the app's UI.
 SCREENS = [
-    (
-        "01-personalised-bedtime-stories.png",
-        "01-home.png",
-        "Never run out of\na bedtime story",
-        "Your first story is free, no account needed. Just their name and what they love.",
-        "Free to try",
-    ),
-    (
-        "02-create-the-perfect-story.png",
-        "02-story-builder.png",
-        "Made for tonight,\nin about a minute",
-        "Their name, their age, what they love, and the adventure they are in the mood for.",
-        "Story builder",
-    ),
-    (
-        "03-save-and-listen-again.png",
-        "03-library.png",
-        "Stories continue\nnight after night",
-        "The same characters and world come back, with calm audio ready for bedtime.",
-        "Story library",
-    ),
-    (
-        "04-parent-friendly-controls.png",
-        "04-parent-controls.png",
-        "You are always\nin control",
-        "Set topics to avoid, read every story first, and manage plans in one calm place.",
-        "Parent controls",
-    ),
+    ("01-bedtime-story.png", "story.png", "gold",
+     [("Never run out of", False), ("a bedtime story", True)],
+     "Personalised stories, starring your child",
+     (170, 1290, 1894, 1500), 1.15, -2, 0, "First story free  •  No account needed"),
+    ("02-first-story-free.png", "home.png", "peach",
+     [("Your first story", False), ("is free", True)],
+     "No account needed, just tap and begin",
+     (402, 1582, 1662, 1803), 1.35, 2, 0, None),
+    ("03-made-in-a-minute.png", "builder.png", "pink",
+     [("Made for tonight,", False), ("in about a minute", True)],
+     "Just their name, their age and what they love",
+     (110, 1465, 1938, 1711), 1.15, 2, 40, None),
+    ("04-stories-continue.png", "library.png", "lilac",
+     [("Stories continue", False), ("night after night", True)],
+     "Seven-night journeys with the same characters",
+     (106, 498, 718, 1228), 1.35, -3, 0, None),
+    ("05-calm-narration.png", "narration.png", "sky",
+     [("Calm narration", False), ("for lights-out", True)],
+     "13 soothing voices with DreamScapes Plus",
+     (120, 1300, 1928, 1690), 1.12, 2, 30, None),
+    ("06-in-control.png", "controls.png", "mint",
+     [("You are always", False), ("in control", True)],
+     "Choose what to avoid, and read every story first",
+     (110, 1465, 1938, 1711), 1.15, -2, 40, None),
 ]
 
 
-def font(path, size, index=0):
-    return ImageFont.truetype(path, size=size, index=index)
+def build(output, source_name, accent_name, lines, subhead, region, zoom, tilt, dy, badge):
+    accent = d.ACCENTS[accent_name]
+    source = Image.open(SOURCE_DIR / source_name).convert("RGBA")
 
+    frame, scale = d.device(source, SCREEN_W, BEZEL, RADIUS)
+    frame_x = (WIDTH - frame.width) // 2
 
-def cover(image, size):
-    target_width, target_height = size
-    scale = max(target_width / image.width, target_height / image.height)
-    resized = image.resize(
-        (round(image.width * scale), round(image.height * scale)),
-        Image.Resampling.LANCZOS,
+    canvas = d.backdrop(
+        WIDTH, HEIGHT, accent,
+        (frame_x - 220, DEVICE_TOP + 200, frame_x + frame.width + 220, DEVICE_TOP + 1700),
     )
-    left = (resized.width - target_width) // 2
-    top = (resized.height - target_height) // 2
-    return resized.crop((left, top, left + target_width, top + target_height))
+    d.draw_brand(canvas, 120, 104, 58)
+    bottom = d.draw_headline(canvas, 320, lines, accent, 150, 24)
+    d.draw_subhead(canvas, bottom + 56, subhead, 60, WIDTH - 360)
 
+    shadow, pad = d.soft_shadow(frame.size, RADIUS, blur=60, alpha=200)
+    canvas.alpha_composite(shadow, (frame_x - pad, DEVICE_TOP - pad + 40))
+    canvas.alpha_composite(frame, (frame_x, DEVICE_TOP))
 
-def wrap_text(draw, text, text_font, max_width):
-    lines = []
-    for paragraph in text.splitlines():
-        words = paragraph.split()
-        line = ""
-        for word in words:
-            test = f"{line} {word}".strip()
-            if draw.textbbox((0, 0), test, font=text_font)[2] <= max_width:
-                line = test
-            else:
-                if line:
-                    lines.append(line)
-                line = word
-        if line:
-            lines.append(line)
-    return "\n".join(lines)
+    screen_origin = (frame_x + BEZEL, DEVICE_TOP + BEZEL)
+    d.draw_callout(canvas, source, region, scale, screen_origin, zoom, accent, tilt, radius=40, dy=dy)
 
+    if badge:
+        d.draw_badge(canvas, badge, (frame_x + frame.width - 380, DEVICE_TOP + 20), 54, 4)
 
-def rounded_layer(size, radius, fill, outline=None, width=1):
-    layer = Image.new("RGBA", size, (0, 0, 0, 0))
-    draw = ImageDraw.Draw(layer)
-    inset = width // 2
-    draw.rounded_rectangle(
-        (inset, inset, size[0] - inset - 1, size[1] - inset - 1),
-        radius=radius,
-        fill=fill,
-        outline=outline,
-        width=width,
-    )
-    return layer
-
-
-def library_source():
-    canvas = Image.new("RGBA", (1400, 1860), (12, 16, 52, 255))
-    draw = ImageDraw.Draw(canvas)
-    header_font = font(FONT_BOLD, 58)
-    eyebrow_font = font(FONT_BOLD, 24)
-    title_font = font(FONT_BOLD, 42)
-    body_font = font(FONT_REGULAR, 28)
-    badge_font = font(FONT_BOLD, 22)
-    button_font = font(FONT_BOLD, 24)
-    tab_font = font(FONT_BOLD, 21)
-
-    logo = Image.open(ICON).convert("RGBA").resize((86, 86), Image.Resampling.LANCZOS)
-    logo_mask = Image.new("L", logo.size, 0)
-    ImageDraw.Draw(logo_mask).rounded_rectangle((0, 0, 86, 86), radius=18, fill=255)
-    logo.putalpha(logo_mask)
-    canvas.alpha_composite(logo, (100, 86))
-    draw.text((210, 100), "SAVED STORIES", font=eyebrow_font, fill=(255, 225, 132, 255))
-    draw.text((210, 134), "Library", font=header_font, fill=(255, 255, 255, 255))
-
-    tabs = [("All", True), ("Audio", False), ("Text", False), ("Saved", False), ("Series", False)]
-    x = 100
-    for label, active in tabs:
-        width = 94 if label == "All" else 124
-        fill = (255, 216, 132, 255) if active else (27, 31, 78, 255)
-        outline = (255, 234, 163, 255) if active else (113, 94, 170, 120)
-        text_fill = (25, 17, 58, 255) if active else (232, 226, 255, 235)
-        draw.rounded_rectangle((x, 250, x + width, 310), radius=18, fill=fill, outline=outline, width=2)
-        label_width = draw.textbbox((0, 0), label, font=tab_font)[2]
-        draw.text((x + (width - label_width) // 2, 268), label, font=tab_font, fill=text_fill)
-        x += width + 18
-
-    draw.rounded_rectangle((1000, 250, 1280, 310), radius=18, fill=(27, 31, 78, 255), outline=(113, 94, 170, 120), width=2)
-    draw.text((1034, 268), "Sort  Newest", font=tab_font, fill=(255, 250, 224, 255))
-
-    def card(y, title, preview, saved=False):
-        outline = (255, 226, 122, 255) if saved else (188, 167, 255, 100)
-        draw.rounded_rectangle((100, y, 1300, y + 330), radius=24, fill=(9, 13, 45, 248), outline=outline, width=4)
-        if saved:
-            draw.rounded_rectangle((132, y + 30, 274, y + 78), radius=24, fill=(255, 226, 122, 255))
-            draw.text((176, y + 43), "Saved", font=badge_font, fill=(24, 16, 58, 255))
-        draw.text((132, y + 108), title, font=title_font, fill=(255, 250, 224, 255))
-        draw.text((132, y + 168), preview, font=body_font, fill=(235, 230, 255, 230))
-        draw.rounded_rectangle((132, y + 246, 600, y + 304), radius=16, fill=(255, 218, 132, 255))
-        draw.text((306, y + 264), "Play Story", font=button_font, fill=(25, 18, 60, 255))
-        draw.rounded_rectangle((632, y + 246, 880, y + 304), radius=16, fill=(68, 54, 123, 255))
-        draw.text((726, y + 264), "Open", font=button_font, fill=(255, 250, 224, 255))
-
-    card(420, "Rosie and the Moonlit Library", "A gentle adventure saved for tomorrow's bedtime.", saved=True)
-    card(790, "The Star That Learned to Shine", "A magical story with audio ready to play.")
-    card(1160, "The Brave Little Cloud", "A calming favourite for sleepy evenings.", saved=True)
-    return canvas
-
-
-def clean_builder_source():
-    source = Image.open(SOURCE_DIR / "02-story-builder.png").convert("RGBA")
-    draw = ImageDraw.Draw(source)
-
-    field_fill = (7, 11, 40, 255)
-    field_outline = (82, 65, 146, 210)
-    panel_fill = (35, 28, 85, 245)
-
-    # Match the current app: optional safety fields and story idea start empty.
-    draw.rounded_rectangle((83, 1160, 535, 1212), radius=9, fill=field_fill, outline=field_outline, width=2)
-    draw.rounded_rectangle((546, 1160, 998, 1212), radius=9, fill=field_fill, outline=field_outline, width=2)
-    draw.rounded_rectangle((83, 1330, 998, 1380), radius=10, fill=panel_fill)
-    draw.rounded_rectangle((83, 1382, 998, 1536), radius=9, fill=field_fill, outline=field_outline, width=2)
-
-    return source
-
-
-def source_screen(source_name):
-    if source_name == "02-story-builder.png":
-        return clean_builder_source()
-    if source_name == "03-library.png":
-        return library_source()
-    return Image.open(SOURCE_DIR / source_name).convert("RGBA")
-
-
-def tablet_mockup(source_name):
-    tablet = Image.new("RGBA", (TABLET_W, TABLET_H), (0, 0, 0, 0))
-    shadow = rounded_layer((TABLET_W, TABLET_H), 86, (0, 0, 0, 165))
-    shadow = shadow.filter(ImageFilter.GaussianBlur(32))
-    tablet.alpha_composite(shadow, (0, 24))
-
-    frame = rounded_layer((TABLET_W, TABLET_H), 86, (247, 243, 255, 255))
-    tablet.alpha_composite(frame, (0, 0))
-
-    margin = 34
-    screen_size = (TABLET_W - margin * 2, TABLET_H - margin * 2)
-    screen = cover(source_screen(source_name), screen_size)
-    mask = Image.new("L", screen_size, 0)
-    ImageDraw.Draw(mask).rounded_rectangle((0, 0, *screen_size), radius=58, fill=255)
-    screen.putalpha(mask)
-    tablet.alpha_composite(screen, (margin, margin))
-
-    draw = ImageDraw.Draw(tablet)
-    draw.rounded_rectangle((TABLET_W // 2 - 100, 46, TABLET_W // 2 + 100, 76), radius=15, fill=(5, 7, 22, 220))
-    return tablet
-
-
-def build(output_name, source_name, headline, subhead, pill):
-    backdrop = cover(Image.open(BACKGROUND).convert("RGB"), (WIDTH, HEIGHT)).convert("RGBA")
-    backdrop = Image.alpha_composite(backdrop, Image.new("RGBA", (WIDTH, HEIGHT), (6, 9, 42, 55)))
-
-    glow = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
-    glow_draw = ImageDraw.Draw(glow)
-    glow_draw.ellipse((-420, 20, 920, 1180), fill=(157, 102, 255, 92))
-    glow_draw.ellipse((1030, -280, 2360, 960), fill=(255, 207, 112, 70))
-    glow_draw.ellipse((520, 1820, 1780, 3100), fill=(255, 164, 206, 54))
-    backdrop = Image.alpha_composite(backdrop, glow.filter(ImageFilter.GaussianBlur(88)))
-
-    draw = ImageDraw.Draw(backdrop)
-    icon = Image.open(ICON).convert("RGBA").resize((118, 118), Image.Resampling.LANCZOS)
-    icon_mask = Image.new("L", icon.size, 0)
-    ImageDraw.Draw(icon_mask).rounded_rectangle((0, 0, 118, 118), radius=28, fill=255)
-    icon.putalpha(icon_mask)
-    backdrop.alpha_composite(icon, (142, 104))
-
-    brand_font = font(FONT_BOLD, 44)
-    pill_font = font(FONT_BOLD, 30)
-    headline_font = font(FONT_BOLD, 108)
-    subhead_font = font(FONT_REGULAR, 42)
-
-    draw.text((292, 140), "DREAMSCAPES", font=brand_font, fill=(255, 226, 132, 255))
-    pill_width = 44 + draw.textbbox((0, 0), pill, font=pill_font)[2]
-    draw.rounded_rectangle((142, 276, 142 + pill_width, 350), radius=37, fill=(255, 226, 132, 238))
-    draw.text((164, 299), pill, font=pill_font, fill=(28, 17, 66, 255))
-    headline_position = (142, 404)
-    draw.multiline_text(headline_position, headline, font=headline_font, fill=(255, 255, 255, 255), spacing=10)
-    headline_box = draw.multiline_textbbox(headline_position, headline, font=headline_font, spacing=10)
-    subhead_y = headline_box[3] + 36
-    draw.multiline_text(
-        (146, subhead_y),
-        wrap_text(draw, subhead, subhead_font, WIDTH - 292),
-        font=subhead_font,
-        fill=(242, 236, 255, 245),
-        spacing=10,
-    )
-
-    backdrop.alpha_composite(tablet_mockup(source_name), (TABLET_X, TABLET_Y))
-    backdrop.convert("RGB").save(OUTPUT_DIR / output_name, "PNG", optimize=True)
+    canvas.convert("RGB").save(OUTPUT_DIR / output, "PNG", optimize=True)
 
 
 def main():
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    wanted = {screen[0] for screen in SCREENS}
+    # Screenshots from an earlier layout would otherwise sit alongside the new
+    # set and get uploaded by mistake.
+    for stale in OUTPUT_DIR.glob("*.png"):
+        if stale.name not in wanted:
+            stale.unlink()
     for screen in SCREENS:
         build(*screen)
+        print(f"  {screen[0]}")
 
 
 if __name__ == "__main__":

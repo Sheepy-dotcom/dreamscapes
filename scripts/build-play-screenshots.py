@@ -78,61 +78,6 @@ def rounded_image(image, size, radius, crop_y):
     return fitted
 
 
-def library_preview(image):
-    image = image.copy()
-    draw = ImageDraw.Draw(image)
-    title_font = font(FONT_BOLD, 28)
-    body_font = font(FONT_REGULAR, 17)
-    meta_font = font(FONT_BOLD, 14)
-    badge_font = font(FONT_BOLD, 14)
-    button_font = font(FONT_BOLD, 16)
-
-    draw.rectangle((82, 224, 999, image.height), fill=(17, 22, 67, 255))
-
-    def story_card(y, title, preview, saved=False, new=False):
-        outline = (255, 231, 133, 235) if saved or new else (216, 198, 255, 72)
-        draw.rounded_rectangle(
-            (83, y, 998, y + 278),
-            radius=10,
-            fill=(9, 14, 49, 242),
-            outline=outline,
-            width=2 if saved or new else 1,
-        )
-        text_y = y + 22
-        if new:
-            draw.rounded_rectangle((101, text_y, 211, text_y + 30), radius=15, fill=(255, 214, 132, 255))
-            draw.text((118, text_y + 6), "New story", font=badge_font, fill=(22, 15, 53, 255))
-        if saved:
-            draw.rounded_rectangle((222, text_y, 302, text_y + 30), radius=15, fill=(75, 57, 128, 255))
-            draw.text((239, text_y + 6), "Saved", font=badge_font, fill=(255, 248, 220, 255))
-        if new or saved:
-            text_y += 44
-        draw.text((101, text_y), title, font=title_font, fill=(255, 248, 220, 255))
-        draw.text((101, text_y + 43), "DreamScapes Plus  -  Story 05:12  -  Audio saved", font=meta_font, fill=(216, 198, 255, 220))
-        draw.text((101, text_y + 74), preview, font=body_font, fill=(237, 232, 255, 225))
-        button_y = y + 213
-        draw.rounded_rectangle((101, button_y, 470, button_y + 48), radius=8, fill=(255, 215, 133, 255))
-        draw.text((235, button_y + 13), "Open Story", font=button_font, fill=(27, 19, 61, 255))
-        draw.rounded_rectangle((482, button_y, 646, button_y + 48), radius=8, fill=(63, 48, 111, 255))
-        draw.text((536, button_y + 13), "Saved" if saved else "Save", font=button_font, fill=(255, 248, 220, 255))
-        draw.rounded_rectangle((658, button_y, 820, button_y + 48), radius=8, fill=(34, 32, 78, 255))
-        draw.text((711, button_y + 13), "Locked" if saved else "Delete", font=button_font, fill=(255, 231, 133, 255))
-
-    story_card(
-        226,
-        "Rosie and the Moonlit Library",
-        "Rosie followed a ribbon of starlight towards a secret library...",
-        saved=True,
-        new=True,
-    )
-    story_card(
-        520,
-        "The Star That Learned to Shine",
-        "High above the sleepy rooftops, one little star needed a friend...",
-    )
-    return image
-
-
 def build(output_name, source_name, headline, subhead, crop_y):
     backdrop = cover(Image.open(BACKGROUND).convert("RGB"), (WIDTH, HEIGHT)).convert("RGBA")
     wash = Image.new("RGBA", (WIDTH, HEIGHT), (2, 7, 42, 38))
@@ -178,8 +123,6 @@ def build(output_name, source_name, headline, subhead, crop_y):
     )
 
     source_screen = Image.open(SOURCE_DIR / source_name).convert("RGBA")
-    if source_name == "03-library.png":
-        source_screen = library_preview(source_screen)
     app_screen = rounded_image(
         source_screen,
         frame_size,
