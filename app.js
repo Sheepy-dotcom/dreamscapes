@@ -1257,8 +1257,33 @@ async function saveChildProfile(profile) {
 async function deleteChildProfile(profileId) {
   const profile = childProfiles.find((savedProfile) => savedProfile.id === profileId);
 
-  if (canUseCloudLibrary() && profile) {
-    await supabaseClient.from("child_profiles").delete().eq("id", profile.id).throwOnError();
+  // Only a real cloud id can exist in the cloud. Older phones without
+  // crypto.randomUUID give profiles a local id, and sending one to a uuid column
+  // makes Postgres reject the whole request, so it could never be deleted.
+  if (canUseCloudLibrary() && profile && isUuid(profile.id)) {
+    const { data, error } = await supabaseClient
+      .from("child_profiles")
+      .delete()
+      .eq("id", profile.id)
+      .select("id");
+    if (error) throw error;
+
+    // Row-level security refuses a delete by matching nothing rather than by
+    // failing. An empty result therefore needs checking: if the row is still
+    // there, reporting success would be a lie the next reload exposes.
+    if (!data || data.length === 0) {
+      const { data: stillSaved, error: checkError } = await supabaseClient
+        .from("child_profiles")
+        .select("id")
+        .eq("id", profile.id)
+        .maybeSingle();
+      if (checkError) throw checkError;
+      if (stillSaved) {
+        const refused = new Error("The profile is still saved to this account.");
+        refused.code = "delete_refused";
+        throw refused;
+      }
+    }
   }
 
   childProfiles = childProfiles.filter((savedProfile) => savedProfile.id !== profileId);
@@ -1278,6 +1303,24 @@ function getProfileSummary(profile) {
   ]
     .filter(Boolean)
     .join(" · ");
+}
+
+// The account screen's own status line sits at the very bottom of the screen,
+// which with the profiles section open is several hundred pixels below the
+// profile a parent just tapped - so a failed delete looked like nothing
+// happening at all. Results for this list are shown beside the list instead.
+function setChildProfileStatus(message, isError = false) {
+  const status = document.querySelector("#child-profile-status");
+  if (!status) {
+    setAuthStatus(message, isError);
+    return;
+  }
+  status.textContent = message;
+  status.hidden = !message;
+  status.classList.toggle("error", Boolean(isError));
+  // With several profiles the one tapped can be well below the message, so
+  // bring the message to where the parent is looking.
+  if (message) status.scrollIntoView({ block: "nearest", behavior: "smooth" });
 }
 
 function renderChildProfiles() {
@@ -4654,12 +4697,26 @@ childProfileList?.addEventListener("click", async (event) => {
   }
 
   if (deleteButton) {
+    const profileName =
+      childProfiles.find((savedProfile) => savedProfile.id === deleteButton.dataset.deleteProfile)?.childName ||
+      "That profile";
+    deleteButton.disabled = true;
     try {
       await deleteChildProfile(deleteButton.dataset.deleteProfile);
-      setAuthStatus("Child profile deleted.");
+      setChildProfileStatus(`${profileName} has been deleted.`);
       trackEvent("child_profile_deleted");
-    } catch {
-      setAuthStatus("Could not delete that child profile. Try again.", true);
+    } catch (error) {
+      deleteButton.disabled = false;
+      console.error("Child profile delete failed", error);
+      trackEvent("child_profile_delete_failed", {
+        reason: String(error?.code || error?.message || "unknown").slice(0, 120),
+      });
+      setChildProfileStatus(
+        error?.code === "delete_refused"
+          ? `${profileName} could not be removed from your account. Please contact support@dreamscapes.cloud.`
+          : getFriendlyFaultMessage(error, `Could not delete ${profileName}. Check your connection and try again.`),
+        true
+      );
     }
   }
 });

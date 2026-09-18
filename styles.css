@@ -4543,3 +4543,25 @@ body.night-mode .welcome-copy p.welcome-offer {
     margin-top: -10px;
   }
 }
+
+/* Delete and save results for the child profile list, shown beside the list
+   rather than in the account status line at the foot of the screen. */
+.child-profile-status {
+  /* Keeps it clear of the fixed tab bar when scrolled into view. */
+  scroll-margin: 90px 0 140px;
+  margin: 4px 0 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(138, 215, 189, 0.14);
+  text-align: left;
+}
+.child-profile-status[hidden] {
+  display: none;
+}
+body.night-mode .child-profile-status {
+  color: #d9f5ea;
+}
+body.night-mode .child-profile-status.error {
+  background: rgba(255, 143, 183, 0.16);
+  color: #ffd3e3;
+}
