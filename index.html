@@ -22,7 +22,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026092901" />
+    <link rel="stylesheet" href="./styles.css?v=2026092902" />
   </head>
   <body class="home-active night-mode">
     <svg class="art-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -603,6 +603,27 @@
             Restore Purchases
           </button>
         </div>
+        <div class="plan-store-links" id="plan-store-links" hidden>
+          <p>Premier and Plus are bought in the DreamScapes app. Get it here:</p>
+          <div class="plan-store-buttons">
+            <a
+              class="button primary-button"
+              id="plan-store-ios"
+              href="https://apps.apple.com/app/id6784545562?mt=8&amp;ct=plans"
+              target="_blank"
+              rel="noopener"
+              >App Store</a
+            >
+            <a
+              class="button primary-button"
+              id="plan-store-android"
+              href="https://play.google.com/store/apps/details?id=cloud.dreamscapes.app&amp;referrer=utm_source%3Dplans%26utm_medium%3Dweb"
+              target="_blank"
+              rel="noopener"
+              >Google Play</a
+            >
+          </div>
+        </div>
         <p class="status-note" id="upgrade-note" role="status"></p>
       </section>
 
@@ -822,11 +843,6 @@
           <article class="auth-card signup-card">
             <h3>Start your DreamScapes account</h3>
             <p>Save stories, child profiles, and audio across your devices.</p>
-            <ul class="signup-highlights" aria-label="Account benefits">
-              <li>Saved stories</li>
-              <li>Child profiles</li>
-              <li>Audio library</li>
-            </ul>
             <form class="auth-form" id="signup-form">
               <label class="field">
                 <span>Email</span>
@@ -1013,6 +1029,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026091810"></script>
+    <script src="./app.js?v=2026092902"></script>
   </body>
 </html>

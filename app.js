@@ -946,6 +946,7 @@ function validateBuilderStep(stepIndex) {
 
 function showScreen(name) {
   stopPreviewAudio();
+  setPlanStoreLinksVisible(false);
   Object.values(screens).forEach((screen) => screen.classList.remove("active"));
   screens[name].classList.add("active");
   if (name === "builder") {
@@ -2250,6 +2251,13 @@ function updatePlanActionButtons(planKey = getCurrentPlanKey()) {
 
 function hidePlanAuthNotice() {
   if (planAuthNotice) planAuthNotice.hidden = true;
+}
+
+// A visitor on the website cannot buy a plan here - the stores handle payment -
+// so rather than only telling them the app has it, hand them the two links.
+function setPlanStoreLinksVisible(visible) {
+  const panel = document.querySelector("#plan-store-links");
+  if (panel) panel.hidden = !visible;
 }
 
 function showPlanAuthNotice(planKey) {
@@ -4950,10 +4958,21 @@ document.querySelectorAll("[data-plan-preview]").forEach((button) => {
   button.addEventListener("click", () => {
     hidePlanAuthNotice();
     const planKey = button.dataset.planPreview;
+    const onTheWeb = !isNativeMobileApp();
+    const wantsPaidPlan = planKey !== "free";
+    setPlanStoreLinksVisible(wantsPaidPlan && onTheWeb);
     upgradeNote.textContent =
       planKey === "free"
         ? "Free is the active starter plan."
-        : "Choose Premier or Plus inside the iOS and Android app.";
+        : onTheWeb
+          ? ""
+          : "Choose Premier or Plus inside the iOS and Android app.";
+  });
+});
+
+[["#plan-store-ios", "ios"], ["#plan-store-android", "android"]].forEach(([selector, store]) => {
+  document.querySelector(selector)?.addEventListener("click", () => {
+    trackEvent("plan_store_link_opened", { store });
   });
 });
 
@@ -4970,7 +4989,8 @@ document.querySelectorAll("[data-purchase-plan]").forEach((button) => {
     } catch (error) {
       const message = getRevenueCatErrorMessage(error);
       console.error("RevenueCat purchase error", error);
-      upgradeNote.textContent = message;
+      setPlanStoreLinksVisible(!isNativeMobileApp());
+      upgradeNote.textContent = isNativeMobileApp() ? message : "";
       trackEvent("revenuecat_purchase_failed", {
         plan: button.dataset.purchasePlan,
         message: message.slice(0, 300),

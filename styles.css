@@ -2208,33 +2208,6 @@ body.night-mode .story-path-button.active {
   background: linear-gradient(90deg, #ffe785, #ff8fb7, #cdb7ff);
 }
 
-/* What an account gets you. These were bordered, filled, centred boxes in a
-   row, which read as three buttons - people tried to tap them. A plain bulleted
-   list cannot be mistaken for something to press. */
-.signup-highlights {
-  display: grid;
-  gap: 6px;
-  margin: 0 0 14px;
-  padding: 0;
-  list-style: none;
-}
-
-.signup-highlights li {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 10px;
-  color: #3d2c6b;
-  font-size: 0.9rem;
-  font-weight: 700;
-  line-height: 1.35;
-}
-
-.signup-highlights li::before {
-  content: "\2022";
-  color: #b07d1a;
-  font-weight: 900;
-}
-
 .redeem-card {
   padding: 12px;
 }
@@ -2780,14 +2753,6 @@ body.night-mode .signup-card {
   background:
     linear-gradient(145deg, rgba(16, 24, 66, 0.94), rgba(55, 36, 101, 0.84) 50%, rgba(34, 30, 86, 0.94)),
     rgba(10, 15, 48, 0.82);
-}
-
-body.night-mode .signup-highlights li {
-  color: rgba(248, 244, 255, 0.88);
-}
-
-body.night-mode .signup-highlights li::before {
-  color: var(--gold);
 }
 
 body.night-mode .plan-auth-notice {
@@ -4578,4 +4543,34 @@ body.night-mode .child-profile-status.error {
 .builder-step .tonight-grid {
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 10px;
+}
+
+/* Paid plans are bought through the stores, so a visitor on the website who
+   taps one is given the two links rather than only being told the app has them. */
+.plan-store-links {
+  display: grid;
+  gap: 10px;
+  margin: 14px 0 0;
+  padding: 14px;
+  border: 1px solid rgba(255, 231, 133, 0.3);
+  border-radius: 14px;
+  background: rgba(255, 217, 106, 0.1);
+}
+.plan-store-links[hidden] {
+  display: none;
+}
+.plan-store-links p {
+  margin: 0;
+  color: #fff8dc;
+  font-size: 0.92rem;
+  font-weight: 800;
+  text-align: center;
+}
+.plan-store-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+.plan-store-buttons .button {
+  text-decoration: none;
 }
