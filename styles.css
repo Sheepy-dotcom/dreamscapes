@@ -2208,26 +2208,31 @@ body.night-mode .story-path-button.active {
   background: linear-gradient(90deg, #ffe785, #ff8fb7, #cdb7ff);
 }
 
+/* What an account gets you. These were bordered, filled, centred boxes in a
+   row, which read as three buttons - people tried to tap them. A plain bulleted
+   list cannot be mistaken for something to press. */
 .signup-highlights {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  gap: 6px;
   margin: 0 0 14px;
   padding: 0;
   list-style: none;
 }
 
 .signup-highlights li {
-  min-height: 36px;
-  border: 1px solid rgba(123, 78, 216, 0.14);
-  border-radius: 8px;
-  padding: 8px 10px;
-  background: rgba(255, 255, 255, 0.58);
-  color: #34245f;
-  font-size: 0.82rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  color: #3d2c6b;
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.signup-highlights li::before {
+  content: "\2022";
+  color: #b07d1a;
   font-weight: 900;
-  line-height: 1.2;
-  text-align: center;
 }
 
 .redeem-card {
@@ -2778,9 +2783,11 @@ body.night-mode .signup-card {
 }
 
 body.night-mode .signup-highlights li {
-  border-color: rgba(255, 231, 133, 0.26);
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff8dc;
+  color: rgba(248, 244, 255, 0.88);
+}
+
+body.night-mode .signup-highlights li::before {
+  color: var(--gold);
 }
 
 body.night-mode .plan-auth-notice {
@@ -4097,10 +4104,6 @@ body.night-mode .loading-steps span {
 
   .signup-invite .button {
     width: 100%;
-  }
-
-  .signup-highlights {
-    grid-template-columns: 1fr;
   }
 
   .account-summary {
