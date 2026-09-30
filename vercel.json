@@ -18,7 +18,7 @@
       "destination": "/api/app"
     },
     {
-      "source": "/auth/confirm",
+      "source": "/confirm",
       "destination": "/"
     }
   ],
@@ -31,6 +31,11 @@
     {
       "source": "/android",
       "destination": "https://play.google.com/store/apps/details?id=cloud.dreamscapes.app",
+      "permanent": false
+    },
+    {
+      "source": "/auth/confirm",
+      "destination": "/confirm",
       "permanent": false
     }
   ]
