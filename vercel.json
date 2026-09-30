@@ -16,6 +16,10 @@
     {
       "source": "/app",
       "destination": "/api/app"
+    },
+    {
+      "source": "/auth/confirm",
+      "destination": "/index.html"
     }
   ],
   "redirects": [

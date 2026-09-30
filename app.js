@@ -1035,6 +1035,60 @@ function getStoryActualDurationSeconds(story) {
   return getSavedAudioDurationSeconds(story) || getEstimatedTextDurationSeconds(story);
 }
 
+// Confirmation and reset links point at dreamscapes.cloud rather than the
+// Supabase project's own address, so the link in the email matches the brand
+// that sent it. A branded email whose every link goes somewhere unrelated is
+// the shape of a phishing message, and mail providers treat it that way.
+// The token in the link is exchanged for a session here instead.
+function getEmailLinkAction() {
+  const query = new URLSearchParams(window.location.search);
+  const tokenHash = query.get("token_hash");
+  if (!tokenHash) return null;
+  return { tokenHash, type: query.get("type") || "email" };
+}
+
+function clearEmailLinkFromUrl() {
+  // A spent token should not be retried on refresh, sit in the address bar, or
+  // travel in a link someone pastes to a friend.
+  window.history.replaceState({}, document.title, window.location.pathname);
+}
+
+async function completeEmailLink(action) {
+  showScreen("account");
+  setAuthStatus(action.type === "recovery" ? "Checking your reset link..." : "Confirming your email...");
+
+  try {
+    const { error } = await supabaseClient.auth.verifyOtp({
+      token_hash: action.tokenHash,
+      type: action.type,
+    });
+    clearEmailLinkFromUrl();
+    if (error) throw error;
+
+    if (action.type === "recovery") {
+      showPasswordResetCard();
+      setAuthStatus("Choose a new password to finish resetting your account.");
+    } else {
+      setAuthStatus("Email confirmed. Welcome to DreamScapes.");
+    }
+    trackEvent("email_link_confirmed", { type: action.type });
+  } catch (error) {
+    clearEmailLinkFromUrl();
+    console.error("Email link could not be confirmed", error);
+    trackEvent("email_link_failed", {
+      type: action.type,
+      reason: String(error?.message || "unknown").slice(0, 120),
+    });
+    const spent = /expired|invalid|already|not found/i.test(String(error?.message || ""));
+    setAuthStatus(
+      spent
+        ? "That link has expired or has already been used. Sign in below, or ask for a new one."
+        : getFriendlyFaultMessage(error, "That link could not be checked. Please try again."),
+      true
+    );
+  }
+}
+
 function isPasswordRecoveryUrl() {
   const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
   const query = new URLSearchParams(window.location.search);
@@ -1793,14 +1847,20 @@ async function initSupabase() {
     },
   });
 
+  // Links sent before this change carry the session in the URL and are handled
+  // by isPasswordRecoveryUrl below, so both kinds keep working.
+  const emailLink = getEmailLinkAction();
+
   supabaseClient.auth.getSession().then(({ data }) => {
     setCurrentUser(data.session?.user);
-    if (isPasswordRecoveryUrl()) {
+    if (!emailLink && isPasswordRecoveryUrl()) {
       showPasswordResetCard();
       setAuthStatus("Choose a new password to finish resetting your account.");
     }
     if (data.session?.user) refreshAccountSummary();
   });
+
+  if (emailLink) completeEmailLink(emailLink);
 
   supabaseClient.auth.onAuthStateChange((event, session) => {
     const previousUserId = currentUser?.id || null;
