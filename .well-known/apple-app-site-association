@@ -1,0 +1,13 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["JX5LYD6MZ2.cloud.dreamscapes.app"],
+        "components": [
+          { "/": "/confirm", "comment": "Email confirmation and password reset" },
+          { "/": "/auth/confirm", "comment": "Older confirmation links already sent" }
+        ]
+      }
+    ]
+  }
+}

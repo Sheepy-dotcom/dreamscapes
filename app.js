@@ -947,6 +947,7 @@ function validateBuilderStep(stepIndex) {
 function showScreen(name) {
   stopPreviewAudio();
   setPlanStoreLinksVisible(false);
+  setOpenAppPanelVisible(false);
   Object.values(screens).forEach((screen) => screen.classList.remove("active"));
   screens[name].classList.add("active");
   if (name === "builder") {
@@ -1053,6 +1054,19 @@ function clearEmailLinkFromUrl() {
   window.history.replaceState({}, document.title, window.location.pathname);
 }
 
+// Confirming on a phone browser leaves the parent in the browser when the app
+// is where they were heading. Until the app claims these links itself - which
+// needs Universal Links and a new build - the next best thing is one tap back
+// to it, which the store opens directly when it is already installed.
+function isPhoneBrowser() {
+  return !isNativeMobileApp() && /iphone|ipad|ipod|android/i.test(navigator.userAgent);
+}
+
+function setOpenAppPanelVisible(visible) {
+  const panel = document.querySelector("#open-app-panel");
+  if (panel) panel.hidden = !visible;
+}
+
 async function completeEmailLink(action) {
   showScreen("account");
   setAuthStatus(action.type === "recovery" ? "Checking your reset link..." : "Confirming your email...");
@@ -1068,6 +1082,9 @@ async function completeEmailLink(action) {
     if (action.type === "recovery") {
       showPasswordResetCard();
       setAuthStatus("Choose a new password to finish resetting your account.");
+    } else if (isPhoneBrowser()) {
+      setOpenAppPanelVisible(true);
+      setAuthStatus("");
     } else {
       setAuthStatus("Email confirmed. Welcome to DreamScapes.");
     }
@@ -5057,6 +5074,10 @@ document.querySelectorAll("[data-purchase-plan]").forEach((button) => {
       });
     }
   });
+});
+
+document.querySelector("#open-app-button")?.addEventListener("click", () => {
+  trackEvent("confirm_open_app_tapped");
 });
 
 document.querySelector("#restore-purchases-button")?.addEventListener("click", async () => {

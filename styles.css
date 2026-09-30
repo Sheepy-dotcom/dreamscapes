@@ -4574,3 +4574,30 @@ body.night-mode .child-profile-status.error {
 .plan-store-buttons .button {
   text-decoration: none;
 }
+
+/* Shown once a phone browser has confirmed an email, to get the parent back
+   into the app in one tap. */
+.open-app-panel {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  margin: 14px 0 0;
+  padding: 16px;
+  border: 1px solid rgba(255, 231, 133, 0.32);
+  border-radius: 14px;
+  background: rgba(255, 217, 106, 0.12);
+}
+.open-app-panel[hidden] {
+  display: none;
+}
+.open-app-panel p {
+  margin: 0;
+  color: #fff8dc;
+  font-size: 0.95rem;
+  font-weight: 800;
+  text-align: center;
+}
+.open-app-panel .button {
+  width: min(280px, 100%);
+  text-decoration: none;
+}

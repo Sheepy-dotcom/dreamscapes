@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "cloud.dreamscapes.app",
+      "sha256_cert_fingerprints": [
+        "BA:CC:06:35:A6:64:9B:77:2A:45:EE:01:AF:7F:12:CF:AF:E5:EA:FA:4E:F6:B3:09:83:1B:E9:68:58:0F:98:07"
+      ]
+    }
+  }
+]
