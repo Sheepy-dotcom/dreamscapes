@@ -4,6 +4,10 @@ android/.idea/
 android/keystore.properties
 android/app/*.jks
 android/app/*.keystore
+
+# Apple private keys. One was sitting untracked in the project root and would
+# have been committed by the next `git add -A`.
+*.p8
 dreamscapes-testers.csv
 node_modules/
 dist/
