@@ -977,6 +977,97 @@ function showScreen(name) {
   window.scrollTo({ top: 0, behavior: name === "builder" ? "auto" : "smooth" });
 }
 
+// Signing in with Apple or Google sends no email at all, which sidesteps the
+// confirmation message entirely - no inbox to search, no junk folder to lose it
+// in - and turns signing up into one tap.
+//
+// Which providers appear is decided by Supabase, not by this file: the project
+// is asked which it has switched on. A provider that is off is simply not
+// offered, so enabling one in the dashboard makes its button appear with no
+// change here, and a half-configured provider never shows a button that fails.
+const AUTH_PROVIDERS = [
+  {
+    id: "apple",
+    label: "Continue with Apple",
+    className: "provider-apple",
+    icon: '<svg viewBox="0 0 384 512" width="18" height="18" aria-hidden="true" focusable="false"><path fill="currentColor" d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>',
+  },
+  {
+    id: "google",
+    label: "Continue with Google",
+    className: "provider-google",
+    icon: '<svg viewBox="0 0 48 48" width="18" height="18" aria-hidden="true" focusable="false"><path fill="#4285F4" d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z"/><path fill="#34A853" d="M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z"/><path fill="#FBBC05" d="M11.69 28.18C11.25 26.86 11 25.45 11 24s.25-2.86.69-4.18v-5.7H4.34C2.85 17.09 2 20.45 2 24s.85 6.91 2.34 9.88l7.35-5.7z"/><path fill="#EA4335" d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z"/></svg>',
+  },
+];
+
+async function getEnabledAuthProviders() {
+  try {
+    const response = await fetch(`${SUPABASE_URL}/auth/v1/settings`, {
+      headers: { apikey: SUPABASE_ANON_KEY },
+    });
+    if (!response.ok) return [];
+    const settings = await response.json();
+    return AUTH_PROVIDERS.filter((provider) => settings?.external?.[provider.id]);
+  } catch {
+    // Offline, or the project cannot be reached: email sign-in still works, so
+    // showing nothing here is better than showing a button that cannot.
+    return [];
+  }
+}
+
+async function startProviderSignIn(providerId) {
+  if (!(await ensureSupabaseClient())) {
+    setAuthStatus("Sign-in could not load. Check your connection and refresh DreamScapes.", true);
+    return;
+  }
+
+  setAuthStatus("Opening a secure sign-in window...");
+  trackEvent("provider_sign_in_started", { provider: providerId });
+
+  const { error } = await supabaseClient.auth.signInWithOAuth({
+    provider: providerId,
+    options: { redirectTo: `${window.location.origin}/` },
+  });
+
+  if (error) {
+    console.error("Provider sign-in failed", error);
+    trackEvent("provider_sign_in_failed", {
+      provider: providerId,
+      reason: String(error?.message || "unknown").slice(0, 120),
+    });
+    setAuthStatus(getFriendlyFaultMessage(error, "That sign-in could not be started. Please try again."), true);
+  }
+}
+
+async function renderAuthProviders() {
+  const slots = [...document.querySelectorAll(".auth-providers")];
+  if (!slots.length) return;
+
+  const providers = await getEnabledAuthProviders();
+  slots.forEach((slot) => {
+    if (!providers.length) {
+      slot.hidden = true;
+      return;
+    }
+    slot.innerHTML =
+      providers
+        .map(
+          (provider) => `
+            <button class="button provider-button ${provider.className}" data-auth-provider="${provider.id}" type="button">
+              ${provider.icon}<span>${escapeHtml(provider.label)}</span>
+            </button>
+          `
+        )
+        .join("") + '<div class="auth-divider"><span>or use your email</span></div>';
+    slot.hidden = false;
+  });
+}
+
+document.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-auth-provider]");
+  if (button) startProviderSignIn(button.dataset.authProvider);
+});
+
 function setAuthStatus(message, isError = false) {
   if (!authStatus) return;
   authStatus.textContent = message;
@@ -6337,3 +6428,4 @@ window.visualViewport?.addEventListener("scroll", updateKeyboardOpenState);
 updatePlanFeatures();
 updateAccountUI();
 ensureSupabaseClient();
+renderAuthProviders();

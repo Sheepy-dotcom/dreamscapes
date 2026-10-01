@@ -4601,3 +4601,65 @@ body.night-mode .child-profile-status.error {
   width: min(280px, 100%);
   text-decoration: none;
 }
+
+/* Apple and Google sign-in. Each follows its owner's branding rules: Apple's
+   button is black with the Apple mark, Google's is white with the Google mark. */
+.auth-providers {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 4px;
+}
+.auth-providers[hidden] {
+  display: none;
+}
+
+.provider-button {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.provider-apple {
+  background: #000000;
+  border: 1px solid #000000;
+  color: #ffffff;
+}
+
+.provider-google {
+  background: #ffffff;
+  border: 1px solid #dadce0;
+  color: #3c4043;
+}
+
+/* Keeps them legible against the night sky, which restyles buttons by default. */
+body.night-mode .provider-apple {
+  background: #000000;
+  color: #ffffff;
+}
+body.night-mode .provider-google {
+  background: #ffffff;
+  color: #3c4043;
+}
+
+.auth-divider {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  margin: 2px 0;
+}
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  height: 1px;
+  background: rgba(216, 198, 255, 0.28);
+}
+.auth-divider span {
+  color: rgba(248, 244, 255, 0.6);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
