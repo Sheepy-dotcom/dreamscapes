@@ -18,39 +18,39 @@ WIDTH, HEIGHT = 1284, 2778
 SCREEN_W, BEZEL, RADIUS = 1060, 24, 96
 DEVICE_TOP = 820
 
-# (output, source, accent, headline lines, subhead, callout region in source px, tilt,
-#  downward nudge for the callout so it clears the heading above it, badge)
-# Callout regions were measured from the live DOM at 540x960 and doubled for the
-# 2x capture, so each one frames a real piece of the app's UI.
+# (output, source, accent, headline lines, subhead, callout region in source px,
+#  zoom, tilt, downward nudge so the callout clears the heading above it, badge)
+# Regions were measured from the live DOM at 540x960 and doubled for the 2x
+# capture, so each one frames a real piece of the app's UI.
 SCREENS = [
-    ("01-bedtime-story.png", "05-story.png", "gold",
-     [("Never run out of", False), ("a bedtime story", True)],
-     "Personalised stories, starring your child",
-     (90, 1495, 990, 1740), -2, 0, "First story free  \u2022  No account needed"),
-    ("02-first-story-free.png", "01-home.png", "peach",
+    ("01-personalised.png", "story.png", "gold",
+     [("A bedtime story", False), ("written for them", True)],
+     "Their name, their favourite things, their bedtime",
+     (103, 838, 977, 1166), 1.2, -2, 0, "First story free  \u2022  No account needed"),
+    ("02-first-story-free.png", "home.png", "peach",
      [("Your first story", False), ("is free", True)],
      "No account needed, just tap and begin",
-     (56, 1198, 1024, 1419), 2, 0, None),
-    ("03-made-in-a-minute.png", "02-story-builder.png", "pink",
+     (76, 972, 1004, 1399), 1.1, 2, 0, None),
+    ("03-made-in-a-minute.png", "builder1.png", "pink",
      [("Made for tonight,", False), ("in about a minute", True)],
      "Just their name, their age and what they love",
-     (40, 995, 1032, 1205), 2, 45, None),
-    ("04-stories-continue.png", "03-library.png", "lilac",
+     (48, 1004, 1024, 1196), 1.2, 2, 45, None),
+    ("04-stories-continue.png", "library.png", "lilac",
      [("Stories continue", False), ("night after night", True)],
      "Seven-night journeys with the same characters",
-     (50, 515, 1030, 790), -2, 0, None),
-    ("05-calm-narration.png", "06-narration.png", "sky",
+     (58, 522, 1022, 1195), 1.0, -2, 0, None),
+    ("05-calm-narration.png", "narration.png", "sky",
      [("Calm narration", False), ("for lights-out", True)],
      "Seven soothing voices with DreamScapes Plus",
-     (60, 850, 1012, 1160), 2, 25, None),
-    ("06-in-control.png", "04-parent-controls.png", "mint",
+     (60, 850, 1012, 1160), 1.2, 2, 25, None),
+    ("06-in-control.png", "controls.png", "mint",
      [("You are always", False), ("in control", True)],
      "Choose what to avoid, and read every story first",
-     (40, 915, 1032, 1285), -2, 60, None),
+     (48, 922, 1024, 1278), 1.2, -2, 60, None),
 ]
 
 
-def build(output, source_name, accent_name, lines, subhead, region, tilt, dy, badge):
+def build(output, source_name, accent_name, lines, subhead, region, zoom, tilt, dy, badge):
     accent = d.ACCENTS[accent_name]
     source = Image.open(SOURCE_DIR / source_name).convert("RGBA")
 
@@ -70,7 +70,7 @@ def build(output, source_name, accent_name, lines, subhead, region, tilt, dy, ba
     canvas.alpha_composite(frame, (frame_x, DEVICE_TOP))
 
     screen_origin = (frame_x + BEZEL, DEVICE_TOP + BEZEL)
-    d.draw_callout(canvas, source, region, scale, screen_origin, 1.2, accent, tilt, radius=34, dy=dy)
+    d.draw_callout(canvas, source, region, scale, screen_origin, zoom, accent, tilt, radius=34, dy=dy)
 
     if badge:
         d.draw_badge(canvas, badge, (frame_x + frame.width - 250, DEVICE_TOP + 20), 40, 5)

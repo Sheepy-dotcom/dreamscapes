@@ -25,22 +25,22 @@ DEVICE_TOP = 880
 # Regions were measured from the live DOM at 1032x1376 and doubled for the 2x
 # capture, so each frames a real piece of the app's UI.
 SCREENS = [
-    ("01-bedtime-story.png", "story.png", "gold",
-     [("Never run out of", False), ("a bedtime story", True)],
-     "Personalised stories, starring your child",
-     (170, 1290, 1894, 1500), 1.15, -2, 0, "First story free  •  No account needed"),
+    ("01-personalised.png", "story.png", "gold",
+     [("A bedtime story", False), ("written for them", True)],
+     "Their name, their favourite things, their bedtime",
+     (186, 728, 1878, 969), 1.15, -2, 0, "First story free  \u2022  No account needed"),
     ("02-first-story-free.png", "home.png", "peach",
      [("Your first story", False), ("is free", True)],
      "No account needed, just tap and begin",
-     (402, 1582, 1662, 1803), 1.35, 2, 0, None),
-    ("03-made-in-a-minute.png", "builder.png", "pink",
+     (422, 1420, 1642, 1783), 1.35, 2, 0, None),
+    ("03-made-in-a-minute.png", "builder1.png", "pink",
      [("Made for tonight,", False), ("in about a minute", True)],
      "Just their name, their age and what they love",
-     (110, 1465, 1938, 1711), 1.15, 2, 40, None),
+     (120, 1475, 1928, 1701), 1.15, 2, 40, None),
     ("04-stories-continue.png", "library.png", "lilac",
      [("Stories continue", False), ("night after night", True)],
      "Seven-night journeys with the same characters",
-     (106, 498, 718, 1228), 1.35, -3, 0, None),
+     (116, 508, 1948, 949), 1.2, -3, 0, None),
     ("05-calm-narration.png", "narration.png", "sky",
      [("Calm narration", False), ("for lights-out", True)],
      "Seven soothing voices with DreamScapes Plus",
@@ -48,7 +48,7 @@ SCREENS = [
     ("06-in-control.png", "controls.png", "mint",
      [("You are always", False), ("in control", True)],
      "Choose what to avoid, and read every story first",
-     (110, 1465, 1938, 1711), 1.15, -2, 40, None),
+     (120, 1475, 1928, 1701), 1.15, -2, 40, None),
 ]
 
 
