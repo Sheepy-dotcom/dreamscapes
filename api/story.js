@@ -30,12 +30,20 @@ const OPTIONAL_RETENTION_COLUMNS = [
 // tolerance either side and about 65 words a paragraph. getMaxOutputTokens asks
 // for maxWords * 2.6, so the longest story now requests about 14,600 tokens of
 // the 24,000 ceiling.
+// Only the first two are sized to their label. The host plan gives this
+// function 60 seconds, and the model writes about 43 words a second: a
+// 10 minute story at 1,650 words took 49, and anything past roughly 2,500
+// words cannot finish inside the budget however it is prompted, because the
+// cost is in the words emitted. So 15, 20 and 30 keep the lengths they have
+// always had - short for their labels, but they return - until generation is
+// split across requests the way narration already is, or the function gets
+// more than a minute. Raise these the moment either happens.
 const durationTargets = {
   5: { words: 825, minWords: 740, maxWords: 970, paragraphs: 13 },
   10: { words: 1650, minWords: 1485, maxWords: 1870, paragraphs: 25 },
-  15: { words: 2475, minWords: 2230, maxWords: 2800, paragraphs: 37 },
-  20: { words: 3300, minWords: 2970, maxWords: 3740, paragraphs: 49 },
-  30: { words: 4950, minWords: 4455, maxWords: 5600, paragraphs: 74 },
+  15: { words: 1275, minWords: 1150, maxWords: 1450, paragraphs: 18 },
+  20: { words: 1700, minWords: 1530, maxWords: 1900, paragraphs: 24 },
+  30: { words: 2550, minWords: 2300, maxWords: 2850, paragraphs: 34 },
 };
 
 const storyLanguages = {
