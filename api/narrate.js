@@ -125,8 +125,12 @@ function getChunkInstructions(instructions, index, total) {
 
 async function createSpeech({ input, voice, instructions, index = 0, total = 1 }) {
   const chunkInstructions = getChunkInstructions(instructions, index, total);
-  const configuredModel = cleanText(process.env.OPENAI_TTS_MODEL) || DEFAULT_SPEECH_MODEL;
-  const model = configuredModel === "gpt-4o-mini-tts-2025-12-15" ? DEFAULT_SPEECH_MODEL : configuredModel;
+  // OPENAI_TTS_MODEL used to be quietly rewritten back to the undated alias
+  // whenever it named the 2025-12-15 snapshot, so setting it had no effect. That
+  // snapshot now exists and reports markedly fewer word errors than the model
+  // this has been using, so the setting is honoured as written and the narration
+  // can be compared by changing one environment variable.
+  const model = cleanText(process.env.OPENAI_TTS_MODEL) || DEFAULT_SPEECH_MODEL;
   const response = await fetch(OPENAI_SPEECH_URL, {
     method: "POST",
     headers: {
