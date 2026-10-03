@@ -368,7 +368,6 @@ const AI_NARRATION_PART_CONCURRENCY = 2;
 const AUDIO_UPLOAD_CONCURRENCY = 3;
 const AUDIO_CREDIT_MAX_MINUTES = 10;
 const VOICE_PREVIEW_TEXT = "Hello from DreamScapes. Settle in, take a gentle breath, and let the story begin.";
-const VOICE_PREVIEW_CACHE_VERSION = "2026061529";
 // Generated previews are kept so a voice is only ever synthesised once. Saved
 // stories compete for the same localStorage budget, so the cache is capped and
 // every write is allowed to fail without breaking playback.
@@ -376,8 +375,20 @@ const VOICE_PREVIEW_STORAGE_KEY = "dreamscapesVoicePreviews";
 const MAX_STORED_VOICE_PREVIEWS = 8;
 const MAX_VOICE_PREVIEW_BYTES = 400000;
 const VOICE_PREVIEW_GAIN = 0.82;
+// The model does not record every voice at the same level: measured across the
+// clips, sage comes out 11dB quieter than the loudest and coral 9dB quieter, so
+// picking one of those sounded like the app had gone wrong. These bring each
+// clip to about -23dB RMS, which leaves every one of them peaking below -3dBFS.
+// Re-measure after rebuilding the previews; voices within 1.5dB of the target
+// are left on VOICE_PREVIEW_GAIN.
 const VOICE_PREVIEW_GAINS = {
-  "female sage calm": 3.4,
+  "female sage calm": 3.05,
+  "coral warm": 2.45,
+  "ballad audition": 1.28,
+  "verse audition": 1.2,
+  "ash storyteller": 1.11,
+  "male calm": 1.04,
+  "alloy audition": 0.54,
 };
 // Clips live under /assets, which is served immutable for a year, so a rebuilt
 // preview keeps its filename and would go on playing the old recording for
@@ -399,6 +410,10 @@ const VOICE_PREVIEW_FILES = {
   "alloy audition": "./assets/voice-preview-alloy-audition.mp3",
   "shimmer soft": "./assets/voice-preview-shimmer-soft.mp3",
 };
+// OpenAI rates marin and cedar highest for audio quality, so they lead each
+// group in the picker and marin is what a parent gets without choosing. Keep
+// this in step with the first <option> of #voice-style in index.html.
+const DEFAULT_VOICE_STYLE = "marin audition";
 const AI_VOICE_PROFILES = {
   "female calm": {
     voice: "nova",
@@ -677,7 +692,7 @@ const voiceStyles = {
 
 function getPreviewAudioSource(source) {
   if (!source || source.startsWith("data:")) return source;
-  return source.includes("?") ? `${source}&v=${VOICE_PREVIEW_CACHE_VERSION}` : `${source}?v=${VOICE_PREVIEW_CACHE_VERSION}`;
+  return source.includes("?") ? `${source}&v=${VOICE_PREVIEW_VERSION}` : `${source}?v=${VOICE_PREVIEW_VERSION}`;
 }
 
 // Whatever a preview is currently playing through, so the next one can stop it.
@@ -3382,7 +3397,7 @@ async function uploadAudioTracksToCloud(story, tracks) {
 }
 
 function getAiNarrationVoice(style) {
-  return AI_VOICE_PROFILES[style]?.voice || AI_VOICE_PROFILES["female calm"].voice;
+  return AI_VOICE_PROFILES[style]?.voice || AI_VOICE_PROFILES[DEFAULT_VOICE_STYLE].voice;
 }
 
 // Said once rather than repeated inside every voice profile, which used up the
@@ -3395,7 +3410,7 @@ const AI_VOICE_SHARED_DIRECTION = [
 ].join(" ");
 
 function getAiNarrationInstructions(story) {
-  const profile = AI_VOICE_PROFILES[story.voiceStyle] || AI_VOICE_PROFILES["female calm"];
+  const profile = AI_VOICE_PROFILES[story.voiceStyle] || AI_VOICE_PROFILES[DEFAULT_VOICE_STYLE];
   const language = getStoryLanguageDetails(story.storyLanguage);
   // Only ask for a British accent from a voice that natively has one. Telling an
   // American-sounding voice to hold a British accent for a whole story makes it
@@ -3690,7 +3705,7 @@ function cloudRowToStory(row) {
     title: row.title,
     text: Array.isArray(row.paragraphs) ? row.paragraphs : [],
     wordCount: row.word_count || 0,
-    voiceStyle: row.voice_style || "female calm",
+    voiceStyle: row.voice_style || DEFAULT_VOICE_STYLE,
     audioNarration: Boolean(
       row.audio_requested || row.audio_generated_at || row.audio_duration_seconds || row.audio_paths?.length
     ),
@@ -4238,7 +4253,7 @@ function saveStoryToLibrary(story, { silent = false } = {}) {
 }
 
 function applyNarrationSettings(utterance, story = currentStory) {
-  const style = voiceStyles[story?.voiceStyle] || voiceStyles["female calm"];
+  const style = voiceStyles[story?.voiceStyle] || voiceStyles[DEFAULT_VOICE_STYLE];
   utterance.rate = style.rate;
   utterance.pitch = style.pitch;
   utterance.volume = style.volume;
@@ -4247,7 +4262,7 @@ function applyNarrationSettings(utterance, story = currentStory) {
   if (preferredVoice) utterance.voice = preferredVoice;
 }
 
-function getPreferredDeviceVoice(style = "female calm") {
+function getPreferredDeviceVoice(style = DEFAULT_VOICE_STYLE) {
   if (!("speechSynthesis" in window)) return null;
 
   const voices = window.speechSynthesis.getVoices();
@@ -4986,8 +5001,8 @@ async function playAiVoicePreview() {
   const previewGain = VOICE_PREVIEW_GAINS[selectedVoiceStyle] || VOICE_PREVIEW_GAIN;
   const previewFile = VOICE_PREVIEW_FILES[selectedVoiceStyle];
   if (previewFile) {
-    const versionedFile = `${previewFile}?v=${VOICE_PREVIEW_VERSION}`;
-    return `fixed-file-${await playPreviewAudio(versionedFile, previewGain)}`;
+    // playPreviewAudio adds the cache-busting version itself.
+    return `fixed-file-${await playPreviewAudio(previewFile, previewGain)}`;
   }
 
   const savedPreview = getStoredVoicePreview(selectedVoiceStyle);
@@ -6019,7 +6034,7 @@ function stopNarration({ clearTimer = true } = {}) {
 }
 
 function getNarrationPause(story = currentStory) {
-  const style = voiceStyles[story?.voiceStyle] || voiceStyles["female calm"];
+  const style = voiceStyles[story?.voiceStyle] || voiceStyles[DEFAULT_VOICE_STYLE];
   return story?.storyType === "bedtime" ? style.pause + 180 : style.pause;
 }
 
