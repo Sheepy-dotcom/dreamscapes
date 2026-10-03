@@ -1,6 +1,10 @@
 const OPENAI_SPEECH_URL = "https://api.openai.com/v1/audio/speech";
 const { enforceNarrationAccess, handleCorsPreflight, incrementUsage, sendApiError } = require("./auth");
-const DEFAULT_SPEECH_MODEL = "gpt-4o-mini-tts";
+// Pinned rather than using the undated alias: narration voices were tuned by
+// ear over many takes, and an alias can be repointed at a new snapshot without
+// warning, changing how every story sounds. This snapshot reports about a third
+// fewer word errors than the one before it. OPENAI_TTS_MODEL still overrides.
+const DEFAULT_SPEECH_MODEL = "gpt-4o-mini-tts-2025-12-15";
 // Natural speed. Every stretch value tried was audible - 0.9 crackled, 0.95 was
 // still fuzzy - because the parameter resamples the finished audio rather than
 // making the model read slower. The pace comes from the line breaks the app
