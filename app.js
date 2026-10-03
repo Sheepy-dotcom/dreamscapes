@@ -382,7 +382,6 @@ const VOICE_PREVIEW_GAIN = 0.82;
 // Re-measure after rebuilding the previews; voices within 1.5dB of the target
 // are left on VOICE_PREVIEW_GAIN.
 const VOICE_PREVIEW_GAINS = {
-  "female sage calm": 3.02,
   "male calm": 1.03,
   "female calm": 0.61,
 };
@@ -393,7 +392,6 @@ const VOICE_PREVIEW_VERSION = "2026100302";
 
 const VOICE_PREVIEW_FILES = {
   "female calm": "./assets/voice-preview-female-calm.mp3",
-  "female sage calm": "./assets/voice-preview-female-sage-calm.mp3",
   "male calm": "./assets/voice-preview-male-calm.mp3",
   "ash storyteller": "./assets/voice-preview-ash-storyteller.mp3",
   "onyx deep": "./assets/voice-preview-onyx-deep.mp3",
@@ -406,10 +404,19 @@ const VOICE_PREVIEW_FILES = {
 // this in step with the first <option> of #voice-style in index.html.
 const DEFAULT_VOICE_STYLE = "marin audition";
 // Thirteen voices made the list a wall of near-identical choices, so the picker
-// now offers four of each. The five it dropped - coral, ballad, verse, alloy
-// and echo - keep their profiles below: stories already saved in those voices
-// have to go on narrating in the voice they were written in. Only the eight in
-// VOICE_PREVIEW_FILES are selectable.
+// now offers a short list. The ones it dropped - coral, ballad, verse, alloy,
+// echo and sage - keep their profiles below: stories already saved in those
+// voices have to go on narrating in the voice they were written in. Only the
+// styles in VOICE_PREVIEW_FILES are selectable.
+//
+// Sage went last and for a different reason. It records about 10dB below every
+// other voice, measured over five takes, and stories play through the device's
+// own audio player, which this app has no gain control over - so a parent who
+// chose it previewed a normal sounding voice and then got a story they could
+// barely hear. The preview was only ever normal because the preview path does
+// apply gain. Wording was not the cause: dropping every "soft" and "quietly"
+// from its direction moved the level less than the spread between two takes of
+// the same text.
 // The label and direction here are what the voice was tuned and recorded with.
 // Changing them changes how narration sounds and silently puts it out of step
 // with the shipped preview clips; the names parents see live in index.html.
@@ -421,12 +428,20 @@ const AI_VOICE_PROFILES = {
     direction:
       "Use the same consistent voice every time: a warm female storyteller, natural, expressive, clear, and reassuring. Keep a steady storybook pace with gentle emotion and a friendly bedtime feel.",
   },
+  // "softly", "soft" and "quietly" were all taken literally here: the voice
+  // came back recorded 10dB below every other one, and stories play through
+  // the device's own player, which has no gain to put that back. Dropping the
+  // three words recovers about 4dB and keeps the character. Measured on one
+  // passage: -33.1dB as it was, -29.3dB without them, against -23.0dB for
+  // marin. The rest is the voice itself - asking outright for full volume
+  // made it quieter, not louder. Keep this block's shape: the preview builder
+  // reads these profiles with a regex and a comment inside one hides it.
   "female sage calm": {
     voice: "sage",
     accent: "british",
-    label: "a calm woman reading softly at bedtime",
+    label: "a calm woman reading at bedtime",
     direction:
-      "Use the same consistent voice every time: a very calm bedtime storyteller with a soft, close, reassuring tone. Sound gentle, cosy, natural, warm, and quietly expressive, like a parent reading slowly beside the bed. Keep the pace unhurried with light pauses at commas and longer pauses at full stops.",
+      "Use the same consistent voice every time: a very calm bedtime storyteller with a close, reassuring tone. Sound gentle, cosy, natural, warm, and expressive, like a parent reading slowly beside the bed. Keep the pace unhurried with light pauses at commas and longer pauses at full stops.",
   },
   "male calm": {
     voice: "fable",

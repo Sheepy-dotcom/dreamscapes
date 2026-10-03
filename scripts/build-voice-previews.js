@@ -84,9 +84,18 @@ if (allVoices.length === 0) {
 // AI_VOICE_PROFILES also carries voices the picker no longer offers, so that
 // stories saved in them still narrate correctly. Those need no preview clip,
 // and generating them would quietly put retired audio back into the bundle.
-const selectable = new Set(
-  [...(appJs.match(/const VOICE_PREVIEW_FILES = \{([\s\S]*?)\};/)?.[1] || "").matchAll(/"([^"]+)":/g)].map((m) => m[1])
+//
+// The list comes from the picker in index.html, not from VOICE_PREVIEW_FILES.
+// This script rewrites that map from whatever it managed to produce, so
+// reading it back meant one failed request dropped a voice from the map, and
+// the next run then had no reason to retry it: a network blip could quietly
+// remove a voice from the app for good. The markup cannot be clobbered that way.
+const indexHtml = fs.readFileSync(path.join(root, "index.html"), "utf8");
+const picker = indexHtml.slice(
+  indexHtml.indexOf('id="voice-style"'),
+  indexHtml.indexOf("</select>", indexHtml.indexOf('id="voice-style"'))
 );
+const selectable = new Set([...picker.matchAll(/<option value="([^"]+)"/g)].map((m) => m[1]));
 const voices = allVoices.filter((profile) => selectable.has(profile.style));
 
 if (voices.length === 0) {
@@ -154,6 +163,15 @@ async function generate(profile) {
 
   if (written.length === 0) {
     console.error("\nNothing generated, leaving app.js alone.");
+    process.exit(1);
+  }
+
+  // Checked against the picker, not against the profiles that parsed, so a
+  // profile this script failed to read shows up here instead of going quiet.
+  const missing = [...selectable].filter((style) => !written.some((p) => p.style === style));
+  if (missing.length) {
+    console.error(`\nThese voices are in the picker but have no clip: ${missing.join(", ")}`);
+    console.error("Fix the failure and run again; app.js is left alone so none of them is dropped.");
     process.exit(1);
   }
 
