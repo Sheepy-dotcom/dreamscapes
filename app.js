@@ -382,24 +382,24 @@ const VOICE_PREVIEW_GAIN = 0.82;
 // Re-measure after rebuilding the previews; voices within 1.5dB of the target
 // are left on VOICE_PREVIEW_GAIN.
 const VOICE_PREVIEW_GAINS = {
-  "female sage calm": 3.05,
-  "ash storyteller": 1.11,
-  "male calm": 1.04,
+  "female sage calm": 3.02,
+  "male calm": 1.03,
+  "female calm": 0.61,
 };
 // Clips live under /assets, which is served immutable for a year, so a rebuilt
 // preview keeps its filename and would go on playing the old recording for
 // anyone who has heard it once. Bump this whenever the clips are rebuilt.
-const VOICE_PREVIEW_VERSION = "2026100301";
+const VOICE_PREVIEW_VERSION = "2026100302";
 
 const VOICE_PREVIEW_FILES = {
-  "marin audition": "./assets/voice-preview-marin-audition.mp3",
   "female calm": "./assets/voice-preview-female-calm.mp3",
   "female sage calm": "./assets/voice-preview-female-sage-calm.mp3",
-  "shimmer soft": "./assets/voice-preview-shimmer-soft.mp3",
-  "cedar audition": "./assets/voice-preview-cedar-audition.mp3",
   "male calm": "./assets/voice-preview-male-calm.mp3",
   "ash storyteller": "./assets/voice-preview-ash-storyteller.mp3",
   "onyx deep": "./assets/voice-preview-onyx-deep.mp3",
+  "cedar audition": "./assets/voice-preview-cedar-audition.mp3",
+  "marin audition": "./assets/voice-preview-marin-audition.mp3",
+  "shimmer soft": "./assets/voice-preview-shimmer-soft.mp3",
 };
 // OpenAI rates marin and cedar highest for audio quality, so they lead each
 // group in the picker and marin is what a parent gets without choosing. Keep
