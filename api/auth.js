@@ -41,11 +41,13 @@ const plans = {
     canSave: true,
     canUseAudio: true,
     savedLimit: 30,
-    // Raised with the story lengths. At 150 this covered 30 stories only
-    // because every story ran at half its stated length; once a 10 minute
-    // story genuinely plays for 10, the same 30 stories need twice the
-    // allowance or a parent runs out of narration mid-month.
-    audioMinutes: 300,
+    // Costed rather than guessed. Narration is the expensive half: measured
+    // token usage puts a 30 minute story at $0.18 to write and $0.46 to voice,
+    // so a subscriber using all 30 stories and all their audio costs more than
+    // the £9.99 returns after VAT and store commission. 225 minutes is where
+    // that breaks even; 200 leaves a margin and still covers thirty ten minute
+    // stories' worth of narration, which is more than most months will use.
+    audioMinutes: 200,
   },
 };
 

@@ -566,8 +566,8 @@ const plans = {
     canSave: true,
     canUseAudio: true,
     savedLimit: 30,
-    audioMinutes: 300,
-    note: "DreamScapes Plus: £9.99/month for 30 stories, larger saved library, audio narration, 300 audio minutes, and stories up to 30 minutes.",
+    audioMinutes: 200,
+    note: "DreamScapes Plus: £9.99/month for 30 stories, larger saved library, audio narration, 200 audio minutes, and stories up to 30 minutes.",
   },
 };
 
