@@ -3531,6 +3531,28 @@ function trimSavedStoriesForLimit(stories, limit = MAX_LOCAL_SAVED_STORIES) {
   return [...favouriteStories, ...otherStories].slice(0, safeLimit);
 }
 
+// A library is scanned for "what did we read last night", not for dates, so
+// the newest stories say how long ago in words and only older ones fall back
+// to a date. Anything from this calendar day counts as today, including a
+// story made at 11pm that a parent opens at midnight.
+function formatStoryWhen(story) {
+  const time = getStoryTimeValue(story);
+  if (!time) return "";
+
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const days = Math.floor((startOfToday.getTime() - new Date(time).setHours(0, 0, 0, 0)) / 86400000);
+
+  if (days <= 0) return "Today";
+  if (days === 1) return "Yesterday";
+  if (days < 7) return `${days} days ago`;
+  if (days < 35) {
+    const weeks = Math.round(days / 7);
+    return `${weeks} ${weeks === 1 ? "week" : "weeks"} ago`;
+  }
+  return new Date(time).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+}
+
 function isHighlightedStory(story) {
   return Boolean(
     highlightedStoryId && (story?.cloudId === highlightedStoryId || story?.id === highlightedStoryId)
@@ -5426,41 +5448,44 @@ async function renderLibrary() {
         : `${shownCount} ${shownCount === 1 ? "story" : "stories"} shown from ${savedStories.length} saved.`;
   }
 
+  // Measured against every saved story, not just the filtered page, so the
+  // badge keeps meaning when a filter or a different sort is applied.
+  const newestStoryTime = savedStories.reduce((latest, item) => Math.max(latest, getStoryTimeValue(item)), 0);
+
   libraryList.innerHTML = visibleStories
     .map(
       (story, index) => {
         const savedAudioDuration = getSavedAudioDurationSeconds(story);
         const isNewStory = isHighlightedStory(story);
         const isFavourite = isStoryFavourite(story);
+        // One line has to survive a phone, so it carries what tells two stories
+        // apart - how long, whether there is audio, where it sits in a series.
+        // The plan that made it and the exact date are on the story itself.
         const audioLabel = story.audioNarration
           ? savedAudioDuration
-            ? `Audio saved ${formatAudioTime(savedAudioDuration)}`
-            : "Audio will be created on first play"
+            ? `Audio ${formatAudioTime(savedAudioDuration)}`
+            : "Audio"
           : "Text only";
         const storyLengthSeconds = getStoryActualDurationSeconds(story);
+        const isNewest = newestStoryTime > 0 && getStoryTimeValue(story) === newestStoryTime;
         const metadata = [
-          getPlan(story.plan).label,
+          storyLengthSeconds ? formatAudioTime(storyLengthSeconds) : "",
+          audioLabel,
           story.seriesTitle ? `${story.seriesTitle} · Chapter ${Number(story.chapterNumber) || 1}` : "",
           story.journeyLength ? `Night ${Number(story.journeyDay) || 1}/${Number(story.journeyLength)}` : "",
-          storyLengthSeconds ? `Story ${formatAudioTime(storyLengthSeconds)}` : "",
-          audioLabel,
-          new Date(story.createdAt).toLocaleDateString(),
         ].filter(Boolean);
         return `
         <article class="library-item ${isNewStory ? "new-story" : ""} ${isFavourite ? "favourite-story" : ""}">
-          ${
-            isNewStory || isFavourite
-              ? `<div class="library-badges">
-                  ${isNewStory ? '<span class="new-story-badge">New story</span>' : ""}
-                  ${isFavourite ? '<span class="favourite-story-badge">Saved</span>' : ""}
-                </div>`
-              : ""
-          }
+          <p class="library-when">
+            <span class="library-when-label">${escapeHtml(formatStoryWhen(story))}</span>
+            ${isNewest && !isNewStory ? '<span class="library-newest-badge">Newest</span>' : ""}
+            ${isNewStory ? '<span class="new-story-badge">Just created</span>' : ""}
+            ${isFavourite ? '<span class="favourite-story-badge">Saved</span>' : ""}
+          </p>
           <h3>${escapeHtml(story.title)}</h3>
           <p class="library-meta">${escapeHtml(metadata.join(" · "))}</p>
-          <p class="library-preview">${escapeHtml(story.text?.[0]?.slice(0, 150) || "Saved story")}...</p>
           <div class="library-actions">
-            <button class="button primary-button library-open-button" data-library-index="${index}" type="button">Open Story</button>
+            <button class="button primary-button library-open-button" data-library-index="${index}" type="button">Open</button>
             <button class="button secondary-button favourite-button ${isFavourite ? "active" : ""}" data-favourite-index="${index}" type="button" aria-pressed="${isFavourite ? "true" : "false"}">${isFavourite ? "Saved" : "Save"}</button>
             <button class="button secondary-button delete-button ${isFavourite ? "protected-delete-button" : ""}" data-delete-index="${index}" type="button" aria-label="${isFavourite ? "Saved story locked from deletion" : "Delete story"}">${isFavourite ? "Locked" : "Delete"}</button>
           </div>
