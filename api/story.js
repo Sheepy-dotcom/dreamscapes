@@ -162,6 +162,20 @@ function shouldTryNextStoryModel(status, message) {
   return /model|not found|does not exist|invalid|unsupported|access|permission/i.test(message || "");
 }
 
+// One of these is picked per story. They are deliberately different kinds of
+// sentence, not synonyms, because the model will converge on whichever shape it
+// is given room to repeat.
+const TITLE_SHAPES = [
+  "name a place from the story, with no verb in it.",
+  "use something a character says out loud, in their own words.",
+  "ask a question a child would ask.",
+  "use two or three words only, concrete and a little odd.",
+  "name an object from the story and what happened to it.",
+  "say when the story happens, as a time or a moment rather than a date.",
+  "name the problem the story solves, plainly.",
+  "use a small, specific detail a child would notice before an adult would.",
+];
+
 function buildPrompt(data) {
   const target = getTarget(data.duration);
   const storyType = data.storyType === "bedtime" ? "bedtime story" : "anytime story";
@@ -187,6 +201,18 @@ function buildPrompt(data) {
         "- Do not summarise scenes. Let each scene play out with enough detail for calm audio narration.",
       ]
     : [];
+
+  // Two independent requests cannot vary against each other, so the variation
+  // has to be put in. Told only to stop starting every title with the name,
+  // the model drops the name from titles altogether - and a parent's child
+  // being named in the title is half the point. Roughly half the stories are
+  // asked for it and half are not, which is what makes a library look varied.
+  const nameInTitle = Math.random() < 0.5;
+  // Banning one formula only moves the model to the next one: told to stop
+  // writing "<name> and the Moonlit <noun>" it wrote "The <noun> That <verb>"
+  // five times out of six. Handing it a different shape each time is what
+  // actually makes a shelf of stories look like a shelf of stories.
+  const titleShape = TITLE_SHAPES[Math.floor(Math.random() * TITLE_SHAPES.length)];
 
   return [
     `Write a polished, imaginative children's ${storyType}.`,
@@ -215,6 +241,16 @@ function buildPrompt(data) {
     "",
     "Quality requirements:",
     "- Make it feel like a real children's story, not a template.",
+    // Left to itself the model titles every story "<name> and the Moonlit
+    // <noun>" and furnishes it from the same cupboard: lanterns, fireflies,
+    // twinkling stars. Measured over six stories with different children and
+    // different interests, six came back with that exact title shape. Naming
+    // the rut is the only thing that gets it out.
+    `- Title: ${titleShape} Do not use the words moonlit, moonbeam, lantern, twinkling, shimmering, glowing or starlight in it, and do not use the shape "<child's name> and the ...".`,
+    nameInTitle
+      ? `- Put ${cleanText(data.childName, "the child")}'s name in the title, somewhere other than the opening words.`
+      : "- Keep the child's name out of the title; let the title name something from the story instead.",
+    "- Imagery: avoid the stock props that fill generated bedtime stories - lanterns, fireflies, glowing orbs, moonbeams, twinkling or winking stars, wise owls, enchanted keys, silver thread. Build the wonder out of this child's own interests and the real detail of this story's world instead.",
     `- ${language.instruction}`,
     "- Use warm, sensory, magical language with clear scenes and character moments.",
     "- Keep it age-appropriate, safe, non-frightening, and parent-friendly.",
