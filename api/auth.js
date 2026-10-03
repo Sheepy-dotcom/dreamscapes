@@ -41,7 +41,11 @@ const plans = {
     canSave: true,
     canUseAudio: true,
     savedLimit: 30,
-    audioMinutes: 150,
+    // Raised with the story lengths. At 150 this covered 30 stories only
+    // because every story ran at half its stated length; once a 10 minute
+    // story genuinely plays for 10, the same 30 stories need twice the
+    // allowance or a parent runs out of narration mid-month.
+    audioMinutes: 300,
   },
 };
 

@@ -6,7 +6,13 @@ const {
   sendApiError,
   supabaseRequest,
 } = require("./auth");
-const NARRATION_WORDS_PER_MINUTE = 85;
+// Measured, not assumed. The eight voices in the picker read this model's
+// output at 145 to 182 words per minute with the app's own instructions, mean
+// about 167; the value below is a touch under that so a story runs slightly
+// long rather than short. It was 85, which is a read-aloud pace no synthetic
+// voice here goes anywhere near, and every duration the app offered was
+// therefore about half what it said - a 30 minute story played for 15.
+const NARRATION_WORDS_PER_MINUTE = 165;
 const OPTIONAL_RETENTION_COLUMNS = [
   "story_language",
   "story_summary",
@@ -20,12 +26,16 @@ const OPTIONAL_RETENTION_COLUMNS = [
   "journey_day",
 ];
 
+// Word counts follow from NARRATION_WORDS_PER_MINUTE above, keeping the same
+// tolerance either side and about 65 words a paragraph. getMaxOutputTokens asks
+// for maxWords * 2.6, so the longest story now requests about 14,600 tokens of
+// the 24,000 ceiling.
 const durationTargets = {
-  5: { words: 425, minWords: 375, maxWords: 500, paragraphs: 7 },
-  10: { words: 850, minWords: 760, maxWords: 960, paragraphs: 12 },
-  15: { words: 1275, minWords: 1150, maxWords: 1450, paragraphs: 18 },
-  20: { words: 1700, minWords: 1530, maxWords: 1900, paragraphs: 24 },
-  30: { words: 2550, minWords: 2300, maxWords: 2850, paragraphs: 34 },
+  5: { words: 825, minWords: 740, maxWords: 970, paragraphs: 13 },
+  10: { words: 1650, minWords: 1485, maxWords: 1870, paragraphs: 25 },
+  15: { words: 2475, minWords: 2230, maxWords: 2800, paragraphs: 37 },
+  20: { words: 3300, minWords: 2970, maxWords: 3740, paragraphs: 49 },
+  30: { words: 4950, minWords: 4455, maxWords: 5600, paragraphs: 74 },
 };
 
 const storyLanguages = {
