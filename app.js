@@ -379,6 +379,11 @@ const VOICE_PREVIEW_GAIN = 0.82;
 const VOICE_PREVIEW_GAINS = {
   "female sage calm": 3.4,
 };
+// Clips live under /assets, which is served immutable for a year, so a rebuilt
+// preview keeps its filename and would go on playing the old recording for
+// anyone who has heard it once. Bump this whenever the clips are rebuilt.
+const VOICE_PREVIEW_VERSION = "2026100301";
+
 const VOICE_PREVIEW_FILES = {
   "female calm": "./assets/voice-preview-female-calm.mp3",
   "female sage calm": "./assets/voice-preview-female-sage-calm.mp3",
@@ -4981,7 +4986,8 @@ async function playAiVoicePreview() {
   const previewGain = VOICE_PREVIEW_GAINS[selectedVoiceStyle] || VOICE_PREVIEW_GAIN;
   const previewFile = VOICE_PREVIEW_FILES[selectedVoiceStyle];
   if (previewFile) {
-    return `fixed-file-${await playPreviewAudio(previewFile, previewGain)}`;
+    const versionedFile = `${previewFile}?v=${VOICE_PREVIEW_VERSION}`;
+    return `fixed-file-${await playPreviewAudio(versionedFile, previewGain)}`;
   }
 
   const savedPreview = getStoredVoicePreview(selectedVoiceStyle);
