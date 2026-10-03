@@ -2546,9 +2546,12 @@ function formatParagraphForDisplay(paragraph) {
     .join("");
 }
 
-// Sentence and paragraph gaps alone left the reading a little quick, so the
-// short break between phrases is on as well. Set to false to go back to
-// sentence and paragraph pauses only.
+// This was measured as working on the speech model that came before the one
+// now pinned in api/narrate.js. On the current model it does nothing: the same
+// passage sent with the full scaffolding, with sentence gaps only, and as one
+// plain paragraph came back at 177, 183 and 179 words per minute, which is the
+// model's own variation. It is left on because it costs almost nothing and a
+// later model may honour it again. Set to false for sentence gaps only.
 const NARRATION_WORD_BREATHING = true;
 
 function addNarrationSentenceBreaks(text) {

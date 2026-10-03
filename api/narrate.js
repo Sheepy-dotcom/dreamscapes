@@ -5,11 +5,13 @@ const { enforceNarrationAccess, handleCorsPreflight, incrementUsage, sendApiErro
 // warning, changing how every story sounds. This snapshot reports about a third
 // fewer word errors than the one before it. OPENAI_TTS_MODEL still overrides.
 const DEFAULT_SPEECH_MODEL = "gpt-4o-mini-tts-2025-12-15";
-// Natural speed. Every stretch value tried was audible - 0.9 crackled, 0.95 was
-// still fuzzy - because the parameter resamples the finished audio rather than
-// making the model read slower. The pace comes from the line breaks the app
-// sends between sentences instead, which are silence rather than processing.
-// Overridable with OPENAI_TTS_SPEED; the API accepts 0.25 to 4.0.
+// Natural speed, and the only control over pace that does anything. Measured on
+// this model with a 115 word bedtime passage: speed 1 reads at about 158 words
+// per minute, 0.9 at about 135, 0.7 at about 124. The curve is not clean - the
+// model varies run to run - and the old objection stands, that the parameter
+// resamples finished audio rather than making the model read slower, so every
+// step down costs some quality. It is left at 1 until someone listens to the
+// alternatives. Overridable with OPENAI_TTS_SPEED; the API accepts 0.25 to 4.0.
 const DEFAULT_SPEECH_SPEED = 1;
 const MIN_SPEECH_SPEED = 0.25;
 const MAX_SPEECH_SPEED = 4;
@@ -55,12 +57,12 @@ function getLanguageNarrationGuard(value) {
   ].join(" ");
 }
 
-// The speed parameter is not honoured by every speech model - gpt-4o-mini-tts
-// takes its pacing from the instructions instead - so the pace is asked for in
-// both places. Whichever the model listens to, the narration comes out slower.
-// Measured against real output, a stated words-per-minute target moved the pace
-// not at all - only the speed parameter did. So this stays to one short line
-// about delivery, and the budget goes to the caller's voice direction instead.
+// Kept, but do not trust it to do anything. Re-measured on the pinned model:
+// this line, the app's "read especially slowly", a stated words-per-minute
+// target, and an instruction as blunt as "leave a full second of silence
+// between sentences" all produced the same pace, and the bluntest version came
+// out slightly faster than no instruction at all. Only the speed parameter
+// moves it. This stays because it costs nothing and the next model may listen.
 const PACE_INSTRUCTION =
   "Read slowly and softly, letting each sentence settle before the next, with a gentle pause at commas and a longer one at full stops.";
 
