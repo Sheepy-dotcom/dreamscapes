@@ -51,8 +51,12 @@ function withNarrationPauses(text) {
 }
 
 const previewInput = withNarrationPauses(previewText);
-const model = process.env.OPENAI_TTS_MODEL || "gpt-4o-mini-tts";
-const speed = Number(process.env.OPENAI_TTS_SPEED || 0.95);
+// These must track api/narrate.js, or a parent picks a voice from a preview
+// that is not what their stories will sound like. The speed in particular was
+// 0.95 here: that is the value that made every preview sound fuzzy, because
+// the parameter resamples finished audio, and narration was moved back to 1.
+const model = process.env.OPENAI_TTS_MODEL || "gpt-4o-mini-tts-2025-12-15";
+const speed = Number(process.env.OPENAI_TTS_SPEED || 1);
 
 // The shared direction every voice gets, so a preview matches the real thing.
 const sharedMatch = appJs.match(/const AI_VOICE_SHARED_DIRECTION = \[([\s\S]*?)\]\.join\(" "\);/);
