@@ -817,14 +817,31 @@ const loadingMessages = [
   "Tucking in a warm, happy ending",
 ];
 
+// A long story is written in sections and takes a couple of minutes, which is
+// a long time to watch messages rotate with no sense of progress. The section
+// counter rides along with them rather than replacing them.
+let storyPartLabel = "";
+
+function renderLoadingMessage(index) {
+  if (!loadingMessage) return;
+  loadingMessage.textContent = `${storyPartLabel}${loadingMessages[index]}`;
+}
+
+function setStoryProgress(partIndex, totalParts) {
+  const total = Math.max(1, Number(totalParts) || 1);
+  storyPartLabel = total > 1 ? `Part ${Math.min(Number(partIndex) + 1, total)} of ${total} · ` : "";
+  renderLoadingMessage(0);
+}
+
 function startLoadingMessages() {
   if (!loadingMessage) return;
   let index = 0;
-  loadingMessage.textContent = loadingMessages[index];
+  storyPartLabel = "";
+  renderLoadingMessage(index);
   window.clearInterval(loadingMessageTimer);
   loadingMessageTimer = window.setInterval(() => {
     index = (index + 1) % loadingMessages.length;
-    loadingMessage.textContent = loadingMessages[index];
+    renderLoadingMessage(index);
   }, 2200);
 }
 
@@ -2683,20 +2700,54 @@ async function createStory(data) {
   if (!AI_ENDPOINT) return generateStory(data);
 
   try {
-    const response = await fetch(AI_ENDPOINT, {
-      method: "POST",
-      headers: await getApiHeaders(),
-      body: JSON.stringify({ ...data, prompt: createPrompt(data) }),
-    });
+    const prompt = createPrompt(data);
+    // A long story is written a section at a time, each its own request, the
+    // way narration is already fetched part by part - one request cannot emit
+    // that many words inside the time the server is given. The server decides
+    // how many sections and says when the last one is in; a short story is a
+    // single pass through this loop and behaves exactly as it always has.
+    let aiStory = null;
+    let paragraphs = [];
+    let index = 0;
 
-    if (!response.ok) {
-      throw new Error(await readApiError(response, "Story endpoint unavailable"));
+    for (;;) {
+      const response = await fetch(AI_ENDPOINT, {
+        method: "POST",
+        headers: await getApiHeaders(),
+        body: JSON.stringify({
+          ...data,
+          prompt,
+          section: {
+            index,
+            title: aiStory?.title || "",
+            summary: aiStory?.summary || "",
+            tail: paragraphs.slice(-2),
+            paragraphsSoFar: paragraphs,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(await readApiError(response, "Story endpoint unavailable"));
+      }
+
+      const part = await response.json();
+      if (!part.title || !Array.isArray(part.paragraphs)) {
+        throw new Error("Story endpoint returned an unexpected shape");
+      }
+
+      // The last section answers with the whole story, the same text the
+      // server saved, so the two cannot drift apart.
+      aiStory = part;
+      paragraphs = part.section?.done ? part.paragraphs : paragraphs.concat(part.paragraphs);
+
+      if (!part.section || part.section.done) break;
+
+      index = part.section.index + 1;
+      setStoryProgress(index, part.section.count);
     }
 
-    const aiStory = await response.json();
-    if (!aiStory.title || !Array.isArray(aiStory.paragraphs)) {
-      throw new Error("Story endpoint returned an unexpected shape");
-    }
+    aiStory = { ...aiStory, paragraphs };
 
     if (aiStory.usage) {
       currentUsage = aiStory.usage;

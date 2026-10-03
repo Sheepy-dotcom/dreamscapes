@@ -30,21 +30,59 @@ const OPTIONAL_RETENTION_COLUMNS = [
 // tolerance either side and about 65 words a paragraph. getMaxOutputTokens asks
 // for maxWords * 2.6, so the longest story now requests about 14,600 tokens of
 // the 24,000 ceiling.
-// Only the first two are sized to their label. The host plan gives this
-// function 60 seconds, and the model writes about 43 words a second: a
-// 10 minute story at 1,650 words took 49, and anything past roughly 2,500
-// words cannot finish inside the budget however it is prompted, because the
-// cost is in the words emitted. So 15, 20 and 30 keep the lengths they have
-// always had - short for their labels, but they return - until generation is
-// split across requests the way narration already is, or the function gets
-// more than a minute. Raise these the moment either happens.
+// Word counts follow from NARRATION_WORDS_PER_MINUTE above, keeping the same
+// tolerance either side and about 65 words a paragraph. Everything past ten
+// minutes is written in sections - see SECTION_MAX_WORDS - because no single
+// request can emit this many words inside the function's minute.
 const durationTargets = {
   5: { words: 825, minWords: 740, maxWords: 970, paragraphs: 13 },
   10: { words: 1650, minWords: 1485, maxWords: 1870, paragraphs: 25 },
-  15: { words: 1275, minWords: 1150, maxWords: 1450, paragraphs: 18 },
-  20: { words: 1700, minWords: 1530, maxWords: 1900, paragraphs: 24 },
-  30: { words: 2550, minWords: 2300, maxWords: 2850, paragraphs: 34 },
+  15: { words: 2475, minWords: 2230, maxWords: 2800, paragraphs: 37 },
+  20: { words: 3300, minWords: 2970, maxWords: 3740, paragraphs: 49 },
+  30: { words: 4950, minWords: 4455, maxWords: 5600, paragraphs: 74 },
 };
+
+// Generation time is spent emitting words - about 43 a second, measured - and
+// this function gets 60 of them. A story longer than roughly 1,700 words
+// cannot be written in one request however it is prompted, so long ones are
+// written a section at a time, each its own request with its own budget. The
+// narration endpoint has always worked this way; this brings story generation
+// into line with it. Sections get no retry: a second attempt inside the same
+// request is what the budget cannot afford.
+// A story of 1,700 words or less is written in one request: measured at 48 to
+// 55 seconds, which fits but leaves little room. Anything longer is split into
+// pieces of about 1,250 words, which land near 33 seconds each - margin enough
+// that a slow response does not cost the parent the whole story.
+const SINGLE_REQUEST_MAX_WORDS = 1700;
+const SECTION_TARGET_WORDS = 1250;
+// The longest duration whose whole story fits in one request.
+const LONGEST_SINGLE_REQUEST_DURATION = 10;
+
+function getSectionCount(duration) {
+  const { words } = getTarget(duration);
+  if (words <= SINGLE_REQUEST_MAX_WORDS) return 1;
+  return Math.max(2, Math.ceil(words / SECTION_TARGET_WORDS));
+}
+
+// A section is asked for less than its arithmetic share, because the model
+// writes past whatever it is given: measured at 1.12 to 1.29 times the asked
+// figure across six sections, even with the hard limit stated. Asking for 85%
+// of the share lands the finished story near its intended length instead of a
+// fifth over it. The aim is deliberately a little high: a story longer than
+// its label is a small annoyance, one shorter is the bug this set out to fix.
+const SECTION_OVERSHOOT = 0.95;
+
+function getSectionTarget(duration, count) {
+  const target = getTarget(duration);
+  if (count <= 1) return target;
+  const words = Math.round((target.words / count) * SECTION_OVERSHOOT);
+  return {
+    words,
+    minWords: Math.round(words * 0.85),
+    maxWords: Math.round(words * 1.1),
+    paragraphs: Math.max(3, Math.round(target.paragraphs / count)),
+  };
+}
 
 const storyLanguages = {
   "en-GB": {
@@ -143,8 +181,9 @@ function getStoryLanguage(value) {
   return storyLanguages[value] || storyLanguages["en-GB"];
 }
 
-function getMaxOutputTokens(duration) {
-  return Math.min(Math.ceil(getTarget(duration).maxWords * 2.6), 24000);
+function getMaxOutputTokens(duration, maxWordsOverride = 0) {
+  const maxWords = maxWordsOverride || getTarget(duration).maxWords;
+  return Math.min(Math.ceil(maxWords * 2.6), 24000);
 }
 
 function getEstimatedNarrationMinutes(wordCount) {
@@ -194,8 +233,10 @@ const TITLE_SHAPES = [
   "use a small, specific detail a child would notice before an adult would.",
 ];
 
-function buildPrompt(data) {
-  const target = getTarget(data.duration);
+function buildPrompt(data, section = null) {
+  // A section is written to its own share of the word count; the whole-story
+  // target would have one request try to write the lot.
+  const target = section ? getSectionTarget(data.duration, section.count) : getTarget(data.duration);
   const storyType = data.storyType === "bedtime" ? "bedtime story" : "anytime story";
   const moods = cleanList(data.moods);
   const childProfileSummary = cleanList(data.childProfileSummary);
@@ -240,6 +281,10 @@ function buildPrompt(data) {
     `Child interests: ${interests || "not specified"}.`,
     `Target duration: ${cleanText(data.duration, "5")} minutes of calm narrated audio.`,
     `Word count target: ${target.words} words. Acceptable range: ${target.minWords}-${target.maxWords} words.`,
+    // Measured: without this the model writes about 30% over the target, which
+    // on a long story is the difference between finishing inside the time the
+    // server has and not finishing at all.
+    `Hard limit: ${target.maxWords} words. Do not go past it. Stopping a little under is fine; going over is not.`,
     `Paragraph target: about ${target.paragraphs} short, readable paragraphs.`,
     "Timing rule: the selected duration is for slow narrated audio, so the story must be long enough when read aloud calmly with pauses.",
     `Mood blend: ${moods.length ? moods.join(", ") : "relaxing"}.`,
@@ -278,16 +323,41 @@ function buildPrompt(data) {
     "- Use selected profile details naturally where helpful, but do not list physical details awkwardly or make appearance the focus.",
     "- If multiple child profiles are selected, include each child as an important character and give each a kind moment.",
     "- Use short, gentle sentences with frequent natural pauses between phrases for bedtime narration.",
-    "- Do not finish early. The story should feel complete and should land inside the requested word range, especially for 15, 20, and 30 minute stories.",
+    section
+      ? `- Write part ${section.index + 1} of ${section.count} only. Write the whole of this part and nothing beyond it.`
+      : "- Do not finish early. The story should feel complete and should land inside the requested word range, especially for 15, 20, and 30 minute stories.",
     "- Longer durations must include more complete scenes, not just longer sentences.",
     "- Include a positive ending and a gentle lesson without sounding preachy.",
     "- If this continues a series, preserve established characters and warmly acknowledge what happened before without repeating the previous story.",
-    "- End the main story peacefully and completely, then provide two short, child-friendly ideas for a possible next adventure in the JSON nextIdeas field.",
+    section && section.index < section.count - 1
+      ? "- Do NOT end the story. This is one part of a longer story and another part follows, so stop at a natural moment mid-adventure with something still to come. Put two ideas in nextIdeas anyway; they are ignored until the last part."
+      : "- End the main story peacefully and completely, then provide two short, child-friendly ideas for a possible next adventure in the JSON nextIdeas field.",
     "- For bedtime, slow the ending down and make the final paragraph peaceful.",
     "- Do not announce or explain the selected language.",
     "- Do not end with farewell phrases such as ta-ta, ta ta for now, bye, or goodbye.",
     "- Do not mention AI, prompts, packages, subscriptions, or app settings.",
     ...retryNote,
+    ...(section && section.index > 0
+      ? [
+          "",
+          `Continuing an existing story - part ${section.index + 1} of ${section.count}:`,
+          `- Title: ${cleanText(section.title, "untitled")}.`,
+          `- The story so far: ${cleanText(section.summary, "not recorded")}`,
+          "- It left off here, and your first sentence follows straight on from it:",
+          ...cleanList(section.tail).map((paragraph) => `  "${paragraph}"`),
+          "- Do not reintroduce the child or retell what has happened. Do not start a new adventure.",
+          "- Do not open with a scene-setting line of the kind a story begins with.",
+          "- Keep every established character, place and name exactly as they are.",
+          "- Return the summary field as a synopsis of the whole story including this part, which the next part will be given.",
+        ]
+      : []),
+    ...(section && section.count > 1 && section.index === 0
+      ? [
+          "",
+          `This is part 1 of ${section.count}. Open the story and carry it to a natural pause, no further.`,
+          "Return the summary field as a synopsis of what has happened so far; the next part is given it and nothing else.",
+        ]
+      : []),
   ].join("\n");
 }
 
@@ -441,7 +511,7 @@ function logModelFallback(failedModel, candidates, reason) {
   );
 }
 
-async function requestStoryWithPrompt(data, prompt) {
+async function requestStoryWithPrompt(data, prompt, maxWordsOverride = 0) {
   const modelCandidates = getStoryModelCandidates();
   let lastError = null;
 
@@ -459,7 +529,7 @@ async function requestStoryWithPrompt(data, prompt) {
           content: prompt,
         },
       ],
-      max_output_tokens: getMaxOutputTokens(data.duration),
+      max_output_tokens: getMaxOutputTokens(data.duration, maxWordsOverride),
       text: {
         format: {
           type: "json_schema",
@@ -550,6 +620,11 @@ async function requestStoryExpansion(data, story) {
   return requestStoryWithPrompt(data, buildExpansionPrompt(data, story));
 }
 
+async function createStorySection(data, section) {
+  const target = getSectionTarget(data.duration, section.count);
+  return requestStoryWithPrompt(data, buildPrompt(data, section), target.maxWords);
+}
+
 async function createStory(data) {
   const target = getTarget(data.duration);
   let story = await requestStory(data);
@@ -568,20 +643,20 @@ async function createStory(data) {
     }
   }
 
-  const shortByWords = Math.max(0, target.minWords - story.wordCount);
+  return { ...story, durationTarget: describeDuration(data, story.wordCount) };
+}
 
+function describeDuration(data, wordCount) {
+  const target = getTarget(data.duration);
   return {
-    ...story,
-    durationTarget: {
-      minutes: Number(data.duration) || 5,
-      words: target.words,
-      minWords: target.minWords,
-      maxWords: target.maxWords,
-      actualWords: story.wordCount,
-      estimatedNarrationMinutes: getEstimatedNarrationMinutes(story.wordCount),
-      withinRange: story.wordCount >= target.minWords && story.wordCount <= target.maxWords,
-      shortByWords,
-    },
+    minutes: Number(data.duration) || 5,
+    words: target.words,
+    minWords: target.minWords,
+    maxWords: target.maxWords,
+    actualWords: wordCount,
+    estimatedNarrationMinutes: getEstimatedNarrationMinutes(wordCount),
+    withinRange: wordCount >= target.minWords && wordCount <= target.maxWords,
+    shortByWords: Math.max(0, target.minWords - wordCount),
   };
 }
 
@@ -599,7 +674,70 @@ module.exports = async function handler(request, response) {
     if (!process.env.OPENAI_API_KEY) {
       return response.status(501).json({ error: "OPENAI_API_KEY is not configured" });
     }
-    const story = await createStory(body);
+    // Long stories arrive a section at a time, each request writing its own
+    // share and handing the next one a synopsis and the paragraph it stopped
+    // on. Only the last one saves the story and counts it against the monthly
+    // allowance, so an abandoned story costs the parent nothing.
+    const sectionCount = getSectionCount(body.duration);
+    if (sectionCount > 1 && body.section && typeof body.section === "object") {
+      const asked = body.section || {};
+      const index = Math.min(Math.max(Math.trunc(Number(asked.index) || 0), 0), sectionCount - 1);
+      const done = index === sectionCount - 1;
+      const part = await createStorySection(body, {
+        index,
+        count: sectionCount,
+        title: asked.title,
+        summary: asked.summary,
+        tail: asked.tail,
+      });
+      const earlier = cleanList(asked.paragraphsSoFar);
+      const paragraphs = [...earlier, ...part.paragraphs];
+      const title = index === 0 ? part.title : cleanText(asked.title, part.title);
+
+      if (!done) {
+        return response.status(200).json({
+          title,
+          summary: part.summary,
+          nextIdeas: [],
+          paragraphs: part.paragraphs,
+          wordCount: countWords(paragraphs),
+          section: { index, count: sectionCount, done: false },
+        });
+      }
+
+      const whole = {
+        title,
+        summary: part.summary,
+        nextIdeas: part.nextIdeas,
+        paragraphs,
+        wordCount: countWords(paragraphs),
+        durationTarget: describeDuration(body, countWords(paragraphs)),
+      };
+      let savedWhole = null;
+      let wholeSaveError = "";
+      try {
+        savedWhole = await saveGeneratedStory(account, body, whole);
+      } catch (error) {
+        wholeSaveError = error.message || "Story save failed";
+      }
+      const wholeUsage = await incrementUsage(account, { stories: 1 });
+
+      return response.status(200).json({
+        ...whole,
+        cloudId: savedWhole?.id || null,
+        savedAt: savedWhole?.updated_at || savedWhole?.created_at || null,
+        saveError: wholeSaveError,
+        usage: wholeUsage,
+        section: { index, count: sectionCount, done: true },
+      });
+    }
+
+    // An app build from before sectioning asks for a long story in one request,
+    // which cannot finish inside the minute. Rather than time out it gets the
+    // longest story that does fit, which is what it used to receive anyway.
+    const story = await createStory(
+      sectionCount > 1 ? { ...body, duration: LONGEST_SINGLE_REQUEST_DURATION } : body
+    );
     let savedStory = null;
     let saveError = "";
     try {
@@ -625,3 +763,5 @@ module.exports = async function handler(request, response) {
 // retries or expansions so an anonymous request cannot cost five of them.
 module.exports.requestStory = requestStory;
 module.exports.createStory = createStory;
+module.exports.createStorySection = createStorySection;
+module.exports.getSectionCount = getSectionCount;
