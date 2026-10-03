@@ -67,7 +67,7 @@ const shared = sharedMatch
 const profilePattern =
   /"([a-z ]+)":\s*\{\s*voice:\s*"([a-z]+)",\s*accent:\s*"([a-z]+)",\s*label:\s*"([^"]+)",\s*direction:\s*\n?\s*"([^"]+)"/g;
 
-const voices = [...appJs.matchAll(profilePattern)].map(([, style, voice, accent, label, direction]) => ({
+const allVoices = [...appJs.matchAll(profilePattern)].map(([, style, voice, accent, label, direction]) => ({
   style,
   voice,
   accent,
@@ -76,9 +76,26 @@ const voices = [...appJs.matchAll(profilePattern)].map(([, style, voice, accent,
   file: `voice-preview-${style.replace(/\s+/g, "-")}.mp3`,
 }));
 
-if (voices.length === 0) {
+if (allVoices.length === 0) {
   console.error("No voice profiles found in app.js. Has AI_VOICE_PROFILES changed shape?");
   process.exit(1);
+}
+
+// AI_VOICE_PROFILES also carries voices the picker no longer offers, so that
+// stories saved in them still narrate correctly. Those need no preview clip,
+// and generating them would quietly put retired audio back into the bundle.
+const selectable = new Set(
+  [...(appJs.match(/const VOICE_PREVIEW_FILES = \{([\s\S]*?)\};/)?.[1] || "").matchAll(/"([^"]+)":/g)].map((m) => m[1])
+);
+const voices = allVoices.filter((profile) => selectable.has(profile.style));
+
+if (voices.length === 0) {
+  console.error("No profile matched VOICE_PREVIEW_FILES. Are the style keys still the same?");
+  process.exit(1);
+}
+if (voices.length < allVoices.length) {
+  const retired = allVoices.filter((profile) => !selectable.has(profile.style)).map((profile) => profile.style);
+  console.log(`retired, no preview needed: ${retired.join(", ")}\n`);
 }
 
 function buildInstructions(profile) {

@@ -43,7 +43,7 @@ SCREENS = [
      (106, 498, 718, 1228), 1.35, -3, 0, None),
     ("05-calm-narration.png", "narration.png", "sky",
      [("Calm narration", False), ("for lights-out", True)],
-     "13 soothing voices with DreamScapes Plus",
+     "Eight soothing voices with DreamScapes Plus",
      (120, 1300, 1928, 1690), 1.12, 2, 30, None),
     ("06-in-control.png", "controls.png", "mint",
      [("You are always", False), ("in control", True)],

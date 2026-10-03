@@ -383,12 +383,8 @@ const VOICE_PREVIEW_GAIN = 0.82;
 // are left on VOICE_PREVIEW_GAIN.
 const VOICE_PREVIEW_GAINS = {
   "female sage calm": 3.05,
-  "coral warm": 2.45,
-  "ballad audition": 1.28,
-  "verse audition": 1.2,
   "ash storyteller": 1.11,
   "male calm": 1.04,
-  "alloy audition": 0.54,
 };
 // Clips live under /assets, which is served immutable for a year, so a rebuilt
 // preview keeps its filename and would go on playing the old recording for
@@ -396,35 +392,38 @@ const VOICE_PREVIEW_GAINS = {
 const VOICE_PREVIEW_VERSION = "2026100301";
 
 const VOICE_PREVIEW_FILES = {
+  "marin audition": "./assets/voice-preview-marin-audition.mp3",
   "female calm": "./assets/voice-preview-female-calm.mp3",
   "female sage calm": "./assets/voice-preview-female-sage-calm.mp3",
+  "shimmer soft": "./assets/voice-preview-shimmer-soft.mp3",
+  "cedar audition": "./assets/voice-preview-cedar-audition.mp3",
   "male calm": "./assets/voice-preview-male-calm.mp3",
   "ash storyteller": "./assets/voice-preview-ash-storyteller.mp3",
-  "coral warm": "./assets/voice-preview-coral-warm.mp3",
   "onyx deep": "./assets/voice-preview-onyx-deep.mp3",
-  "echo gentle": "./assets/voice-preview-echo-gentle.mp3",
-  "ballad audition": "./assets/voice-preview-ballad-audition.mp3",
-  "cedar audition": "./assets/voice-preview-cedar-audition.mp3",
-  "marin audition": "./assets/voice-preview-marin-audition.mp3",
-  "verse audition": "./assets/voice-preview-verse-audition.mp3",
-  "alloy audition": "./assets/voice-preview-alloy-audition.mp3",
-  "shimmer soft": "./assets/voice-preview-shimmer-soft.mp3",
 };
 // OpenAI rates marin and cedar highest for audio quality, so they lead each
 // group in the picker and marin is what a parent gets without choosing. Keep
 // this in step with the first <option> of #voice-style in index.html.
 const DEFAULT_VOICE_STYLE = "marin audition";
+// Thirteen voices made the list a wall of near-identical choices, so the picker
+// now offers four of each. The five it dropped - coral, ballad, verse, alloy
+// and echo - keep their profiles below: stories already saved in those voices
+// have to go on narrating in the voice they were written in. Only the eight in
+// VOICE_PREVIEW_FILES are selectable.
+// The label and direction here are what the voice was tuned and recorded with.
+// Changing them changes how narration sounds and silently puts it out of step
+// with the shipped preview clips; the names parents see live in index.html.
 const AI_VOICE_PROFILES = {
   "female calm": {
     voice: "nova",
-    accent: "neutral",
+    accent: "british",
     label: "a warm female storyteller",
     direction:
       "Use the same consistent voice every time: a warm female storyteller, natural, expressive, clear, and reassuring. Keep a steady storybook pace with gentle emotion and a friendly bedtime feel.",
   },
   "female sage calm": {
     voice: "sage",
-    accent: "neutral",
+    accent: "british",
     label: "a calm woman reading softly at bedtime",
     direction:
       "Use the same consistent voice every time: a very calm bedtime storyteller with a soft, close, reassuring tone. Sound gentle, cosy, natural, warm, and quietly expressive, like a parent reading slowly beside the bed. Keep the pace unhurried with light pauses at commas and longer pauses at full stops.",
@@ -438,7 +437,7 @@ const AI_VOICE_PROFILES = {
   },
   "ash storyteller": {
     voice: "ash",
-    accent: "neutral",
+    accent: "british",
     label: "a calm male storyteller",
     direction:
       "Use the same consistent voice every time: a calm male storyteller, clear, gentle, expressive, and reassuring. Keep a natural bedtime story pace with soft warmth and calm character.",
@@ -452,7 +451,7 @@ const AI_VOICE_PROFILES = {
   },
   "onyx deep": {
     voice: "onyx",
-    accent: "neutral",
+    accent: "british",
     label: "a deep, slow male storyteller",
     direction:
       "Use the same consistent voice every time: a deep, low, unhurried male voice, grounded and safe, the kind that settles a room. Stay in the lower register with plenty of weight and space, warm rather than stern or gloomy, and let the volume drop softly towards the end of every sentence.",
@@ -473,14 +472,14 @@ const AI_VOICE_PROFILES = {
   },
   "cedar audition": {
     voice: "cedar",
-    accent: "neutral",
+    accent: "british",
     label: "a calm, even storyteller",
     direction:
       "Read in your own natural voice and accent, calm and warm, at a slow bedtime pace. Let the volume fall away gently at the end of each sentence.",
   },
   "marin audition": {
     voice: "marin",
-    accent: "neutral",
+    accent: "british",
     label: "a soft, easy storyteller",
     direction:
       "Read in your own natural voice and accent, calm and warm, at a slow bedtime pace. Let the volume fall away gently at the end of each sentence.",
@@ -501,7 +500,7 @@ const AI_VOICE_PROFILES = {
   },
   "shimmer soft": {
     voice: "shimmer",
-    accent: "neutral",
+    accent: "british",
     label: "a soft-spoken woman settling a child to sleep",
     direction:
       "Use the same consistent voice every time: a soft, light, hushed female voice, quiet and close to the microphone, as if not to wake anyone else in the house. This is the most relaxing voice in the app and should feel like the last thing heard before sleep: low volume, airy, tender, and completely unhurried. Let the energy drop gently towards the end of every sentence. Keep it flat and soothing rather than bright or animated, and do not lift into an excited or questioning tone.",
@@ -3412,9 +3411,11 @@ const AI_VOICE_SHARED_DIRECTION = [
 function getAiNarrationInstructions(story) {
   const profile = AI_VOICE_PROFILES[story.voiceStyle] || AI_VOICE_PROFILES[DEFAULT_VOICE_STYLE];
   const language = getStoryLanguageDetails(story.storyLanguage);
-  // Only ask for a British accent from a voice that natively has one. Telling an
-  // American-sounding voice to hold a British accent for a whole story makes it
-  // strain, which reads as robotic and still does not sound British.
+  // Every voice in the picker is asked for a British accent: this is a UK app
+  // and an American narrator reading to a British child is jarring. Only fable
+  // used to be asked, because on the older speech model the rest strained and
+  // came out robotic without ever sounding British; the current model holds it.
+  // The retired profiles stay neutral so stories saved in them replay as made.
   const englishAccentDirection =
     getStoryLanguage(story.storyLanguage) === "en-GB" && profile.accent === "british"
       ? "Keep the spoken accent clearly UK/British English throughout and do not drift into American pronunciation."
