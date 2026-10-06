@@ -1052,7 +1052,10 @@ const AUTH_PROVIDERS = [
 ];
 
 function getAppleSignInPlugin() {
-  return window.Capacitor?.Plugins?.SignInWithApple || null;
+  // ios/App/App/AppleSignInPlugin.swift, ours rather than a community plugin:
+  // the published ones either pin an older capacitor-swift-pm than RevenueCat
+  // needs, or bring the Google and Facebook SDKs with them.
+  return window.Capacitor?.Plugins?.AppleSignIn || null;
 }
 
 // Apple is given the hash and Supabase the original. Getting that the wrong way
@@ -1068,8 +1071,8 @@ async function signInWithNativeApple() {
   if (!plugin) throw new Error("Apple sign-in is unavailable on this device.");
 
   const rawNonce = `${crypto.randomUUID()}${crypto.randomUUID()}`;
-  const result = await plugin.authorize({ scopes: "email name", nonce: await sha256Hex(rawNonce) });
-  const token = result?.response?.identityToken;
+  const result = await plugin.authorize({ nonce: await sha256Hex(rawNonce) });
+  const token = result?.identityToken;
   if (!token) throw new Error("Apple did not return an identity token.");
 
   // The token's audience is the bundle id, not the Services ID the website
