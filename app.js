@@ -1051,16 +1051,48 @@ const AUTH_PROVIDERS = [
   },
 ];
 
+function getAppleSignInPlugin() {
+  return window.Capacitor?.Plugins?.SignInWithApple || null;
+}
+
+// Apple is given the hash and Supabase the original. Getting that the wrong way
+// round is the usual cause of a token Supabase will not accept, and the error it
+// returns points at the token rather than at the nonce.
+async function sha256Hex(value) {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+async function signInWithNativeApple() {
+  const plugin = getAppleSignInPlugin();
+  if (!plugin) throw new Error("Apple sign-in is unavailable on this device.");
+
+  const rawNonce = `${crypto.randomUUID()}${crypto.randomUUID()}`;
+  const result = await plugin.authorize({ scopes: "email name", nonce: await sha256Hex(rawNonce) });
+  const token = result?.response?.identityToken;
+  if (!token) throw new Error("Apple did not return an identity token.");
+
+  // The token's audience is the bundle id, not the Services ID the website
+  // uses, so both have to be listed on the Supabase Apple provider.
+  const { error } = await supabaseClient.auth.signInWithIdToken({
+    provider: "apple",
+    token,
+    nonce: rawNonce,
+  });
+  if (error) throw error;
+}
+
 async function getEnabledAuthProviders() {
-  // Not in the native app. signInWithOAuth hands the browser to Apple and asks
-  // to be sent back to window.location.origin, which inside the app is
-  // capacitor://localhost - not a URL Apple will return to and not one Supabase
-  // allows, so the sign-in completes against the project's Site URL instead and
-  // the parent ends up logged in on the website with the app none the wiser.
-  // Doing this properly means the native Sign in with Apple sheet and
-  // signInWithIdToken, which needs a plugin and a new build; until then the app
-  // offers email only, which works.
-  if (isNativeMobileApp()) return [];
+  // In the app only Apple, only on iOS, and only when the native sheet is
+  // actually there. The web redirect cannot come back into the app - it asks to
+  // return to window.location.origin, which here is capacitor://localhost, so
+  // the sign-in used to complete against the project's Site URL and leave the
+  // parent signed in on the website with the app none the wiser. Android keeps
+  // email only until Google sign-in gets the same native treatment.
+  if (isNativeMobileApp()) {
+    if (getCapacitorPlatform() !== "ios" || !getAppleSignInPlugin()) return [];
+    return AUTH_PROVIDERS.filter((provider) => provider.id === "apple");
+  }
 
   try {
     const response = await fetch(`${SUPABASE_URL}/auth/v1/settings`, {
@@ -1082,8 +1114,29 @@ async function startProviderSignIn(providerId) {
     return;
   }
 
-  setAuthStatus("Opening a secure sign-in window...");
   trackEvent("provider_sign_in_started", { provider: providerId });
+
+  if (isNativeMobileApp()) {
+    setAuthStatus("Opening Sign in with Apple...");
+    try {
+      await signInWithNativeApple();
+      setAuthStatus("");
+      return;
+    } catch (error) {
+      // Cancelling the system sheet is not a failure worth shouting about.
+      const message = String(error?.message || "");
+      if (/cancel/i.test(message) || error?.code === "1001") {
+        setAuthStatus("");
+        return;
+      }
+      console.error("Native Apple sign-in failed", error);
+      trackEvent("provider_sign_in_failed", { provider: providerId, reason: message.slice(0, 120) });
+      setAuthStatus(getFriendlyFaultMessage(error, "That sign-in could not be completed. Please try again."), true);
+      return;
+    }
+  }
+
+  setAuthStatus("Opening a secure sign-in window...");
 
   const { error } = await supabaseClient.auth.signInWithOAuth({
     provider: providerId,

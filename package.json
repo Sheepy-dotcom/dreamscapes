@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/Sheepy-dotcom/dreamscapes#readme",
   "dependencies": {
+    "@capacitor-community/apple-sign-in": "^7.1.0",
     "@capacitor/android": "^8.3.4",
     "@capacitor/cli": "^8.3.4",
     "@capacitor/core": "^8.3.4",
