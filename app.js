@@ -1052,6 +1052,16 @@ const AUTH_PROVIDERS = [
 ];
 
 async function getEnabledAuthProviders() {
+  // Not in the native app. signInWithOAuth hands the browser to Apple and asks
+  // to be sent back to window.location.origin, which inside the app is
+  // capacitor://localhost - not a URL Apple will return to and not one Supabase
+  // allows, so the sign-in completes against the project's Site URL instead and
+  // the parent ends up logged in on the website with the app none the wiser.
+  // Doing this properly means the native Sign in with Apple sheet and
+  // signInWithIdToken, which needs a plugin and a new build; until then the app
+  // offers email only, which works.
+  if (isNativeMobileApp()) return [];
+
   try {
     const response = await fetch(`${SUPABASE_URL}/auth/v1/settings`, {
       headers: { apikey: SUPABASE_ANON_KEY },
