@@ -1783,7 +1783,9 @@ function renderChildProfiles() {
 function renderBuilderProfileChoices() {
   if (!builderChildProfiles || !builderProfileList) return;
 
-  builderChildProfiles.hidden = childProfiles.length === 0;
+  // The list itself is no longer shown: the name field's picker replaced it.
+  // Its inputs stay in the page because they are what the builder reads.
+  builderChildProfiles.hidden = true;
   builderProfileList.innerHTML = childProfiles
     .map(
       (profile) => `
@@ -1797,7 +1799,73 @@ function renderBuilderProfileChoices() {
       `
     )
     .join("");
+
+  renderSavedChildPicker();
 }
+
+/* A saved child is chosen from the name field itself rather than from a
+   separate list above it: by the time a parent has two or three profiles, the
+   list was a block of checkboxes sitting between the question and the answer.
+   The chevron opens the device's own picker, which is the control a phone
+   already knows how to show.
+
+   The checkboxes in #builder-child-profiles are still what the rest of the
+   builder reads - choosing here ticks exactly one of them - so nothing
+   downstream has to know this control exists. */
+const childSavedPicker = document.querySelector("#child-saved-picker");
+const childSavedSelect = document.querySelector("#child-saved-select");
+
+function renderSavedChildPicker() {
+  if (!childSavedPicker || !childSavedSelect) return;
+  const hasProfiles = childProfiles.length > 0;
+  childSavedPicker.hidden = !hasProfiles;
+  if (!hasProfiles) {
+    childSavedSelect.innerHTML = "";
+    return;
+  }
+  const chosen = childSavedSelect.value;
+  childSavedSelect.innerHTML =
+    '<option value="">Someone new</option>' +
+    childProfiles
+      .map((profile) => {
+        const name = profile.childName || "Child profile";
+        const age = profile.childAge ? `, ${profile.childAge}` : "";
+        return `<option value="${escapeHtml(profile.id)}">${escapeHtml(name + age)}</option>`;
+      })
+      .join("");
+  if (chosen && childProfiles.some((profile) => profile.id === chosen)) {
+    childSavedSelect.value = chosen;
+  }
+}
+
+function applySavedChild(profileId) {
+  const profile = childProfiles.find((entry) => entry.id === profileId);
+
+  // The checkboxes are the source of truth, so keep them in step: exactly the
+  // chosen child ticked, or none of them for "Someone new".
+  builderProfileList?.querySelectorAll('input[name="childProfiles"]').forEach((input) => {
+    input.checked = Boolean(profile) && input.value === profileId;
+  });
+
+  const nameInput = document.querySelector("#child-name");
+  const ageInput = document.querySelector("#child-age");
+  if (profile) {
+    if (nameInput) nameInput.value = profile.childName || "";
+    if (ageInput) ageInput.value = profile.childAge || "";
+  } else if (nameInput?.dataset.fromSavedChild === "true") {
+    // Only clear what this control filled; a name typed by hand stays.
+    if (nameInput) nameInput.value = "";
+    if (ageInput) ageInput.value = "";
+  }
+  if (nameInput) nameInput.dataset.fromSavedChild = String(Boolean(profile));
+
+  refreshNameField();
+  trackEvent("saved_child_used", { picked: Boolean(profile) });
+}
+
+childSavedSelect?.addEventListener("change", (event) => {
+  applySavedChild(event.target.value);
+});
 
 function setChildProfileFormOpen(open) {
   if (!childProfileForm) return;
