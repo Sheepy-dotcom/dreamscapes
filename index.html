@@ -22,7 +22,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026100938" />
+    <link rel="stylesheet" href="./styles.css?v=2026100940" />
   </head>
   <body class="home-active night-mode">
     <svg class="art-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -150,7 +150,7 @@
           </section>
 
           <section class="builder-step builder-step-mood" data-builder-step="4" data-step-sub="Pick as many as you like." data-step-title="Mood" aria-labelledby="builder-step-mood-title" hidden>
-            <div class="mood-scene" aria-hidden="true"><img src="./assets/mood-scene.webp?v=2026100938" alt="" /></div><div class="step-foreground mood-foreground">
+            <div class="mood-scene" aria-hidden="true"><img src="./assets/mood-scene.webp?v=2026100940" alt="" /></div><div class="step-foreground mood-foreground">
             <h3 id="builder-step-mood-title">What should it <span>feel like?</span></h3>
             <fieldset class="choice-group builder-group mood-group">
               <legend class="visually-hidden">Moods</legend>
@@ -171,7 +171,7 @@
               <h3 id="builder-step-idea-title" data-preview-title="What do they love?">What shall we <span>explore tonight?</span></h3>
             </div>
             <div class="tonight-window">
-              <img class="tonight-scene" src="./assets/tonight-scene.webp?v=2026100938" alt="" />
+              <img class="tonight-scene" src="./assets/tonight-scene.webp?v=2026100940" alt="" />
               <div class="interest-chips" id="interest-chips" role="group" aria-label="Story ideas"></div>
             </div>
             <div class="tonight-body">
@@ -205,22 +205,30 @@
             </div>
           </section>
 
-          <section class="builder-step has-art" data-builder-step="6" data-step-sub="Choose a few preferences to make the story feel right for them." data-step-title="Parent controls" aria-labelledby="builder-step-details-title" hidden>
-            <div class="step-art" aria-hidden="true"><svg viewBox="0 0 200 140" focusable="false"><ellipse cx="100" cy="72" rx="80" ry="62" fill="url(#art-halo)" /><path d="M100 26L138 39V70C138 94 121 109 100 118C79 109 62 94 62 70V39Z" fill="#8ad7bd" /><path d="M100 35L129 45V70C129 89 116 101 100 108C84 101 71 89 71 70V45Z" fill="#a9e6d0" /><path d="M100 35L129 45V56C119 50 110 48 100 48Z" fill="#ffffff" opacity="0.2" /><path d="M100 91C88 83 80 76 80 67A10 10 0 0 1 100 63A10 10 0 0 1 120 67C120 76 112 83 100 91Z" fill="#ff8fb7" /><ellipse cx="91" cy="67" rx="4" ry="3" fill="#ffffff" opacity="0.45" /><use class="twinkle" href="#art-sparkle" x="36" y="34" width="13" height="13" fill="#ffd96a" /><use class="twinkle" href="#art-sparkle" x="158" y="30" width="11" height="11" fill="#fff8dc" /><use class="twinkle" href="#art-sparkle" x="160" y="98" width="10" height="10" fill="#ffd96a" /><use class="twinkle" href="#art-sparkle" x="36" y="100" width="9" height="9" fill="#d8c6ff" /></svg></div>
-            <h3 id="builder-step-details-title">Make it feel right for them</h3>
+          <section class="builder-step builder-step-parent" data-builder-step="6" data-step-sub="Choose a few preferences to make the story feel right for them." data-step-title="Parent controls" aria-labelledby="builder-step-details-title" hidden>
+            <div class="parent-banner">
+              <img class="parent-scene" src="./assets/parent-scene.webp?v=2026100940" alt="" />
+              <div class="parent-headline">
+                <h3 id="builder-step-details-title">Make it feel right <span>for them</span></h3>
+              </div>
               <button class="step-skip" id="skip-parent-controls" type="button">Skip</button>
-            <fieldset class="choice-group builder-group builder-group-mint">
-                <legend class="chip-group-title">Anything to avoid?</legend>
-                <p class="chip-group-note">Select any topics you would rather leave out.</p>
-                <div class="pref-chips" id="avoid-chips" role="group" aria-label="Topics to avoid"></div>
-                <label class="field chip-custom"><span>Something else?</span><input name="avoidTopics" type="text" placeholder="Anything else to leave out..." /></label>
-              </fieldset>
-              <fieldset class="choice-group builder-group builder-group-sky">
-                <legend class="chip-group-title">Anything to encourage?</legend>
+            </div>
+            <div class="parent-body">
+              <div class="pref-card">
+                <h4 class="chip-group-title"><span class="pref-card-icon pref-card-icon-stop" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><circle class="pc-stop" cx="12" cy="12" r="9" fill="none"/><path class="pc-stop" d="M5.6 18.4 18.4 5.6"/></svg></span>Anything to avoid?</h4>
+                <p class="chip-group-note">Tell us anything you would rather the story left out.</p>
+                <label class="field chip-custom chip-custom-avoid">
+                  <span class="visually-hidden">Anything to avoid</span>
+                  <textarea name="avoidTopics" rows="2" placeholder="Monsters, getting lost, thunderstorms..."></textarea>
+                </label>
+              </div>
+              <div class="pref-card">
+                <h4 class="chip-group-title"><span class="pref-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path class="pc-accent" d="M12 1.8 14.9 8.6 22.2 9.2 16.6 14 18.3 21.2 12 17.3 5.7 21.2 7.4 14 1.8 9.2 9.1 8.6Z"/></svg></span>Anything to encourage?</h4>
                 <p class="chip-group-note">Choose a theme, or skip if not tonight.</p>
                 <div class="pref-chips" id="lesson-chips" role="group" aria-label="Themes to encourage"></div>
                 <label class="field chip-custom"><span>Something else?</span><input name="preferredLesson" type="text" placeholder="A gentle lesson..." /></label>
-              </fieldset>
+              </div>
+            </div>
           </section>
 
           <section class="builder-step has-art" data-builder-step="7" data-step-sub="Language and how the story is told." data-step-title="Story settings" aria-labelledby="builder-step-settings-title" hidden>
@@ -1061,6 +1069,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026100938"></script>
+    <script src="./app.js?v=2026100940"></script>
   </body>
 </html>

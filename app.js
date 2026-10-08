@@ -2580,7 +2580,7 @@ function syncInterestChips() {
 // source of truth, so typing and tapping cannot disagree and nothing that reads
 // the form had to change. A "clear" option empties the field instead of adding
 // itself.
-function wireChipGroup({ container, input, options, clearLabel = "", event = "chip" }) {
+function wireChipGroup({ container, input, options, clearLabel = "", event = "chip", icons = {} }) {
   if (!container || !input) return;
 
   const read = () => input.value.split(",").map((part) => part.trim()).filter(Boolean);
@@ -2602,7 +2602,8 @@ function wireChipGroup({ container, input, options, clearLabel = "", event = "ch
   container.innerHTML = all
     .map((label) => {
       const clear = clearLabel && label === clearLabel;
-      return `<button type="button" data-value="${label}" data-clear="${clear}" aria-pressed="false">${label}</button>`;
+      const icon = icons[label] ? `<span class="chip-ic" aria-hidden="true">${icons[label]}</span>` : "";
+      return `<button type="button" data-value="${label}" data-clear="${clear}" aria-pressed="false">${icon}<span class="chip-label">${label}</span></button>`;
     })
     .join("");
 
@@ -2626,13 +2627,30 @@ function wireChipGroup({ container, input, options, clearLabel = "", event = "ch
   sync();
 }
 
-wireChipGroup({
-  container: document.querySelector("#avoid-chips"),
-  input: document.querySelector('[name="avoidTopics"]'),
-  options: ["Getting lost", "Thunderstorms", "Monsters", "Separation", "Strangers", "Illness", "Loud noises"],
-  clearLabel: "None of these",
-  event: "avoid_chip",
-});
+/* Anything to avoid is a box to write in, not a list to pick from. A list of
+   seven frights is a list of seven things to think about at bedtime, and the
+   seven it offered were never going to be the one a particular child has - the
+   free text was always where the real answer went. The old options survive as
+   the placeholder, which suggests without prescribing. */
+
+const LESSON_ICONS = {
+  "Being brave":
+    '<svg viewBox="0 0 24 24" focusable="false"><path class="pc-fill" d="M1.8 20.4 9 8.2l3.6 5.8 2-2.9 6.6 9.3Z"/><path class="pc-cream" d="M9 8.2l2.1 3.4-4.3 0Z"/><path class="pc-accent-stroke" d="M16.6 11.2V3.2"/><path class="pc-accent" d="M16.6 3.4 21.6 5.2l-5 1.8Z"/></svg>',
+  Kindness:
+    '<svg viewBox="0 0 24 24" focusable="false"><path class="pc-fill" d="M12 20.6C5.7 16.4 2.5 13.2 2.5 9.4A4.85 4.85 0 0 1 12 6.7 4.85 4.85 0 0 1 21.5 9.4C21.5 13.2 18.3 16.4 12 20.6Z"/></svg>',
+  Friendship:
+    '<svg viewBox="0 0 24 24" focusable="false"><circle class="pc-fill" cx="8.2" cy="7.4" r="3.2"/><path class="pc-fill" d="M2.4 20.2a5.8 5.8 0 0 1 11.6 0Z"/><circle class="pc-accent" cx="16.8" cy="9" r="2.6"/><path class="pc-accent" d="M12.6 20.2a4.5 4.5 0 0 1 9 0Z"/></svg>',
+  "Trying something new":
+    '<svg viewBox="0 0 24 24" focusable="false"><path class="pc-stroke" d="M12 20.8v-7.4"/><path class="pc-fill" d="M12 13.6C12 9.9 9.1 7.4 5.5 7.4c0 3.7 2.9 6.2 6.5 6.2Z"/><path class="pc-accent" d="M12 12.6c0-3.1 2.4-5.3 5.5-5.3 0 3.1-2.4 5.3-5.5 5.3Z"/></svg>',
+  Listening:
+    '<svg viewBox="0 0 24 24" focusable="false"><circle class="pc-fill" cx="6.4" cy="12" r="2.6"/><path class="pc-stroke" d="M11.6 7.4a7 7 0 0 1 0 9.2"/><path class="pc-accent-stroke" d="M16 4.4a11.4 11.4 0 0 1 0 15.2"/></svg>',
+  "Managing big feelings":
+    '<svg viewBox="0 0 24 24" focusable="false"><circle class="pc-fill" cx="12" cy="12" r="8.6"/><path class="pc-ink-stroke" d="M7.6 10.8a2.5 2.5 0 0 1 3.3 0M13.1 10.8a2.5 2.5 0 0 1 3.3 0"/><path class="pc-ink-stroke" d="M8.9 14.8a3.9 3.9 0 0 0 6.2 0"/></svg>',
+  Sharing:
+    '<svg viewBox="0 0 24 24" focusable="false"><rect class="pc-fill" x="3.6" y="10.4" width="16.8" height="10" rx="1.8"/><rect class="pc-accent" x="2.6" y="6.6" width="18.8" height="4.2" rx="1.4"/><path class="pc-ink-stroke" d="M12 7v13.4"/><circle class="pc-accent" cx="8.8" cy="4.6" r="2.1"/><circle class="pc-accent" cx="15.2" cy="4.6" r="2.1"/></svg>',
+  "No lesson tonight":
+    '<svg viewBox="0 0 24 24" focusable="false"><circle class="pc-stroke" cx="12" cy="12" r="8.4" fill="none"/><path class="pc-stroke" d="M8.2 12h7.6"/></svg>',
+};
 
 wireChipGroup({
   container: document.querySelector("#lesson-chips"),
@@ -2640,6 +2658,7 @@ wireChipGroup({
   options: ["Being brave", "Kindness", "Friendship", "Trying something new", "Listening", "Managing big feelings", "Sharing"],
   clearLabel: "No lesson tonight",
   event: "lesson_chip",
+  icons: LESSON_ICONS,
 });
 
 // Skip is the review's point that this step is optional: it should cost one tap

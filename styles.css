@@ -7025,3 +7025,214 @@ body.night-mode .builder-step-tonight .story-idea-field {
   background: none;
   box-shadow: none;
 }
+
+/* ---- Parent controls: the picture says what the step is for -------------- */
+/* The reassurance has to be in the picture, because this is the step where a
+   parent says what to leave out - and the old art for it was a shield with a
+   heart on it, which is a security badge, not a child asleep. */
+.builder-step-parent,
+.builder-step-parent.active {
+  display: block;
+  grid-template-rows: none;
+  gap: 0;
+  padding: 0 0 6px;
+  align-content: start;
+}
+
+.builder-screen .builder-step-parent {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.parent-banner {
+  position: relative;
+  width: 100%;
+}
+
+.parent-scene {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* Meets the page rather than stopping on a line, the same as the other two
+     pictures. */
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 62%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 62%, transparent 100%);
+}
+
+.parent-headline {
+  position: absolute;
+  inset: 0 0 auto;
+  padding: clamp(8px, 2.4vw, 14px) clamp(46px, 13vw, 64px) 18px;
+  /* The crop starts lower than it did, so the second line of the heading now
+     reaches the top of the clouds rather than sitting on plain sky. */
+  background: linear-gradient(180deg, rgba(14, 12, 48, 0.62) 0%, rgba(14, 12, 48, 0.42) 46%, rgba(14, 12, 48, 0) 100%);
+  text-align: center;
+}
+
+.builder-step-parent h3 {
+  margin: 0 auto;
+  font-size: clamp(1.18rem, 5.2vw, 1.42rem);
+  line-height: 1.22;
+}
+
+.builder-step-parent h3 span {
+  display: block;
+  color: #ffd45c;
+}
+
+.builder-step-parent .builder-step-sub {
+  margin: 2px auto 0;
+  color: rgba(238, 232, 255, 0.86);
+  text-shadow: 0 1px 6px rgba(8, 10, 38, 0.75);
+}
+
+.builder-step-parent .step-skip {
+  position: absolute;
+  z-index: 2;
+  top: clamp(6px, 2vw, 12px);
+  right: clamp(10px, 3.5vw, 18px);
+  margin: 0;
+}
+
+.parent-body {
+  display: grid;
+  gap: 12px;
+  padding: 0 clamp(14px, 4vw, 24px);
+  /* The picture fades out over its last third, so the first card starts up
+     inside that fade rather than below it. */
+  margin-top: -9%;
+}
+
+/* Two cards, the way the design has them: a title with its own mark, a line of
+   explanation, then the controls. */
+.builder-step-parent .pref-card {
+  margin: 0;
+  border: 1px solid rgba(226, 216, 255, 0.16);
+  border-left: 1px solid rgba(226, 216, 255, 0.16);
+  border-radius: 18px;
+  padding: 14px 14px 12px;
+  background: rgba(20, 20, 64, 0.72);
+  box-shadow: 0 10px 28px rgba(6, 8, 32, 0.3);
+}
+
+.builder-step-parent .chip-group-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  float: none;
+  width: auto;
+  margin: 0 0 2px;
+  padding: 0;
+  color: #fffaf0;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.pref-card-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+}
+
+.pref-card-icon svg {
+  width: 23px;
+  height: 23px;
+}
+
+.builder-step-parent .chip-group-note {
+  margin: 0 0 10px;
+  color: rgba(228, 222, 255, 0.72);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.builder-step-parent .chip-custom-avoid textarea {
+  width: 100%;
+  min-height: 62px;
+  max-height: 62px;
+  resize: none;
+}
+
+.builder-step-parent .pref-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 10px;
+}
+
+.builder-step-parent .pref-chips button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 0;
+  border: 1px solid rgba(226, 216, 255, 0.22);
+  border-radius: 999px;
+  padding: 6px 10px 6px 8px;
+  color: #f2eeff;
+  background: rgba(28, 26, 78, 0.78);
+  font-size: 0.74rem;
+  font-weight: 800;
+  line-height: 1.15;
+  cursor: pointer;
+}
+
+.builder-step-parent .pref-chips button.selected,
+.builder-step-parent .pref-chips button[aria-pressed="true"] {
+  border-color: #ffd45c;
+  color: #fffaf0;
+  background: rgba(52, 38, 104, 0.92);
+}
+
+.chip-ic {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+}
+
+.chip-ic svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* One drawing language again: a filled shape in the theme's own colour, gold
+   for anything that reads as a highlight, and the dark of the page for a mark
+   on the shape. */
+.builder-step-parent .pc-fill { fill: var(--chip-tint, #fff6e6); }
+.builder-step-parent .pc-cream { fill: #fff8ea; }
+.builder-step-parent .pc-accent { fill: #ffd95f; }
+.builder-step-parent .pc-ink { fill: #241a52; }
+.builder-step-parent .pc-stop { fill: none; stroke: #ff7a9c; stroke-width: 2.1; stroke-linecap: round; }
+.builder-step-parent .pc-stroke {
+  fill: none;
+  stroke: var(--chip-tint, #fff6e6);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.builder-step-parent .pc-accent-stroke {
+  fill: none;
+  stroke: #ffd95f;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.builder-step-parent .pc-ink-stroke {
+  fill: none;
+  stroke: #241a52;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.builder-step-parent .pref-chips button:nth-child(1) { --chip-tint: #9fd8ff; }
+.builder-step-parent .pref-chips button:nth-child(2) { --chip-tint: #ff9fc2; }
+.builder-step-parent .pref-chips button:nth-child(3) { --chip-tint: #c9b0ff; }
+.builder-step-parent .pref-chips button:nth-child(4) { --chip-tint: #8ff0c9; }
+.builder-step-parent .pref-chips button:nth-child(5) { --chip-tint: #ffd45c; }
+.builder-step-parent .pref-chips button:nth-child(6) { --chip-tint: #ffb98f; }
+.builder-step-parent .pref-chips button:nth-child(7) { --chip-tint: #b9c6ff; }
+.builder-step-parent .pref-chips button:nth-child(8) { --chip-tint: rgba(226, 216, 255, 0.6); }
