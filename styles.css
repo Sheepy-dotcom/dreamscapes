@@ -5679,68 +5679,6 @@ body.night-mode .field-boxed input::placeholder {
 
 }
 
-/* ---- Home screen: the illustration as a plate ---------------------------- */
-/* The picture is a band between the promise and the button rather than a photo
-   behind the whole screen. It is cut from the design with its top and bottom
-   edges faded, so it dissolves into the page instead of ending on a line, and
-   it bleeds past the screen's own padding to reach both edges the way it does
-   in the design. */
-#welcome-screen.active {
-  background: radial-gradient(circle at 20% 12%, rgba(120, 104, 220, 0.3), transparent 20rem),
-    linear-gradient(180deg, #141c55 0%, #131a4e 46%, #101640 100%);
-}
-
-.welcome-art {
-  display: block;
-  width: calc(100% + 2 * clamp(18px, 4vw, 44px));
-  max-width: none;
-  margin: 2px calc(-1 * clamp(18px, 4vw, 44px)) 0;
-  /* The art row is the one that gives way: everything else on this screen is a
-     word someone has to read or a control they have to press. At its natural
-     size it is about 330 points tall on a large phone, which is ninety more
-     than the screen can spare once the tab bar and the safe areas are paid for,
-     so it is capped and cropped from the middle. The faded edges are the first
-     thing the crop eats, which is what they are there for. */
-  min-height: 0;
-  max-height: 25dvh;
-  object-fit: cover;
-  /* Weighted to the top: the story title in the bubble is the point of this
-     picture - it shows what the app makes - and a centred crop beheaded it.
-     What goes instead is the foot of the quilt, which carries nothing. */
-  object-position: center 18%;
-  /* The fade is applied here as well as baked into the file, because cropping
-     to the cap removes the baked one first - the top and bottom are exactly
-     what a vertical crop takes. This one is applied to whatever is left. */
-  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 9%, #000 88%, transparent 100%);
-  mask-image: linear-gradient(180deg, transparent 0%, #000 9%, #000 88%, transparent 100%);
-}
-
-/* A small phone has about 480 points to spend here once the tab bar and the
-   safe areas are paid for, and the parts that have to survive are the promise,
-   the button and the line that says no account is needed. The picture and the
-   three reassurances give way in that order. */
-@media (max-height: 740px) {
-  .welcome-art {
-    margin-top: -6px;
-    max-height: 16dvh;
-  }
-
-  .welcome-points {
-    margin-top: 2px;
-    gap: 6px;
-  }
-
-  .welcome-points li {
-    gap: 4px;
-    font-size: 0.7rem;
-  }
-
-  .point-icon svg {
-    width: 24px;
-    height: 24px;
-  }
-}
-
 /* ---- Home screen: the three promises ------------------------------------ */
 /* Drawn rather than typed. The system emoji rendered as Apple's photographic
    pencil, headphones and moon - three different illustration styles sitting
@@ -5767,4 +5705,30 @@ body.night-mode .field-boxed input::placeholder {
   stroke: #8fd0ff;
   stroke-width: 2.8;
   stroke-linecap: round;
+}
+
+/* Everything above the button is pinned to the top and everything below it to
+   the bottom; this is the gap between them, and it is where the child and the
+   storybook show through. */
+.welcome-spacer {
+  min-height: 0;
+}
+
+/* ---- Home screen: the illustration is the screen ------------------------ */
+/* The design's own plate with the type taken back out of it, so the places the
+   words go are smooth and the words have something quiet to sit on. Anchored
+   to the top and covering, because it is cut at almost exactly a phone's
+   proportions. Same weight as the rule above that still names home-hero.jpg,
+   and later, so this is the one in force. */
+#welcome-screen.active {
+  background:
+    /* Darkest where the words are and lightest over the child and the book.
+       The plate has no scrim of its own - the design's type sat straight on the
+       picture - so this is what keeps white legible over a lit cloud. */
+    linear-gradient(180deg, rgba(10, 12, 44, 0.5) 0%, rgba(10, 12, 44, 0.56) 22%,
+                    rgba(10, 12, 44, 0.42) 36%, rgba(10, 12, 44, 0.06) 52%,
+                    rgba(10, 12, 44, 0.1) 64%, rgba(10, 12, 44, 0.5) 82%,
+                    rgba(10, 12, 44, 0.72) 100%),
+    url("./assets/home-scene.webp?v=2026100856") center top / cover no-repeat,
+    linear-gradient(180deg, #141c55 0%, #101640 100%);
 }
