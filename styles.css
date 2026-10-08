@@ -6562,3 +6562,97 @@ body.night-mode .builder-step[data-builder-step="6"] .field input {
 .builder-step-length .duration-card.locked-choice .duration-plan[data-plan="plus"] {
   color: #2a0f24;
 }
+
+/* ---- The foot of every page joins the button and the menu ---------------- */
+/* Three bands used to stack up at the bottom of the app: the page, then a
+   lighter lilac slab behind the forward button, then the darker menu. The slab
+   was not a panel - nothing draws it. It is the foot of the night sky itself,
+   which runs from #11163f at the top to #5a3f91 at the bottom, and the only
+   place that bottom is ever visible is the strip below the content, exactly
+   where the button sits. Measured on a 17 Pro: the page ends on (16,13,50),
+   the button band is (51,36,98), and the menu is (27,26,69). Light between two
+   darks, with a hard edge at each end.
+   So the sky is brought back down to its own starting navy over the last third
+   of the window. Nothing is covered up and no band is painted - the gradient
+   just stops lifting and comes back, so the picture, the button and the menu
+   all end up on the same colour. */
+body.night-mode::before {
+  background:
+    linear-gradient(180deg, rgba(17, 22, 63, 0) 50%, rgba(17, 22, 63, 0.3) 64%,
+                    rgba(17, 22, 63, 0.72) 72%, rgba(17, 22, 63, 0.93) 79%,
+                    rgba(17, 22, 63, 1) 86%, rgba(17, 22, 63, 1) 100%),
+    url("./assets/screen-sky.webp?v=2026100874") center bottom / cover no-repeat,
+    linear-gradient(180deg, #11163f 0%, #211d56 62%, #392a70 100%);
+}
+
+/* The forward button stops being a shelf. The rule this replaces drew a line
+   across the screen and washed the strip under it in navy, which made sense
+   when the steps scrolled and something had to pass behind the button; they do
+   not scroll any more - the whole point of the rebuild was that a step fits -
+   so the line was drawing the top of a panel that holds nothing. */
+.builder-screen .builder-actions {
+  border-top: 0;
+  background: none;
+}
+
+/* And the menu stops being a slab. It still needs something behind it, because
+   the library does scroll and story titles ran straight through the labels -
+   but a flat fill with a border on top is a bar laid over the page, which is
+   the thing being complained about. The fill moves to a layer of its own that
+   starts above the bar, fades in from nothing, and is masked as well as
+   graded, so the blur fades with it. There is no row of pixels anywhere that
+   is the edge. */
+.app-tabbar,
+body.night-mode .app-tabbar {
+  border-top: 0;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.app-tabbar::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  /* Starts well above the bar so the fade has somewhere to happen. */
+  inset: -56px 0 0;
+  /* Reaches the foot opaque. A bar only has to hide something on a page that
+     moves, and on those pages what passes behind it is a gold Open button on a
+     story card - at the 0.82 flat fill this replaces, Home and Library were
+     being read off the top of one. Opaque where the labels are, nothing at all
+     where it begins, and a long ramp between the two. */
+  background: linear-gradient(180deg, rgba(16, 19, 56, 0) 0%, rgba(16, 19, 56, 0.42) 24%,
+                              rgba(16, 19, 56, 0.86) 42%, rgba(16, 19, 56, 0.99) 60%,
+                              rgba(16, 19, 56, 1) 100%);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  /* The mask is what keeps the blur from having an edge of its own: a
+     backdrop-filter applies evenly across its whole box, so without this the
+     top of the bar would show a crisp line where the page behind it goes
+     suddenly soft. */
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.4) 20%, #000 46%);
+  mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.4) 20%, #000 46%);
+  pointer-events: none;
+}
+
+/* Except on the two screens that cannot scroll. Nothing ever passes behind the
+   bar on home or in the builder - the illustration there is fixed and the
+   steps are sized to fit - so the fill has no work to do, and keeping it at
+   full strength would cut the bedspread off square under the menu. Lighter, so
+   the picture carries on through. */
+body.home-active .app-tabbar::before,
+body.builder-active .app-tabbar::before {
+  background: linear-gradient(180deg, rgba(16, 19, 56, 0) 0%, rgba(16, 19, 56, 0.3) 34%,
+                              rgba(16, 19, 56, 0.58) 64%, rgba(16, 19, 56, 0.72) 100%);
+}
+
+/* One thing was still drawing a line across the foot of the builder, and it
+   was not a background: the forward button's own glow. It reaches 31pt below
+   the button - 16pt of offset plus half of a 30pt blur - and the form clips
+   its contents a little above that, so the halo stopped dead on a straight
+   horizontal edge. A soft light with a hard bottom reads as a panel. Tighter,
+   so it finishes inside the form and fades out on its own. */
+.builder-screen .builder-actions .primary-button {
+  box-shadow: 0 6px 16px rgba(255, 157, 104, 0.26);
+}
