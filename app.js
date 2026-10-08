@@ -2526,19 +2526,24 @@ function getChildAgePhrase(age) {
 // A blank box at bedtime asks a tired parent to invent something. These are the
 // same answers they would have typed, offered as one tap - and because every
 // chip writes into the interests input, nothing downstream had to change.
+/* Eight, not twelve. They are drawn inside the window on the Tonight step now,
+   in the sky the boy is looking at, and the window holds a three by three with
+   the boy himself in the ninth cell. Twelve would mean scrolling a grid inside
+   a page that already scrolls.
+   The four that went were the four with the closest neighbours or the weakest
+   fit: Fairies sits on top of Magic, Diggers on top of Fire engines,
+   Superheroes is the only one leaning on licensed characters and the furthest
+   from winding down, and Football was the only idea in the list that is not a
+   place you could go. Their tiles are still in assets/interests. */
 const INTEREST_IDEAS = [
   ["Dinosaurs", "dinosaurs"],
   ["Space", "space"],
   ["Animals", "animals"],
-  ["Football", "football"],
   ["Princesses", "princesses"],
   ["Pirates", "pirates"],
   ["Magic", "magic"],
   ["Fire engines", "fire-engines"],
-  ["Diggers", "diggers"],
   ["Under the sea", "under-the-sea"],
-  ["Fairies", "fairies"],
-  ["Superheroes", "superheroes"],
 ];
 
 const interestsInput = document.querySelector('[name="interests"]');
