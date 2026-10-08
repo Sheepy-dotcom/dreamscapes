@@ -4933,8 +4933,60 @@ body.night-mode .provider-google {
   outline-offset: 2px;
 }
 
+/* The lowest-effort route through the whole builder, so it is allowed to look
+   like the fun option rather than a secondary button hiding under the grid. */
 .surprise-button {
-  justify-self: start;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 52px;
+  border: 1px solid rgba(216, 198, 255, 0.4);
+  border-radius: 14px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, rgba(123, 78, 216, 0.55), rgba(185, 162, 242, 0.42));
+  color: var(--white);
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.surprise-button:hover {
+  border-color: rgba(255, 231, 133, 0.75);
+}
+
+.surprise-button:focus-visible {
+  outline: 3px solid rgba(255, 217, 106, 0.9);
+  outline-offset: 2px;
+}
+
+.surprise-dice {
+  font-size: 1.45rem;
+  line-height: 1;
+}
+
+.surprise-spark {
+  font-size: 0.95rem;
+  opacity: 0.85;
+}
+
+/* A quick roll on press, so the button answers before the tiles change. */
+.surprise-button.rolling .surprise-dice {
+  animation: diceRoll 520ms ease-in-out;
+}
+
+@keyframes diceRoll {
+  0% { transform: rotate(0) scale(1); }
+  45% { transform: rotate(220deg) scale(1.25); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .surprise-button.rolling .surprise-dice {
+    animation: none;
+  }
 }
 
 .interest-custom {

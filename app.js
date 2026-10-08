@@ -2490,7 +2490,15 @@ function renderInterestChips() {
     const pool = [...INTEREST_IDEAS].sort(() => Math.random() - 0.5);
     const picked = pool.slice(0, 1 + Math.floor(Math.random() * 2)).map(([label]) => label);
     writeInterests(picked);
+    surpriseInterests.classList.remove("rolling");
+    // Restarting a CSS animation needs a reflow between removing and adding the
+    // class, or a second press does nothing.
+    void surpriseInterests.offsetWidth;
+    surpriseInterests.classList.add("rolling");
     trackEvent("interest_surprise", { picked: picked.join(", ") });
+  });
+  surpriseInterests?.addEventListener("animationend", () => {
+    surpriseInterests.classList.remove("rolling");
   });
   syncInterestChips();
 }
