@@ -5499,6 +5499,10 @@ body.night-mode .field-boxed input,
 body.night-mode .field-boxed select,
 .builder-step .field-boxed input,
 .builder-step .field-boxed select {
+  /* The label above says "Child's name" and "Age", so the inputs carry no
+     placeholder repeating it - which means they are empty boxes until someone
+     types, and need a line's height of their own to stand up. */
+  min-height: 1.5em;
   border: 0;
   border-radius: 0;
   padding: 0;
