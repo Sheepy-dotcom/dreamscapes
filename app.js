@@ -2532,6 +2532,12 @@ function getChildAgePhrase(age) {
    is the one that has to step over him.
    Only Fairies is left out, and only because it sits on top of Magic. Its tile
    is still in assets/interests. */
+/* These tiles are the one set of images in the app whose URLs were not
+   versioned, and Vercel serves everything under assets/ as immutable for a
+   year - so replacing a tile in place reached nobody who had already seen it.
+   Bump this whenever a tile's bytes change. */
+const INTEREST_ART_VERSION = "2026100942";
+
 const INTEREST_IDEAS = [
   ["Dinosaurs", "dinosaurs"],
   ["Space", "space"],
@@ -2763,7 +2769,7 @@ function renderInterestChips() {
   interestChips.innerHTML = INTEREST_IDEAS.map(
     ([label, slug]) =>
       `<button type="button" data-interest="${label}" aria-pressed="false">
-         <img src="./assets/interests/${slug}.jpg" alt="" loading="lazy" decoding="async" />
+         <img src="./assets/interests/${slug}.jpg?v=${INTEREST_ART_VERSION}" alt="" loading="lazy" decoding="async" />
          <span>${label}</span>
        </button>`
   ).join("");
