@@ -1038,7 +1038,12 @@ function updateWelcomeOffer() {
   const startButton = document.querySelector("#start-button");
   const welcomeOffer = document.querySelector("#welcome-offer");
   if (startButton) {
-    startButton.textContent = currentUser ? "Create a story" : "Create their free story";
+    // Only the label, not the whole button: setting textContent here wiped out
+    // the chevron that sits beside it.
+    const label = startButton.querySelector("span:not(.cta-chevron)");
+    const words = currentUser ? "Create a story" : "Create their free story";
+    if (label) label.textContent = words;
+    else startButton.textContent = words;
   }
   if (welcomeOffer) welcomeOffer.hidden = Boolean(currentUser);
 }

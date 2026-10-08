@@ -5165,7 +5165,12 @@ body.night-mode .provider-google {
 #welcome-screen.active {
   display: grid;
   align-content: space-between;
-  min-height: calc(100dvh - 96px);
+  /* Matches what the shell actually reserves above and below this screen -
+     12px and 108px plus the safe areas. The flat 96px here ignored the insets,
+     so on a phone with a notch and a home indicator the screen was about a
+     hundred points taller than its room and the three promises at the foot of
+     it were served up underneath the tab bar. */
+  min-height: calc(100dvh - 120px - var(--safe-top) - var(--safe-bottom));
   /* Light scrims only: enough to keep the headline and the button readable,
      not so much that the picture underneath them disappears. */
   background:
@@ -5647,4 +5652,38 @@ body.night-mode .field-boxed input::placeholder {
 .builder-step-scene .field-icon {
   width: 34px;
   height: 34px;
+}
+
+/* ---- Home screen: the one button ---------------------------------------- */
+/* A pill with a chevron rather than a rounded box. It is the only thing this
+   screen asks anyone to do, so it should read as a way through rather than as
+   one more panel among the panels. */
+.welcome-screen .welcome-actions .primary-button {
+  gap: 12px;
+  min-height: 58px;
+  border-radius: 999px;
+  padding-left: 28px;
+  padding-right: 24px;
+  font-size: 1.05rem;
+}
+
+/* Bigger than the body text they sit over, so the three promises read as marks
+   on the picture rather than as a caption under the button. */
+.welcome-points span {
+  font-size: 1.75rem;
+}
+
+.welcome-points li {
+  font-size: 0.79rem;
+}
+
+@media (max-height: 700px) {
+  .welcome-screen .welcome-actions .primary-button {
+    min-height: 50px;
+    font-size: 0.98rem;
+  }
+
+  .welcome-points span {
+    font-size: 1.4rem;
+  }
 }
