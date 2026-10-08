@@ -5732,3 +5732,64 @@ body.night-mode .field-boxed input::placeholder {
     url("./assets/home-scene.webp?v=2026100856") center 46% / cover no-repeat,
     linear-gradient(180deg, #141c55 0%, #101640 100%);
 }
+
+/* ---- Tab bar: clouds and drawn icons ------------------------------------ */
+/* The bar was a white panel with five typographic glyphs on it - a house
+   character, a four-pointed star, a filled square - borrowed from whatever the
+   font had rather than drawn. It is a night sky now, with the clouds rolling
+   across its top edge, and the five icons are drawn in the same palette as the
+   rest of the app. */
+body.night-mode .app-tabbar,
+.app-tabbar {
+  border: 0;
+  border-radius: 20px 20px 0 0;
+  /* Room for the clouds above the icons. At their own proportions they are
+     seventy points tall and swallowed the whole bar, labels included. */
+  padding-top: 30px;
+  background:
+    url("./assets/tabbar-clouds.webp?v=2026100865") center top / 100% 34px no-repeat,
+    linear-gradient(180deg, #221a5e 0%, #1b1550 58%, #171244 100%);
+  box-shadow: 0 -14px 34px rgba(7, 9, 34, 0.42);
+}
+
+.app-tabbar button,
+body.night-mode .app-tabbar button {
+  gap: 4px;
+  border-radius: 16px;
+  color: rgba(228, 222, 255, 0.78);
+}
+
+.app-tabbar button.active,
+body.night-mode .app-tabbar button.active,
+.app-tabbar button:hover,
+body.night-mode .app-tabbar button:hover {
+  color: #fff6d8;
+  background: rgba(255, 224, 126, 0.16);
+}
+
+.tab-icon {
+  display: block;
+  line-height: 0;
+}
+
+.tab-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* Dimmed until the tab is the one you are on, so the row reads as one thing
+   with a single bright spot rather than five competing badges. */
+.tab-icon svg > * {
+  opacity: 0.74;
+  transition: opacity 160ms ease;
+}
+
+.app-tabbar button.active .tab-icon svg > * {
+  opacity: 1;
+}
+
+.tab-icon svg .tb-lilac { fill: #b9a6ff; }
+.tab-icon svg .tb-sky { fill: #8fd0ff; }
+.tab-icon svg .tb-coral { fill: #ff9a86; }
+.tab-icon svg .tb-gold { fill: #ffd16a; }
+.tab-icon svg .tb-star { fill: #fff3c4; }
