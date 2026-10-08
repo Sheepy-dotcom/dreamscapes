@@ -5751,7 +5751,7 @@ body.night-mode::before {
   z-index: -1;
   inset: 0;
   background:
-    url("./assets/screen-clouds.webp?v=2026100869") center bottom / cover no-repeat,
+    url("./assets/screen-sky.webp?v=2026100874") center bottom / cover no-repeat,
     linear-gradient(180deg, #11163f 0%, #211d56 62%, #392a70 100%);
   pointer-events: none;
 }
