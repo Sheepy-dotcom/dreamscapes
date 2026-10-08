@@ -216,8 +216,23 @@ const PREVIEW_DEVICE_COUNT_KEY = "dreamscapesPreviewCount";
 // questions is a lot to ask of an app nobody has seen work yet. That trade is
 // off: the steps are all offered to everyone now, and the limits that actually
 // matter are still enforced where they always were, on the server.
+//
+// Two are left out of the run rather than taken out of the page.
+//
+// Story path, because the journey is offered after a story now, not before one,
+// so asking up front makes a parent choose a format for something they have not
+// read yet. Its section stays in the markup: the buttons and the continuation
+// banner in it are what the post-story offer and a continued series both use.
+//
+// Time of day, because the honest answer is bedtime nearly every time, which is
+// the radio that is already checked - so the step asked a question that answers
+// itself, and leaving it out changes nothing about the story that comes back.
+const BUILDER_STEPS_NOT_ASKED = [1, 2];
+
 function getActiveBuilderSteps() {
-  return builderSteps.map((_, index) => index);
+  return builderSteps
+    .map((_, index) => index)
+    .filter((index) => !BUILDER_STEPS_NOT_ASKED.includes(index));
 }
 
 // Nothing is held back from the builder any more, so the fields the preview
