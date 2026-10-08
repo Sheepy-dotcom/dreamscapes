@@ -211,30 +211,27 @@ const PREVIEW_MAX_DURATION_MINUTES = 5;
 // free story is not what the ceilings are defending against.
 const PREVIEW_DEVICE_DAILY_LIMIT = 3;
 const PREVIEW_DEVICE_COUNT_KEY = "dreamscapesPreviewCount";
-// Signed-out visitors answer two questions before their free story: who it is
-// for, and what they love. The seven left out either need an account (journeys,
-// narration), are fixed server side for a preview (length), or are refinements
-// worth asking only once someone has seen a story work. Nine questions from an
-// app a parent has never used, before any evidence it is good, is a lot to ask.
-const PREVIEW_BUILDER_STEP_INDEXES = [0, 5];
-
+// Everyone gets the whole builder. It used to cut signed-out visitors down to
+// two questions - who it is for, and what they love - on the grounds that nine
+// questions is a lot to ask of an app nobody has seen work yet. That trade is
+// off: the steps are all offered to everyone now, and the limits that actually
+// matter are still enforced where they always were, on the server.
 function getActiveBuilderSteps() {
-  if (currentUser) return builderSteps.map((_, index) => index);
-  const preview = PREVIEW_BUILDER_STEP_INDEXES.filter((index) => index < builderSteps.length);
-  return preview.length ? preview : builderSteps.map((_, index) => index);
+  return builderSteps.map((_, index) => index);
 }
 
-// Fields the preview does not ask for, and the heading that changes with them.
+// Nothing is held back from the builder any more, so the fields the preview
+// used to hide are shown and the headings keep their full wording. The markup
+// hooks are left in place: this is one line to put back if the shorter run is
+// ever wanted again.
 function applyPreviewFieldVisibility() {
-  const isPreview = !currentUser;
-
   document.querySelectorAll("[data-full-builder-only]").forEach((element) => {
-    element.hidden = isPreview;
+    element.hidden = false;
   });
 
   document.querySelectorAll("[data-preview-title]").forEach((heading) => {
     if (!heading.dataset.fullTitle) heading.dataset.fullTitle = heading.textContent.trim();
-    heading.textContent = isPreview ? heading.dataset.previewTitle : heading.dataset.fullTitle;
+    heading.textContent = heading.dataset.fullTitle;
   });
 }
 
@@ -989,8 +986,9 @@ function setBuilderStep(stepIndex, announce = true) {
     builderStepCount.textContent = `Step ${stepPosition + 1} of ${activeSteps.length}`;
   }
   if (builderStepTitle) {
-    builderStepTitle.textContent =
-      (!currentUser && activeStep?.dataset.previewStepTitle) || activeStep?.dataset.stepTitle || "";
+    // The preview wording went with the preview: every step carries its own
+    // title now, whether or not anyone is signed in.
+    builderStepTitle.textContent = activeStep?.dataset.stepTitle || "";
   }
   if (builderProgressFill) {
     builderProgressFill.style.width = `${((stepPosition + 1) / activeSteps.length) * 100}%`;
@@ -1012,11 +1010,7 @@ function setBuilderStep(stepIndex, announce = true) {
     // Saying where Next goes turns a blank instruction into momentum, and tells
     // a parent the form is going somewhere rather than carrying on forever.
     const nextStep = activeSteps[stepPosition + 1];
-    const nextTitle = nextStep === undefined
-      ? ""
-      : (!currentUser && builderSteps[nextStep]?.dataset.previewStepTitle) ||
-        builderSteps[nextStep]?.dataset.stepTitle ||
-        "";
+    const nextTitle = nextStep === undefined ? "" : builderSteps[nextStep]?.dataset.stepTitle || "";
     if (builderStepNextLabel) {
       builderStepNextLabel.textContent = nextTitle ? `Next: ${nextTitle.toLowerCase()}` : "Next";
     }
