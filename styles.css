@@ -5697,19 +5697,17 @@ body.night-mode .field-boxed input::placeholder {
    and later, so this is the one in force. */
 #welcome-screen.active {
   background:
-    /* Darkest where the words are and lightest over the child and the book.
-       The plate has no scrim of its own - the design's type sat straight on the
-       picture - so this is what keeps white legible over a lit cloud. */
-    linear-gradient(180deg, rgba(10, 12, 44, 0.52) 0%, rgba(10, 12, 44, 0.58) 22%,
-                    rgba(10, 12, 44, 0.44) 36%, rgba(10, 12, 44, 0.06) 52%,
-                    rgba(10, 12, 44, 0.08) 66%, rgba(10, 12, 44, 0.3) 84%,
-                    rgba(10, 12, 44, 0.46) 100%),
-    /* Anchored to the foot, not the head. Covering crops about a seventh of
-       the picture, and from the top that seventh was the quilt - the one part
-       with nothing in it, and the part the button needs to stand on. Taken off
-       the top instead, the button and the promises sit on bedding and the
-       child, the aeroplane and the dog stay clear above them. */
-    url("./assets/home-scene.webp?v=2026100875") center 46% / cover no-repeat,
+    /* Barely there now. The heavy scrim was propping up a plate that had its
+       own type painted out of it, so nothing on the screen had a reliable
+       surface to sit on. This illustration reserves its top third as plain sky
+       and its bottom fifth as plain quilt, which is the job the scrim was
+       standing in for - so this only steadies the foot. */
+    linear-gradient(180deg, rgba(10, 12, 44, 0.16) 0%, rgba(10, 12, 44, 0.08) 28%,
+                    rgba(10, 12, 44, 0) 46%, rgba(10, 12, 44, 0.08) 64%,
+                    rgba(10, 12, 44, 0.3) 84%, rgba(10, 12, 44, 0.46) 100%),
+    /* Centred, because this one is drawn at the screen's own proportions and
+       barely crops at all - the sliding was for a picture cut from a mockup. */
+    url("./assets/home-scene.webp?v=2026100900") center center / cover no-repeat,
     linear-gradient(180deg, #141c55 0%, #101640 100%);
 }
 
