@@ -6898,28 +6898,35 @@ body.night-mode .mood-group .builder-step-mood .mood-grid input:checked + span {
 }
 
 /* Measured off the file: the opening runs x 14.3% to 85.9% and y 4.6% to
-   83.1%, and the boy's hair reaches y 48.1%. Four across and two down puts all
-   eight tiles in the clear sky above him with ten pixels to spare, and leaves
-   the lower half of the window open - he is below, looking up at them, which a
-   three by three with a hole in the corner never quite said.
+   83.1%. The boy kneels at x 14.3% to 34.6%, y 48.1% down to the sill, so the
+   sky to his right is clear the whole way down and takes a third row.
+   The grid is nudged right and tightened so its second column starts at 35.2%,
+   clear of his hair by seven pixels - at the old column positions a tile would
+   have been drawn across the outermost strands of it. Eleven cells, with the
+   twelfth being him.
    The cells are square because the tiles are: every one of them is 480 by 480,
    and the 230 by 170 cells they were in before were cropping a quarter off the
    top and bottom of each picture. */
 .tonight-window .interest-chips {
   position: absolute;
-  left: 15.6%;
-  top: 4.62%;
-  width: 68.98%;
-  height: 41.54%;
+  left: 17.825%;
+  top: 4.615%;
+  width: 67.914%;
+  height: 62.308%;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  grid-template-rows: repeat(2, minmax(0, 1fr));
-  gap: 4.76% 2.33%;
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  gap: 3.175% 2.362%;
   margin: 0;
   padding: 0;
   border: 0;
   background: none;
   overflow: visible;
+}
+
+/* The ninth tile steps over the boy into the second column. */
+.tonight-window .interest-chips button:nth-child(9) {
+  grid-column: 2;
 }
 
 .tonight-window .interest-chips button {
