@@ -5846,3 +5846,170 @@ body.night-mode .app-tabbar button:hover {
 .tab-icon svg .tb-star { fill: #fff8dc; }
 .tab-icon svg .tb-pink { fill: #ff8fc4; }
 .tab-icon svg .tb-mint { fill: #74ecc6; }
+
+/* ---- Length cards, as the design has them ------------------------------- */
+/* A picture on the left, the choice in the middle, a radio on the right, and
+   the recommendation as a tab on the corner rather than a word in the row.
+   The container is .duration-list, not .duration-grid: twenty-odd rules were
+   written for the pill version of this control and every one of them styles
+   any span inside a chosen label, which turned each part of the new card into
+   its own gold block. Renaming retires all of them at once. */
+.duration-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+
+.duration-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  gap: 12px;
+  border: 2px solid rgba(216, 198, 255, 0.24);
+  border-radius: 18px;
+  /* Tight, because five of these plus a heading, a standfirst and a footnote
+     have to fit a step that does not scroll. */
+  padding: 9px 12px;
+  background: rgba(16, 20, 58, 0.52);
+}
+
+.duration-card:has(input:checked) {
+  border-color: rgba(255, 221, 120, 0.95);
+  background: rgba(36, 30, 86, 0.72);
+  box-shadow: 0 0 0 1px rgba(255, 221, 120, 0.35), 0 10px 26px rgba(8, 10, 40, 0.35);
+}
+
+/* The real input stays for keyboard and screen readers; the circle on the
+   right is what anybody actually sees. */
+.duration-card input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.duration-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(120, 104, 210, 0.26);
+}
+
+.duration-icon svg { width: 29px; height: 29px; }
+.duration-icon svg .dc-gold { fill: #ffd45c; }
+.duration-icon svg .dc-star { fill: #fff6d4; }
+.duration-icon svg .dc-cream { fill: #fdf3e2; }
+.duration-icon svg .dc-cloud { fill: #b9a6ff; }
+.duration-icon svg .dc-ink { fill: #3a2d5e; }
+.duration-icon svg .dc-line,
+.duration-icon svg .dc-swirl {
+  fill: none;
+  stroke: #9fd8ff;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.duration-body { flex: 1 1 auto; }
+
+.duration-mark {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  border: 2px solid rgba(226, 216, 255, 0.5);
+  border-radius: 50%;
+}
+
+.duration-card:has(input:checked) .duration-mark {
+  border-color: #ffd45c;
+  box-shadow: inset 0 0 0 4px rgba(16, 20, 58, 0.9), inset 0 0 0 11px #ffd45c;
+}
+
+/* On the corner, half off the card, the way a tab sits on a folder. */
+.duration-badge {
+  position: absolute;
+  top: -10px;
+  right: 12px;
+  border-radius: 999px;
+  padding: 3px 10px;
+  background: #ffd45c;
+  color: #2b1f55;
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.01em;
+}
+
+.duration-plan {
+  flex: 0 0 auto;
+  margin-right: 2px;
+  color: rgba(226, 216, 255, 0.6);
+  font-size: 0.66rem;
+  font-weight: 800;
+}
+
+.duration-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.note-mark {
+  display: grid;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: rgba(159, 216, 255, 0.24);
+  color: #9fd8ff;
+  font-size: 0.64rem;
+  font-weight: 900;
+  font-style: normal;
+}
+
+/* A length the plan does not reach is dimmed and says so where the plan name
+   would otherwise sit. */
+/* The card fades, the recommendation does not: dimming the whole label took
+   the badge down with it and left the gold looking brown. */
+.duration-card.locked-choice .duration-icon,
+.duration-card.locked-choice .duration-body,
+.duration-card.locked-choice .duration-mark {
+  opacity: 0.5;
+}
+
+.duration-card.locked-choice .duration-plan {
+  color: rgba(255, 196, 196, 0.8);
+}
+
+.duration-list.preview-durations .duration-card.locked-choice .duration-plan {
+  font-size: 0.6rem;
+}
+
+.duration-body {
+  display: grid;
+  gap: 1px;
+  text-align: left;
+}
+
+.duration-body strong {
+  color: var(--white);
+  font-size: 1.02rem;
+  font-weight: 900;
+}
+
+.duration-body em {
+  color: #ffd45c;
+  font-size: 0.86rem;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.duration-body small {
+  color: rgba(226, 216, 255, 0.72);
+  font-size: 0.74rem;
+}

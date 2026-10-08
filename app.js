@@ -2926,7 +2926,7 @@ function updateDurationLocks(plan = getPlan(getCurrentPlanKey())) {
   // A signed-out visitor's locked lengths are not locked by their plan, so the
   // grid says so differently - "Free" beside "Locked" reads as a contradiction.
   durationInputs[0]
-    ?.closest(".duration-grid")
+    ?.closest(".duration-list")
     ?.classList.toggle("preview-durations", !currentUser);
 
   durationInputs.forEach((input) => {
