@@ -121,13 +121,22 @@ button {
 }
 
 .welcome-screen {
+  position: relative;
+  display: flex;
+  flex-direction: column;
   min-height: min(720px, calc(100vh - 120px));
-  padding: clamp(20px, 4vw, 44px) clamp(18px, 4vw, 44px) clamp(28px, 5vw, 52px);
-  /* Night all the way down. The old gradient ended in pink, which undercut the
-     one thing this screen is selling. */
+  padding: clamp(18px, 4vw, 40px) clamp(18px, 4vw, 44px) clamp(22px, 4vw, 44px);
+  /* The illustration is the screen, not a picture on it. Scrims top and bottom
+     so the headline and the button stay readable over whatever is behind them -
+     without them the type sits on a bookshelf and a bedspread. */
   background:
-    radial-gradient(circle at 50% 8%, rgba(255, 217, 106, 0.22), transparent 18rem),
-    linear-gradient(180deg, #171a4d 0%, #141339 48%, #0f0d2c 100%);
+    linear-gradient(180deg, rgba(11, 14, 44, 0.92) 0%, rgba(11, 14, 44, 0.62) 26%, rgba(11, 14, 44, 0.12) 44%,
+                    rgba(11, 14, 44, 0.45) 68%, rgba(11, 14, 44, 0.92) 88%),
+    /* Taller than the box and anchored high, so the visible slice is the sky
+       and the story world rising from the book - the child stays at the foot,
+       mostly behind the scrim, rather than sitting under the feature text. */
+    url("./assets/home-hero.jpg") center 18% / auto 128% no-repeat,
+    linear-gradient(180deg, #171a4d 0%, #0f0d2c 100%);
   color: var(--white);
   text-align: center;
 }
@@ -4769,15 +4778,11 @@ body.night-mode .provider-google {
   line-height: 1.5;
 }
 
-.welcome-hero {
-  width: min(300px, 68%);
-  margin: 8px auto 2px;
-  display: block;
-  border-radius: 28px;
-  /* Faded at the edges so the illustration sits in the night rather than on a
-     visible square of its own. */
-  -webkit-mask-image: radial-gradient(ellipse at center, #000 56%, transparent 95%);
-  mask-image: radial-gradient(ellipse at center, #000 56%, transparent 95%);
+/* Pushes the action and the cues to the foot, leaving the middle to the
+   illustration. */
+.welcome-spacer {
+  flex: 1 1 auto;
+  min-height: 12px;
 }
 
 .welcome-screen .welcome-actions {
@@ -4840,11 +4845,6 @@ body.night-mode .provider-google {
   .welcome-copy .welcome-sub {
     margin-top: 8px;
     font-size: 0.9rem;
-  }
-
-  .welcome-hero {
-    width: min(215px, 52%);
-    margin: 6px auto 0;
   }
 
   .welcome-screen .welcome-actions .button {
@@ -5145,4 +5145,48 @@ body.night-mode .provider-google {
   border-top: 2.5px solid currentColor;
   border-right: 2.5px solid currentColor;
   transform: rotate(45deg);
+}
+
+
+/* ---- Home screen, full bleed -------------------------------------------- */
+/* Scoped to beat body.night-mode .welcome-screen, which sets its own gradient
+   and is the rule actually in force - the app runs in night mode. A bare
+   .welcome-screen selector loses to it and the illustration never appears. */
+/* Addressed by id on purpose. The home screen's background, alignment and
+   height each lost to a different, more specific rule elsewhere in this file -
+   night mode, the screen base, the home body class - and chasing them one at a
+   time was costing more than it was worth. There is exactly one of this screen. */
+#welcome-screen {
+  display: grid;
+  align-content: space-between;
+  min-height: calc(100dvh - 96px);
+  /* Light scrims only: enough to keep the headline and the button readable,
+     not so much that the picture underneath them disappears. */
+  background:
+    linear-gradient(
+      180deg,
+      rgba(11, 14, 44, 0.86) 0%,
+      rgba(11, 14, 44, 0.42) 22%,
+      rgba(11, 14, 44, 0) 40%,
+      rgba(11, 14, 44, 0.06) 56%,
+      rgba(11, 14, 44, 0.62) 76%,
+      rgba(11, 14, 44, 0.93) 100%
+    ),
+    /* Taller than the box and anchored high, so the visible slice is the sky and
+       the story world rising from the book rather than the child's face sitting
+       under the feature text. */
+    url("./assets/home-hero.jpg") center 14% / auto 134% no-repeat,
+    linear-gradient(180deg, #171a4d 0%, #0f0d2c 100%);
+}
+
+/* A soft shadow under the type does the rest of the legibility work, so the
+   scrim can stay light enough to see the picture through. */
+.welcome-headline,
+.welcome-copy .welcome-sub,
+.welcome-points li {
+  text-shadow: 0 2px 10px rgba(6, 8, 30, 0.85);
+}
+
+.welcome-spacer {
+  display: none;
 }
