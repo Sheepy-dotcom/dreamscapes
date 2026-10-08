@@ -4822,7 +4822,7 @@ body.night-mode .provider-google {
 .welcome-points li {
   display: grid;
   justify-items: center;
-  gap: 8px;
+  gap: 2px;
   color: rgba(232, 224, 255, 0.82);
   font-size: 0.76rem;
   font-weight: 700;
@@ -5743,6 +5743,6 @@ body.night-mode .field-boxed input::placeholder {
        with nothing in it, and the part the button needs to stand on. Taken off
        the top instead, the button and the promises sit on bedding and the
        child, the aeroplane and the dog stay clear above them. */
-    url("./assets/home-scene.webp?v=2026100856") center 56% / cover no-repeat,
+    url("./assets/home-scene.webp?v=2026100856") center 46% / cover no-repeat,
     linear-gradient(180deg, #141c55 0%, #101640 100%);
 }
