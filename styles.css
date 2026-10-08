@@ -5734,15 +5734,15 @@ body.night-mode .field-boxed input::placeholder {
     /* Darkest where the words are and lightest over the child and the book.
        The plate has no scrim of its own - the design's type sat straight on the
        picture - so this is what keeps white legible over a lit cloud. */
-    linear-gradient(180deg, rgba(10, 12, 44, 0.5) 0%, rgba(10, 12, 44, 0.56) 22%,
-                    rgba(10, 12, 44, 0.42) 36%, rgba(10, 12, 44, 0.06) 52%,
-                    rgba(10, 12, 44, 0.1) 64%, rgba(10, 12, 44, 0.5) 82%,
-                    rgba(10, 12, 44, 0.72) 100%),
+    linear-gradient(180deg, rgba(10, 12, 44, 0.52) 0%, rgba(10, 12, 44, 0.58) 22%,
+                    rgba(10, 12, 44, 0.44) 36%, rgba(10, 12, 44, 0.06) 52%,
+                    rgba(10, 12, 44, 0.08) 66%, rgba(10, 12, 44, 0.3) 84%,
+                    rgba(10, 12, 44, 0.46) 100%),
     /* Anchored to the foot, not the head. Covering crops about a seventh of
        the picture, and from the top that seventh was the quilt - the one part
        with nothing in it, and the part the button needs to stand on. Taken off
        the top instead, the button and the promises sit on bedding and the
        child, the aeroplane and the dog stay clear above them. */
-    url("./assets/home-scene.webp?v=2026100856") center bottom / cover no-repeat,
+    url("./assets/home-scene.webp?v=2026100856") center 68% / cover no-repeat,
     linear-gradient(180deg, #141c55 0%, #101640 100%);
 }
