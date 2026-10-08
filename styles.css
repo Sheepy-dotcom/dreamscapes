@@ -6762,33 +6762,73 @@ body.builder-active .app-tabbar::before {
   gap: 8px;
 }
 
-/* The chip becomes a small card: drawing above, word below. */
+/* The chip becomes a small card: drawing above, word below.
+   Picked and not picked have to be legible at a glance on a dark picture, and
+   a gold hairline on its own was not doing it - on six tiles at this size the
+   difference read as a trick of the light. So the two states differ four ways
+   at once: the border, the fill, the ink, and how bright the drawing is. The
+   border is 2px in both, only its colour changes, or every tick would nudge
+   the grid by a pixel. */
 .builder-step-mood .mood-grid span,
 body.night-mode .builder-step-mood .mood-grid span,
 .builder-step .builder-step-mood .mood-grid span {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 5px;
   min-height: 0;
-  border: 1px solid rgba(226, 216, 255, 0.2);
+  border: 2px solid rgba(226, 216, 255, 0.13);
   border-radius: 14px;
-  padding: 9px 4px 8px;
-  color: #fffaf0;
-  background: rgba(22, 18, 62, 0.74);
+  padding: 8px 4px 7px;
+  color: rgba(226, 220, 252, 0.7);
+  background: rgba(14, 13, 48, 0.56);
   backdrop-filter: blur(3px);
   font-size: 0.76rem;
   font-weight: 900;
   line-height: 1.15;
+  transition: border-color 140ms ease, background-color 140ms ease, color 140ms ease;
+}
+
+/* Unpicked, the drawing is dimmed and desaturated rather than hidden: it still
+   has to say what the mood is, it just must not compete with the ones chosen. */
+.builder-step-mood .mood-grid .mi {
+  opacity: 0.5;
+  filter: saturate(0.55);
+  transition: opacity 140ms ease, filter 140ms ease;
 }
 
 .builder-step-mood .mood-grid input:checked + span,
 body.night-mode .builder-step-mood .mood-grid input:checked + span,
 body.night-mode .mood-group .builder-step-mood .mood-grid input:checked + span {
   border-color: #ffd45c;
-  color: #fffaf0;
-  background: rgba(44, 32, 92, 0.9);
+  color: #fffdf6;
+  background: rgba(68, 50, 124, 0.94);
+  box-shadow: 0 0 0 3px rgba(255, 212, 92, 0.16), 0 8px 20px rgba(6, 8, 32, 0.4);
+}
+
+.builder-step-mood .mood-grid input:checked + span .mi {
+  opacity: 1;
+  filter: none;
+}
+
+/* And a tick, because a highlight can be read as "this one is focused" where a
+   tick can only be read as "this one is chosen". Inside the tile rather than
+   on its corner: the gaps between the cards are eight pixels and a badge
+   hanging over the edge would have touched its neighbour. */
+.builder-step-mood .mood-grid input:checked + span::after {
+  content: "";
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #ffd45c
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.6 6.3 4.8 8.5 9.4 3.9' fill='none' stroke='%232a1d08' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    center / 11px 11px no-repeat;
+  box-shadow: 0 2px 5px rgba(6, 8, 32, 0.5);
 }
 
 .builder-step-mood .mi {
