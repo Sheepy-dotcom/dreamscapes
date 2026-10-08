@@ -2419,18 +2419,18 @@ function getChildAgePhrase(age) {
 // same answers they would have typed, offered as one tap - and because every
 // chip writes into the interests input, nothing downstream had to change.
 const INTEREST_IDEAS = [
-  ["Dinosaurs", "\u{1F996}"],
-  ["Space", "\u{1F680}"],
-  ["Animals", "\u{1F43B}"],
-  ["Football", "\u26BD"],
-  ["Princesses", "\u{1F451}"],
-  ["Pirates", "\u{1F3F4}"],
-  ["Magic", "\u2728"],
-  ["Fire engines", "\u{1F692}"],
-  ["Diggers", "\u{1F6A7}"],
-  ["Under the sea", "\u{1F41F}"],
-  ["Fairies", "\u{1F9DA}"],
-  ["Superheroes", "\u{1F9B8}"],
+  ["Dinosaurs", "dinosaurs"],
+  ["Space", "space"],
+  ["Animals", "animals"],
+  ["Football", "football"],
+  ["Princesses", "princesses"],
+  ["Pirates", "pirates"],
+  ["Magic", "magic"],
+  ["Fire engines", "fire-engines"],
+  ["Diggers", "diggers"],
+  ["Under the sea", "under-the-sea"],
+  ["Fairies", "fairies"],
+  ["Superheroes", "superheroes"],
 ];
 
 const interestsInput = document.querySelector('[name="interests"]');
@@ -2464,9 +2464,15 @@ function syncInterestChips() {
 
 function renderInterestChips() {
   if (!interestChips) return;
+  // Pictures rather than emoji: a tile shows a parent the story world they are
+  // choosing, which an emoji at body-text size cannot. Lazy so twelve images do
+  // not load before the step they belong to is reached.
   interestChips.innerHTML = INTEREST_IDEAS.map(
-    ([label, emoji]) =>
-      `<button type="button" data-interest="${label}" aria-pressed="false"><span aria-hidden="true">${emoji}</span>${label}</button>`
+    ([label, slug]) =>
+      `<button type="button" data-interest="${label}" aria-pressed="false">
+         <img src="./assets/interests/${slug}.jpg" alt="" loading="lazy" decoding="async" />
+         <span>${label}</span>
+       </button>`
   ).join("");
   interestChips.querySelectorAll("button").forEach((chip) => {
     chip.addEventListener("click", () => {
