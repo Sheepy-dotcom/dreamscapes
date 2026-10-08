@@ -6320,3 +6320,14 @@ body.night-mode .builder-step-scene .builder-fields-block {
   background: none;
   box-shadow: none;
 }
+
+/* ---- Pictures dissolve into the page rather than stopping on a line ------ */
+/* A step's scene fills the step exactly, which left a hard horizontal edge
+   under the progress line and another above the button - the picture ended
+   mid-air. Fading both edges lets it meet the night sky behind the app instead
+   of being cut against it. */
+.step-scene,
+.length-scene {
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 6%, #000 90%, transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0%, #000 6%, #000 90%, transparent 100%);
+}
