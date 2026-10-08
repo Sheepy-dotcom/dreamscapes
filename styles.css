@@ -6860,7 +6860,7 @@ body.night-mode .mood-group .builder-step-mood .mood-grid input:checked + span {
 }
 
 .tonight-headline {
-  padding: 2px clamp(12px, 3.5vw, 20px) 8px;
+  padding: 0 clamp(12px, 3.5vw, 20px) 4px;
 }
 
 .builder-step-tonight h3 {
@@ -6882,9 +6882,13 @@ body.night-mode .mood-group .builder-step-mood .mood-grid input:checked + span {
    percentage only lands on the window if the whole picture is on screen -
    object-fit: cover would slide the frame out from under them at every width
    bar one. */
+/* Not quite full bleed. Every point the picture gives back is a point the
+   story-idea box gets, and that box is the one thing on this step that changes
+   what gets written. */
 .tonight-window {
   position: relative;
-  width: 100%;
+  width: 94%;
+  margin: 0 auto;
 }
 
 .tonight-scene {
@@ -6894,28 +6898,28 @@ body.night-mode .mood-group .builder-step-mood .mood-grid input:checked + span {
 }
 
 /* Measured off the file: the opening runs x 14.3% to 85.9% and y 4.6% to
-   83.1%. The grid sits inside that, and stops short of the bottom left,
-   because that is where the boy is. */
+   83.1%, and the boy's hair reaches y 48.1%. Four across and two down puts all
+   eight tiles in the clear sky above him with ten pixels to spare, and leaves
+   the lower half of the window open - he is below, looking up at them, which a
+   three by three with a hole in the corner never quite said.
+   The cells are square because the tiles are: every one of them is 480 by 480,
+   and the 230 by 170 cells they were in before were cropping a quarter off the
+   top and bottom of each picture. */
 .tonight-window .interest-chips {
   position: absolute;
-  left: 15.33%;
-  top: 6.04%;
-  width: 69.52%;
-  height: 63.96%;
+  left: 15.6%;
+  top: 4.62%;
+  width: 68.98%;
+  height: 41.54%;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  grid-template-rows: repeat(3, minmax(0, 1fr));
-  gap: 3.2% 3.6%;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 4.76% 2.33%;
   margin: 0;
   padding: 0;
   border: 0;
   background: none;
   overflow: visible;
-}
-
-/* The ninth cell is the boy. The last two tiles step over it. */
-.tonight-window .interest-chips button:nth-child(7) {
-  grid-column: 2;
 }
 
 .tonight-window .interest-chips button {
@@ -6938,24 +6942,28 @@ body.night-mode .mood-group .builder-step-mood .mood-grid input:checked + span {
   display: block;
   width: 100%;
   height: 100%;
+  /* Square picture in a square cell, so this crops nothing; it is here to
+     absorb the odd rounded pixel, not to fit the image. */
   object-fit: cover;
   border-radius: 0;
-  opacity: 0.92;
+  opacity: 0.94;
 }
 
+/* The name comes off the picture, but not out of the page: the button has no
+   other text, so without this a screen reader would read eight buttons called
+   nothing. Hidden the same way the rest of the app hides a label it still
+   needs announced. */
 .tonight-window .interest-chips span {
   position: absolute;
-  inset: auto 0 0;
-  display: block;
-  padding: 10px 4px 4px;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
   border: 0;
-  background: linear-gradient(180deg, rgba(10, 9, 38, 0) 0%, rgba(10, 9, 38, 0.82) 58%, rgba(10, 9, 38, 0.94) 100%);
-  color: #fffaf0;
-  font-size: 0.62rem;
-  font-weight: 900;
-  line-height: 1.1;
-  text-align: center;
-  text-shadow: 0 1px 4px rgba(8, 10, 38, 0.9);
+  overflow: hidden;
+  white-space: nowrap;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
 }
 
 .tonight-window .interest-chips button[aria-pressed="true"] {
@@ -6975,8 +6983,24 @@ body.night-mode .mood-group .builder-step-mood .mood-grid input:checked + span {
 
 .tonight-body {
   display: grid;
-  gap: 14px;
-  padding: 14px clamp(14px, 4vw, 24px) 0;
+  gap: 10px;
+  padding: 10px clamp(14px, 4vw, 24px) 0;
+}
+
+/* Story idea sits above Occasion now. Occasion defaults to None and most
+   nights stays there; the idea box is free text that steers the whole story,
+   so it is the one that should be on screen without reaching for it. */
+.builder-step-tonight .tonight-grid {
+  display: grid;
+  grid-template-columns: 1.45fr 1fr;
+  gap: 10px;
+}
+
+/* Occasion is a short word from a list; the idea box is free text. Splitting
+   the row evenly gave the typing half the room and the dropdown half the room
+   it had no use for. */
+.builder-step-tonight .tonight-grid .interest-field {
+  grid-column: 1 / -1;
 }
 
 /* Same as the scene and length steps: the fieldset loses its panel and its
