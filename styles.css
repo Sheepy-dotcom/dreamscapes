@@ -7062,10 +7062,11 @@ body.night-mode .builder-step-tonight .story-idea-field {
 .parent-headline {
   position: absolute;
   inset: 0 0 auto;
-  padding: clamp(8px, 2.4vw, 14px) clamp(46px, 13vw, 64px) 18px;
-  /* The crop starts lower than it did, so the second line of the heading now
-     reaches the top of the clouds rather than sitting on plain sky. */
-  background: linear-gradient(180deg, rgba(14, 12, 48, 0.62) 0%, rgba(14, 12, 48, 0.42) 46%, rgba(14, 12, 48, 0) 100%);
+  padding: clamp(8px, 2.4vw, 14px) clamp(46px, 13vw, 64px) 14px;
+  /* The crop starts lower than it did, so the heading reaches the top of the
+     clouds rather than sitting on plain sky. Shallower now the standfirst has
+     gone and there are only two short lines to cover. */
+  background: linear-gradient(180deg, rgba(14, 12, 48, 0.6) 0%, rgba(14, 12, 48, 0.36) 52%, rgba(14, 12, 48, 0) 100%);
   text-align: center;
 }
 
