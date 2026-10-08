@@ -122,11 +122,14 @@ button {
 
 .welcome-screen {
   min-height: min(720px, calc(100vh - 120px));
-  padding: clamp(24px, 5vw, 58px);
+  padding: clamp(20px, 4vw, 44px) clamp(18px, 4vw, 44px) clamp(28px, 5vw, 52px);
+  /* Night all the way down. The old gradient ended in pink, which undercut the
+     one thing this screen is selling. */
   background:
-    linear-gradient(118deg, rgba(16, 25, 74, 0.96) 0%, rgba(39, 37, 105, 0.88) 42%, rgba(255, 228, 238, 0.92) 100%),
-    radial-gradient(circle at 80% 16%, rgba(255, 217, 106, 0.4), transparent 15rem);
+    radial-gradient(circle at 50% 8%, rgba(255, 217, 106, 0.22), transparent 18rem),
+    linear-gradient(180deg, #171a4d 0%, #141339 48%, #0f0d2c 100%);
   color: var(--white);
+  text-align: center;
 }
 
 body.home-active .app-shell {
@@ -4720,4 +4723,131 @@ body.night-mode .provider-google {
   color: rgba(248, 244, 255, 0.6);
   font-size: 0.78rem;
   font-weight: 700;
+}
+
+
+/* ---- Home screen ------------------------------------------------------- */
+/* The home screen has to do two jobs in the few seconds a stranger gives it:
+   say what the product is, and make bedtime feel like something worth having.
+   The old one did the first and not the second. */
+
+.welcome-screen .brand-logo {
+  width: min(210px, 48vw);
+}
+
+.welcome-screen .tagline {
+  margin-top: 2px;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: rgba(255, 217, 106, 0.92);
+}
+
+.welcome-headline {
+  max-width: 18ch;
+  margin: 10px auto 0;
+  color: var(--white);
+  font-size: clamp(1.72rem, 6.8vw, 2.3rem);
+  font-weight: 900;
+  line-height: 1.18;
+}
+
+.welcome-headline span {
+  display: block;
+  color: var(--gold);
+}
+
+.welcome-copy .welcome-sub {
+  max-width: 30ch;
+  margin: 12px auto 0;
+  color: rgba(232, 224, 255, 0.86);
+  font-size: clamp(0.95rem, 3.9vw, 1.08rem);
+  line-height: 1.5;
+}
+
+.welcome-hero {
+  width: min(300px, 68%);
+  margin: 8px auto 2px;
+  display: block;
+  border-radius: 28px;
+  /* Faded at the edges so the illustration sits in the night rather than on a
+     visible square of its own. */
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 56%, transparent 95%);
+  mask-image: radial-gradient(ellipse at center, #000 56%, transparent 95%);
+}
+
+.welcome-screen .welcome-actions {
+  margin-top: 6px;
+}
+
+.welcome-screen .welcome-actions .button {
+  min-width: min(420px, 86vw);
+  min-height: 60px;
+  font-size: 1.08rem;
+}
+
+.welcome-screen p.welcome-offer {
+  margin: 10px 0 0;
+  color: rgba(232, 224, 255, 0.72);
+  font-size: 0.92rem;
+}
+
+.welcome-screen p.welcome-offer[hidden] {
+  display: none;
+}
+
+.welcome-points {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  width: min(480px, 100%);
+  margin: 12px auto 0;
+  padding: 0;
+  list-style: none;
+}
+
+.welcome-points li {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  color: rgba(232, 224, 255, 0.82);
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.welcome-points span {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+/* On a short phone - an SE is 667 tall - the hero pushes the button below the
+   tab bar, which hides the only thing this screen asks anyone to do. */
+@media (max-height: 700px) {
+  .welcome-screen .brand-logo {
+    width: min(165px, 40vw);
+  }
+
+  .welcome-headline {
+    margin-top: 6px;
+    font-size: clamp(1.45rem, 6vw, 1.8rem);
+  }
+
+  .welcome-copy .welcome-sub {
+    margin-top: 8px;
+    font-size: 0.9rem;
+  }
+
+  .welcome-hero {
+    width: min(215px, 52%);
+    margin: 6px auto 0;
+  }
+
+  .welcome-screen .welcome-actions .button {
+    min-height: 54px;
+  }
+
+  .welcome-points {
+    margin-top: 10px;
+    font-size: 0.7rem;
+  }
 }

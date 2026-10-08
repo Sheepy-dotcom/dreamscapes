@@ -22,7 +22,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026100301" />
+    <link rel="stylesheet" href="./styles.css?v=2026100801" />
   </head>
   <body class="home-active night-mode">
     <svg class="art-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -58,19 +58,23 @@
           </button>
         </div>
         <div class="welcome-copy">
-          <p>
-            Create gentle, imaginative stories shaped around your child, their mood,
-            and the kind of adventure they are ready for today.
-          </p>
-          <p class="welcome-offer" id="welcome-offer" hidden>
-            Your first story is free - no account needed.
-          </p>
-          <div class="welcome-actions">
-            <button class="button primary-button" id="start-button" type="button">
-              Create a Story
-            </button>
-          </div>
+          <h1 class="welcome-headline">A bedtime story <span>made just for them</span></h1>
+          <p class="welcome-sub">Their name. Their favourite things. Their adventure.</p>
         </div>
+        <img
+          class="welcome-hero"
+          src="./assets/home-hero.jpg"
+          alt="A child reading in bed with a teddy, while an aeroplane, a dinosaur and a pirate ship rise out of the open storybook"
+        />
+        <div class="welcome-actions">
+          <button class="button primary-button" id="start-button" type="button">Create their free story</button>
+        </div>
+        <p class="welcome-offer" id="welcome-offer" hidden>No account needed</p>
+        <ul class="welcome-points">
+          <li><span aria-hidden="true">✏️</span>Personalised just for them</li>
+          <li><span aria-hidden="true">🎧</span>Read together or let them listen</li>
+          <li><span aria-hidden="true">🌙</span>Calming stories for happy bedtimes</li>
+        </ul>
       </section>
 
       <section class="screen builder-screen" id="builder-screen" aria-labelledby="builder-title">
@@ -1033,6 +1037,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026100603"></script>
+    <script src="./app.js?v=2026100801"></script>
   </body>
 </html>

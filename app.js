@@ -959,7 +959,7 @@ function updateWelcomeOffer() {
   const startButton = document.querySelector("#start-button");
   const welcomeOffer = document.querySelector("#welcome-offer");
   if (startButton) {
-    startButton.textContent = currentUser ? "Create a Story" : "Create a Free Story";
+    startButton.textContent = currentUser ? "Create a story" : "Create their free story";
   }
   if (welcomeOffer) welcomeOffer.hidden = Boolean(currentUser);
 }
