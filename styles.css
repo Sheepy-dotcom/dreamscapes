@@ -120,7 +120,10 @@ button {
   display: block;
 }
 
-.welcome-screen {
+/* Gated on .active for the same reason as #welcome-screen.active far below:
+   `display: flex` here comes after `.screen { display: none }` and wins on
+   source order, which kept the home illustration on screen everywhere. */
+.welcome-screen.active {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -275,7 +278,9 @@ h3 {
   justify-content: center;
   min-height: 48px;
   border: 0;
-  border-radius: 8px;
+  /* Softer than the 8px everything else in here uses: the controls a parent
+     actually presses should read as the roundest thing on the screen. */
+  border-radius: 18px;
   padding: 13px 20px;
   cursor: pointer;
   font-weight: 900;
@@ -1027,7 +1032,7 @@ body.keyboard-open .app-tabbar {
   gap: 3px;
   place-items: center;
   border: 0;
-  border-radius: 8px;
+  border-radius: 14px;
   padding: 8px 6px;
   color: #34245f;
   background: transparent;
@@ -1974,7 +1979,7 @@ body.night-mode .story-path-button.active {
 .library-filter button {
   min-height: 36px;
   border: 0;
-  border-radius: 6px;
+  border-radius: 999px;
   padding: 7px 10px;
   color: #5e5f80;
   background: transparent;
@@ -4955,7 +4960,7 @@ body.night-mode .provider-google {
   width: 100%;
   min-height: 52px;
   border: 1px solid rgba(216, 198, 255, 0.4);
-  border-radius: 14px;
+  border-radius: 18px;
   padding: 10px 16px;
   background: linear-gradient(135deg, rgba(123, 78, 216, 0.55), rgba(185, 162, 242, 0.42));
   color: var(--white);
@@ -5168,7 +5173,11 @@ body.night-mode .provider-google {
    height each lost to a different, more specific rule elsewhere in this file -
    night mode, the screen base, the home body class - and chasing them one at a
    time was costing more than it was worth. There is exactly one of this screen. */
-#welcome-screen {
+/* Only when it is the screen being shown. An unqualified `display: grid` here
+   outranked `.screen { display: none }`, so the home illustration stayed painted
+   behind every other screen - visible down both edges and in the strip above the
+   tab bar. The ID still wins where it needs to; it just has to be asked. */
+#welcome-screen.active {
   display: grid;
   align-content: space-between;
   min-height: calc(100dvh - 96px);
