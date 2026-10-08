@@ -6252,3 +6252,71 @@ body.night-mode .screen {
 .loading-screen {
   padding-inline: clamp(14px, 4vw, 28px);
 }
+
+/* ---- Step one, with the room the borderless screen gave it --------------- */
+/* The gutter moves off the screen and onto the parts that need it, so a step
+   whose content is a picture can reach the glass while a step whose content is
+   a form still has something to breathe into. */
+.builder-screen.active {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* Scoped to the screen, because a bare .builder-progress / .builder-actions
+   loses to rules already written against them. */
+.builder-screen .builder-progress,
+.builder-screen .builder-actions,
+.builder-screen .plan-note,
+.builder-screen .builder-step {
+  padding-left: clamp(14px, 4vw, 24px);
+  padding-right: clamp(14px, 4vw, 24px);
+}
+
+.builder-screen .builder-step-scene,
+.builder-screen .builder-step-length {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* The fields were sized for a step with eighty fewer points in it. */
+.builder-step-scene .field-boxed {
+  gap: 14px;
+  padding: 13px 15px;
+}
+
+.builder-step-scene .field-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+}
+
+.builder-step-scene .field-icon svg {
+  width: 23px;
+  height: 23px;
+}
+
+.builder-step-scene .field-boxed input,
+body.night-mode .builder-step-scene .field-boxed input {
+  font-size: 1.18rem;
+}
+
+.builder-step-scene .child-basics-grid {
+  gap: 12px;
+}
+
+.builder-step-scene h3 {
+  font-size: clamp(1.26rem, 5.6vw, 1.52rem);
+}
+
+/* On the scene step the two cards sit straight on the picture. The group's
+   panel and its coloured spine were drawn for a step that was itself a panel;
+   on a photograph they read as a box inside a box, the same thing the length
+   step's fieldset was doing before it lost its own. */
+.builder-step-scene .builder-fields-block,
+body.night-mode .builder-step-scene .builder-fields-block {
+  border: 0;
+  border-left: 0;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+}
