@@ -6113,8 +6113,12 @@ body.night-mode .app-tabbar button:hover {
   color: #ffd45c;
 }
 
+/* `auto` sides, not 0 - the standfirst is capped at 34ch, so the box is
+   narrower than the step and has to be centred itself. Zeroing the side
+   margins in the shorthand left it flush against the left padding, with the
+   text neatly centred inside a box that was not. */
 .builder-step-length .builder-step-sub {
-  margin: 2px 0 0;
+  margin: 2px auto 0;
 }
 
 /* Tighter again on this step only: it carries one more card than the design
