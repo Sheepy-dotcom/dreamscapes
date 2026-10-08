@@ -4949,3 +4949,39 @@ body.night-mode .provider-google {
   font-weight: 800;
   white-space: nowrap;
 }
+
+/* Offered after the story rather than before it, so it reads as "keep this
+   going" rather than as another decision in a form. */
+.journey-offer {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 14px;
+  border: 1px solid rgba(255, 231, 133, 0.45);
+  border-radius: 14px;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(255, 231, 133, 0.14), rgba(185, 162, 242, 0.14));
+}
+
+.journey-offer[hidden] {
+  display: none;
+}
+
+.journey-offer-title {
+  margin: 0;
+  color: var(--gold);
+  font-size: 1.02rem;
+  font-weight: 900;
+}
+
+.journey-offer-copy {
+  margin: 0;
+  color: rgba(255, 248, 220, 0.84);
+  font-size: 0.9rem;
+}
+
+.journey-offer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}

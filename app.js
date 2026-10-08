@@ -55,6 +55,9 @@ const continuationTitle = document.querySelector("#continuation-title");
 const continuationNote = document.querySelector("#continuation-note");
 const cancelContinuationButton = document.querySelector("#cancel-continuation-button");
 const continueAdventureButton = document.querySelector("#continue-adventure-button");
+const journeyOffer = document.querySelector("#journey-offer");
+const journeyOfferStart = document.querySelector("#journey-offer-start");
+const journeyOfferLater = document.querySelector("#journey-offer-later");
 const shareFamilyButton = document.querySelector("#share-family-button");
 const nextAdventurePanel = document.querySelector("#next-adventure-panel");
 const nextAdventureActions = document.querySelector("#next-adventure-actions");
@@ -3052,6 +3055,14 @@ function renderStory(story) {
   }
   if (reportAudioButton) reportAudioButton.hidden = !story.audioNarration;
   if (continueAdventureButton) continueAdventureButton.hidden = false;
+  // The review's point: a seven-night journey is an abstract choice before the
+  // first story and an obvious one straight after it, when the parent knows the
+  // characters. Offered here instead of in the builder, and only to a story
+  // that is not already part of a series - and never twice, because a prompt
+  // that keeps reappearing after it was declined is just nagging.
+  if (journeyOffer) {
+    journeyOffer.hidden = Boolean(story.seriesId) || dismissedJourneyOffer || !currentUser;
+  }
   renderNextAdventureChoices(story);
   resetAudioProgress();
   setAudioProgressVisible(Boolean(story.audioNarration));
@@ -4851,6 +4862,20 @@ tonightsStoryButton?.addEventListener("click", createTonightStoryIdea);
 weeklyJourneyButton?.addEventListener("click", startWeeklyJourney);
 cancelContinuationButton?.addEventListener("click", clearPendingStoryContext);
 continueAdventureButton?.addEventListener("click", () => beginStoryContinuation(currentStory));
+
+// Remembered for the session only: declining tonight should not mean never
+// being asked again after a story they love next week.
+let dismissedJourneyOffer = false;
+journeyOfferStart?.addEventListener("click", () => {
+  trackEvent("journey_offer_accepted", { from: currentStory?.id || "" });
+  if (journeyOffer) journeyOffer.hidden = true;
+  beginStoryContinuation(currentStory);
+});
+journeyOfferLater?.addEventListener("click", () => {
+  dismissedJourneyOffer = true;
+  if (journeyOffer) journeyOffer.hidden = true;
+  trackEvent("journey_offer_dismissed", {});
+});
 shareFamilyButton?.addEventListener("click", () => shareStoryWithFamily(currentStory));
 nextAdventureActions?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-next-adventure-index]");
