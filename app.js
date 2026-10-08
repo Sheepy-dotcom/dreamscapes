@@ -945,8 +945,12 @@ function updateBuilderActions() {
   const isLastStep = getActiveStepPosition() === getActiveBuilderSteps().length - 1;
   // Only the final step offers Create, which also keeps the action bar to a
   // single row so every step fits without scrolling.
+  // Same words as the home screen, and the same voice as the rest of the app:
+  // the story belongs to the child, not to the parent pressing the button.
+  // This said "Create My Free Story" in title case, which was the only first
+  // person on either screen.
   generateStoryButton.hidden = !isLastStep;
-  generateStoryButton.textContent = currentUser ? "Create Story" : "Create My Free Story";
+  generateStoryButton.textContent = currentUser ? "Create their story" : "Create their free story";
 }
 
 function setBuilderStep(stepIndex, announce = true) {
@@ -1056,7 +1060,7 @@ function updateBuilderAccountNotice() {
   updateWelcomeOffer();
   if (builderAccountNotice) builderAccountNotice.hidden = true;
   if (generateStoryButton && !generateStoryButton.hidden) {
-    generateStoryButton.textContent = currentUser ? "Create Story" : "Create My Free Story";
+    generateStoryButton.textContent = currentUser ? "Create their story" : "Create their free story";
   }
 
   // Signing in or out changes the longest story on offer, so the picker has to
