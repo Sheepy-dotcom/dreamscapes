@@ -4774,14 +4774,6 @@ body.night-mode .provider-google {
   color: var(--gold);
 }
 
-.welcome-copy .welcome-sub {
-  max-width: 30ch;
-  margin: 12px auto 0;
-  color: rgba(232, 224, 255, 0.86);
-  font-size: clamp(0.95rem, 3.9vw, 1.08rem);
-  line-height: 1.5;
-}
-
 /* Pushes the action and the cues to the foot, leaving the middle to the
    illustration. */
 .welcome-spacer {
@@ -4844,11 +4836,6 @@ body.night-mode .provider-google {
   .welcome-headline {
     margin-top: 6px;
     font-size: clamp(1.45rem, 6vw, 1.8rem);
-  }
-
-  .welcome-copy .welcome-sub {
-    margin-top: 8px;
-    font-size: 0.9rem;
   }
 
   .welcome-screen .welcome-actions .button {
@@ -5202,7 +5189,6 @@ body.night-mode .provider-google {
 /* A soft shadow under the type does the rest of the legibility work, so the
    scrim can stay light enough to see the picture through. */
 .welcome-headline,
-.welcome-copy .welcome-sub,
 .welcome-points li {
   text-shadow: 0 2px 10px rgba(6, 8, 30, 0.85);
 }
