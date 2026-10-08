@@ -37,7 +37,6 @@ const OPTIONAL_RETENTION_COLUMNS = [
 const durationTargets = {
   5: { words: 825, minWords: 740, maxWords: 970, paragraphs: 13 },
   10: { words: 1650, minWords: 1485, maxWords: 1870, paragraphs: 25 },
-  15: { words: 2475, minWords: 2230, maxWords: 2800, paragraphs: 37 },
   20: { words: 3300, minWords: 2970, maxWords: 3740, paragraphs: 49 },
   30: { words: 4950, minWords: 4455, maxWords: 5600, paragraphs: 74 },
 };
@@ -325,7 +324,7 @@ function buildPrompt(data, section = null) {
     "- Use short, gentle sentences with frequent natural pauses between phrases for bedtime narration.",
     section
       ? `- Write part ${section.index + 1} of ${section.count} only. Write the whole of this part and nothing beyond it.`
-      : "- Do not finish early. The story should feel complete and should land inside the requested word range, especially for 15, 20, and 30 minute stories.",
+      : "- Do not finish early. The story should feel complete and should land inside the requested word range, especially for 20 and 30 minute stories.",
     "- Longer durations must include more complete scenes, not just longer sentences.",
     "- Include a positive ending and a gentle lesson without sounding preachy.",
     "- If this continues a series, preserve established characters and warmly acknowledge what happened before without repeating the previous story.",

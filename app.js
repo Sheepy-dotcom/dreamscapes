@@ -661,17 +661,6 @@ const durationDetails = {
         `First, ${name} shared a brave smile. Then, ${name} asked a thoughtful question. Finally, ${name} offered help in a way that made everyone feel safe and seen. The DreamScape glowed brighter with each good choice.`,
     ],
   },
-  15: {
-    label: "15 min",
-    premium: true,
-    pacing: "This story had room to wander through several gentle turns.",
-    extraBeats: [
-      (name) =>
-        `The path curled past silver flowers, sleepy clouds, and a tiny bridge that hummed when kind words crossed it. ${name} noticed that every place in the DreamScape became friendlier when someone listened carefully.`,
-      (name) =>
-        `A second little challenge appeared, and ${name} took a slow breath before choosing what to do. That pause made space for a thoughtful answer, and the answer helped everyone move forward together.`,
-    ],
-  },
   20: {
     label: "20 min",
     premium: true,
