@@ -6052,3 +6052,19 @@ body.night-mode .app-tabbar button:hover {
 .field-saved:focus-within .field-saved-chevron {
   border-color: #ffd45c;
 }
+
+/* The sibling list appears inside a step that does not scroll, so it is capped
+   and scrolls itself rather than pushing the fields off the top. */
+.builder-step .profile-choice-list {
+  max-height: 27vh;
+  overflow-y: auto;
+}
+
+.builder-step .child-profile-picker {
+  gap: 10px;
+  padding: 12px;
+}
+
+.builder-step .child-profile-picker legend {
+  font-size: 0.82rem;
+}

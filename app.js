@@ -1772,9 +1772,9 @@ function renderChildProfiles() {
 function renderBuilderProfileChoices() {
   if (!builderChildProfiles || !builderProfileList) return;
 
-  // The list itself is no longer shown: the name field's picker replaced it.
-  // Its inputs stay in the page because they are what the builder reads.
-  builderChildProfiles.hidden = true;
+  // Hidden unless "More than one child" is chosen from the name field; its
+  // inputs stay in the page either way, because they are what the builder reads.
+  if (childProfiles.length < 2) builderChildProfiles.hidden = true;
   builderProfileList.innerHTML = childProfiles
     .map(
       (profile) => `
@@ -1813,6 +1813,11 @@ function renderSavedChildPicker() {
     return;
   }
   const chosen = childSavedSelect.value;
+  // Siblings are the last option rather than a second control: the list only
+  // appears for someone who asks for it, so the step keeps its two cards for
+  // everyone else.
+  const several =
+    childProfiles.length > 1 ? `<option value="${SEVERAL_CHILDREN}">More than one child…</option>` : "";
   childSavedSelect.innerHTML =
     '<option value="">Someone new</option>' +
     childProfiles
@@ -1821,13 +1826,38 @@ function renderSavedChildPicker() {
         const age = profile.childAge ? `, ${profile.childAge}` : "";
         return `<option value="${escapeHtml(profile.id)}">${escapeHtml(name + age)}</option>`;
       })
-      .join("");
+      .join("") +
+    several;
   if (chosen && childProfiles.some((profile) => profile.id === chosen)) {
     childSavedSelect.value = chosen;
   }
 }
 
+const SEVERAL_CHILDREN = "__several";
+
+function setSeveralChildrenOpen(open) {
+  if (builderChildProfiles) builderChildProfiles.hidden = !open;
+  if (!open) return;
+  // The story takes the joined names of whoever is ticked, but only when the
+  // name box is empty - so it is cleared on the way in, and the age with it,
+  // because one age cannot describe two children.
+  const nameInput = document.querySelector("#child-name");
+  const ageInput = document.querySelector("#child-age");
+  if (nameInput) {
+    nameInput.value = "";
+    nameInput.dataset.fromSavedChild = "false";
+  }
+  if (ageInput) ageInput.value = "";
+  refreshNameField();
+}
+
 function applySavedChild(profileId) {
+  if (profileId === SEVERAL_CHILDREN) {
+    setSeveralChildrenOpen(true);
+    trackEvent("saved_child_used", { picked: false, several: true });
+    return;
+  }
+  setSeveralChildrenOpen(false);
   const profile = childProfiles.find((entry) => entry.id === profileId);
 
   // The checkboxes are the source of truth, so keep them in step: exactly the
@@ -5601,6 +5631,9 @@ clearProfileSelectionButton?.addEventListener("click", () => {
   document.querySelectorAll('input[name="childProfiles"]').forEach((input) => {
     input.checked = false;
   });
+  // And back to the single picker, which is where the button's label points.
+  setSeveralChildrenOpen(false);
+  if (childSavedSelect) childSavedSelect.value = "";
 });
 
 async function playAiVoicePreview() {
