@@ -4533,6 +4533,18 @@ body.night-mode .welcome-copy p.welcome-offer {
   height: 100%;
 }
 
+/* The drawn steps use inline SVG; the painted ones use a real illustration.
+   Both have to behave the same way in the flexible art row above, so the image
+   is told to fit inside whatever height that row was given rather than set a
+   height of its own. */
+.step-art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+}
+
 /* The art's row brings a grid gap with it even when the row has collapsed to
    nothing, which on an already tight step is extra height it never asked for.
    Pulling the heading back over that gap means the art can only give space
