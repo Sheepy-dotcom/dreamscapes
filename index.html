@@ -22,7 +22,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026100805" />
+    <link rel="stylesheet" href="./styles.css?v=2026100808" />
   </head>
   <body class="home-active night-mode">
     <svg class="art-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -90,11 +90,12 @@
 
         <form class="story-form" id="story-form" novalidate>
           <div class="builder-progress" aria-label="Story builder progress">
-            <div class="builder-progress-heading"><span id="builder-step-count">Step 1 of 8</span><strong id="builder-step-title">Who it's for</strong></div>
+            <div class="builder-progress-heading"><button class="step-back-button" id="builder-step-back" type="button" aria-label="Back"><span aria-hidden="true"></span></button><span id="builder-step-count">Step 1 of 8</span><strong id="builder-step-title">Who it's for</strong></div>
             <div class="builder-progress-track" aria-hidden="true"><span id="builder-progress-fill"></span></div>
+              <p class="builder-step-sub" id="builder-step-sub"></p>
           </div>
 
-          <section class="builder-step has-art active" data-builder-step="0" data-step-title="Who it's for" aria-labelledby="builder-step-child-title">
+          <section class="builder-step has-art active" data-builder-step="0" data-step-sub="Tell us a little about your child so we can create a story just for them." data-step-title="Who it's for" aria-labelledby="builder-step-child-title">
             <div class="step-art" aria-hidden="true"><svg viewBox="0 0 200 140" focusable="false"><ellipse cx="100" cy="72" rx="80" ry="62" fill="url(#art-halo)" /><circle cx="68" cy="46" r="15" fill="#b8784a" /><circle cx="132" cy="46" r="15" fill="#b8784a" /><circle cx="68" cy="46" r="8" fill="#f0c49c" /><circle cx="132" cy="46" r="8" fill="#f0c49c" /><ellipse cx="100" cy="78" rx="42" ry="38" fill="#cf9160" /><ellipse cx="90" cy="60" rx="20" ry="10" fill="#e3b083" opacity="0.6" /><ellipse cx="100" cy="93" rx="19" ry="14" fill="#f6dbb8" /><path d="M79 76q6 5 12 0M109 76q6 5 12 0" fill="none" stroke="#4b2e22" stroke-width="3" stroke-linecap="round" /><ellipse cx="100" cy="87" rx="6.5" ry="4.8" fill="#4b2e22" /><path d="M100 91.5v3.5M100 95q-4 4 -8 2M100 95q4 4 8 2" fill="none" stroke="#4b2e22" stroke-width="2.4" stroke-linecap="round" /><circle cx="73" cy="89" r="6" fill="#ff8fb7" opacity="0.5" /><circle cx="127" cy="89" r="6" fill="#ff8fb7" opacity="0.5" /><use class="twinkle" href="#art-sparkle" x="24" y="22" width="14" height="14" fill="#ffd96a" /><use class="twinkle" href="#art-sparkle" x="160" y="18" width="11" height="11" fill="#fff8dc" /><use class="twinkle" href="#art-sparkle" x="168" y="96" width="13" height="13" fill="#ffd96a" /><use class="twinkle" href="#art-sparkle" x="28" y="100" width="9" height="9" fill="#d8c6ff" /></svg></div>
             <h3 id="builder-step-child-title">Who’s the story for?</h3>
             <fieldset class="choice-group child-profile-picker builder-group builder-group-lilac" id="builder-child-profiles" hidden>
@@ -110,7 +111,7 @@
             </div>
           </section>
 
-          <section class="builder-step has-art" data-builder-step="1" data-step-title="Story path" data-autoadvance="true" aria-labelledby="builder-step-path-title" hidden>
+          <section class="builder-step has-art" data-builder-step="1" data-step-sub="One story for tonight, or an adventure that carries on." data-step-title="Story path" data-autoadvance="true" aria-labelledby="builder-step-path-title" hidden>
             <div class="step-art" aria-hidden="true"><svg viewBox="0 0 200 140" focusable="false"><ellipse cx="100" cy="72" rx="80" ry="62" fill="url(#art-halo)" /><rect x="30" y="106" width="140" height="7" rx="3.5" fill="#6a45c4" /><rect x="38" y="54" width="16" height="52" rx="3" fill="#ff8fb7" /><rect x="38" y="62" width="16" height="3" fill="#ffffff" opacity="0.35" /><rect x="38" y="94" width="16" height="3" fill="#ffffff" opacity="0.35" /><rect x="57" y="48" width="16" height="58" rx="3" fill="#ffd96a" /><rect x="57" y="56" width="16" height="3" fill="#ffffff" opacity="0.35" /><rect x="57" y="94" width="16" height="3" fill="#ffffff" opacity="0.35" /><rect x="76" y="58" width="16" height="48" rx="3" fill="#8ad7bd" /><rect x="76" y="66" width="16" height="3" fill="#ffffff" opacity="0.35" /><rect x="76" y="94" width="16" height="3" fill="#ffffff" opacity="0.35" /><rect x="95" y="44" width="16" height="62" rx="3" fill="#d8c6ff" /><rect x="95" y="52" width="16" height="3" fill="#ffffff" opacity="0.35" /><rect x="95" y="94" width="16" height="3" fill="#ffffff" opacity="0.35" /><rect x="114" y="52" width="16" height="54" rx="3" fill="#b9a2f2" /><rect x="114" y="60" width="16" height="3" fill="#ffffff" opacity="0.35" /><rect x="114" y="94" width="16" height="3" fill="#ffffff" opacity="0.35" /><rect x="133" y="46" width="16" height="60" rx="3" fill="#ffb38a" /><rect x="133" y="54" width="16" height="3" fill="#ffffff" opacity="0.35" /><rect x="133" y="94" width="16" height="3" fill="#ffffff" opacity="0.35" /><rect x="152" y="56" width="16" height="50" rx="3" fill="#9fd0ff" /><rect x="152" y="64" width="16" height="3" fill="#ffffff" opacity="0.35" /><rect x="152" y="94" width="16" height="3" fill="#ffffff" opacity="0.35" /><use href="#art-crescent" x="150" y="10" width="28" height="28" fill="#ffd96a" /><use class="twinkle" href="#art-sparkle" x="28" y="30" width="12" height="12" fill="#ffd96a" /><use class="twinkle" href="#art-sparkle" x="96" y="20" width="10" height="10" fill="#fff8dc" /><use class="twinkle" href="#art-sparkle" x="176" y="66" width="9" height="9" fill="#d8c6ff" /></svg></div>
             <h3 id="builder-step-path-title">One story, or a journey?</h3>
             <fieldset class="choice-group story-spark-panel builder-group builder-group-pink">
@@ -126,7 +127,7 @@
             </fieldset>
           </section>
 
-          <section class="builder-step has-art" data-builder-step="2" data-step-title="Time of day" data-autoadvance="true" aria-labelledby="builder-step-when-title" hidden>
+          <section class="builder-step has-art" data-builder-step="2" data-step-sub="Bedtime stories wind down towards sleep." data-step-title="Time of day" data-autoadvance="true" aria-labelledby="builder-step-when-title" hidden>
             <div class="step-art" aria-hidden="true"><svg viewBox="0 0 200 140" focusable="false"><ellipse cx="100" cy="72" rx="80" ry="62" fill="url(#art-halo)" /><path d="M82.2 33.9L78 24.9M65.6 47.9L57.4 42.2M58 72H48M65.6 96.1L57.4 101.8M82.2 110.1L78 119.1" fill="none" stroke="#ffd96a" stroke-width="5" stroke-linecap="round" /><path d="M100 38A34 34 0 0 0 100 106Z" fill="#ffd96a" /><path d="M100 38A34 34 0 0 1 100 106Z" fill="#b9a2f2" /><circle cx="116" cy="58" r="5" fill="#d8c6ff" opacity="0.85" /><circle cx="121" cy="83" r="7" fill="#d8c6ff" opacity="0.7" /><circle cx="108" cy="96" r="3.5" fill="#d8c6ff" opacity="0.85" /><use class="twinkle" href="#art-sparkle" x="150" y="28" width="13" height="13" fill="#ffd96a" /><use class="twinkle" href="#art-sparkle" x="164" y="86" width="10" height="10" fill="#fff8dc" /><use class="twinkle" href="#art-sparkle" x="142" y="112" width="8" height="8" fill="#d8c6ff" /></svg></div>
             <h3 id="builder-step-when-title">Bedtime, or anytime?</h3>
             <fieldset class="choice-group builder-group builder-group-mint story-type-group">
@@ -138,7 +139,7 @@
             </fieldset>
           </section>
 
-          <section class="builder-step has-art" data-builder-step="3" data-step-title="Length" data-autoadvance="true" aria-labelledby="builder-step-length-title" hidden>
+          <section class="builder-step has-art" data-builder-step="3" data-step-sub="Choose the length that works best tonight. You can change this later." data-step-title="Length" data-autoadvance="true" aria-labelledby="builder-step-length-title" hidden>
             <div class="step-art" aria-hidden="true"><svg viewBox="0 0 200 140" focusable="false"><ellipse cx="100" cy="72" rx="80" ry="62" fill="url(#art-halo)" /><circle cx="100" cy="72" r="42" fill="url(#art-glow)" opacity="0.3" /><rect x="74" y="36" width="5" height="72" rx="2.5" fill="#d8c6ff" opacity="0.7" /><rect x="121" y="36" width="5" height="72" rx="2.5" fill="#d8c6ff" opacity="0.7" /><path d="M82 37C82 58 97 63 97 72C97 81 82 86 82 107H118C118 86 103 81 103 72C103 63 118 58 118 37Z" fill="#d8c6ff" fill-opacity="0.2" stroke="#d8c6ff" stroke-width="2.5" /><path d="M88 48H112C110 58 103 63 100 67C97 63 90 58 88 48Z" fill="#ffd96a" /><path d="M100 67V92" stroke="#ffd96a" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="2 5" /><path d="M86 106C88 96 96 92 100 91C104 92 112 96 114 106Z" fill="#ffd96a" /><rect x="70" y="28" width="60" height="9" rx="4.5" fill="#fff8dc" /><rect x="70" y="107" width="60" height="9" rx="4.5" fill="#fff8dc" /><use class="twinkle" href="#art-sparkle" x="34" y="30" width="13" height="13" fill="#ffd96a" /><use class="twinkle" href="#art-sparkle" x="156" y="44" width="11" height="11" fill="#fff8dc" /><use class="twinkle" href="#art-sparkle" x="150" y="104" width="9" height="9" fill="#d8c6ff" /><use class="twinkle" href="#art-sparkle" x="40" y="98" width="9" height="9" fill="#fff8dc" /></svg></div>
             <h3 id="builder-step-length-title">How long should it be?</h3>
             <fieldset class="choice-group builder-group builder-group-gold duration-group">
@@ -154,7 +155,7 @@
             </fieldset>
           </section>
 
-          <section class="builder-step has-art" data-builder-step="4" data-step-title="Mood" aria-labelledby="builder-step-mood-title" hidden>
+          <section class="builder-step has-art" data-builder-step="4" data-step-sub="Pick as many as you like." data-step-title="Mood" aria-labelledby="builder-step-mood-title" hidden>
             <div class="step-art" aria-hidden="true"><svg viewBox="0 0 200 140" focusable="false"><ellipse cx="100" cy="72" rx="80" ry="62" fill="url(#art-halo)" /><g fill="#fff8dc"><circle cx="80" cy="82" r="21" /><circle cx="104" cy="70" r="28" /><circle cx="126" cy="84" r="20" /><rect x="62" y="84" width="82" height="24" rx="12" /></g><path d="M86 82q5 4 10 0M108 82q5 4 10 0" fill="none" stroke="#5b4a8a" stroke-width="2.8" stroke-linecap="round" /><path d="M96 92q7 6 14 0" fill="none" stroke="#5b4a8a" stroke-width="2.8" stroke-linecap="round" /><circle cx="85" cy="91" r="5" fill="#ff8fb7" opacity="0.5" /><circle cx="121" cy="91" r="5" fill="#ff8fb7" opacity="0.5" /><path d="M50 56C42 50 36 45 36 39A7 7 0 0 1 50 37A7 7 0 0 1 64 39C64 45 58 50 50 56Z" fill="#ff8fb7" /><use class="twinkle" href="#art-sparkle" x="142" y="26" width="22" height="22" fill="#ffd96a" /><use class="twinkle" href="#art-sparkle" x="168" y="72" width="10" height="10" fill="#fff8dc" /><use class="twinkle" href="#art-sparkle" x="30" y="94" width="10" height="10" fill="#d8c6ff" /></svg></div>
             <h3 id="builder-step-mood-title">What should it feel like?</h3>
             <fieldset class="choice-group builder-group builder-group-lilac mood-group">
@@ -202,7 +203,7 @@
             </div>
           </section>
 
-          <section class="builder-step has-art" data-builder-step="6" data-step-title="Parent controls" aria-labelledby="builder-step-details-title" hidden>
+          <section class="builder-step has-art" data-builder-step="6" data-step-sub="Choose a few preferences to make the story feel right for them." data-step-title="Parent controls" aria-labelledby="builder-step-details-title" hidden>
             <div class="step-art" aria-hidden="true"><svg viewBox="0 0 200 140" focusable="false"><ellipse cx="100" cy="72" rx="80" ry="62" fill="url(#art-halo)" /><path d="M100 26L138 39V70C138 94 121 109 100 118C79 109 62 94 62 70V39Z" fill="#8ad7bd" /><path d="M100 35L129 45V70C129 89 116 101 100 108C84 101 71 89 71 70V45Z" fill="#a9e6d0" /><path d="M100 35L129 45V56C119 50 110 48 100 48Z" fill="#ffffff" opacity="0.2" /><path d="M100 91C88 83 80 76 80 67A10 10 0 0 1 100 63A10 10 0 0 1 120 67C120 76 112 83 100 91Z" fill="#ff8fb7" /><ellipse cx="91" cy="67" rx="4" ry="3" fill="#ffffff" opacity="0.45" /><use class="twinkle" href="#art-sparkle" x="36" y="34" width="13" height="13" fill="#ffd96a" /><use class="twinkle" href="#art-sparkle" x="158" y="30" width="11" height="11" fill="#fff8dc" /><use class="twinkle" href="#art-sparkle" x="160" y="98" width="10" height="10" fill="#ffd96a" /><use class="twinkle" href="#art-sparkle" x="36" y="100" width="9" height="9" fill="#d8c6ff" /></svg></div>
             <h3 id="builder-step-details-title">Parent controls</h3>
             <fieldset class="choice-group safety-grid compact-safety-grid builder-group builder-group-mint">
@@ -212,7 +213,7 @@
             </fieldset>
           </section>
 
-          <section class="builder-step has-art" data-builder-step="7" data-step-title="Story settings" aria-labelledby="builder-step-settings-title" hidden>
+          <section class="builder-step has-art" data-builder-step="7" data-step-sub="Language and how the story is told." data-step-title="Story settings" aria-labelledby="builder-step-settings-title" hidden>
             <div class="step-art" aria-hidden="true"><svg viewBox="0 0 200 140" focusable="false"><ellipse cx="100" cy="72" rx="80" ry="62" fill="url(#art-halo)" /><circle cx="100" cy="74" r="48" fill="url(#art-glow)" opacity="0.65" /><path d="M88 36A12 12 0 0 1 112 36" fill="none" stroke="#ffd96a" stroke-width="4" stroke-linecap="round" /><path d="M84 38H116L122 48H78Z" fill="#6a45c4" /><rect x="82" y="48" width="36" height="52" rx="9" fill="#ffe08a" /><rect x="82" y="48" width="36" height="52" rx="9" fill="none" stroke="#6a45c4" stroke-width="3" /><path d="M100 60C106 68 108 74 104 82C102 86 98 86 96 82C92 74 94 68 100 60Z" fill="#fff8dc" /><path d="M78 100H122L118 108H82Z" fill="#6a45c4" /><use class="twinkle" href="#art-sparkle" x="34" y="36" width="12" height="12" fill="#fff8dc" /><use class="twinkle" href="#art-sparkle" x="160" y="40" width="12" height="12" fill="#ffd96a" /><use class="twinkle" href="#art-sparkle" x="156" y="104" width="9" height="9" fill="#d8c6ff" /><use class="twinkle" href="#art-sparkle" x="40" y="104" width="10" height="10" fill="#ffd96a" /></svg></div>
             <h3 id="builder-step-settings-title">How should it be told?</h3>
             <div class="builder-group builder-group-mint">
@@ -240,7 +241,7 @@
             </label>
           </section>
 
-          <section class="builder-step has-art" data-builder-step="8" data-step-title="Narration" aria-labelledby="builder-step-audio-title" hidden>
+          <section class="builder-step has-art" data-builder-step="8" data-step-sub="Add a calm voice for lights-out listening." data-step-title="Narration" aria-labelledby="builder-step-audio-title" hidden>
             <div class="step-art" aria-hidden="true"><svg viewBox="0 0 200 140" focusable="false"><ellipse cx="100" cy="72" rx="80" ry="62" fill="url(#art-halo)" /><use href="#art-crescent" x="50" y="38" width="68" height="68" fill="#ffd96a" /><path d="M118 60q7 12 0 24" fill="none" stroke="#d8c6ff" stroke-width="4" stroke-linecap="round" /><path d="M130 52q13 20 0 40" fill="none" stroke="#d8c6ff" stroke-width="4" stroke-linecap="round" opacity="0.7" /><path d="M142 44q19 28 0 56" fill="none" stroke="#d8c6ff" stroke-width="4" stroke-linecap="round" opacity="0.45" /><use class="twinkle" href="#art-sparkle" x="84" y="58" width="12" height="12" fill="#fff8dc" /><use class="twinkle" href="#art-sparkle" x="36" y="28" width="11" height="11" fill="#ffd96a" /><use class="twinkle" href="#art-sparkle" x="40" y="104" width="9" height="9" fill="#d8c6ff" /><use class="twinkle" href="#art-sparkle" x="100" y="18" width="9" height="9" fill="#ffd96a" /></svg></div>
             <h3 id="builder-step-audio-title">Add narration?</h3>
             <div class="builder-group builder-group-gold narration-group">
@@ -267,8 +268,7 @@
           </section>
 
           <div class="builder-actions">
-            <button class="button secondary-button" id="builder-step-back" type="button">Back</button>
-            <button class="button primary-button" id="builder-step-next" type="button">Next</button>
+            <button class="button primary-button" id="builder-step-next" type="button"><span id="builder-step-next-label">Next</span><span class="cta-chevron" aria-hidden="true"></span></button>
             <button class="button primary-button" id="generate-story-button" type="submit" hidden>Create Story</button>
           </div>
           <p class="plan-note" id="plan-note" role="status"></p>
@@ -1051,6 +1051,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026100805"></script>
+    <script src="./app.js?v=2026100807"></script>
   </body>
 </html>

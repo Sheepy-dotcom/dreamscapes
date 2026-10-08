@@ -19,6 +19,8 @@ const builderStepTitle = document.querySelector("#builder-step-title");
 const builderProgressFill = document.querySelector("#builder-progress-fill");
 const builderStepBackButton = document.querySelector("#builder-step-back");
 const builderStepNextButton = document.querySelector("#builder-step-next");
+const builderStepNextLabel = document.querySelector("#builder-step-next-label");
+const builderStepSub = document.querySelector("#builder-step-sub");
 const generateStoryButton = document.querySelector("#generate-story-button");
 const builderAccountNotice = document.querySelector("#builder-lock");
 const builderCreateAccountButton = document.querySelector("#builder-create-account-button");
@@ -989,9 +991,18 @@ function setBuilderStep(stepIndex, announce = true) {
   if (builderProgressFill) {
     builderProgressFill.style.width = `${((stepPosition + 1) / activeSteps.length) * 100}%`;
   }
-  // "Home" inside a creation flow invites an accidental exit; Back is what the
-  // control actually does from the first step too.
-  if (builderStepBackButton) builderStepBackButton.textContent = "Back";
+  // Back is a chevron at the top now, so its label lives in aria rather than in
+  // textContent - writing text into it would wipe the glyph.
+  if (builderStepBackButton) builderStepBackButton.setAttribute("aria-label", "Back");
+  if (builderStepSub) {
+    const sub = activeStep?.dataset.stepSub || "";
+    builderStepSub.textContent = sub;
+    builderStepSub.hidden = !sub;
+    // One element shared by every step, moved under that step's heading so the
+    // line reads after the question rather than before it.
+    const heading = activeStep?.querySelector("h3");
+    if (heading && sub) heading.insertAdjacentElement("afterend", builderStepSub);
+  }
   if (builderStepNextButton) {
     builderStepNextButton.hidden = isLastStep;
     // Saying where Next goes turns a blank instruction into momentum, and tells
@@ -1002,7 +1013,9 @@ function setBuilderStep(stepIndex, announce = true) {
       : (!currentUser && builderSteps[nextStep]?.dataset.previewStepTitle) ||
         builderSteps[nextStep]?.dataset.stepTitle ||
         "";
-    builderStepNextButton.textContent = nextTitle ? `Next: ${nextTitle.toLowerCase()}` : "Next";
+    if (builderStepNextLabel) {
+      builderStepNextLabel.textContent = nextTitle ? `Next: ${nextTitle.toLowerCase()}` : "Next";
+    }
   }
   updateBuilderActions();
   updateBuilderAccountNotice();
