@@ -2563,10 +2563,9 @@ let repositionScene = () => {};
      68% of the way down it. Everything below that is quilt, which is what the
      form sits over. */
   const ART_BOTTOM = 0.68;
-  // The form may tuck over the foot of the book by this fraction of the
-  // picture - a fixed number of pixels swallows a small one and barely shows
-  // on a large one.
-  const TUCK = 0.08;
+  // The form clears the book rather than tucking over it: the lit pages are
+  // the brightest thing in the picture and the heading sat across them.
+  const TUCK = 0;
 
   function placeScene() {
     if (!scene || !frame || !sceneImage) return;
@@ -2583,9 +2582,14 @@ let repositionScene = () => {};
     const drawnHeight = (width * sceneImage.naturalHeight) / sceneImage.naturalWidth;
     const contentTop = foreground ? height - foreground.offsetHeight : height;
     const wanted = contentTop - drawnHeight * (ART_BOTTOM - TUCK);
-    // Never pull the picture below the top of the step, nor up past its own
-    // bottom edge, which would open a gap under it.
-    const top = Math.min(0, Math.max(Math.min(0, height - drawnHeight), wanted));
+    /* The picture may ride up until its own bottom edge reaches the top of the
+       form, but no further. Stopping at the bottom of the step instead - which
+       is what this did before - left the book covered on a screen where the
+       picture is barely taller than the step, because there was nothing left to
+       slide. Everything below the form's top edge is behind an opaque scrim, so
+       the picture ending there costs nothing. */
+    const lowest = Math.min(0, contentTop - drawnHeight);
+    const top = Math.min(0, Math.max(lowest, wanted));
 
     frame.style.top = `${top}px`;
     // The form's final height arrives a frame or two after the step does, so
