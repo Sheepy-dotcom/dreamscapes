@@ -5736,6 +5736,11 @@ body.night-mode .field-boxed input::placeholder {
                     rgba(10, 12, 44, 0.42) 36%, rgba(10, 12, 44, 0.06) 52%,
                     rgba(10, 12, 44, 0.1) 64%, rgba(10, 12, 44, 0.5) 82%,
                     rgba(10, 12, 44, 0.72) 100%),
-    url("./assets/home-scene.webp?v=2026100856") center top / cover no-repeat,
+    /* Anchored to the foot, not the head. Covering crops about a seventh of
+       the picture, and from the top that seventh was the quilt - the one part
+       with nothing in it, and the part the button needs to stand on. Taken off
+       the top instead, the button and the promises sit on bedding and the
+       child, the aeroplane and the dog stay clear above them. */
+    url("./assets/home-scene.webp?v=2026100856") center bottom / cover no-repeat,
     linear-gradient(180deg, #141c55 0%, #101640 100%);
 }
