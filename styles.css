@@ -5548,9 +5548,15 @@ body.night-mode .field-boxed input::placeholder {
   position: absolute;
   inset: 0;
   z-index: 0;
-  /* Sampled from the picture's own edges, so when it is scaled down to fit a
-     short screen the space either side of it is invisible. */
-  background: #181248;
+  /* The quilt at the foot of the picture, for the sliver below it on a step
+     taller than the picture is. */
+  background: #4a38ab;
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.step-scene.is-placed {
+  opacity: 1;
 }
 
 /* The picture keeps its own proportions and is slid vertically by script until

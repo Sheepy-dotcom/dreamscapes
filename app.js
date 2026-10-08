@@ -2559,16 +2559,14 @@ let repositionScene = () => {};
   const sceneImage = frame?.querySelector("img");
   const foreground = document.querySelector(".step-foreground");
 
-  // The drawing occupies the top 58% of builder-scene.jpg; the rest is the flat
-  // navy it was painted on, which is the part the form covers. (Kept as the
-  // reference the fitted fraction below is reasoned against.)
-
-  /* The heading may sit over the foot of the drawing - the bear's paws behind
-     the scrim look deliberate - but only ever by the same fraction of it, so a
-     picture scaled down for a short screen is not swallowed by a tuck that was
-     measured for a big one. Allowing the drawing to reach 58% of its height but
-     only requiring room for 50% leaves that tuck at 8%. */
-  const ART_FITTED = 0.5;
+  /* The scene is a bedroom, and the storybook the bear is holding ends about
+     68% of the way down it. Everything below that is quilt, which is what the
+     form sits over. */
+  const ART_BOTTOM = 0.68;
+  // The form may tuck over the foot of the book by this fraction of the
+  // picture - a fixed number of pixels swallows a small one and barely shows
+  // on a large one.
+  const TUCK = 0.08;
 
   function placeScene() {
     if (!scene || !frame || !sceneImage) return;
@@ -2576,22 +2574,25 @@ let repositionScene = () => {};
     const height = scene.clientHeight;
     if (!width || !height || !sceneImage.naturalWidth || !sceneImage.naturalHeight) return;
 
-    const ratio = sceneImage.naturalHeight / sceneImage.naturalWidth;
-    const room = foreground ? height - foreground.offsetHeight : height;
-    /* Scale to fit rather than slide. Sliding a full-width picture up until the
-       drawing cleared the form worked on a tall phone and gutted it on a short
-       one - at 667pt the form takes two thirds of the step, and the picture had
-       to ride up so far that the bear's head went with it. Shrinking instead
-       keeps the whole drawing whatever the screen, and the margins it leaves at
-       the sides are the same navy the picture was painted on, so they do not
-       read as margins at all. */
-    const drawnHeight = Math.min(width * ratio, room / ART_FITTED);
-    const drawnWidth = drawnHeight / ratio;
+    /* Full width and slid, not scaled to fit. The previous artwork was a
+       cut-out on flat navy, so shrinking it left margins in the same colour and
+       nobody could tell. This one is a room: its edges are lamp, bookshelf and
+       window, so any margin reads as a border. It has to bleed, which means the
+       top is cropped instead - which a room tolerates, being a photograph of a
+       place rather than a drawing of a thing. */
+    const drawnHeight = (width * sceneImage.naturalHeight) / sceneImage.naturalWidth;
+    const contentTop = foreground ? height - foreground.offsetHeight : height;
+    const wanted = contentTop - drawnHeight * (ART_BOTTOM - TUCK);
+    // Never pull the picture below the top of the step, nor up past its own
+    // bottom edge, which would open a gap under it.
+    const top = Math.min(0, Math.max(Math.min(0, height - drawnHeight), wanted));
 
-    frame.style.width = `${drawnWidth}px`;
-    frame.style.left = `${(width - drawnWidth) / 2}px`;
-    frame.style.right = "auto";
-    frame.style.top = "0px";
+    frame.style.top = `${top}px`;
+    // The form's final height arrives a frame or two after the step does, so
+    // the first placement is usually corrected by a second one. Holding the
+    // picture back until it has been placed turns that correction from a jump
+    // into a fade.
+    scene.classList.add("is-placed");
   }
 
   function syncNameField() {
@@ -2599,6 +2600,8 @@ let repositionScene = () => {};
   }
 
   if (sceneImage) {
+    // Whatever happens, the picture must not stay hidden.
+    setTimeout(() => scene?.classList.add("is-placed"), 1200);
     if (sceneImage.complete) placeScene();
     sceneImage.addEventListener("load", placeScene);
     // The form settles to its final height a beat after the step appears and
