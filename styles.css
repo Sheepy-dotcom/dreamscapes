@@ -5363,3 +5363,210 @@ body.night-mode .provider-google {
   height: auto;
   margin-bottom: 2px;
 }
+
+/* ── Step one: the page that has to sell personalisation ────────────────────
+   The first builder step is the one a parent judges the app on, so it carries
+   more weight than the steps after it: the art is bigger, the two fields are
+   cards with their own icons rather than labelled boxes, and the book the bear
+   is holding takes the child's name as it is typed. */
+
+.builder-step .step-art-book {
+  position: relative;
+}
+
+/* Sits on the open pages. They run from 28% to 72% across and are widest at
+   66-71% down, measured off the illustration rather than guessed, and the
+   slight rotation follows the angle the book is drawn at. */
+.book-title {
+  position: absolute;
+  left: 50%;
+  top: 68%;
+  width: 34%;
+  transform: translate(-50%, -50%) rotate(-1.5deg);
+  color: #5b3a1b;
+  font-size: clamp(0.62rem, 2.6cqw, 0.95rem);
+  font-weight: 900;
+  line-height: 1.15;
+  text-align: center;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+  opacity: 0;
+  transition: opacity 240ms ease;
+}
+
+.book-title.is-written {
+  opacity: 1;
+}
+
+.field-boxed {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 18px;
+  padding: 12px 14px;
+  background: rgba(14, 18, 54, 0.52);
+}
+
+.field-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: rgba(124, 142, 255, 0.22);
+}
+
+.field-icon svg {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: #cfd6ff;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.field-body {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.field-label {
+  color: rgba(226, 231, 255, 0.72);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* The input is the value itself, not a box inside a box: the card around it is
+   already doing that job. */
+.field-boxed input,
+.field-boxed select {
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: none;
+  color: var(--white);
+  font-size: 1.12rem;
+  font-weight: 900;
+}
+
+.field-boxed input::placeholder {
+  color: rgba(226, 231, 255, 0.4);
+  font-weight: 700;
+}
+
+.field-boxed input:focus,
+.field-boxed select:focus {
+  outline: none;
+}
+
+.field-boxed:focus-within {
+  border-color: rgba(255, 214, 122, 0.6);
+}
+
+.field-boxed select {
+  appearance: none;
+  /* Room for the chevron, which is drawn on the card rather than the select so
+     it cannot inherit the native control's own arrow. */
+  padding-right: 20px;
+  background-image: linear-gradient(45deg, transparent 50%, rgba(226, 231, 255, 0.8) 50%),
+                    linear-gradient(135deg, rgba(226, 231, 255, 0.8) 50%, transparent 50%);
+  background-size: 7px 7px, 7px 7px;
+  background-position: right 4px center, right 11px center;
+  background-repeat: no-repeat;
+}
+
+.field-clear {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 50%;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.field-clear svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: rgba(226, 231, 255, 0.55);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+.field-clear:hover svg {
+  stroke: var(--white);
+}
+
+/* Step one carries the illustration the whole app is judged on, and it has only
+   two fields under it, so it can afford the room the other steps cannot. The
+   short-screen override below still applies and still wins. */
+.builder-step.has-art.active[data-builder-step="0"] {
+  --step-art-max: 260px;
+}
+
+@media (max-height: 700px) {
+  .builder-step.has-art.active[data-builder-step="0"] {
+    --step-art-max: 150px;
+  }
+}
+
+/* The step's own forward button is the thing the parent is reaching for, so it
+   is taller and rounder than a button anywhere else in the app. */
+.builder-screen .builder-actions .primary-button {
+  min-height: 60px;
+  border-radius: 26px;
+  font-size: 1.06rem;
+}
+
+/* The two fields stack full width, the way the mockup has them: side by side
+   leaves the age card too narrow for an icon, a value and a chevron, which
+   crushed the select into a sliver. */
+.builder-step[data-builder-step="0"] .child-basics-grid {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+}
+
+/* The step centres its text; the fields are read left to right. */
+.builder-step .field-boxed {
+  text-align: left;
+}
+
+/* `body.night-mode .field input` is (0,2,2) and a plain `.field-boxed input` is
+   only (0,2,1), so the night rules kept drawing the inner box back on - the
+   fill and the inset highlight that the card around it already provides. These
+   match that weight and come later, so they win without !important. */
+body.night-mode .field-boxed input,
+body.night-mode .field-boxed select,
+.builder-step .field-boxed input,
+.builder-step .field-boxed select {
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--white);
+  font-size: 1.12rem;
+  font-weight: 900;
+}
+
+/* A drawn chevron rather than the two clipped gradients `.field select` uses:
+   at this size those met in a solid triangle. */
+body.night-mode .field-boxed select,
+.builder-step .field-boxed select {
+  padding-right: 22px;
+  background:
+    url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23cfd6ff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")
+    right center / 15px 15px no-repeat;
+}
+
+body.night-mode .field-boxed input::placeholder {
+  color: rgba(226, 231, 255, 0.42);
+}

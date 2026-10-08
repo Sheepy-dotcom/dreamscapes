@@ -2536,6 +2536,43 @@ document.querySelector("#skip-parent-controls")?.addEventListener("click", () =>
   builderStepNextButton?.click();
 });
 
+let refreshBookTitle = () => {};
+
+/* The bear on step one is holding an open book, and the book takes the child's
+   name as it is typed. It is the only moment in the builder that shows rather
+   than promises what "personalised" means, so it is worth the few lines: the
+   parent sees their child's story exist before they have answered anything
+   else. The name is written in, not interpolated into a sentence, so a long
+   name wraps on the page instead of overflowing it. */
+(() => {
+  const nameInput = document.querySelector("#child-name");
+  const bookTitle = document.querySelector("#book-title");
+  const clearName = document.querySelector("#clear-child-name");
+  if (!nameInput) return;
+
+  function writeOnBook() {
+    const name = nameInput.value.trim();
+    if (clearName) clearName.hidden = name === "";
+    if (!bookTitle) return;
+    // An apostrophe-s on a name already ending in s reads badly, so names like
+    // Jess get the bare possessive the way a book cover would print it.
+    const possessive = /s$/i.test(name) ? `${name}’` : `${name}’s`;
+    bookTitle.textContent = name ? `${possessive} Story` : "";
+    bookTitle.classList.toggle("is-written", name !== "");
+  }
+
+  nameInput.addEventListener("input", writeOnBook);
+  clearName?.addEventListener("click", () => {
+    nameInput.value = "";
+    writeOnBook();
+    nameInput.focus();
+  });
+  // A name restored from a saved story or a child profile is set on the input
+  // directly, which fires no input event, so the fill paths call this.
+  refreshBookTitle = writeOnBook;
+  writeOnBook();
+})();
+
 function renderInterestChips() {
   if (!interestChips) return;
   // Pictures rather than emoji: a tile shows a parent the story world they are
@@ -4760,6 +4797,7 @@ function beginStoryContinuation(story, choice = "") {
   };
 
   form.elements.childName.value = story.childName || "";
+  refreshBookTitle();
   form.elements.childAge.value = story.childAge || "";
   form.elements.interests.value = story.interests || "";
   form.elements.storyIdea.value = pendingStoryContext.continuationChoice;
