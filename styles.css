@@ -6163,3 +6163,48 @@ body.night-mode .app-tabbar button:hover {
 .builder-step-length .duration-body strong { color: #fffaf0; }
 .builder-step-length .duration-body em { color: #ffd95f; }
 .builder-step-length .duration-body small { color: rgba(231, 223, 255, 0.78); }
+
+/* ---- The illustrated screens run edge to edge ---------------------------- */
+/* Home and the builder are pictures, and a picture inside a bordered card with
+   the night sky showing around it reads as a picture of an app rather than the
+   app. The content screens - library, plans, account - keep their panel,
+   because a list of saved stories on bare sky has nothing to sit on. */
+body.home-active .app-shell,
+body.builder-active .app-shell {
+  width: 100%;
+  padding-top: 0;
+}
+
+#welcome-screen.active {
+  border: 0;
+  border-radius: 0;
+  min-height: 100dvh;
+  padding-top: calc(10px + var(--safe-top));
+  padding-bottom: calc(96px + var(--safe-bottom));
+}
+
+.builder-screen.active {
+  top: 0;
+  bottom: calc(80px + var(--safe-bottom));
+  width: 100%;
+  border-radius: 0;
+  padding-top: calc(6px + var(--safe-top));
+}
+
+.builder-step-scene,
+.builder-step-length {
+  border-radius: 0;
+}
+
+/* An edge of its own, now the panels are gone - and something behind it. The
+   bar was given no background at all so it would sit on the home illustration
+   without a seam, which works on a screen that does not move; the library
+   scrolls, and the stories ran under the menu and showed straight through it,
+   titles crossing labels. Translucent and blurred keeps the blended look on
+   the pictures and gives a moving list something to pass behind. */
+.app-tabbar,
+body.night-mode .app-tabbar {
+  border-top: 1px solid rgba(226, 216, 255, 0.16);
+  background: rgba(16, 19, 56, 0.82);
+  backdrop-filter: blur(16px);
+}
