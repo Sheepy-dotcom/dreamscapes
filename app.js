@@ -936,8 +936,21 @@ function setBuilderStep(stepIndex, announce = true) {
   if (builderProgressFill) {
     builderProgressFill.style.width = `${((stepPosition + 1) / activeSteps.length) * 100}%`;
   }
-  if (builderStepBackButton) builderStepBackButton.textContent = stepPosition === 0 ? "Home" : "Back";
-  if (builderStepNextButton) builderStepNextButton.hidden = isLastStep;
+  // "Home" inside a creation flow invites an accidental exit; Back is what the
+  // control actually does from the first step too.
+  if (builderStepBackButton) builderStepBackButton.textContent = "Back";
+  if (builderStepNextButton) {
+    builderStepNextButton.hidden = isLastStep;
+    // Saying where Next goes turns a blank instruction into momentum, and tells
+    // a parent the form is going somewhere rather than carrying on forever.
+    const nextStep = activeSteps[stepPosition + 1];
+    const nextTitle = nextStep === undefined
+      ? ""
+      : (!currentUser && builderSteps[nextStep]?.dataset.previewStepTitle) ||
+        builderSteps[nextStep]?.dataset.stepTitle ||
+        "";
+    builderStepNextButton.textContent = nextTitle ? `Next: ${nextTitle.toLowerCase()}` : "Next";
+  }
   updateBuilderActions();
   updateBuilderAccountNotice();
 
