@@ -5814,10 +5814,10 @@ body.night-mode .app-tabbar button:hover {
   height: 24px;
 }
 
-/* Dimmed until the tab is the one you are on, so the row reads as one thing
-   with a single bright spot rather than five competing badges. */
+/* Barely held back when the tab is not the one you are on. They were at 74%,
+   which on a night sky left them looking switched off rather than waiting. */
 .tab-icon svg > * {
-  opacity: 0.74;
+  opacity: 0.92;
   transition: opacity 160ms ease;
 }
 
@@ -5825,8 +5825,20 @@ body.night-mode .app-tabbar button:hover {
   opacity: 1;
 }
 
-.tab-icon svg .tb-lilac { fill: #b9a6ff; }
-.tab-icon svg .tb-sky { fill: #8fd0ff; }
-.tab-icon svg .tb-coral { fill: #ff9a86; }
-.tab-icon svg .tb-gold { fill: #ffd16a; }
-.tab-icon svg .tb-star { fill: #fff3c4; }
+/* A glow of their own, so the colour carries against the clouds rather than
+   sinking into them. */
+.tab-icon svg {
+  filter: drop-shadow(0 1px 5px rgba(10, 12, 44, 0.55));
+}
+
+.app-tabbar button.active .tab-icon svg {
+  filter: drop-shadow(0 0 8px rgba(255, 216, 128, 0.5)) drop-shadow(0 1px 4px rgba(10, 12, 44, 0.5));
+}
+
+.tab-icon svg .tb-lilac { fill: #c9b6ff; }
+.tab-icon svg .tb-sky { fill: #7ad6ff; }
+.tab-icon svg .tb-coral { fill: #ff8f74; }
+.tab-icon svg .tb-gold { fill: #ffd45c; }
+.tab-icon svg .tb-star { fill: #fff8dc; }
+.tab-icon svg .tb-pink { fill: #ff8fc4; }
+.tab-icon svg .tb-mint { fill: #74ecc6; }
