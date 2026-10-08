@@ -5164,7 +5164,13 @@ body.night-mode .provider-google {
    tab bar. The ID still wins where it needs to; it just has to be asked. */
 #welcome-screen.active {
   display: grid;
-  align-content: space-between;
+  /* All the slack goes into the third row, the empty one, instead of being
+     shared out between every gap. Shared out, the button came to rest halfway
+     down the screen - straight across the aeroplane and the pilot. With one
+     row taking it, the words sit at the top, the button and the promises sit
+     at the foot, and the middle of the picture is left alone. */
+  grid-template-rows: auto auto minmax(0, 1fr) auto auto auto;
+  align-content: stretch;
   /* Matches what the shell actually reserves above and below this screen -
      12px and 108px plus the safe areas. The flat 96px here ignored the insets,
      so on a phone with a notch and a home indicator the screen was about a
@@ -5197,10 +5203,6 @@ body.night-mode .provider-google {
 .welcome-copy .welcome-sub,
 .welcome-points li {
   text-shadow: 0 2px 10px rgba(6, 8, 30, 0.85);
-}
-
-.welcome-spacer {
-  display: none;
 }
 
 /* ---- Length cards -------------------------------------------------------- */
@@ -5710,7 +5712,12 @@ body.night-mode .field-boxed input::placeholder {
 /* Everything above the button is pinned to the top and everything below it to
    the bottom; this is the gap between them, and it is where the child and the
    storybook show through. */
+/* The empty row that holds the screen apart. It was display:none from when
+   this screen shared its slack between every gap and had no use for it; left
+   that way it was not a grid item at all, so the button inherited the flexible
+   row and stretched to a yellow slab half the screen deep. */
 .welcome-spacer {
+  display: block;
   min-height: 0;
 }
 
