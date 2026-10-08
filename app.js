@@ -16,7 +16,6 @@ const builderSteps = Array.from(document.querySelectorAll("[data-builder-step]")
 const builderStepMarkers = Array.from(document.querySelectorAll("[data-builder-step-marker]"));
 const builderStepCount = document.querySelector("#builder-step-count");
 const builderStepTitle = document.querySelector("#builder-step-title");
-const builderProgressFill = document.querySelector("#builder-progress-fill");
 const builderStepBackButton = document.querySelector("#builder-step-back");
 const builderStepNextButton = document.querySelector("#builder-step-next");
 const builderStepNextLabel = document.querySelector("#builder-step-next-label");
@@ -993,9 +992,6 @@ function setBuilderStep(stepIndex, announce = true) {
     // The preview wording went with the preview: every step carries its own
     // title now, whether or not anyone is signed in.
     builderStepTitle.textContent = activeStep?.dataset.stepTitle || "";
-  }
-  if (builderProgressFill) {
-    builderProgressFill.style.width = `${((stepPosition + 1) / activeSteps.length) * 100}%`;
   }
   // Back is a chevron at the top now, so its label lives in aria rather than in
   // textContent - writing text into it would wipe the glyph.

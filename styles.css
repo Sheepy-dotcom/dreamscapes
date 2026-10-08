@@ -486,22 +486,6 @@ textarea:focus-visible {
   font-size: 1rem;
 }
 
-.builder-progress-track {
-  height: 6px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: rgba(123, 78, 216, 0.14);
-}
-
-.builder-progress-track span {
-  display: block;
-  width: 25%;
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, #ffe785, #ffb0d0 55%, #cdb7ff);
-  transition: width 220ms ease;
-}
-
 .builder-step-list {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -2796,11 +2780,7 @@ body.night-mode .builder-step-list li {
   color: rgba(216, 198, 255, 0.72);
 }
 
-body.night-mode .builder-progress-track {
-  background: rgba(216, 198, 255, 0.16);
-}
-
-body.night-mode .builder-step-list li span {
+body.night-mode body.night-mode .builder-step-list li span {
   border-color: rgba(216, 198, 255, 0.28);
   background: rgba(10, 15, 48, 0.72);
 }
@@ -3262,11 +3242,7 @@ body.night-mode .builder-step-list li {
   color: rgba(239, 229, 255, 0.86);
 }
 
-body.night-mode .builder-progress-track {
-  background: rgba(236, 226, 255, 0.24);
-}
-
-body.night-mode .builder-step-list li span {
+body.night-mode body.night-mode .builder-step-list li span {
   border-color: rgba(226, 211, 255, 0.42);
   background: rgba(32, 40, 97, 0.92);
 }
