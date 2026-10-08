@@ -5738,9 +5738,22 @@ body.night-mode .field-boxed input::placeholder {
    the bottom, sat on the body so every screen shares it rather than each
    carrying its own gradient. */
 body.night-mode {
+  background: linear-gradient(180deg, #11163f 0%, #211d56 62%, #392a70 100%);
+}
+
+/* The sky is a fixed layer rather than the body's own background, because the
+   body is as tall as its content: on a screen that scrolls - the account page
+   is the long one - the clouds sat at the foot of the document, far below
+   anything anyone would see. Fixed, they stay at the foot of the window. */
+body.night-mode::before {
+  content: "";
+  position: fixed;
+  z-index: -1;
+  inset: 0;
   background:
-    url("./assets/screen-clouds.webp?v=2026100867") center bottom / cover no-repeat,
+    url("./assets/screen-clouds.webp?v=2026100868") center bottom / cover no-repeat,
     linear-gradient(180deg, #11163f 0%, #211d56 62%, #392a70 100%);
+  pointer-events: none;
 }
 
 /* The screens let it through. They were opaque panels, which turned the sky
@@ -5761,6 +5774,7 @@ body.night-mode .app-tabbar,
 .app-tabbar {
   border: 0;
   border-radius: 0;
+  outline: 0;
   padding-top: 10px;
   background: linear-gradient(180deg, rgba(17, 20, 58, 0) 0%, rgba(17, 20, 58, 0.34) 46%, rgba(17, 20, 58, 0.62) 100%);
   box-shadow: none;
@@ -5780,7 +5794,9 @@ body.night-mode .app-tabbar button.active,
 .app-tabbar button:hover,
 body.night-mode .app-tabbar button:hover {
   color: #fff6d8;
-  background: rgba(255, 224, 126, 0.14);
+  /* A glow that fades out, not a tinted rectangle. At 14% on the clouds the
+     rectangle read as an outline drawn round the tab. */
+  background: radial-gradient(ellipse at 50% 42%, rgba(255, 224, 126, 0.26), rgba(255, 224, 126, 0) 72%);
 }
 
 .tab-icon {
