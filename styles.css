@@ -5370,34 +5370,6 @@ body.night-mode .provider-google {
    cards with their own icons rather than labelled boxes, and the book the bear
    is holding takes the child's name as it is typed. */
 
-.builder-step .step-art-book {
-  position: relative;
-}
-
-/* Sits on the open pages. They run from 28% to 72% across and are widest at
-   66-71% down, measured off the illustration rather than guessed, and the
-   slight rotation follows the angle the book is drawn at. */
-.book-title {
-  position: absolute;
-  left: 50%;
-  top: 68%;
-  width: 34%;
-  transform: translate(-50%, -50%) rotate(-1.5deg);
-  color: #5b3a1b;
-  font-size: clamp(0.62rem, 2.6cqw, 0.95rem);
-  font-weight: 900;
-  line-height: 1.15;
-  text-align: center;
-  text-wrap: balance;
-  overflow-wrap: anywhere;
-  opacity: 0;
-  transition: opacity 240ms ease;
-}
-
-.book-title.is-written {
-  opacity: 1;
-}
-
 .field-boxed {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
@@ -5569,4 +5541,120 @@ body.night-mode .field-boxed select,
 
 body.night-mode .field-boxed input::placeholder {
   color: rgba(226, 231, 255, 0.42);
+}
+
+/* ── Step one as a full-bleed scene ─────────────────────────────────────────
+   The illustration is the screen here, not a picture at the top of it. The
+   picture covers the whole step; the heading and the fields hug the bottom over
+   a scrim, so the artwork takes every pixel the content is not using and the
+   step never has to decide between showing the bear and showing the form. */
+.builder-step-scene {
+  position: relative;
+  display: block;
+  grid-template-rows: none;
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 20px;
+}
+
+.step-scene {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: #16113f;
+}
+
+/* The picture keeps its own proportions and is slid vertically by script until
+   the book sits just above whatever room the fields have left. Cropping it to
+   the box with object-fit instead would fix the book wherever the crop put it,
+   which on a short phone is underneath the form. */
+.step-scene-frame {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  display: block;
+}
+
+.step-scene-frame img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Placed by script from the image's measured geometry rather than by a
+   percentage of this box: under object-fit: cover the picture is scaled and
+   cropped, so a percentage of the container and a percentage of the picture are
+   not the same point, and the name would drift off the page. */
+.builder-step-scene .book-title {
+  position: absolute;
+  color: #5b3a1b;
+  font-weight: 900;
+  line-height: 1.15;
+  text-align: center;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+  transform: translate(-50%, -50%) rotate(-1.5deg);
+  opacity: 0;
+  transition: opacity 240ms ease;
+  pointer-events: none;
+}
+
+.builder-step-scene .book-title.is-written {
+  opacity: 1;
+}
+
+/* Pinned rather than laid out. The step stays `display: grid` with
+   `align-content: safe center` from a rule more specific than anything sane to
+   write here, which centred this block and left the fields sitting on top of
+   the book. Taking it out of flow sidesteps that argument entirely: the content
+   hugs the bottom of the step, and the artwork keeps everything above it. */
+.builder-step-scene .step-foreground {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0 clamp(14px, 4vw, 26px) clamp(14px, 3vw, 22px);
+  /* Rises out of the picture so the fields are legible wherever the artwork
+     happens to end on a given screen. */
+  background: linear-gradient(180deg, transparent 0%, rgba(14, 12, 48, 0.62) 13%, rgba(14, 12, 48, 0.88) 26%, rgba(14, 12, 48, 0.95) 44%, rgba(14, 12, 48, 0.97) 100%);
+}
+
+.step-foreground h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+/* The two field icons are drawn in the app's own palette rather than as grey
+   line art: the lilac and sky of the builder groups for the child, and the
+   pink, cream and gold the rest of the app uses for anything celebratory. */
+.field-icon svg .ic-fill-lilac { fill: #b9a6ff; }
+.field-icon svg .ic-fill-sky { fill: #8fd0ff; }
+.field-icon svg .ic-fill-pink { fill: #ff9ec2; }
+.field-icon svg .ic-fill-cream { fill: #ffeccb; }
+.field-icon svg .ic-fill-gold { fill: #ffd16a; }
+.field-icon svg .ic-stroke-gold {
+  fill: none;
+  stroke: #ffd16a;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.field-icon-child { background: rgba(150, 132, 255, 0.24); }
+.field-icon-age { background: rgba(255, 158, 194, 0.2); }
+
+/* The icons carry their own colour, so the shared stroke must not repaint them. */
+.field-icon svg [class^="ic-fill"] { stroke: none; }
+
+/* Smaller than before: the picture is doing the selling on this step, and the
+   button was taking room the scene wants. */
+.builder-screen .builder-actions .primary-button {
+  min-height: 52px;
+  border-radius: 22px;
+  font-size: 1rem;
 }

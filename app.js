@@ -1085,6 +1085,13 @@ function showScreen(name) {
     updateBuilderAccountNotice();
   }
   document.body.classList.toggle("home-active", name === "welcome");
+  // The step is laid out while its screen is still display:none, where every
+  // box measures zero, so the scene is placed again once it actually has one.
+  if (name === "builder") {
+    // Two frames: the first is where the screen gets its box, the second is
+    // where that box has been laid out and can be measured.
+    requestAnimationFrame(() => requestAnimationFrame(() => repositionBookTitle()));
+  }
   document.body.classList.toggle("builder-active", name === "builder");
   document.querySelectorAll("[data-screen-target]").forEach((button) => {
     button.classList.toggle("active", button.dataset.screenTarget === name);
@@ -2537,6 +2544,7 @@ document.querySelector("#skip-parent-controls")?.addEventListener("click", () =>
 });
 
 let refreshBookTitle = () => {};
+let repositionBookTitle = () => {};
 
 /* The bear on step one is holding an open book, and the book takes the child's
    name as it is typed. It is the only moment in the builder that shows rather
@@ -2561,7 +2569,66 @@ let refreshBookTitle = () => {};
     bookTitle.classList.toggle("is-written", name !== "");
   }
 
-  nameInput.addEventListener("input", writeOnBook);
+  /* Where the book lands has to depend on how much room the fields leave,
+     because that varies with the phone. The picture keeps its proportions and
+     is slid up until the pages sit just clear of the form - so on a tall screen
+     you see the rocket and the dinosaur above the bear, and on a short one the
+     picture rides up and you still see the name on the book. The pages are
+     centred 40% down the artwork and 30% of its width across. */
+  /* Measured off builder-scene.jpg: the open pages are the only wide unbroken
+     band of bright pixels in the picture, centred 45.5% down and spanning about
+     a quarter of its width. The 40% used before came from the cropped version
+     of this artwork and sat on the book's top edge, not its pages. */
+  const BOOK = { x: 0.5, y: 0.455, w: 0.26, clearance: 76 };
+  const scene = document.querySelector(".step-scene");
+  const frame = document.querySelector(".step-scene-frame");
+  const sceneImage = frame?.querySelector("img");
+  const foreground = document.querySelector(".step-foreground");
+
+  function placeBookTitle() {
+    if (!scene || !frame || !sceneImage || !bookTitle) return;
+    const width = scene.clientWidth;
+    const height = scene.clientHeight;
+    const natural = sceneImage.naturalWidth && sceneImage.naturalHeight;
+    if (!width || !height || !natural) return;
+
+    const drawnHeight = (width * sceneImage.naturalHeight) / sceneImage.naturalWidth;
+    const bookOffset = drawnHeight * BOOK.y;
+    const contentTop = foreground ? height - foreground.offsetHeight : height;
+    // Slide far enough that the pages clear the form, but never so far that the
+    // picture pulls away from the top or runs out at the bottom.
+    const wanted = contentTop - BOOK.clearance - bookOffset;
+    const top = Math.min(0, Math.max(Math.min(0, height - drawnHeight), wanted));
+
+    frame.style.top = `${top}px`;
+    // The title is a child of the frame, so it is positioned within the
+    // picture and must not be offset by the slide a second time.
+    bookTitle.style.left = `${width * BOOK.x}px`;
+    bookTitle.style.top = `${bookOffset}px`;
+    bookTitle.style.width = `${width * BOOK.w}px`;
+    bookTitle.style.fontSize = `${Math.max(9, Math.min(17, width * 0.042))}px`;
+  }
+
+  if (sceneImage) {
+    if (sceneImage.complete) placeBookTitle();
+    sceneImage.addEventListener("load", placeBookTitle);
+    // Both boxes matter. Watching only the picture was not enough: the form
+    // settles to its final height a beat after the step appears, and the slide
+    // is measured from how much room the form leaves, so a placement made
+    // against the taller first pass put the name up on the bear's face.
+    const watch = new ResizeObserver(placeBookTitle);
+    watch.observe(scene);
+    if (foreground) watch.observe(foreground);
+    window.addEventListener("resize", placeBookTitle);
+  }
+  repositionBookTitle = placeBookTitle;
+
+  nameInput.addEventListener("input", () => {
+    writeOnBook();
+    // Cheap, and it guarantees the name is placed the first time it is typed
+    // even if nothing else has measured the step yet.
+    placeBookTitle();
+  });
   clearName?.addEventListener("click", () => {
     nameInput.value = "";
     writeOnBook();
@@ -2571,6 +2638,7 @@ let refreshBookTitle = () => {};
   // directly, which fires no input event, so the fill paths call this.
   refreshBookTitle = writeOnBook;
   writeOnBook();
+  placeBookTitle();
 })();
 
 function renderInterestChips() {

@@ -22,7 +22,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026100823" />
+    <link rel="stylesheet" href="./styles.css?v=2026100832" />
   </head>
   <body class="home-active night-mode">
     <svg class="art-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -91,9 +91,10 @@
               <p class="builder-step-sub" id="builder-step-sub"></p>
           </div>
 
-          <section class="builder-step has-art active" data-builder-step="0" data-step-sub="Tell us a little about your child so we can create a story just for them." data-step-title="Who it's for" aria-labelledby="builder-step-child-title">
-            <div class="step-art step-art-book" aria-hidden="true"><img src="./assets/builder-bear.png" alt="" /><span class="book-title" id="book-title"></span></div>
-            <h3 id="builder-step-child-title">Who’s the story for?</h3>
+          <section class="builder-step builder-step-scene active" data-builder-step="0" data-step-sub="Tell us a little about your child so we can create a story just for them." data-step-title="Who it's for" aria-labelledby="builder-step-child-title">
+            <div class="step-scene" aria-hidden="true"><span class="step-scene-frame"><img src="./assets/builder-scene.jpg" alt="" /><span class="book-title" id="book-title"></span></span></div>
+            <div class="step-foreground">
+<h3 id="builder-step-child-title">Who’s the story for?</h3>
             <fieldset class="choice-group child-profile-picker builder-group builder-group-lilac" id="builder-child-profiles" hidden>
               <legend>Tap a child to start</legend>
               <div class="profile-choice-list" id="builder-profile-list"></div>
@@ -102,15 +103,16 @@
             <div class="builder-group builder-group-sky builder-fields-block">
               <div class="form-grid child-basics-grid">
                 <label class="field field-boxed">
-                  <span class="field-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" /></svg></span>
+                  <span class="field-icon field-icon-child" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><circle class="ic-fill-lilac" cx="12" cy="8" r="4.2" /><path class="ic-fill-sky" d="M3.6 21.4c0-4.6 3.8-7.4 8.4-7.4s8.4 2.8 8.4 7.4z" /></svg></span>
                   <span class="field-body"><span class="field-label">Child’s name</span><input id="child-name" name="childName" type="text" placeholder="Their name" autocomplete="off" /></span>
                   <button class="field-clear" id="clear-child-name" type="button" aria-label="Clear name" hidden><svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M9 9l6 6M15 9l-6 6" /></svg></button>
                 </label>
                 <label class="field field-boxed">
-                  <span class="field-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M4 20h16v-7H4z" /><path d="M6 13v-2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2" /><path d="M12 9V5" /><circle cx="12" cy="4" r="1.2" /></svg></span>
-                  <span class="field-body"><span class="field-label">Age</span><select id="child-age" name="childAge"><option value="">Pick</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option></select></span>
+                  <span class="field-icon field-icon-age" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path class="ic-fill-pink" d="M3.4 20.6v-5.2c0-1 .8-1.8 1.8-1.8h13.6c1 0 1.8.8 1.8 1.8v5.2z" /><path class="ic-fill-cream" d="M5.8 13.6v-2.2c0-1 .8-1.8 1.8-1.8h8.8c1 0 1.8.8 1.8 1.8v2.2z" /><path class="ic-stroke-gold" d="M12 9.6V6.4" /><path class="ic-fill-gold" d="M12 2.2c1.5 1.4 2.2 2.4 2.2 3.1a2.2 2.2 0 0 1-4.4 0c0-.7.7-1.7 2.2-3.1z" /></svg></span>
+                  <span class="field-body"><span class="field-label">Age</span><input id="child-age" name="childAge" type="number" inputmode="numeric" min="1" max="12" placeholder="Age" /></span>
                 </label>
               </div>
+            </div>
             </div>
           </section>
 
@@ -1068,6 +1070,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026100823"></script>
+    <script src="./app.js?v=2026100832"></script>
   </body>
 </html>
