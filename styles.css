@@ -147,14 +147,16 @@ button {
 body.home-active .app-shell {
   min-height: 100vh;
   min-height: 100dvh;
-  padding: calc(12px + var(--safe-top)) 0 calc(108px + var(--safe-bottom));
+  /* The tab bar is 88 points; the extra twenty here were empty air between the
+     foot of the screen and the top of the bar. */
+  padding: calc(12px + var(--safe-top)) 0 calc(92px + var(--safe-bottom));
 }
 
 body.home-active .welcome-screen {
   /* Matches the 12px/108px shell padding above; a smaller figure here made the
      home screen taller than the viewport. */
   min-height: calc(100vh - 120px);
-  min-height: calc(100dvh - 120px - var(--safe-top) - var(--safe-bottom));
+  min-height: calc(100dvh - 104px - var(--safe-top) - var(--safe-bottom));
 }
 
 body.home-active .welcome-screen.active {
@@ -5176,7 +5178,7 @@ body.night-mode .provider-google {
      so on a phone with a notch and a home indicator the screen was about a
      hundred points taller than its room and the three promises at the foot of
      it were served up underneath the tab bar. */
-  min-height: calc(100dvh - 120px - var(--safe-top) - var(--safe-bottom));
+  min-height: calc(100dvh - 104px - var(--safe-top) - var(--safe-bottom));
   /* Light scrims only: enough to keep the headline and the button readable,
      not so much that the picture underneath them disappears. */
   background:
@@ -5662,7 +5664,7 @@ body.night-mode .field-boxed input::placeholder {
    one more panel among the panels. */
 .welcome-screen .welcome-actions .primary-button {
   gap: 12px;
-  min-height: 58px;
+  min-height: 50px;
   border-radius: 999px;
   padding-left: 28px;
   padding-right: 24px;
@@ -5675,7 +5677,7 @@ body.night-mode .field-boxed input::placeholder {
 
 @media (max-height: 700px) {
   .welcome-screen .welcome-actions .primary-button {
-    min-height: 50px;
+    min-height: 44px;
     font-size: 0.98rem;
   }
 
