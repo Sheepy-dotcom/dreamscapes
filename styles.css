@@ -6678,3 +6678,163 @@ body.builder-active .app-tabbar::before {
    10-minute moon against its own gold background. */
 .builder-step-length .duration-icon svg .dc-cream { fill: #fff8ea; }
 .builder-step-length .duration-icon svg .dc-gold { fill: #ffd95f; }
+
+/* ---- Mood step: the picture is the step --------------------------------- */
+/* Same arrangement as step one and the length step. The mood step was the
+   last one still built the old way: a small flat SVG cloud at the top, a
+   bordered fieldset with a coloured spine, and - inside it - a second copy of
+   "Pick as many as you like." sitting directly under the first. */
+.builder-step-mood {
+  position: relative;
+  display: block;
+  grid-template-rows: none;
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 0;
+}
+
+.mood-scene {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: #161244;
+}
+
+.mood-scene img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* He sits low in the file, with the orbs above him and plain bedding below.
+     Holding the picture high shows the orbs and keeps the bedding - which is
+     what the chips sit on - rather than cropping it away. */
+  object-position: center 28%;
+}
+
+.mood-foreground {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: clamp(12px, 3vw, 20px) clamp(12px, 3.5vw, 20px) clamp(10px, 2vw, 16px);
+  background: linear-gradient(180deg, rgba(14, 12, 48, 0.7) 0%, rgba(14, 12, 48, 0.26) 17%,
+                              rgba(14, 12, 48, 0) 34%, rgba(14, 12, 48, 0.3) 52%,
+                              rgba(14, 12, 48, 0.74) 70%, rgba(14, 12, 48, 0.9) 100%);
+}
+
+/* `auto` sides: the heading is capped at 20ch by .builder-step h3 and centred
+   inside that block, so zeroing the side margins in the shorthand puts the
+   block hard left and the words with it. The length step has the same rule
+   and the same fix. */
+.builder-step-mood h3 {
+  margin: 0 auto 2px;
+  font-size: clamp(1.18rem, 5.2vw, 1.42rem);
+  line-height: 1.22;
+}
+
+.builder-step-mood h3 span {
+  display: block;
+  color: #ffd45c;
+}
+
+.builder-step-mood .builder-step-sub {
+  margin: 2px auto 0;
+}
+
+/* Only the moods go to the foot; the question stays at the top. */
+.builder-step-mood .mood-group {
+  margin-top: auto;
+  border: 0;
+  border-left: 0;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.builder-step-mood .mood-grid,
+.builder-step .builder-step-mood .mood-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+/* The chip becomes a small card: drawing above, word below. */
+.builder-step-mood .mood-grid span,
+body.night-mode .builder-step-mood .mood-grid span,
+.builder-step .builder-step-mood .mood-grid span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 0;
+  border: 1px solid rgba(226, 216, 255, 0.2);
+  border-radius: 14px;
+  padding: 9px 4px 8px;
+  color: #fffaf0;
+  background: rgba(22, 18, 62, 0.74);
+  backdrop-filter: blur(3px);
+  font-size: 0.76rem;
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.builder-step-mood .mood-grid input:checked + span,
+body.night-mode .builder-step-mood .mood-grid input:checked + span,
+body.night-mode .mood-group .builder-step-mood .mood-grid input:checked + span {
+  border-color: #ffd45c;
+  color: #fffaf0;
+  background: rgba(44, 32, 92, 0.9);
+}
+
+.builder-step-mood .mi {
+  width: 24px;
+  height: 24px;
+}
+
+/* One drawing language: a filled shape in the mood's own colour, a gold
+   sparkle on top, and the dark of the page for anything that reads as a mark
+   on the shape - a smile, the fold of a wing, the spine of a book. */
+.builder-step-mood .mi-fill { fill: var(--mood-tint, #fff6e6); }
+.builder-step-mood .mi-accent { fill: #ffd95f; }
+.builder-step-mood .mi-ink { fill: #241a52; }
+.builder-step-mood .mi-stroke {
+  fill: none;
+  stroke: var(--mood-tint, #fff6e6);
+  stroke-width: 2.1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.builder-step-mood .mi-accent-stroke {
+  fill: none;
+  stroke: #ffd95f;
+  stroke-width: 2.1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.builder-step-mood .mi-ink-stroke {
+  fill: none;
+  stroke: #241a52;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.builder-step-mood .mood-grid label:nth-child(1) span { --mood-tint: #9fd8ff; }
+.builder-step-mood .mood-grid label:nth-child(2) span { --mood-tint: #c9b0ff; }
+.builder-step-mood .mood-grid label:nth-child(3) span { --mood-tint: #ffd45c; }
+.builder-step-mood .mood-grid label:nth-child(4) span { --mood-tint: #8ff0c9; }
+.builder-step-mood .mood-grid label:nth-child(5) span { --mood-tint: #ffb98f; }
+.builder-step-mood .mood-grid label:nth-child(6) span { --mood-tint: #b9c6ff; }
+
+/* Same dissolve the other two pictures get, so it meets the night sky rather
+   than stopping on a line. */
+.mood-scene {
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 6%, #000 90%, transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0%, #000 6%, #000 90%, transparent 100%);
+}
