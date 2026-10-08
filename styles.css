@@ -6078,9 +6078,11 @@ body.night-mode .app-tabbar button:hover {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  /* The file is already cropped to put her where she needs to be, so this only
-     has to keep the framing steady as the step changes height. */
-  object-position: center 38%;
+  /* The drawn file is 3:4 against a step nearer 2:3, so covering crops the
+     sides and shows the whole height - her face lands at 40% of the step on
+     its own, which is the window between the standfirst and the first card.
+     Nothing to position around. */
+  object-position: center center;
 }
 
 /* The question at the top, the lengths at the foot, the child between them. */
