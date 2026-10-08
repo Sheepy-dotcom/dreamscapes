@@ -384,16 +384,15 @@ textarea:focus-visible {
   bottom: calc(88px + var(--safe-bottom));
   left: 50%;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  /* One row, not two. The first used to hold the Story Builder bar above the
+     form; with that gone an `auto` row took the form and collapsed it to
+     nothing, because everything inside it is sized from the row it is given. */
+  grid-template-rows: minmax(0, 1fr);
   width: min(980px, calc(100% - 24px - var(--safe-left) - var(--safe-right)));
   height: auto;
   min-height: 0;
   transform: translateX(-50%);
   overflow: hidden;
-}
-
-.builder-screen .top-bar {
-  margin-bottom: 16px;
 }
 
 .builder-screen .story-form {
@@ -3851,20 +3850,6 @@ body.night-mode .loading-steps span {
 
   body.keyboard-open .builder-screen.active {
     bottom: calc(12px + var(--safe-bottom) + var(--keyboard-offset, 0px));
-  }
-
-  .builder-screen .top-bar {
-    gap: 8px;
-    margin-bottom: 6px;
-  }
-
-  .builder-screen .mini-logo {
-    width: 48px;
-    height: 48px;
-  }
-
-  .builder-screen .top-bar h2 {
-    font-size: clamp(1.3rem, 6vw, 1.75rem);
   }
 
   .builder-screen .story-form {
