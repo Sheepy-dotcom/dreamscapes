@@ -6222,3 +6222,33 @@ body.night-mode .app-tabbar {
 #welcome-screen.active .welcome-copy {
   margin-top: 4px;
 }
+
+/* ---- No cards anywhere: every screen runs edge to edge ------------------- */
+/* The panel went from home and the builder first; this takes it off the rest.
+   What is inside them already carries its own surface - a story in the library
+   is a card, a plan is a card, the account form is a panel - so the outer one
+   was a frame around frames. */
+.app-shell {
+  width: 100%;
+}
+
+.screen,
+body.night-mode .screen {
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+/* The gutter the card used to provide now has to come from the screens
+   themselves, or the content runs into the edge of the glass. */
+.library-screen,
+.upgrade-screen,
+.account-screen,
+.signup-screen,
+.admin-screen,
+.info-screen,
+.result-screen,
+.loading-screen {
+  padding-inline: clamp(14px, 4vw, 28px);
+}
