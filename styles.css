@@ -6333,3 +6333,91 @@ body.night-mode .builder-step-scene .builder-fields-block {
   -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 6%, #000 90%, transparent 100%);
   mask-image: linear-gradient(180deg, transparent 0%, #000 6%, #000 90%, transparent 100%);
 }
+
+/* ---- Fitting the steps without letting them scroll ----------------------- */
+/* The builder does not scroll by design, so anything that does not fit is not
+   hidden below the fold - it is cut off and gone. Two steps were losing a
+   third of their content on a large phone and half of it on a small one, so
+   the selections themselves come down a size rather than the step growing. */
+
+/* The heading was centred inside a 20ch block that had lost its auto margins,
+   so the block sat left and the words with it. */
+.builder-step-length h3 {
+  margin: 0 auto 2px;
+}
+
+/* Thinner cards leave more of the sleeping child showing above them. */
+.builder-step-length .duration-card {
+  padding: 6px 10px;
+}
+
+.builder-step-length .duration-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+}
+
+.builder-step-length .duration-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.builder-step-length .duration-body strong { font-size: 0.96rem; }
+.builder-step-length .duration-body em { font-size: 0.82rem; }
+.builder-step-length .duration-body small { font-size: 0.71rem; }
+
+/* Interest tiles were squares, which is the most height a grid of them can
+   possibly take. Landscape tiles show the same picture and the same word in
+   three quarters of the space. */
+.builder-step .interest-chips button {
+  aspect-ratio: 4 / 3;
+}
+
+/* The free-text boxes on the two fat steps are a fallback for the chips above
+   them, not the main event, so they get one line rather than three. */
+.builder-step .story-idea-field textarea,
+.builder-step .interest-field textarea,
+.builder-step[data-builder-step="6"] .field textarea {
+  min-height: 46px;
+  max-height: 46px;
+}
+
+/* Parent controls carries two questions, each with eight chips and a free-text
+   box under them. Everything in it comes down a size. */
+.builder-step[data-builder-step="6"] .pref-chips {
+  gap: 6px;
+}
+
+.builder-step[data-builder-step="6"] .pref-chips button {
+  padding: 6px 11px;
+  font-size: 0.78rem;
+}
+
+.builder-step[data-builder-step="6"] .chip-group-title {
+  font-size: 0.78rem;
+}
+
+.builder-step[data-builder-step="6"] .choice-group {
+  gap: 8px;
+  padding: 10px;
+}
+
+/* The free-text box under each group is the exception the chips do not cover,
+   so it stays - but as a single compact line rather than a labelled block. */
+.builder-step[data-builder-step="6"] .field {
+  gap: 3px;
+}
+
+.builder-step[data-builder-step="6"] .field span {
+  font-size: 0.72rem;
+}
+
+.builder-step[data-builder-step="6"] .field input,
+body.night-mode .builder-step[data-builder-step="6"] .field input {
+  padding: 8px 11px;
+  font-size: 0.88rem;
+}
+
+.builder-step[data-builder-step="6"] .builder-step-sub {
+  font-size: 0.84rem;
+}
