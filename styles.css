@@ -5563,7 +5563,9 @@ body.night-mode .field-boxed input::placeholder {
   position: absolute;
   inset: 0;
   z-index: 0;
-  background: #16113f;
+  /* Sampled from the picture's own edges, so when it is scaled down to fit a
+     short screen the space either side of it is invisible. */
+  background: #181248;
 }
 
 /* The picture keeps its own proportions and is slid vertically by script until
@@ -5584,34 +5586,7 @@ body.night-mode .field-boxed input::placeholder {
   height: auto;
 }
 
-/* Placed by script from the image's measured geometry rather than by a
-   percentage of this box: under object-fit: cover the picture is scaled and
-   cropped, so a percentage of the container and a percentage of the picture are
-   not the same point, and the name would drift off the page. */
-.builder-step-scene .book-title {
-  position: absolute;
-  color: #5b3a1b;
-  font-weight: 900;
-  line-height: 1.15;
-  text-align: center;
-  text-wrap: balance;
-  overflow-wrap: anywhere;
-  transform: translate(-50%, -50%) rotate(-1.5deg);
-  opacity: 0;
-  transition: opacity 240ms ease;
-  pointer-events: none;
-}
-
-.builder-step-scene .book-title.is-written {
-  opacity: 1;
-}
-
-/* Pinned rather than laid out. The step stays `display: grid` with
-   `align-content: safe center` from a rule more specific than anything sane to
-   write here, which centred this block and left the fields sitting on top of
-   the book. Taking it out of flow sidesteps that argument entirely: the content
-   hugs the bottom of the step, and the artwork keeps everything above it. */
-.builder-step-scene .step-foreground {
+.step-foreground {
   position: absolute;
   left: 0;
   right: 0;
@@ -5651,10 +5626,34 @@ body.night-mode .field-boxed input::placeholder {
 /* The icons carry their own colour, so the shared stroke must not repaint them. */
 .field-icon svg [class^="ic-fill"] { stroke: none; }
 
-/* Smaller than before: the picture is doing the selling on this step, and the
-   button was taking room the scene wants. */
+/* The picture and the form share a fixed amount of room on this step, so the
+   button takes as little of it as it can while still being the obvious thing to
+   press. Every pixel it gives back is one the bear gets. */
 .builder-screen .builder-actions .primary-button {
-  min-height: 52px;
-  border-radius: 22px;
-  font-size: 1rem;
+  min-height: 44px;
+  border-radius: 18px;
+  padding-top: 9px;
+  padding-bottom: 9px;
+  font-size: 0.95rem;
+}
+
+/* Likewise the heading and the standfirst: tightened so the drawing clears the
+   form rather than being slid up behind it. */
+.builder-step-scene .step-foreground h3 {
+  margin-bottom: 4px;
+  font-size: 1.22rem;
+}
+
+.builder-step-scene .builder-fields-block {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.builder-step-scene .field-boxed {
+  padding: 9px 12px;
+}
+
+.builder-step-scene .field-icon {
+  width: 34px;
+  height: 34px;
 }

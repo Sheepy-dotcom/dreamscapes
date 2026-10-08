@@ -1090,7 +1090,7 @@ function showScreen(name) {
   if (name === "builder") {
     // Two frames: the first is where the screen gets its box, the second is
     // where that box has been laid out and can be measured.
-    requestAnimationFrame(() => requestAnimationFrame(() => repositionBookTitle()));
+    requestAnimationFrame(() => requestAnimationFrame(() => repositionScene()));
   }
   document.body.classList.toggle("builder-active", name === "builder");
   document.querySelectorAll("[data-screen-target]").forEach((button) => {
@@ -2543,102 +2543,84 @@ document.querySelector("#skip-parent-controls")?.addEventListener("click", () =>
   builderStepNextButton?.click();
 });
 
-let refreshBookTitle = () => {};
-let repositionBookTitle = () => {};
+let refreshNameField = () => {};
+let repositionScene = () => {};
 
-/* The bear on step one is holding an open book, and the book takes the child's
-   name as it is typed. It is the only moment in the builder that shows rather
-   than promises what "personalised" means, so it is worth the few lines: the
-   parent sees their child's story exist before they have answered anything
-   else. The name is written in, not interpolated into a sentence, so a long
-   name wraps on the page instead of overflowing it. */
+/* Step one is a picture with a form over it, and the two have to share a fixed
+   amount of room. The picture keeps its own proportions and is slid up until
+   the bottom of the artwork meets the top of the form, so the bear is whole and
+   nothing is written over anything: on a tall screen there is sky above him, on
+   a short one the picture rides up and the rocket goes instead. */
 (() => {
   const nameInput = document.querySelector("#child-name");
-  const bookTitle = document.querySelector("#book-title");
   const clearName = document.querySelector("#clear-child-name");
-  if (!nameInput) return;
-
-  function writeOnBook() {
-    const name = nameInput.value.trim();
-    if (clearName) clearName.hidden = name === "";
-    if (!bookTitle) return;
-    // An apostrophe-s on a name already ending in s reads badly, so names like
-    // Jess get the bare possessive the way a book cover would print it.
-    const possessive = /s$/i.test(name) ? `${name}’` : `${name}’s`;
-    bookTitle.textContent = name ? `${possessive} Story` : "";
-    bookTitle.classList.toggle("is-written", name !== "");
-  }
-
-  /* Where the book lands has to depend on how much room the fields leave,
-     because that varies with the phone. The picture keeps its proportions and
-     is slid up until the pages sit just clear of the form - so on a tall screen
-     you see the rocket and the dinosaur above the bear, and on a short one the
-     picture rides up and you still see the name on the book. The pages are
-     centred 40% down the artwork and 30% of its width across. */
-  /* Measured off builder-scene.jpg: the open pages are the only wide unbroken
-     band of bright pixels in the picture, centred 45.5% down and spanning about
-     a quarter of its width. The 40% used before came from the cropped version
-     of this artwork and sat on the book's top edge, not its pages. */
-  const BOOK = { x: 0.5, y: 0.455, w: 0.26, clearance: 76 };
   const scene = document.querySelector(".step-scene");
   const frame = document.querySelector(".step-scene-frame");
   const sceneImage = frame?.querySelector("img");
   const foreground = document.querySelector(".step-foreground");
 
-  function placeBookTitle() {
-    if (!scene || !frame || !sceneImage || !bookTitle) return;
+  // The drawing occupies the top 58% of builder-scene.jpg; the rest is the flat
+  // navy it was painted on, which is the part the form covers. (Kept as the
+  // reference the fitted fraction below is reasoned against.)
+
+  /* The heading may sit over the foot of the drawing - the bear's paws behind
+     the scrim look deliberate - but only ever by the same fraction of it, so a
+     picture scaled down for a short screen is not swallowed by a tuck that was
+     measured for a big one. Allowing the drawing to reach 58% of its height but
+     only requiring room for 50% leaves that tuck at 8%. */
+  const ART_FITTED = 0.5;
+
+  function placeScene() {
+    if (!scene || !frame || !sceneImage) return;
     const width = scene.clientWidth;
     const height = scene.clientHeight;
-    const natural = sceneImage.naturalWidth && sceneImage.naturalHeight;
-    if (!width || !height || !natural) return;
+    if (!width || !height || !sceneImage.naturalWidth || !sceneImage.naturalHeight) return;
 
-    const drawnHeight = (width * sceneImage.naturalHeight) / sceneImage.naturalWidth;
-    const bookOffset = drawnHeight * BOOK.y;
-    const contentTop = foreground ? height - foreground.offsetHeight : height;
-    // Slide far enough that the pages clear the form, but never so far that the
-    // picture pulls away from the top or runs out at the bottom.
-    const wanted = contentTop - BOOK.clearance - bookOffset;
-    const top = Math.min(0, Math.max(Math.min(0, height - drawnHeight), wanted));
+    const ratio = sceneImage.naturalHeight / sceneImage.naturalWidth;
+    const room = foreground ? height - foreground.offsetHeight : height;
+    /* Scale to fit rather than slide. Sliding a full-width picture up until the
+       drawing cleared the form worked on a tall phone and gutted it on a short
+       one - at 667pt the form takes two thirds of the step, and the picture had
+       to ride up so far that the bear's head went with it. Shrinking instead
+       keeps the whole drawing whatever the screen, and the margins it leaves at
+       the sides are the same navy the picture was painted on, so they do not
+       read as margins at all. */
+    const drawnHeight = Math.min(width * ratio, room / ART_FITTED);
+    const drawnWidth = drawnHeight / ratio;
 
-    frame.style.top = `${top}px`;
-    // The title is a child of the frame, so it is positioned within the
-    // picture and must not be offset by the slide a second time.
-    bookTitle.style.left = `${width * BOOK.x}px`;
-    bookTitle.style.top = `${bookOffset}px`;
-    bookTitle.style.width = `${width * BOOK.w}px`;
-    bookTitle.style.fontSize = `${Math.max(9, Math.min(17, width * 0.042))}px`;
+    frame.style.width = `${drawnWidth}px`;
+    frame.style.left = `${(width - drawnWidth) / 2}px`;
+    frame.style.right = "auto";
+    frame.style.top = "0px";
+  }
+
+  function syncNameField() {
+    if (clearName) clearName.hidden = nameInput ? nameInput.value.trim() === "" : true;
   }
 
   if (sceneImage) {
-    if (sceneImage.complete) placeBookTitle();
-    sceneImage.addEventListener("load", placeBookTitle);
-    // Both boxes matter. Watching only the picture was not enough: the form
-    // settles to its final height a beat after the step appears, and the slide
-    // is measured from how much room the form leaves, so a placement made
-    // against the taller first pass put the name up on the bear's face.
-    const watch = new ResizeObserver(placeBookTitle);
+    if (sceneImage.complete) placeScene();
+    sceneImage.addEventListener("load", placeScene);
+    // The form settles to its final height a beat after the step appears and
+    // the slide is measured from the room it leaves, so both boxes are watched.
+    const watch = new ResizeObserver(placeScene);
     watch.observe(scene);
     if (foreground) watch.observe(foreground);
-    window.addEventListener("resize", placeBookTitle);
+    window.addEventListener("resize", placeScene);
   }
-  repositionBookTitle = placeBookTitle;
+  repositionScene = placeScene;
 
-  nameInput.addEventListener("input", () => {
-    writeOnBook();
-    // Cheap, and it guarantees the name is placed the first time it is typed
-    // even if nothing else has measured the step yet.
-    placeBookTitle();
-  });
+  if (!nameInput) return;
+  nameInput.addEventListener("input", syncNameField);
   clearName?.addEventListener("click", () => {
     nameInput.value = "";
-    writeOnBook();
+    syncNameField();
     nameInput.focus();
   });
-  // A name restored from a saved story or a child profile is set on the input
-  // directly, which fires no input event, so the fill paths call this.
-  refreshBookTitle = writeOnBook;
-  writeOnBook();
-  placeBookTitle();
+  // A name restored from a saved story is set on the input directly, which
+  // fires no input event, so the fill path calls this.
+  refreshNameField = syncNameField;
+  syncNameField();
 })();
 
 function renderInterestChips() {
@@ -4865,7 +4847,7 @@ function beginStoryContinuation(story, choice = "") {
   };
 
   form.elements.childName.value = story.childName || "";
-  refreshBookTitle();
+  refreshNameField();
   form.elements.childAge.value = story.childAge || "";
   form.elements.interests.value = story.interests || "";
   form.elements.storyIdea.value = pendingStoryContext.continuationChoice;
