@@ -5667,12 +5667,6 @@ body.night-mode .field-boxed input::placeholder {
   font-size: 1.05rem;
 }
 
-/* Bigger than the body text they sit over, so the three promises read as marks
-   on the picture rather than as a caption under the button. */
-.welcome-points span {
-  font-size: 1.75rem;
-}
-
 .welcome-points li {
   font-size: 0.79rem;
 }
@@ -5683,9 +5677,6 @@ body.night-mode .field-boxed input::placeholder {
     font-size: 0.98rem;
   }
 
-  .welcome-points span {
-    font-size: 1.4rem;
-  }
 }
 
 /* ---- Home screen: the illustration as a plate ---------------------------- */
@@ -5711,7 +5702,7 @@ body.night-mode .field-boxed input::placeholder {
      so it is capped and cropped from the middle. The faded edges are the first
      thing the crop eats, which is what they are there for. */
   min-height: 0;
-  max-height: 28dvh;
+  max-height: 25dvh;
   object-fit: cover;
   /* Weighted to the top: the story title in the bubble is the point of this
      picture - it shows what the app makes - and a centred crop beheaded it.
@@ -5731,7 +5722,7 @@ body.night-mode .field-boxed input::placeholder {
 @media (max-height: 740px) {
   .welcome-art {
     margin-top: -6px;
-    max-height: 18dvh;
+    max-height: 16dvh;
   }
 
   .welcome-points {
@@ -5744,7 +5735,36 @@ body.night-mode .field-boxed input::placeholder {
     font-size: 0.7rem;
   }
 
-  .welcome-points span {
-    font-size: 1.2rem;
+  .point-icon svg {
+    width: 24px;
+    height: 24px;
   }
+}
+
+/* ---- Home screen: the three promises ------------------------------------ */
+/* Drawn rather than typed. The system emoji rendered as Apple's photographic
+   pencil, headphones and moon - three different illustration styles sitting
+   under a picture book. These are the app's own shapes in the app's own
+   colours. */
+.point-icon {
+  display: block;
+  line-height: 0;
+}
+
+.point-icon svg {
+  width: 36px;
+  height: 36px;
+  overflow: visible;
+}
+
+.point-icon svg .pi-coral { fill: #ff9a86; }
+.point-icon svg .pi-gold { fill: #ffd06a; }
+.point-icon svg .pi-cream { fill: #fff2d6; }
+.point-icon svg .pi-lilac { fill: #b9a6ff; }
+.point-icon svg .pi-star { fill: #fff3c4; }
+.point-icon svg .pi-stroke-sky {
+  fill: none;
+  stroke: #8fd0ff;
+  stroke-width: 2.8;
+  stroke-linecap: round;
 }
