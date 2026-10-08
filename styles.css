@@ -5709,10 +5709,12 @@ body.night-mode .field-boxed input::placeholder {
        picture down the screen by the same proportion. The dinosaur's head is
        24.5% down the file - measured, not guessed - and the second line of the
        headline sits just under it, so at cover they were in the same place.
-       Ten per cent of lift puts his head clear of the words; the headline
-       moving up into the gap under the lockup pays for the other eight, and
-       keeps the storybook out from behind the button. */
-    url("./assets/home-scene.webp?v=2026100900") center top / auto 110% no-repeat,
+       Six per cent of lift puts his head just clear of the words and the
+       headline moving up into the gap under the lockup pays for the rest.
+       Six is close to the floor: the file is drawn at almost exactly the
+       screen's proportions, so below about 104% he is back in the text and
+       below 100% the picture stops covering the screen at all. */
+    url("./assets/home-scene.webp?v=2026100900") center top / auto 106% no-repeat,
     linear-gradient(180deg, #141c55 0%, #101640 100%);
 }
 
