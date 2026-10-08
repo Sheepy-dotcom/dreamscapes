@@ -5705,9 +5705,14 @@ body.night-mode .field-boxed input::placeholder {
     linear-gradient(180deg, rgba(10, 12, 44, 0.16) 0%, rgba(10, 12, 44, 0.08) 28%,
                     rgba(10, 12, 44, 0) 46%, rgba(10, 12, 44, 0.08) 64%,
                     rgba(10, 12, 44, 0.3) 84%, rgba(10, 12, 44, 0.46) 100%),
-    /* Centred, because this one is drawn at the screen's own proportions and
-       barely crops at all - the sliding was for a picture cut from a mockup. */
-    url("./assets/home-scene.webp?v=2026100900") center center / cover no-repeat,
+    /* Anchored to the top and scaled past cover, which moves everything in the
+       picture down the screen by the same proportion. The dinosaur's head is
+       24.5% down the file - measured, not guessed - and the second line of the
+       headline sits just under it, so at cover they were in the same place.
+       Ten per cent of lift puts his head clear of the words; the headline
+       moving up into the gap under the lockup pays for the other eight, and
+       keeps the storybook out from behind the button. */
+    url("./assets/home-scene.webp?v=2026100900") center top / auto 110% no-repeat,
     linear-gradient(180deg, #141c55 0%, #101640 100%);
 }
 
@@ -6207,4 +6212,11 @@ body.night-mode .app-tabbar {
   border-top: 1px solid rgba(226, 216, 255, 0.16);
   background: rgba(16, 19, 56, 0.82);
   backdrop-filter: blur(16px);
+}
+
+/* The headline moves up into the gap under the lockup so the picture does not
+   have to be lifted as far to clear it - every per cent of lift is a slice of
+   the storybook disappearing behind the button at the other end. */
+#welcome-screen.active .welcome-copy {
+  margin-top: 4px;
 }
