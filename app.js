@@ -832,6 +832,48 @@ const loadingMessages = [
   "Tucking in a warm, happy ending",
 ];
 
+// The wait is the longest stretch of the whole app, and a generic message makes
+// it feel like a loading bar for anything. Saying the child's name and what they
+// love turns it into the only minute where the parent watches the thing they
+// asked for being made. Falls back to the generic list when there is nothing to
+// personalise with.
+function buildLoadingMessages(story) {
+  const name = cleanName(story?.childName);
+  const interests = String(story?.interests || "")
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (!name && !interests.length) return loadingMessages;
+
+  const who = name || "your child";
+  const loves = interests.length
+    ? interests.slice(0, 2).join(" and ").toLowerCase()
+    : "";
+
+  return [
+    "Opening the storybook under the stars",
+    `Writing ${who} into tonight's adventure`,
+    loves ? `Finding the ${loves}` : "Choosing kind characters and cosy details",
+    `Building the adventure around ${who}`,
+    "Sprinkling in gentle surprises",
+    "Tucking in a warm, happy ending",
+  ].filter(Boolean);
+}
+
+function cleanName(value) {
+  const name = String(value || "").trim();
+  return name.length > 24 ? "" : name;
+}
+
+// Which of Characters / Adventure / Ending is lit, so the screen shows progress
+// through the writing rather than through a bar that means nothing.
+function setLoadingStage(index) {
+  document.querySelectorAll(".loading-steps span").forEach((pill, i) => {
+    pill.classList.toggle("active", i === index);
+    pill.classList.toggle("done", i < index);
+  });
+}
+
 // A long story is written in sections and takes a couple of minutes, which is
 // a long time to watch messages rotate with no sense of progress. The section
 // counter rides along with them rather than replacing them.
@@ -839,7 +881,7 @@ let storyPartLabel = "";
 
 function renderLoadingMessage(index) {
   if (!loadingMessage) return;
-  loadingMessage.textContent = `${storyPartLabel}${loadingMessages[index]}`;
+  loadingMessage.textContent = `${storyPartLabel}${activeLoadingMessages[index]}`;
 }
 
 function setStoryProgress(partIndex, totalParts) {
@@ -848,15 +890,22 @@ function setStoryProgress(partIndex, totalParts) {
   renderLoadingMessage(0);
 }
 
+let activeLoadingMessages = loadingMessages;
+let pendingStoryData = null;
+
 function startLoadingMessages() {
   if (!loadingMessage) return;
+  activeLoadingMessages = buildLoadingMessages(pendingStoryData);
   let index = 0;
   storyPartLabel = "";
   renderLoadingMessage(index);
+  setLoadingStage(0);
   window.clearInterval(loadingMessageTimer);
   loadingMessageTimer = window.setInterval(() => {
-    index = (index + 1) % loadingMessages.length;
+    index = (index + 1) % activeLoadingMessages.length;
     renderLoadingMessage(index);
+    // Three pills across the run of messages, so the stage moves with the words.
+    setLoadingStage(Math.min(2, Math.floor((index / activeLoadingMessages.length) * 3)));
   }, 2200);
 }
 
@@ -4196,6 +4245,7 @@ async function generatePreviewStory() {
     return;
   }
 
+  pendingStoryData = storyData;
   showScreen("loading");
 
   let story = null;
@@ -5510,6 +5560,7 @@ form.addEventListener("submit", async (event) => {
     return;
   }
 
+  pendingStoryData = storyData;
   showScreen("loading");
 
   window.setTimeout(async () => {

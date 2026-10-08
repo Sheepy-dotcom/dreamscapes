@@ -4916,3 +4916,17 @@ body.night-mode .provider-google {
 .interest-custom {
   margin-top: 2px;
 }
+
+/* The three writing stages light in turn, so the wait shows progress through
+   the story rather than through a bar that measures nothing a parent cares
+   about. */
+.loading-steps span.active {
+  border-color: rgba(255, 231, 133, 0.95);
+  background: linear-gradient(135deg, rgba(255, 231, 133, 0.95), rgba(255, 176, 208, 0.88));
+  color: #160f35;
+}
+
+.loading-steps span.done {
+  border-color: rgba(255, 231, 133, 0.55);
+  color: rgba(255, 248, 220, 0.9);
+}
