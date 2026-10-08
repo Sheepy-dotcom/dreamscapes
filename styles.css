@@ -1497,15 +1497,20 @@ body.keyboard-open .app-tabbar {
   font-weight: 900;
 }
 
+/* Read in a dim room, often one-handed, by someone who is tired. Bigger than a
+   web paragraph and further apart than a document, because this is read aloud
+   rather than scanned. */
 .story-text {
   color: #26345f;
-  font-size: clamp(1.02rem, 2vw, 1.16rem);
-  line-height: 1.78;
+  font-size: clamp(1.14rem, 4.4vw, 1.32rem);
+  line-height: 1.86;
   word-spacing: 0.1em;
+  max-width: 34em;
+  margin-inline: auto;
 }
 
 .story-text p {
-  margin-bottom: 1.1em;
+  margin-bottom: 1.35em;
 }
 
 .story-text .sentence-break {
@@ -4929,4 +4934,18 @@ body.night-mode .provider-google {
 .loading-steps span.done {
   border-color: rgba(255, 231, 133, 0.55);
   color: rgba(255, 248, 220, 0.9);
+}
+
+/* The narration control is the one place a parent decides between reading and
+   listening, so it reads as a labelled button rather than a bare icon. */
+.audio-controls .icon-button {
+  width: auto;
+  gap: 8px;
+  padding-inline: 16px;
+}
+
+.audio-play-label {
+  font-size: 0.92rem;
+  font-weight: 800;
+  white-space: nowrap;
 }

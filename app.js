@@ -38,6 +38,7 @@ const audioToggle = document.querySelector("#audio-narration");
 const audioPlayButton = document.querySelector("#audio-play-button");
 const audioPauseButton = document.querySelector("#audio-pause-button");
 const narrationNote = document.querySelector("#narration-note");
+const audioPlayLabel = document.querySelector("#audio-play-label");
 const audioProgressWrap = document.querySelector("#audio-progress-wrap");
 const audioProgress = document.querySelector("#audio-progress");
 const audioProgressLabel = document.querySelector("#audio-progress-label");
@@ -3036,6 +3037,19 @@ function renderStory(story) {
       ? "Create narration"
       : "Play narration";
   audioPlayButton.setAttribute("aria-label", audioPlayButton.title);
+  // The button carried this distinction in a tooltip, which on a phone nobody
+  // ever sees. Whether audio exists yet changes what pressing it does, and
+  // whether it costs a minute of waiting, so it says so on its face.
+  if (audioPlayLabel) {
+    const hasAudioFile = Boolean(
+      savedAudioDuration || story.aiAudioTracks?.length || story.aiAudioPaths?.length
+    );
+    audioPlayLabel.textContent = !story.audioNarration
+      ? "No audio"
+      : hasAudioFile
+        ? "Listen"
+        : "Add narration";
+  }
   if (reportAudioButton) reportAudioButton.hidden = !story.audioNarration;
   if (continueAdventureButton) continueAdventureButton.hidden = false;
   renderNextAdventureChoices(story);
