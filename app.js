@@ -2336,6 +2336,82 @@ function getChildAgePhrase(age) {
   return age ? `, who was ${age},` : "";
 }
 
+// A blank box at bedtime asks a tired parent to invent something. These are the
+// same answers they would have typed, offered as one tap - and because every
+// chip writes into the interests input, nothing downstream had to change.
+const INTEREST_IDEAS = [
+  ["Dinosaurs", "\u{1F996}"],
+  ["Space", "\u{1F680}"],
+  ["Animals", "\u{1F43B}"],
+  ["Football", "\u26BD"],
+  ["Princesses", "\u{1F451}"],
+  ["Pirates", "\u{1F3F4}"],
+  ["Magic", "\u2728"],
+  ["Fire engines", "\u{1F692}"],
+  ["Diggers", "\u{1F6A7}"],
+  ["Under the sea", "\u{1F41F}"],
+  ["Fairies", "\u{1F9DA}"],
+  ["Superheroes", "\u{1F9B8}"],
+];
+
+const interestsInput = document.querySelector('[name="interests"]');
+const interestChips = document.querySelector("#interest-chips");
+const surpriseInterests = document.querySelector("#surprise-interests");
+
+function readInterests() {
+  return (interestsInput?.value || "")
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+function writeInterests(list) {
+  if (!interestsInput) return;
+  interestsInput.value = list.join(", ");
+  syncInterestChips();
+}
+
+// Chips follow the field rather than keeping their own state, so typing by hand
+// and tapping stay in agreement whichever the parent uses.
+function syncInterestChips() {
+  if (!interestChips) return;
+  const chosen = readInterests().map((value) => value.toLowerCase());
+  interestChips.querySelectorAll("button").forEach((chip) => {
+    const on = chosen.includes(chip.dataset.interest.toLowerCase());
+    chip.classList.toggle("selected", on);
+    chip.setAttribute("aria-pressed", on ? "true" : "false");
+  });
+}
+
+function renderInterestChips() {
+  if (!interestChips) return;
+  interestChips.innerHTML = INTEREST_IDEAS.map(
+    ([label, emoji]) =>
+      `<button type="button" data-interest="${label}" aria-pressed="false"><span aria-hidden="true">${emoji}</span>${label}</button>`
+  ).join("");
+  interestChips.querySelectorAll("button").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      const value = chip.dataset.interest;
+      const current = readInterests();
+      const index = current.findIndex((item) => item.toLowerCase() === value.toLowerCase());
+      if (index >= 0) current.splice(index, 1);
+      else current.push(value);
+      writeInterests(current);
+      trackEvent("interest_chip", { interest: value, on: index < 0 });
+    });
+  });
+  interestsInput?.addEventListener("input", syncInterestChips);
+  surpriseInterests?.addEventListener("click", () => {
+    const pool = [...INTEREST_IDEAS].sort(() => Math.random() - 0.5);
+    const picked = pool.slice(0, 1 + Math.floor(Math.random() * 2)).map(([label]) => label);
+    writeInterests(picked);
+    trackEvent("interest_surprise", { picked: picked.join(", ") });
+  });
+  syncInterestChips();
+}
+
+renderInterestChips();
+
 function getSelectedMoods(moods) {
   const selected = Array.isArray(moods) ? moods : [moods].filter(Boolean);
   return selected.filter((mood) => moodDetails[mood]);

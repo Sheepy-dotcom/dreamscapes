@@ -4851,3 +4851,68 @@ body.night-mode .provider-google {
     font-size: 0.7rem;
   }
 }
+
+/* ---- Interest picker ---------------------------------------------------- */
+/* A blank field at bedtime is a question a tired parent has to answer from
+   nothing. These give them something to react to instead, and the free-text
+   box stays underneath for the child whose favourite thing is not on the list. */
+
+.interest-field {
+  display: grid;
+  gap: 10px;
+  /* The step lays its fields out in two columns; chips need the whole row or
+     they stack one per line in a 150px column. */
+  grid-column: 1 / -1;
+}
+
+.interest-prompt {
+  color: rgba(255, 248, 220, 0.78);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.interest-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.interest-chips button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 42px;
+  border: 1px solid rgba(216, 198, 255, 0.34);
+  border-radius: 999px;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 248, 220, 0.92);
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.interest-chips button span {
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.interest-chips button.selected {
+  border-color: rgba(255, 231, 133, 0.95);
+  background: linear-gradient(135deg, rgba(255, 231, 133, 0.96), rgba(255, 176, 208, 0.9));
+  color: #160f35;
+}
+
+.interest-chips button:focus-visible {
+  outline: 3px solid rgba(255, 217, 106, 0.9);
+  outline-offset: 2px;
+}
+
+.surprise-button {
+  justify-self: start;
+}
+
+.interest-custom {
+  margin-top: 2px;
+}
