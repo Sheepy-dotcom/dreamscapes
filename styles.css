@@ -5887,6 +5887,12 @@ body.night-mode .app-tabbar button:hover {
 .duration-icon svg .dc-cream { fill: #fdf3e2; }
 .duration-icon svg .dc-cloud { fill: #b9a6ff; }
 .duration-icon svg .dc-ink { fill: #3a2d5e; }
+/* The unlit half of the moon. Dark, not faint: pale lavender at a quarter
+   alpha vanished against the blue and pink tiles, which left the 20-minute
+   gibbous reading as a full moon and made it indistinguishable from the
+   30. It has to be a real silhouette, or the lit part is not a fraction of
+   anything. */
+.duration-icon svg .dc-disc { fill: rgba(34, 25, 68, 0.74); }
 .duration-icon svg .dc-line,
 .duration-icon svg .dc-swirl {
   fill: none;
@@ -6173,6 +6179,7 @@ body.night-mode .app-tabbar button:hover {
 .builder-step-length .duration-icon svg .dc-star { fill: #fffbe8; }
 .builder-step-length .duration-icon svg .dc-cream { fill: #fff6e6; }
 .builder-step-length .duration-icon svg .dc-cloud { fill: #c6b2ff; }
+.builder-step-length .duration-icon svg .dc-disc { fill: rgba(30, 22, 62, 0.78); }
 .builder-step-length .duration-icon svg .dc-line,
 .builder-step-length .duration-icon svg .dc-swirl { stroke: #9fe0ff; }
 
@@ -6660,3 +6667,14 @@ body.builder-active .app-tabbar::before {
 .builder-screen .builder-actions .primary-button {
   box-shadow: 0 6px 16px rgba(255, 157, 104, 0.26);
 }
+
+/* ---- The lengths are one moon, filling ---------------------------------- */
+/* The four icons used to be a rabbit, a moon, a rising line chart and a
+   swirl: four pictures with nothing to do with each other and nothing to do
+   with how long the story is. One of them was, literally, an analytics
+   sparkline. They are a single waxing moon now - sliver, half, gibbous, full -
+   so the row can be read left to right as more, and the sparkles count up
+   alongside it. Cream on every tile rather than gold, which was losing the
+   10-minute moon against its own gold background. */
+.builder-step-length .duration-icon svg .dc-cream { fill: #fff8ea; }
+.builder-step-length .duration-icon svg .dc-gold { fill: #ffd95f; }
