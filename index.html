@@ -22,7 +22,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026100815" />
+    <link rel="stylesheet" href="./styles.css?v=2026100817" />
   </head>
   <body class="home-active night-mode">
     <svg class="art-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -141,11 +141,11 @@
             <fieldset class="choice-group builder-group builder-group-gold duration-group">
               <legend class="visually-hidden">Story duration</legend>
               <div class="duration-grid" role="radiogroup" aria-label="Story duration">
-                <label><input type="radio" name="durationChoice" value="5" checked /><span>5 min <small>Free</small></span></label>
-                <label><input type="radio" name="durationChoice" value="10" /><span>10 min <small>Free</small></span></label>
-                <label><input type="radio" name="durationChoice" value="15" /><span>15 min <small>Premier</small></span></label>
-                <label><input type="radio" name="durationChoice" value="20" /><span>20 min <small>Premier</small></span></label>
-                <label><input type="radio" name="durationChoice" value="30" /><span>30 min <small>Plus</small></span></label>
+                <label class="duration-card"><input type="radio" name="durationChoice" value="5" /><span class="duration-body"><strong>Short</strong><em>5 minutes</em><small>A quick, magical story</small></span><span class="duration-plan">Free</span></label>
+                <label class="duration-card recommended"><input type="radio" name="durationChoice" value="10" checked /><span class="duration-body"><strong>Standard</strong><em>10 minutes</em><small>Perfect for bedtime</small></span><span class="duration-plan">Free</span><span class="duration-badge">Recommended</span></label>
+                <label class="duration-card"><input type="radio" name="durationChoice" value="15" /><span class="duration-body"><strong>Longer</strong><em>15 minutes</em><small>More room for the adventure</small></span><span class="duration-plan">Premier</span></label>
+                <label class="duration-card"><input type="radio" name="durationChoice" value="20" /><span class="duration-body"><strong>Long</strong><em>20 minutes</em><small>A deeper adventure</small></span><span class="duration-plan">Premier</span></label>
+                <label class="duration-card"><input type="radio" name="durationChoice" value="30" /><span class="duration-body"><strong>Epic</strong><em>30 minutes</em><small>The full journey</small></span><span class="duration-plan">Plus</span></label>
               </div>
               <p class="helper-text">Times are a guide; narration may vary.</p>
             </fieldset>
@@ -207,12 +207,20 @@
 
           <section class="builder-step has-art" data-builder-step="6" data-step-sub="Choose a few preferences to make the story feel right for them." data-step-title="Parent controls" aria-labelledby="builder-step-details-title" hidden>
             <div class="step-art" aria-hidden="true"><svg viewBox="0 0 200 140" focusable="false"><ellipse cx="100" cy="72" rx="80" ry="62" fill="url(#art-halo)" /><path d="M100 26L138 39V70C138 94 121 109 100 118C79 109 62 94 62 70V39Z" fill="#8ad7bd" /><path d="M100 35L129 45V70C129 89 116 101 100 108C84 101 71 89 71 70V45Z" fill="#a9e6d0" /><path d="M100 35L129 45V56C119 50 110 48 100 48Z" fill="#ffffff" opacity="0.2" /><path d="M100 91C88 83 80 76 80 67A10 10 0 0 1 100 63A10 10 0 0 1 120 67C120 76 112 83 100 91Z" fill="#ff8fb7" /><ellipse cx="91" cy="67" rx="4" ry="3" fill="#ffffff" opacity="0.45" /><use class="twinkle" href="#art-sparkle" x="36" y="34" width="13" height="13" fill="#ffd96a" /><use class="twinkle" href="#art-sparkle" x="158" y="30" width="11" height="11" fill="#fff8dc" /><use class="twinkle" href="#art-sparkle" x="160" y="98" width="10" height="10" fill="#ffd96a" /><use class="twinkle" href="#art-sparkle" x="36" y="100" width="9" height="9" fill="#d8c6ff" /></svg></div>
-            <h3 id="builder-step-details-title">Parent controls</h3>
-            <fieldset class="choice-group safety-grid compact-safety-grid builder-group builder-group-mint">
-              <legend class="visually-hidden">Parent controls</legend>
-              <label class="field"><span>Avoid topics</span><input name="avoidTopics" type="text" /></label>
-              <label class="field"><span>Gentle lesson</span><input name="preferredLesson" type="text" /></label>
-            </fieldset>
+            <h3 id="builder-step-details-title">Make it feel right for them</h3>
+              <button class="step-skip" id="skip-parent-controls" type="button">Skip</button>
+            <fieldset class="choice-group builder-group builder-group-mint">
+                <legend class="chip-group-title">Anything to avoid?</legend>
+                <p class="chip-group-note">Select any topics you would rather leave out.</p>
+                <div class="pref-chips" id="avoid-chips" role="group" aria-label="Topics to avoid"></div>
+                <label class="field chip-custom"><span>Something else?</span><input name="avoidTopics" type="text" placeholder="Anything else to leave out..." /></label>
+              </fieldset>
+              <fieldset class="choice-group builder-group builder-group-sky">
+                <legend class="chip-group-title">Anything to encourage?</legend>
+                <p class="chip-group-note">Choose a theme, or skip if not tonight.</p>
+                <div class="pref-chips" id="lesson-chips" role="group" aria-label="Themes to encourage"></div>
+                <label class="field chip-custom"><span>Something else?</span><input name="preferredLesson" type="text" placeholder="A gentle lesson..." /></label>
+              </fieldset>
           </section>
 
           <section class="builder-step has-art" data-builder-step="7" data-step-sub="Language and how the story is told." data-step-title="Story settings" aria-labelledby="builder-step-settings-title" hidden>
@@ -1053,6 +1061,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026100811"></script>
+    <script src="./app.js?v=2026100817"></script>
   </body>
 </html>

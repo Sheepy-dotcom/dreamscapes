@@ -2462,6 +2462,80 @@ function syncInterestChips() {
   });
 }
 
+// Shared by interests, topics to avoid and themes to encourage. Each group is a
+// set of chips over a comma-separated text field: the field stays the single
+// source of truth, so typing and tapping cannot disagree and nothing that reads
+// the form had to change. A "clear" option empties the field instead of adding
+// itself.
+function wireChipGroup({ container, input, options, clearLabel = "", event = "chip" }) {
+  if (!container || !input) return;
+
+  const read = () => input.value.split(",").map((part) => part.trim()).filter(Boolean);
+  const write = (list) => {
+    input.value = list.join(", ");
+    sync();
+  };
+  const sync = () => {
+    const chosen = read().map((value) => value.toLowerCase());
+    container.querySelectorAll("button").forEach((chip) => {
+      const isClear = chip.dataset.clear === "true";
+      const on = isClear ? chosen.length === 0 : chosen.includes(chip.dataset.value.toLowerCase());
+      chip.classList.toggle("selected", on);
+      chip.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+  };
+
+  const all = clearLabel ? [...options, clearLabel] : options;
+  container.innerHTML = all
+    .map((label) => {
+      const clear = clearLabel && label === clearLabel;
+      return `<button type="button" data-value="${label}" data-clear="${clear}" aria-pressed="false">${label}</button>`;
+    })
+    .join("");
+
+  container.querySelectorAll("button").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      if (chip.dataset.clear === "true") {
+        write([]);
+        trackEvent(event, { value: "cleared" });
+        return;
+      }
+      const value = chip.dataset.value;
+      const current = read();
+      const index = current.findIndex((item) => item.toLowerCase() === value.toLowerCase());
+      if (index >= 0) current.splice(index, 1);
+      else current.push(value);
+      write(current);
+      trackEvent(event, { value, on: index < 0 });
+    });
+  });
+  input.addEventListener("input", sync);
+  sync();
+}
+
+wireChipGroup({
+  container: document.querySelector("#avoid-chips"),
+  input: document.querySelector('[name="avoidTopics"]'),
+  options: ["Getting lost", "Thunderstorms", "Monsters", "Separation", "Strangers", "Illness", "Loud noises"],
+  clearLabel: "None of these",
+  event: "avoid_chip",
+});
+
+wireChipGroup({
+  container: document.querySelector("#lesson-chips"),
+  input: document.querySelector('[name="preferredLesson"]'),
+  options: ["Being brave", "Kindness", "Friendship", "Trying something new", "Listening", "Managing big feelings", "Sharing"],
+  clearLabel: "No lesson tonight",
+  event: "lesson_chip",
+});
+
+// Skip is the review's point that this step is optional: it should cost one tap
+// to pass, not a read of every chip.
+document.querySelector("#skip-parent-controls")?.addEventListener("click", () => {
+  trackEvent("parent_controls_skipped", {});
+  builderStepNextButton?.click();
+});
+
 function renderInterestChips() {
   if (!interestChips) return;
   // Pictures rather than emoji: a tile shows a parent the story world they are
