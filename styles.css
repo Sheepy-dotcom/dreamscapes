@@ -138,7 +138,7 @@ button {
     /* Taller than the box and anchored high, so the visible slice is the sky
        and the story world rising from the book - the child stays at the foot,
        mostly behind the scrim, rather than sitting under the feature text. */
-    url("./assets/home-hero.jpg") center 18% / auto 128% no-repeat,
+    url("./assets/home-hero.jpg") center 32% / auto 114% no-repeat,
     linear-gradient(180deg, #171a4d 0%, #0f0d2c 100%);
   color: var(--white);
   text-align: center;
@@ -5193,10 +5193,11 @@ body.night-mode .provider-google {
       rgba(11, 14, 44, 0.62) 76%,
       rgba(11, 14, 44, 0.93) 100%
     ),
-    /* Taller than the box and anchored high, so the visible slice is the sky and
-       the story world rising from the book rather than the child's face sitting
-       under the feature text. */
-    url("./assets/home-hero.jpg") center 14% / auto 134% no-repeat,
+    /* The new picture puts the child large at the bottom left and sends the
+       story world up the right, so it is zoomed far less than the old one: just
+       enough to cover the width, anchored low enough that the aeroplane clears
+       the headline instead of flying through it. */
+    url("./assets/home-hero.jpg") center 32% / auto 114% no-repeat,
     linear-gradient(180deg, #171a4d 0%, #0f0d2c 100%);
 }
 
@@ -5344,4 +5345,21 @@ body.night-mode .provider-google {
   font-size: 0.92rem;
   font-weight: 800;
   cursor: pointer;
+}
+
+/* An empty library is the one place in the app with nothing to look at, so it
+   gets the picture rather than the apology: a book waiting to be written in,
+   centred above the explanation. */
+.library-empty {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: 10px;
+  padding-top: 26px;
+}
+
+.library-empty-art {
+  width: min(210px, 54%);
+  height: auto;
+  margin-bottom: 2px;
 }

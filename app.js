@@ -5822,7 +5822,8 @@ async function renderLibrary() {
 
   if (savedStories.length === 0) {
     libraryList.innerHTML = `
-      <article class="library-item">
+      <article class="library-item library-empty">
+        <img class="library-empty-art" src="./assets/story-loading.png" alt="" />
         <h3>No saved stories yet</h3>
         <p>${usingCloudLibrary ? "Stories you create while signed in will save to your cloud library." : "Free saves up to 3 stories here. Premier and Plus save more."}</p>
         <button class="button primary-button" data-screen-target="builder" type="button">Create a Story</button>
