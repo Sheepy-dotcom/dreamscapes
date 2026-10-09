@@ -22,7 +22,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026100989" />
+    <link rel="stylesheet" href="./styles.css?v=2026100990" />
   </head>
   <body class="home-active night-mode">
     <svg class="art-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -336,6 +336,36 @@
             <div class="story-details-body">
               <p class="status-note" id="status-note" role="status"></p>
               <div class="story-meta" id="story-meta"></div>
+              <div class="result-actions">
+          <button class="button secondary-button" id="view-library-button" type="button">
+            View Library
+          </button>
+          <button class="button primary-button" id="create-another-button" type="button">
+            Create Another Story
+          </button>
+          
+          <button class="button secondary-button" id="continue-adventure-button" type="button">
+            Continue Adventure
+          </button>
+          <button class="button secondary-button" id="share-family-button" type="button">
+            Share with Family
+          </button>
+          <button class="button secondary-button" id="report-audio-button" type="button" hidden>
+            Report Audio Issue
+          </button>
+        </div>
+              <div class="sleep-timer-panel" aria-label="Sleep timer">
+          <div>
+            <strong>Sleep Timer</strong>
+            <span id="sleep-timer-note">Off</span>
+          </div>
+          <div class="sleep-timer-actions">
+            <button class="button secondary-button" data-sleep-minutes="10" type="button">10 min</button>
+            <button class="button secondary-button" data-sleep-minutes="20" type="button">20 min</button>
+            <button class="button secondary-button" data-sleep-minutes="30" type="button">30 min</button>
+            <button class="button secondary-button" id="sleep-timer-off" type="button">Off</button>
+          </div>
+        </div>
             </div>
           </details>
         </div>
@@ -467,31 +497,7 @@
           </div>
         </div>
 
-        <div class="result-actions">
-          <button class="button secondary-button" id="view-library-button" type="button">
-            View Library
-          </button>
-          <button class="button primary-button" id="create-another-button" type="button">
-            Create Another Story
-          </button>
-          <div class="journey-offer" id="journey-offer" hidden>
-            <p class="journey-offer-title">Loved this one?</p>
-            <p class="journey-offer-copy">Keep the same characters going, a chapter a night.</p>
-            <div class="journey-offer-actions">
-              <button class="button primary-button" id="journey-offer-start" type="button">Continue tomorrow night</button>
-              <button class="button secondary-button compact-button" id="journey-offer-later" type="button">Maybe later</button>
-            </div>
-          </div>
-          <button class="button secondary-button" id="continue-adventure-button" type="button">
-            Continue Adventure
-          </button>
-          <button class="button secondary-button" id="share-family-button" type="button">
-            Share with Family
-          </button>
-          <button class="button secondary-button" id="report-audio-button" type="button" hidden>
-            Report Audio Issue
-          </button>
-        </div>
+        
 
         <section class="next-adventure-panel" id="next-adventure-panel" aria-labelledby="next-adventure-title" hidden>
           <div>
@@ -501,18 +507,7 @@
           <div class="next-adventure-actions" id="next-adventure-actions"></div>
         </section>
 
-        <div class="sleep-timer-panel" aria-label="Sleep timer">
-          <div>
-            <strong>Sleep Timer</strong>
-            <span id="sleep-timer-note">Off</span>
-          </div>
-          <div class="sleep-timer-actions">
-            <button class="button secondary-button" data-sleep-minutes="10" type="button">10 min</button>
-            <button class="button secondary-button" data-sleep-minutes="20" type="button">20 min</button>
-            <button class="button secondary-button" data-sleep-minutes="30" type="button">30 min</button>
-            <button class="button secondary-button" id="sleep-timer-off" type="button">Off</button>
-          </div>
-        </div>
+        
       </section>
 
       <section class="screen library-screen" id="library-screen" aria-labelledby="library-title">
@@ -1155,6 +1150,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026100989"></script>
+    <script src="./app.js?v=2026100990"></script>
   </body>
 </html>

@@ -8578,3 +8578,30 @@ body.night-mode .builder-step[data-builder-step="8"] .narration-group {
   color: #ffd45c;
   font-size: 0.62rem;
 }
+
+/* Story details holds the long tail now: the other things you can do with a
+   story, and the sleep timer. They were stacked under the reveal, which made
+   a screen meant to be a moment of arrival 1372pt tall with 680 of it below
+   the fold and invisible. */
+.story-details-body {
+  display: grid;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.story-details-body .result-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.story-details-body .result-actions .button {
+  width: 100%;
+}
+
+.story-details-body .sleep-timer-panel {
+  margin: 0;
+  border: 0;
+  border-radius: 16px;
+  padding: 12px 14px;
+  background: rgba(20, 20, 64, 0.6);
+}

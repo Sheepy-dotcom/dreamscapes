@@ -53,9 +53,6 @@ const continuationTitle = document.querySelector("#continuation-title");
 const continuationNote = document.querySelector("#continuation-note");
 const cancelContinuationButton = document.querySelector("#cancel-continuation-button");
 const continueAdventureButton = document.querySelector("#continue-adventure-button");
-const journeyOffer = document.querySelector("#journey-offer");
-const journeyOfferStart = document.querySelector("#journey-offer-start");
-const journeyOfferLater = document.querySelector("#journey-offer-later");
 const shareFamilyButton = document.querySelector("#share-family-button");
 const nextAdventurePanel = document.querySelector("#next-adventure-panel");
 const nextAdventureActions = document.querySelector("#next-adventure-actions");
@@ -4128,7 +4125,12 @@ document.querySelector("#reading-next")?.addEventListener("click", () => turnPag
 document.querySelector("#reading-prev")?.addEventListener("click", () => turnPage(-1));
 
 document.querySelector("#reading-end-journey")?.addEventListener("click", () => {
-  journeyOfferStart?.click();
+  // Calls the continuation directly. It used to click the offer's own button,
+  // which only worked while a second, invisible copy of that offer was sitting
+  // under the reveal.
+  trackEvent("journey_offer_accepted", { from: currentStory?.id || "" });
+  if (readingEnd) readingEnd.hidden = true;
+  beginStoryContinuation(currentStory);
 });
 
 document.querySelector("#reading-end-done")?.addEventListener("click", () => {
@@ -4239,9 +4241,6 @@ function renderStory(story) {
   // characters. Offered here instead of in the builder, and only to a story
   // that is not already part of a series - and never twice, because a prompt
   // that keeps reappearing after it was declined is just nagging.
-  if (journeyOffer) {
-    journeyOffer.hidden = Boolean(story.seriesId) || dismissedJourneyOffer || !currentUser;
-  }
   renderNextAdventureChoices(story);
   resetAudioProgress();
   setAudioProgressVisible(Boolean(story.audioNarration));
@@ -6089,16 +6088,6 @@ continueAdventureButton?.addEventListener("click", () => beginStoryContinuation(
 // Remembered for the session only: declining tonight should not mean never
 // being asked again after a story they love next week.
 let dismissedJourneyOffer = false;
-journeyOfferStart?.addEventListener("click", () => {
-  trackEvent("journey_offer_accepted", { from: currentStory?.id || "" });
-  if (journeyOffer) journeyOffer.hidden = true;
-  beginStoryContinuation(currentStory);
-});
-journeyOfferLater?.addEventListener("click", () => {
-  dismissedJourneyOffer = true;
-  if (journeyOffer) journeyOffer.hidden = true;
-  trackEvent("journey_offer_dismissed", {});
-});
 shareFamilyButton?.addEventListener("click", () => shareStoryWithFamily(currentStory));
 nextAdventureActions?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-next-adventure-index]");
