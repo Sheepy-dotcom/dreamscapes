@@ -3708,71 +3708,6 @@ const storyPlayer = document.querySelector("#story-player");
 const playerRange = document.querySelector("#player-range");
 const playerToggleIcon = document.querySelector("#player-toggle-icon");
 
-/* ---- The story, following the narration -------------------------------- */
-/* Like a lyrics view: the line being read is lit, the rest are dim, and the
-   column keeps the live line in the same place on screen.
-   Where each line falls in time is worked out from how far through the text
-   it is - the audio has no marks in it, and there is no way to get any
-   without transcribing what was generated. So it is proportional, and it will
-   drift a little where the narrator pauses or hurries. That is why tapping a
-   line seeks to it: the view is a good guess you can correct, not a claim to
-   be exact. */
-
-const playerLines = document.querySelector("#player-lines");
-let lineSpans = [];
-let lineStarts = [];
-let activeLineIndex = -1;
-
-function buildPlayerLines(story) {
-  if (!playerLines) return;
-  const parts = [];
-  for (const paragraph of story?.text || []) {
-    for (const sentence of sentencesOf(paragraph)) {
-      const text = String(sentence).trim();
-      if (text) parts.push(text);
-    }
-  }
-  const whole = parts.join(" ").length || 1;
-  let seen = 0;
-  lineStarts = parts.map((part) => {
-    const at = seen / whole;
-    seen += part.length + 1;
-    return at;
-  });
-  playerLines.innerHTML = parts
-    .map((part, i) => `<p data-line="${i}">${formatParagraphForDisplay(part)}</p>`)
-    .join("");
-  lineSpans = Array.from(playerLines.querySelectorAll("[data-line]"));
-  activeLineIndex = -1;
-}
-
-function syncPlayerLines(percent) {
-  if (!playerLines || !lineSpans.length) return;
-  const through = Math.max(0, Math.min(1, percent / 100));
-  let index = 0;
-  for (let i = 0; i < lineStarts.length; i += 1) {
-    if (lineStarts[i] <= through) index = i;
-    else break;
-  }
-  if (index === activeLineIndex) return;
-  activeLineIndex = index;
-  lineSpans.forEach((line, i) => line.classList.toggle("is-live", i === index));
-  const live = lineSpans[index];
-  if (!live) return;
-  // Held a little above the middle, the way a lyrics view does: what is
-  // coming matters more than what has gone.
-  const target = live.offsetTop - playerLines.clientHeight * 0.38 + live.offsetHeight / 2;
-  playerLines.scrollTo({ top: Math.max(0, target), behavior: "smooth" });
-}
-
-playerLines?.addEventListener("click", (event) => {
-  const line = event.target.closest("[data-line]");
-  if (!line || !playerTotalSeconds()) return;
-  const at = lineStarts[Number(line.dataset.line)] ?? 0;
-  seekByPercent(at * 100);
-  trackEvent("player_line_seek", { line: Number(line.dataset.line) });
-});
-
 function isNarrationPlaying() {
   return Boolean((currentAudio && !currentAudio.paused) || nativeAudioActive);
 }
@@ -3796,7 +3731,6 @@ function syncPlayerUi() {
   if (remainingEl) remainingEl.textContent = total ? `-${formatAudioTime(Math.max(0, total - elapsed))}` : "--:--";
 
   if (playerToggleIcon) playerToggleIcon.textContent = isNarrationPlaying() ? "\u23F8" : "\u25B6";
-  syncPlayerLines(percent);
 }
 
 window.setInterval(() => {
@@ -3875,7 +3809,12 @@ document.querySelector("#player-chapters")?.addEventListener("click", () => {
 function repaginate() {
   if (!storyReading || storyReading.hidden || !currentStory) return;
   const before = readingPages.slice(0, readingIndex).flat().join(" ").length;
+  // Same reason as above: the page has to be measurable while it is measured,
+  // so listening steps aside for the length of it.
+  const wasListening = resultScreen?.classList.contains("is-listening");
+  if (wasListening) resultScreen.classList.remove("is-listening");
   readingPages = paginateStory(currentStory);
+  if (wasListening) resultScreen.classList.add("is-listening");
   let seen = 0;
   let index = 0;
   for (let i = 0; i < readingPages.length; i += 1) {
@@ -3961,11 +3900,12 @@ function openReading(story, { listen = false } = {}) {
   // audio back ends behind one code path.
   if (narrationPanel) narrationPanel.hidden = true;
   if (storyPlayer) storyPlayer.hidden = !listen;
-  if (listen) buildPlayerLines(story);
   // Listening and reading are two different things to be doing. The player
   // takes the screen rather than sitting on top of the page, which is also
   // what makes dimming it worth anything.
-  resultScreen?.classList.toggle("is-listening", listen);
+  // Applied below, after pagination: listening hides the page, and a hidden
+  // page measures zero, which collapsed every story to a single page and left
+  // Pages with nowhere to jump to.
   const playerSub = document.querySelector("#player-sub");
   if (playerSub) {
     const name = cleanName(story.childName);
@@ -3985,6 +3925,7 @@ function openReading(story, { listen = false } = {}) {
      height is not final until the webfont has landed and the picture above
      has a size. */
   readingPages = paginateStory(story);
+  resultScreen?.classList.toggle("is-listening", listen);
   renderReadingPage();
   document.fonts?.ready?.then(() => repaginate());
   if (art && !art.complete) art.addEventListener("load", () => repaginate(), { once: true });
