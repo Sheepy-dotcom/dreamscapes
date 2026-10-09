@@ -22,7 +22,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026100987" />
+    <link rel="stylesheet" href="./styles.css?v=2026100988" />
   </head>
   <body class="home-active night-mode">
     <svg class="art-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -234,8 +234,9 @@
           <section class="builder-step has-art" data-builder-step="8" data-step-sub="Add a calm voice for lights-out listening." data-step-title="Narration" aria-labelledby="builder-step-audio-title" hidden>
             <div class="step-art" aria-hidden="true"><svg viewBox="0 0 200 140" focusable="false"><ellipse cx="100" cy="72" rx="80" ry="62" fill="url(#art-halo)" /><use href="#art-crescent" x="50" y="38" width="68" height="68" fill="#ffd96a" /><path d="M118 60q7 12 0 24" fill="none" stroke="#d8c6ff" stroke-width="4" stroke-linecap="round" /><path d="M130 52q13 20 0 40" fill="none" stroke="#d8c6ff" stroke-width="4" stroke-linecap="round" opacity="0.7" /><path d="M142 44q19 28 0 56" fill="none" stroke="#d8c6ff" stroke-width="4" stroke-linecap="round" opacity="0.45" /><use class="twinkle" href="#art-sparkle" x="84" y="58" width="12" height="12" fill="#fff8dc" /><use class="twinkle" href="#art-sparkle" x="36" y="28" width="11" height="11" fill="#ffd96a" /><use class="twinkle" href="#art-sparkle" x="40" y="104" width="9" height="9" fill="#d8c6ff" /><use class="twinkle" href="#art-sparkle" x="100" y="18" width="9" height="9" fill="#ffd96a" /></svg></div>
             <h3 id="builder-step-audio-title">Add narration?</h3>
-            <div class="builder-group builder-group-gold narration-group">
+            <div class="narration-group">
               <label class="feature-toggle"><input id="audio-narration" name="audioNarration" type="checkbox" /><span><strong>Add audio narration</strong><small>Selecting audio uses DreamScapes Plus</small></span></label>
+              <div class="narration-options" id="narration-options" hidden>
               <label class="field voice-field">
                 <span>Narration voice</span>
                 <select id="voice-style" name="voiceStyle">
@@ -253,7 +254,8 @@
                 </select>
               </label>
               <div class="audio-settings"><button class="button secondary-button compact-button" id="voice-preview-button" type="button">Preview Voice</button></div>
-              <p class="audio-note">AI audio can occasionally fail or sound uneven. Try again or contact support@dreamscapes.cloud if you need help.</p>
+              <p class="audio-note">Audio is made by a machine and can occasionally sound uneven. Try again, or email support@dreamscapes.cloud.</p>
+              </div>
             </div>
           </section>
 
@@ -1153,6 +1155,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026100987"></script>
+    <script src="./app.js?v=2026100988"></script>
   </body>
 </html>

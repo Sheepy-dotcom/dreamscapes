@@ -3283,6 +3283,7 @@ async function requestPlusForAudio() {
   if (canUseAudioNarration()) return;
 
   audioToggle.checked = false;
+  syncNarrationOptions();
   const selectedDuration = Number(getValue("durationChoice"));
   const creditMessage =
     getAudioStoryCredits() > 0 && selectedDuration > AUDIO_CREDIT_MAX_MINUTES
@@ -6121,13 +6122,29 @@ reminderForm?.addEventListener("submit", async (event) => {
   }
 });
 
+/* The voice and its preview only exist once narration is on. They were on
+   screen whatever the toggle said, which is a step offering to configure
+   something it has just been told not to do - and on the one step whose whole
+   question is yes or no. */
+function syncNarrationOptions() {
+  const options = document.querySelector("#narration-options");
+  if (options) options.hidden = !audioToggle.checked;
+}
+
 audioToggle.addEventListener("change", () => {
   if (audioToggle.checked) {
-    requestPlusForAudio().catch(() => {
-      audioToggle.checked = false;
-    });
+    requestPlusForAudio()
+      .then(syncNarrationOptions)
+      .catch(() => {
+        audioToggle.checked = false;
+        syncNarrationOptions();
+      });
+    return;
   }
+  syncNarrationOptions();
 });
+
+syncNarrationOptions();
 
 function syncDurationChoiceHighlight() {
   durationInputs.forEach((input) => {
@@ -6145,6 +6162,7 @@ function handleDurationChoiceChange(input) {
 
   if (audioToggle.checked && !audioAllowed) {
     audioToggle.checked = false;
+    syncNarrationOptions();
     const creditMessage =
       getAudioStoryCredits() > 0 && duration > AUDIO_CREDIT_MAX_MINUTES
         ? `Redeemed audio credits can be used on stories up to ${AUDIO_CREDIT_MAX_MINUTES} minutes. Choose a shorter story or upgrade to DreamScapes Plus.`

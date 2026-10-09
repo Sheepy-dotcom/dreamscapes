@@ -8365,3 +8365,59 @@ body.reading-active .result-screen.is-reading {
     animation: none;
   }
 }
+
+/* ---- Narration: the last step joins the rest of them ------------------- */
+/* Every other step lost its panel and its coloured spine when it was rebuilt
+   around a picture. This one kept both, so the final step of the flow was the
+   only one still looking like a form on a page. */
+.builder-step[data-builder-step="8"] .narration-group,
+body.night-mode .builder-step[data-builder-step="8"] .narration-group {
+  display: grid;
+  gap: 12px;
+  width: min(420px, 100%);
+  margin: 0 auto;
+  border: 0;
+  border-left: 0;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+}
+
+/* The question is yes or no, so the toggle is the thing on the screen rather
+   than one row in a list of settings. */
+.builder-step[data-builder-step="8"] .feature-toggle {
+  border-radius: 18px;
+  padding: 14px 16px;
+}
+
+.narration-options {
+  display: grid;
+  gap: 10px;
+  /* Arrives rather than appears: the step is short enough that a block
+     popping into the middle of it reads as a jump. */
+  animation: narration-options-in 240ms ease both;
+}
+
+@keyframes narration-options-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
+}
+
+.builder-step[data-builder-step="8"] .audio-note {
+  margin: 0;
+  color: rgba(226, 220, 252, 0.52);
+  font-size: 0.74rem;
+  line-height: 1.35;
+  text-align: center;
+}
+
+/* The art was floating in the middle of a mostly empty step. */
+.builder-step[data-builder-step="8"] .step-art {
+  margin-bottom: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .narration-options {
+    animation: none;
+  }
+}
