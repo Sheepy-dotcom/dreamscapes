@@ -2406,6 +2406,72 @@ function trackEvent(name, details = {}) {
   queueAnalyticsEvent(name, details);
 }
 
+/* Language and calm mode used to be a step of their own in the builder - the
+   last one before the story was written. They are not decisions about tonight
+   though: a household reads in the same language every night, and calm mode is
+   a preference about how stories are told, not about this one. So they move to
+   Story settings on the account screen and are set once.
+   They live in localStorage rather than on the form, because the form is gone
+   from under them - and getValue would have thrown on the missing field rather
+   than returning a blank. */
+const STORY_SETTINGS_KEY = "dreamscapesStorySettings";
+const STORY_SETTINGS_DEFAULTS = { storyLanguage: "en-GB", calmMode: false };
+
+function readStorySettings() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(STORY_SETTINGS_KEY) || "{}");
+    return {
+      storyLanguage: getStoryLanguage(stored.storyLanguage || STORY_SETTINGS_DEFAULTS.storyLanguage),
+      calmMode: stored.calmMode === true,
+    };
+  } catch {
+    return { ...STORY_SETTINGS_DEFAULTS };
+  }
+}
+
+function writeStorySettings(patch) {
+  const next = { ...readStorySettings(), ...patch };
+  try {
+    localStorage.setItem(STORY_SETTINGS_KEY, JSON.stringify(next));
+  } catch {
+    /* A full or blocked store is not worth failing a bedtime story over. */
+  }
+  return next;
+}
+
+(() => {
+  const languageSelect = document.querySelector("#story-language");
+  const calmToggle = document.querySelector("#story-calm-mode");
+  const status = document.querySelector("#story-settings-status");
+  if (!languageSelect && !calmToggle) return;
+
+  const saved = readStorySettings();
+  if (languageSelect) languageSelect.value = saved.storyLanguage;
+  if (calmToggle) calmToggle.checked = saved.calmMode;
+
+  let clear;
+  const confirmSaved = () => {
+    if (!status) return;
+    status.textContent = "Saved.";
+    clearTimeout(clear);
+    clear = setTimeout(() => {
+      status.textContent = "";
+    }, 2000);
+  };
+
+  languageSelect?.addEventListener("change", () => {
+    writeStorySettings({ storyLanguage: languageSelect.value });
+    trackEvent("story_language_set", { language: languageSelect.value });
+    confirmSaved();
+  });
+
+  calmToggle?.addEventListener("change", () => {
+    writeStorySettings({ calmMode: calmToggle.checked });
+    trackEvent("calm_mode_set", { on: calmToggle.checked });
+    confirmSaved();
+  });
+})();
+
 function getValue(name) {
   return new FormData(form).get(name).toString().trim();
 }
@@ -2466,14 +2532,14 @@ function buildProfileAwareStoryData(selectedPlan, selectedPlanKey) {
     friends,
     recurringCharacters,
     duration: getValue("durationChoice"),
-    storyLanguage: getStoryLanguage(getValue("storyLanguage")),
+    storyLanguage: getStoryLanguage(readStorySettings().storyLanguage),
     storyType: getValue("storyType"),
     moods: getValues("moods"),
     storyIdea: getValue("storyIdea"),
     occasion: getValue("occasion"),
     avoidTopics,
     preferredLesson: getValue("preferredLesson"),
-    calmMode: new FormData(form).has("calmMode"),
+    calmMode: readStorySettings().calmMode,
     audioNarration: canUseAudioNarration() && audioToggle.checked,
     voiceStyle: getValue("voiceStyle"),
     childProfiles: selectedProfiles.map((profile) => ({
