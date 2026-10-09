@@ -1512,9 +1512,11 @@ body.keyboard-open .app-tabbar {
   margin-bottom: 1.35em;
 }
 
-.story-text .sentence-break {
-  display: block;
-  height: 1.15em;
+/* The separator between sentences is a real space in the markup now; this
+   span is only a hook. It was the only thing holding sentences apart, scoped
+   to a .story-text that no longer exists. */
+.sentence-break {
+  display: none;
 }
 
 .status-note {
@@ -7589,10 +7591,12 @@ body.night-mode .support-card {
    because those fade to transparent and never draw a line; only the flat sheet
    underneath them goes. The glow at the foot is a soft ellipse and keeps its
    job. */
+/* Gone entirely. Taking the flat sheet out of it was not enough - the two
+   corner washes still painted to the edges of an inset rounded rectangle, and
+   on the phone that edge read as a grey panel floating above the picture. A
+   wash with a boundary is a box. */
 .loading-screen::before {
-  background:
-    linear-gradient(135deg, rgba(255, 231, 133, 0.1), transparent 36%),
-    linear-gradient(225deg, rgba(255, 143, 183, 0.12), transparent 42%);
+  display: none;
 }
 
 /* ---- The cards on Plans and Account lose their outlines too -------------- */

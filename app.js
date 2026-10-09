@@ -3312,9 +3312,16 @@ function formatParagraphForDisplay(paragraph) {
   const sentences = splitIntoSentences(paragraph);
   if (sentences.length <= 1) return escapeHtml(paragraph);
 
+  /* The space is in the markup, not in the CSS. splitIntoSentences trims each
+     sentence, and the separator used to be a styled span - which worked until
+     the only rule that styled it, .story-text .sentence-break, went with the
+     scrolling story element it was scoped to. The span then had zero width and
+     every sentence ran into the next: "flowerbed.There was a T.rex". A real
+     space cannot be deleted by a stylesheet. */
   return sentences
     .map((sentence, index) => {
-      const gap = index < sentences.length - 1 ? '<span class="sentence-break" aria-hidden="true"></span>' : "";
+      const last = index === sentences.length - 1;
+      const gap = last ? "" : ' <span class="sentence-break" aria-hidden="true"></span>';
       return `${escapeHtml(sentence)}${gap}`;
     })
     .join("");
@@ -3603,6 +3610,12 @@ function paginateStory(story) {
     page = [];
   };
 
+  /* A paragraph that does not fit the room left on the page is broken on a
+     sentence and continued overleaf, rather than moved whole to the next page.
+     Moving it whole is tidier in principle and awful in practice: a real story
+     came out as 28 pages, most of them a third full, because every paragraph
+     that would not fit started a new one. A printed book fills the page and
+     carries on, and so does this. */
   for (const paragraph of paragraphs) {
     render([...page, paragraph]);
     if (!overflows()) {
@@ -3610,23 +3623,16 @@ function paginateStory(story) {
       continue;
     }
 
-    // Not with what is already there. Try it on a page of its own.
-    pushPage();
-    render([paragraph]);
-    if (!overflows()) {
-      page = [paragraph];
-      continue;
-    }
-
-    // Too tall even alone, so it is broken on sentences.
     let chunk = "";
     for (const sentence of sentencesOf(paragraph)) {
       const next = chunk + sentence;
       render([...page, next]);
-      if (overflows() && chunk) {
-        page = [...page, chunk];
+      if (overflows() && (chunk || page.length)) {
+        if (chunk) page = [...page, chunk];
         pushPage();
         chunk = sentence;
+        // The sentence alone may still be taller than an empty page; there is
+        // nothing further to break it on, so it gets the page and overflows.
       } else {
         chunk = next;
       }
