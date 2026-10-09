@@ -21,9 +21,6 @@ const builderStepNextButton = document.querySelector("#builder-step-next");
 const builderStepNextLabel = document.querySelector("#builder-step-next-label");
 const builderStepSub = document.querySelector("#builder-step-sub");
 const generateStoryButton = document.querySelector("#generate-story-button");
-const builderAccountNotice = document.querySelector("#builder-lock");
-const builderCreateAccountButton = document.querySelector("#builder-create-account-button");
-const builderSignInButton = document.querySelector("#builder-sign-in-button");
 const statusNote = document.querySelector("#status-note");
 const planNote = document.querySelector("#plan-note");
 const loadingMessage = document.querySelector("#loading-message");
@@ -1168,12 +1165,12 @@ function updateWelcomeOffer() {
 }
 
 function updateBuilderAccountNotice() {
-  // Signed-out visitors get one real story before being asked for anything. The
-  // lock stays in the markup for the states that still need it, but the builder
-  // itself is open - a parent who has never seen a DreamScapes story has no
-  // reason to hand over an email first.
+  // Signed-out visitors get real stories before being asked for anything, so
+  // there is no gate here any more. The panel that used to cover the form has
+  // gone with it: it was permanently hidden but still carried the line "you
+  // will need one before making a story", which stopped being true and would
+  // have come back as a lie the first time anything unhid it.
   updateWelcomeOffer();
-  if (builderAccountNotice) builderAccountNotice.hidden = true;
   if (generateStoryButton && !generateStoryButton.hidden) {
     generateStoryButton.textContent = currentUser ? "Create their story" : "Create their free story";
   }
@@ -1233,6 +1230,7 @@ function showScreen(name) {
   if (name === "account") refreshAccountSummary();
   if (name === "admin") loadAdminDashboard();
   if (name === "loading") startLoadingMessages();
+  if (name === "signup") updateSignupContext();
   else stopLoadingMessages();
   trackEvent("screen_view", { screen: name });
   window.scrollTo({ top: 0, behavior: name === "builder" ? "auto" : "smooth" });
@@ -4600,21 +4598,34 @@ async function saveStoryToCloud(story) {
 const previewCta = document.querySelector("#preview-cta");
 const previewCtaNote = document.querySelector("#preview-cta-note");
 
-function storePendingPreview(story) {
+/* A visitor gets several free stories before being asked for anything, and
+   every one of them has to survive signing up. This held a single story and
+   overwrote it, so a parent who made two and signed up to keep the first got
+   the second instead - the exact loss the signed-out flow exists to avoid.
+   Capped a little above the per-device daily limit: the list only has to
+   outlive one sitting, and an unbounded list of whole stories in localStorage
+   is a quota failure waiting to happen. */
+const PENDING_PREVIEW_MAX = 5;
+
+function readPendingPreviews() {
   try {
-    localStorage.setItem(PENDING_PREVIEW_KEY, JSON.stringify(story));
+    const stored = JSON.parse(localStorage.getItem(PENDING_PREVIEW_KEY) || "null");
+    // Anyone mid-flow when this shipped has a bare story object under the key.
+    if (stored && stored.title) return [stored];
+    if (!Array.isArray(stored)) return [];
+    return stored.filter((story) => story && story.title);
   } catch {
-    // A preview that cannot be stored is still worth reading; it just will not
-    // survive into the new account.
+    return [];
   }
 }
 
-function readPendingPreview() {
+function storePendingPreview(story) {
   try {
-    const stored = JSON.parse(localStorage.getItem(PENDING_PREVIEW_KEY) || "null");
-    return stored && stored.title ? stored : null;
+    const kept = [...readPendingPreviews(), story].slice(-PENDING_PREVIEW_MAX);
+    localStorage.setItem(PENDING_PREVIEW_KEY, JSON.stringify(kept));
   } catch {
-    return null;
+    // A preview that cannot be stored is still worth reading; it just will not
+    // survive into the new account.
   }
 }
 
@@ -4626,20 +4637,49 @@ function clearPendingPreview() {
   }
 }
 
-// Called once a visitor signs in, so the story that persuaded them to sign up
-// is waiting in their library rather than lost to the account screen.
+/* Arriving here from a story and arriving here from the account screen are
+   different errands, and the page should know which one it is. A parent who
+   just read a story is not here to "start an account" - they are here to keep
+   the thing they are holding, and the page says so before it asks for an
+   email. */
+function updateSignupContext() {
+  const title = document.querySelector("#signup-card-title");
+  const note = document.querySelector("#signup-card-note");
+  if (!title || !note) return;
+  const waiting = readPendingPreviews().length;
+  if (!waiting) {
+    title.textContent = "Start your DreamScapes account";
+    note.textContent = "Save stories, child profiles, and audio across your devices.";
+    return;
+  }
+  title.textContent = waiting > 1 ? `Keep ${waiting} stories` : "Keep this story";
+  note.textContent =
+    waiting > 1
+      ? `Create a free account to keep the ${waiting} stories you have made and come back to them any time.`
+      : "Create a free account to keep this story and come back to it any time.";
+}
+
+// Called once a visitor signs in, so the stories that persuaded them to sign
+// up are waiting in their library rather than lost to the account screen.
 async function claimPendingPreview() {
   if (!currentUser) return;
-  const pending = readPendingPreview();
-  if (!pending) return;
+  const pending = readPendingPreviews();
+  if (!pending.length) return;
   clearPendingPreview();
 
-  try {
-    await saveGeneratedStoryToLibrary({ ...pending, isPreview: false });
-    trackEvent("preview_story_claimed");
-  } catch (error) {
-    console.error("Could not save the preview story to the new account", error);
+  // Oldest first, so the library reads in the order they were written. One
+  // failure must not take the rest down with it - a story that cannot be saved
+  // is worse lost quietly than taking its siblings with it.
+  let saved = 0;
+  for (const story of pending) {
+    try {
+      await saveGeneratedStoryToLibrary({ ...story, isPreview: false });
+      saved += 1;
+    } catch (error) {
+      console.error("Could not save a preview story to the new account", error);
+    }
   }
+  if (saved) trackEvent("preview_story_claimed", { count: saved });
 }
 
 // Everything on the result screen that needs an account is hidden for a preview.
@@ -5588,18 +5628,6 @@ document.querySelector("#preview-sign-in-button")?.addEventListener("click", () 
   setAuthStatus("Sign in and this story will be saved to your library.");
   showScreen("account");
   trackEvent("preview_account_signin_selected");
-});
-
-builderCreateAccountButton?.addEventListener("click", () => {
-  setSignupStatus("Create your free account, then come back to make your story.");
-  showScreen("signup");
-  trackEvent("builder_account_create_selected");
-});
-
-builderSignInButton?.addEventListener("click", () => {
-  setAuthStatus("Sign in, then return to Create a Story.");
-  showScreen("account");
-  trackEvent("builder_account_signin_selected");
 });
 
 document.querySelector("#create-account-button")?.addEventListener("click", async () => {
