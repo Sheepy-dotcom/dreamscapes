@@ -1248,6 +1248,15 @@ function showScreen(name) {
   if (name === "loading") startLoadingMessages();
   if (name === "signup") updateSignupContext();
   else stopLoadingMessages();
+  /* Leaving the story stops the rain. closeReading only runs from the X on
+     the player, so tapping a tab while it was raining left it playing with
+     nothing on screen to turn it off - and the only way back to the control
+     was to find the same story again. Anything that leaves the result screen
+     counts as leaving. */
+  if (name !== "result") {
+    Rain.stop();
+    setRepeatArmed(false);
+  }
   trackEvent("screen_view", { screen: name });
   window.scrollTo({ top: 0, behavior: name === "builder" ? "auto" : "smooth" });
 }
