@@ -289,8 +289,15 @@ function buildPrompt(data, section = null) {
   /* Without this the only thing the model has to go on is the name, so it
      guesses - and for Alex, Sam, Charlie, Riley, or any name it does not know
      well, it guesses wrong about half the time and then calls the child by the
-     wrong word for the length of the story. An unset field is not a licence to
-     guess; it means write so it does not matter. */
+     wrong word for the length of the story.
+
+     The field lives on the saved child profile, which needs an account, so
+     most stories arrive with nothing set. Unset therefore means "not asked",
+     not "declined to say", and banning inference outright would make every
+     story about a Sophie or a James read around a pronoun for no reason. The
+     rule is narrower: follow the name when the name is not in doubt, and go
+     neutral when it is. That removes the coin flip without touching the case
+     the model already gets right. */
   const pronouns = PRONOUNS[String(data.pronouns || "").trim().toLowerCase()];
   const childLabel = cleanText(data.childName, "the child");
   const pronounRule = pronouns
@@ -299,7 +306,7 @@ function buildPrompt(data, section = null) {
         pronouns.object,
         pronouns.possessive,
       ])} for ${childLabel} every time, and never any other pronoun for them.`
-    : `Child pronouns: not given. Do not infer them from the name. Refer to ${childLabel} by name, or use they/them, and keep every other description free of gendered words (no boy, girl, son, daughter, lad, lass, prince or princess for ${childLabel}).`;
+    : `Child pronouns: not given. If ${childLabel} is a name whose gender is unmistakable to you, use the matching pronouns consistently. If it is unisex, unfamiliar, a nickname, or one you are at all unsure of, do not guess: refer to ${childLabel} by name or use they/them, and keep gendered words out of the description (no boy, girl, son, daughter, lad, lass, prince or princess for ${childLabel}). A wrong guess is far worse here than a neutral story.`;
 
   return [
     `Write a polished, imaginative children's ${storyType}.`,

@@ -2046,16 +2046,13 @@ function applySavedChild(profileId) {
 
   const nameInput = document.querySelector("#child-name");
   const ageInput = document.querySelector("#child-age");
-  const pronounInput = document.querySelector("#child-pronouns");
   if (profile) {
     if (nameInput) nameInput.value = profile.childName || "";
     if (ageInput) ageInput.value = profile.childAge || "";
-    if (pronounInput) pronounInput.value = profile.pronouns || "";
   } else if (nameInput?.dataset.fromSavedChild === "true") {
     // Only clear what this control filled; a name typed by hand stays.
     if (nameInput) nameInput.value = "";
     if (ageInput) ageInput.value = "";
-    if (pronounInput) pronounInput.value = "";
   }
   if (nameInput) nameInput.dataset.fromSavedChild = String(Boolean(profile));
 
@@ -2702,11 +2699,9 @@ function buildProfileAwareStoryData(selectedPlan, selectedPlanKey) {
   const manualName = getValue("childName");
   const childName = manualName || profileNames;
   const childAge = getValue("childAge") || (selectedProfiles.length === 1 ? selectedProfiles[0].childAge : "");
-  /* Only meaningful for one child. Two children share one field, so their
-     pronouns go through the per-profile details instead. */
-  const pronouns =
-    normalisePronouns(getValue("pronouns")) ||
-    (selectedProfiles.length === 1 ? selectedProfiles[0].pronouns : "");
+  /* Set on the saved child profile, not in the builder. Two children share one
+     story, so their pronouns go through the per-profile details instead. */
+  const pronouns = selectedProfiles.length === 1 ? selectedProfiles[0].pronouns : "";
   const interests = [getValue("interests"), joinProfileValues(selectedProfiles, "interests")]
     .filter(Boolean)
     .join(", ");
