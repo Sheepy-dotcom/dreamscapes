@@ -21,3 +21,9 @@ ios/build/
 
 # Python bytecode from scripts/
 __pycache__/
+
+# Source material for the artwork, kept beside the project but never shipped:
+# everything under assets/ is copied into both app bundles, and these are the
+# originals the webp files in assets/ were made from.
+/source-art/
+/assets/app-illustrations/

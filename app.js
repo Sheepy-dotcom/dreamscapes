@@ -864,12 +864,17 @@ const MAKING_LINES = [
    to whoever picked that chip.
    A set can hold any number of pictures; one is drawn from it per story, so
    the same parent does not watch the same wait every night. Adding to a set is
-   a filename and nothing else. */
+   a filename and nothing else.
+   Every one is drawn for this screen and used nowhere else in the app: a
+   picture a parent has already passed three times on the way here cannot
+   build anticipation. */
 const MAKING_ART = {
-  adventure: ["making-1.webp"],
-  loves: ["making-2.webp"],
-  star: ["making-3.webp"],
-  ending: ["making-4.webp"],
+  adventure: ["adventure-1.webp", "adventure-2.webp", "adventure-3.webp", "adventure-4.webp"],
+  // One, because this is the stage the interest sets below take over. It is
+  // only ever the fallback for free text or for a chip with no art yet.
+  loves: ["loves-1.webp"],
+  star: ["star-1.webp", "star-2.webp", "star-3.webp", "star-4.webp", "star-5.webp", "star-6.webp"],
+  ending: ["ending-1.webp", "ending-2.webp", "ending-3.webp", "ending-4.webp", "ending-5.webp"],
 };
 
 /* Keyed by the slugs in INTEREST_IDEAS, so the chip a parent tapped and the
@@ -878,7 +883,7 @@ const MAKING_ART = {
    say anything, and guessing at it would be worse than a good generic. */
 const MAKING_ART_BY_INTEREST = {};
 
-const MAKING_ART_VERSION = "2026100949";
+const MAKING_ART_VERSION = "2026100951";
 
 const makingArt = Array.from(document.querySelectorAll(".making-art"));
 
