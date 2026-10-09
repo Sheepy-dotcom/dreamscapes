@@ -3518,6 +3518,153 @@ async function createStory(data) {
   }
 }
 
+/* ---- The story arrives as a reveal, and is read a page at a time ---------
+   It used to be one long scroll: title, nine metadata chips, a player, then
+   the whole story in body text. That is an article. A story at bedtime is
+   read aloud in a dim room by someone who is tired, which asks for three
+   different things - a moment of arrival, then large type in short pages,
+   and only then a way to carry on tomorrow. */
+
+const resultScreen = document.querySelector("#result-screen");
+const storyReveal = document.querySelector("#story-reveal");
+const storyReading = document.querySelector("#story-reading");
+const readingPage = document.querySelector("#reading-page");
+const readingDots = document.querySelector("#reading-dots");
+const readingCount = document.querySelector("#reading-count");
+const readingEnd = document.querySelector("#reading-end");
+const narrationPanel = document.querySelector("#narration-panel");
+
+/* Pages are built to a character budget rather than one paragraph each: the
+   model writes paragraphs of wildly different lengths, and a page holding a
+   single line next to one holding ten reads as a mistake. Paragraphs are never
+   split across a page - a half-sentence turn is worse than an uneven page. */
+const READING_PAGE_BUDGET = 420;
+
+function paginateStory(story) {
+  const paragraphs = (story?.text || []).filter((part) => String(part || "").trim());
+  const pages = [];
+  let current = [];
+  let length = 0;
+  for (const paragraph of paragraphs) {
+    const size = String(paragraph).length;
+    if (current.length && length + size > READING_PAGE_BUDGET) {
+      pages.push(current);
+      current = [];
+      length = 0;
+    }
+    current.push(paragraph);
+    length += size;
+  }
+  if (current.length) pages.push(current);
+  return pages.length ? pages : [[""]];
+}
+
+/* The artwork is the app's own, picked by the story's own id rather than at
+   random: a parent who reopens a story should find the same picture waiting,
+   or the story does not feel like a thing that exists. */
+function revealArtFor(story) {
+  const pool = [...MAKING_ART.adventure, ...MAKING_ART.star, ...MAKING_ART.ending];
+  if (!pool.length) return "";
+  const key = String(getStoryIdentity(story) || story?.title || "");
+  let hash = 0;
+  for (let i = 0; i < key.length; i += 1) hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
+  return `./assets/making/${pool[hash % pool.length]}?v=${MAKING_ART_VERSION}`;
+}
+
+let readingPages = [];
+let readingIndex = 0;
+
+function renderReadingPage() {
+  if (!readingPage) return;
+  const page = readingPages[readingIndex] || [];
+  readingPage.innerHTML = page
+    .map((paragraph) => `<p>${formatParagraphForDisplay(paragraph)}</p>`)
+    .join("");
+  readingPage.scrollTop = 0;
+  if (readingCount) readingCount.textContent = `${readingIndex + 1} / ${readingPages.length}`;
+  if (readingDots) {
+    readingDots.innerHTML = readingPages
+      .map((_, i) => `<span class="${i === readingIndex ? "is-here" : ""}"></span>`)
+      .join("");
+  }
+  const prev = document.querySelector("#reading-prev");
+  const next = document.querySelector("#reading-next");
+  if (prev) prev.disabled = readingIndex === 0;
+  if (next) next.hidden = readingIndex >= readingPages.length - 1;
+  // The journey is offered at the end of the story, where a parent knows the
+  // characters - not on the way in, where it is an abstract choice.
+  if (readingEnd) {
+    const atEnd = readingIndex >= readingPages.length - 1;
+    readingEnd.hidden = !atEnd || !currentUser || dismissedJourneyOffer || Boolean(currentStory?.seriesId);
+  }
+}
+
+function openReading(story, { listen = false } = {}) {
+  readingPages = paginateStory(story);
+  readingIndex = 0;
+  if (storyReveal) storyReveal.hidden = true;
+  if (storyReading) storyReading.hidden = false;
+  // Everything else on the screen belongs to the card, not to the page being
+  // read. Leaving View Library and Create Another Story sitting under the
+  // story is the document layout this is meant to replace.
+  resultScreen?.classList.add("is-reading");
+  document.querySelector("#reading-title").textContent = story.title || "";
+  const art = document.querySelector("#reading-art-image");
+  if (art) art.src = revealArtFor(story);
+  if (narrationPanel) narrationPanel.hidden = !listen;
+  const copy = document.querySelector("#reading-end-copy");
+  if (copy) {
+    const who = cleanName(story.childName);
+    copy.textContent = who
+      ? `Keep the same characters going with a new bedtime story for ${who}.`
+      : "Keep the same characters going, a chapter a night.";
+  }
+  renderReadingPage();
+  trackEvent("story_reading_opened", { listen });
+}
+
+function closeReading() {
+  if (storyReading) storyReading.hidden = true;
+  if (storyReveal) storyReveal.hidden = false;
+  resultScreen?.classList.remove("is-reading");
+}
+
+document.querySelector("#read-together-button")?.addEventListener("click", () => {
+  if (currentStory) openReading(currentStory);
+});
+
+document.querySelector("#reveal-listen-button")?.addEventListener("click", () => {
+  if (!currentStory) return;
+  openReading(currentStory, { listen: true });
+  audioPlayButton?.click();
+});
+
+document.querySelector("#reading-close")?.addEventListener("click", closeReading);
+
+document.querySelector("#reading-next")?.addEventListener("click", () => {
+  if (readingIndex < readingPages.length - 1) {
+    readingIndex += 1;
+    renderReadingPage();
+  }
+});
+
+document.querySelector("#reading-prev")?.addEventListener("click", () => {
+  if (readingIndex > 0) {
+    readingIndex -= 1;
+    renderReadingPage();
+  }
+});
+
+document.querySelector("#reading-end-journey")?.addEventListener("click", () => {
+  journeyOfferStart?.click();
+});
+
+document.querySelector("#reading-end-done")?.addEventListener("click", () => {
+  dismissedJourneyOffer = true;
+  if (readingEnd) readingEnd.hidden = true;
+  trackEvent("journey_offer_declined", { from: "reading" });
+});
+
 function renderStory(story) {
   // Narration keeps running when the screen changes, so a story opened while
   // another is playing would otherwise sit behind the previous one's audio.
@@ -3530,6 +3677,36 @@ function renderStory(story) {
   const savedAudioDuration = getSavedAudioDurationSeconds(story);
   const actualLengthSeconds = getStoryActualDurationSeconds(story);
   document.querySelector("#story-title").textContent = story.title;
+
+  // The reveal: who it is for, a line about it, and two chips. The review's
+  // point about metadata is that nine chips is a specification sheet - the two
+  // that matter before reading are how long it is and what kind of story it
+  // is. The rest is still here, one tap down in Story details.
+  const who = cleanName(story.childName);
+  const revealBadge = document.querySelector("#reveal-badge");
+  if (revealBadge) revealBadge.textContent = who ? `\u2605 Made just for ${who}` : "\u2605 Made for you";
+  const revealArt = document.querySelector("#reveal-art-image");
+  if (revealArt) revealArt.src = revealArtFor(story);
+  const revealSummary = document.querySelector("#reveal-summary");
+  if (revealSummary) {
+    const moodWords = selectedMoods.map((mood) => moodDetails[mood]?.titleWord?.toLowerCase()).filter(Boolean);
+    revealSummary.textContent =
+      String(story.summary || "").trim() ||
+      (moodWords.length
+        ? `A ${joinNatural(moodWords)} bedtime story, written tonight.`
+        : "A bedtime story, written tonight.");
+  }
+  const revealChips = document.querySelector("#reveal-chips");
+  if (revealChips) {
+    const minutes = Number(story.duration) || 0;
+    revealChips.innerHTML = [
+      minutes ? `<span>\u23F1 ${minutes} min</span>` : "",
+      `<span>\u{1F319} ${story.storyType === "bedtime" ? "Bedtime" : "Anytime"}</span>`,
+    ]
+      .filter(Boolean)
+      .join("");
+  }
+
   document.querySelector("#story-meta").innerHTML = `
     <span>${plan.label}</span>
     <span>${escapeHtml(getStoryLanguageLabel(story.storyLanguage))}</span>
@@ -3543,9 +3720,6 @@ function renderStory(story) {
     <span>${story.audioNarration ? "Audio narration" : "Text only"}</span>
     ${story.childAge ? `<span>Age ${story.childAge}</span>` : ""}
   `;
-  document.querySelector("#story-text").innerHTML = story.text
-    .map((paragraph) => `<p>${formatParagraphForDisplay(paragraph)}</p>`)
-    .join("");
   narrationNote.textContent = story.audioNarration
     ? savedAudioDuration || story.aiAudioTracks?.length || story.aiAudioPaths?.length
       ? savedAudioDuration
@@ -3561,16 +3735,31 @@ function renderStory(story) {
   // The button carried this distinction in a tooltip, which on a phone nobody
   // ever sees. Whether audio exists yet changes what pressing it does, and
   // whether it costs a minute of waiting, so it says so on its face.
+  const hasAudioFile = Boolean(
+    savedAudioDuration || story.aiAudioTracks?.length || story.aiAudioPaths?.length
+  );
   if (audioPlayLabel) {
-    const hasAudioFile = Boolean(
-      savedAudioDuration || story.aiAudioTracks?.length || story.aiAudioPaths?.length
-    );
     audioPlayLabel.textContent = !story.audioNarration
       ? "No audio"
       : hasAudioFile
         ? "Listen"
         : "Add narration";
   }
+  /* Whether audio exists is said by the button rather than by a chip saying
+     "Audio available" next to a button that then has to say it again. A story
+     with no narration at all offers to add it; one that cannot have it says
+     nothing and the action goes. */
+  const revealListen = document.querySelector("#reveal-listen-button");
+  const revealListenLabel = document.querySelector("#reveal-listen-label");
+  if (revealListen && revealListenLabel) {
+    const canNarrate = Boolean(story.audioNarration) || canUseAudioNarration();
+    revealListen.hidden = !canNarrate;
+    revealListenLabel.textContent = hasAudioFile ? "Listen to story" : "Add narration";
+  }
+
+  // Back to the card whenever a different story is rendered, or the reader
+  // would still be holding the last one's pages.
+  closeReading();
   if (reportAudioButton) reportAudioButton.hidden = !story.audioNarration;
   if (continueAdventureButton) continueAdventureButton.hidden = false;
   // The review's point: a seven-night journey is an abstract choice before the
