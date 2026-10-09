@@ -6928,17 +6928,44 @@ async function renderLibrary() {
 
   const usingCloudLibrary = canUseCloudLibrary();
   const localStories = getSavedStories();
+  /* Where both copies of a story exist, they are merged rather than the cloud
+     one simply winning. The device keeps the whole object; the row keeps the
+     columns the table has. If the two ever disagree - a column that did not
+     save, a field added since the row was written - the cloud copy is missing
+     something the device still has, and taking it wholesale throws that away.
+     This showed up as a story losing its summary the moment it was reopened:
+     the generated object had one, and the copy that came back did not.
+     Cloud wins on anything it actually has; local fills the gaps. */
+  const matchesLocal = (cloudStory, localStory) =>
+    cloudStory.id === localStory.id ||
+    (cloudStory.cloudId && cloudStory.cloudId === localStory.cloudId) ||
+    cloudStory.cloudId === localStory.id;
+
+  const mergeStories = (cloudStory, localStory) => {
+    if (!localStory) return cloudStory;
+    const merged = { ...cloudStory };
+    for (const [key, value] of Object.entries(localStory)) {
+      const cloudValue = merged[key];
+      const cloudHasIt =
+        cloudValue !== undefined &&
+        cloudValue !== null &&
+        cloudValue !== "" &&
+        !(Array.isArray(cloudValue) && cloudValue.length === 0);
+      if (!cloudHasIt && value !== undefined) merged[key] = value;
+    }
+    // Identity always comes from the row, or a later save writes a new one.
+    merged.id = cloudStory.id;
+    merged.cloudId = cloudStory.cloudId;
+    return merged;
+  };
+
   const savedStories = usingCloudLibrary
     ? [
-        ...cloudStories,
+        ...cloudStories.map((cloudStory) =>
+          mergeStories(cloudStory, localStories.find((localStory) => matchesLocal(cloudStory, localStory)))
+        ),
         ...localStories.filter(
-          (localStory) =>
-            !cloudStories.some(
-              (cloudStory) =>
-                cloudStory.id === localStory.id ||
-                cloudStory.cloudId === localStory.cloudId ||
-                cloudStory.cloudId === localStory.id
-            )
+          (localStory) => !cloudStories.some((cloudStory) => matchesLocal(cloudStory, localStory))
         ),
       ]
     : localStories;
