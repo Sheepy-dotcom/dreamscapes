@@ -3544,29 +3544,82 @@ const readingCount = document.querySelector("#reading-count");
 const readingEnd = document.querySelector("#reading-end");
 const narrationPanel = document.querySelector("#narration-panel");
 
-/* Pages are built to a character budget rather than one paragraph each: the
-   model writes paragraphs of wildly different lengths, and a page holding a
-   single line next to one holding ten reads as a mistake. Paragraphs are never
-   split across a page - a half-sentence turn is worse than an uneven page. */
-const READING_PAGE_BUDGET = 420;
+/* A page is what fits on the page. It cannot be scrolled, so it cannot be
+   guessed at: a character budget gets it roughly right at one text size on
+   one phone and wrong everywhere else. These are measured against the real
+   box, after layout, by adding text until it overflows and then backing off.
+   A paragraph that is taller than a whole page is split on a sentence, which
+   is what a printed book does; the earlier rule against splitting held only
+   while the page could scroll to absorb the overflow. */
+function sentencesOf(paragraph) {
+  return String(paragraph).match(/[^.!?]+[.!?]+["')\]]*\s*|[^.!?]+$/g) || [String(paragraph)];
+}
 
 function paginateStory(story) {
   const paragraphs = (story?.text || []).filter((part) => String(part || "").trim());
-  const pages = [];
-  let current = [];
-  let length = 0;
-  for (const paragraph of paragraphs) {
-    const size = String(paragraph).length;
-    if (current.length && length + size > READING_PAGE_BUDGET) {
-      pages.push(current);
-      current = [];
-      length = 0;
-    }
-    current.push(paragraph);
-    length += size;
+  if (!paragraphs.length) return [[""]];
+  if (!readingPage || !readingPage.clientHeight) {
+    // No box to measure against yet - one page, corrected the moment there is.
+    return [paragraphs];
   }
-  if (current.length) pages.push(current);
-  return pages.length ? pages : [[""]];
+
+  /* Measured with the end panel out of the way. It only ever appears on the
+     last page, so leaving it visible while measuring shrinks the box by its
+     own height and pages the whole story to a size that only the last page
+     actually has. */
+  const endWasHidden = readingEnd ? readingEnd.hidden : true;
+  if (readingEnd) readingEnd.hidden = true;
+
+  const render = (items) => {
+    readingPage.innerHTML = items
+      .map((part) => `<p>${formatParagraphForDisplay(part)}</p>`)
+      .join("");
+  };
+  const overflows = () => readingPage.scrollHeight > readingPage.clientHeight + 1;
+
+  const pages = [];
+  let page = [];
+
+  const pushPage = () => {
+    if (page.length) pages.push(page);
+    page = [];
+  };
+
+  for (const paragraph of paragraphs) {
+    render([...page, paragraph]);
+    if (!overflows()) {
+      page = [...page, paragraph];
+      continue;
+    }
+
+    // Not with what is already there. Try it on a page of its own.
+    pushPage();
+    render([paragraph]);
+    if (!overflows()) {
+      page = [paragraph];
+      continue;
+    }
+
+    // Too tall even alone, so it is broken on sentences.
+    let chunk = "";
+    for (const sentence of sentencesOf(paragraph)) {
+      const next = chunk + sentence;
+      render([...page, next]);
+      if (overflows() && chunk) {
+        page = [...page, chunk];
+        pushPage();
+        chunk = sentence;
+      } else {
+        chunk = next;
+      }
+    }
+    if (chunk.trim()) page = [...page, chunk];
+  }
+  pushPage();
+
+  readingPage.innerHTML = "";
+  if (readingEnd) readingEnd.hidden = endWasHidden;
+  return pages.length ? pages : [paragraphs];
 }
 
 /* The artwork is the app's own, picked by the story's own id rather than at
@@ -3589,29 +3642,46 @@ function revealArtFor(story, variant = 0) {
 let readingPages = [];
 let readingIndex = 0;
 
+/* The journey is offered at the end of the story, where a parent has just met
+   the characters - not on the way in, where it is an abstract choice. */
+function canOfferJourney() {
+  return Boolean(currentUser) && !dismissedJourneyOffer && !currentStory?.seriesId;
+}
+
+/* It is a page of its own rather than a panel under the last page of text.
+   Under the text it shrinks the box by its own height, and the pages were
+   measured without it - so the last page overflowed by exactly as much as the
+   prompt was tall. One more turn is also simply truer to what it is: the
+   story has finished. */
+function readingStepCount() {
+  return readingPages.length + (canOfferJourney() ? 1 : 0);
+}
+
 function renderReadingPage() {
   if (!readingPage) return;
-  const page = readingPages[readingIndex] || [];
+  const onPrompt = canOfferJourney() && readingIndex >= readingPages.length;
+  const page = onPrompt ? [] : readingPages[readingIndex] || [];
   readingPage.innerHTML = page
     .map((paragraph) => `<p>${formatParagraphForDisplay(paragraph)}</p>`)
     .join("");
   readingPage.scrollTop = 0;
-  if (readingCount) readingCount.textContent = `${readingIndex + 1} / ${readingPages.length}`;
+
+  // The count is of the story's own pages; the prompt is not one of them.
+  if (readingCount) {
+    const shown = Math.min(readingIndex + 1, readingPages.length);
+    readingCount.textContent = `${shown} / ${readingPages.length}`;
+  }
   if (readingDots) {
     readingDots.innerHTML = readingPages
-      .map((_, i) => `<span class="${i === readingIndex ? "is-here" : ""}"></span>`)
+      .map((_, i) => `<span class="${i === Math.min(readingIndex, readingPages.length - 1) ? "is-here" : ""}"></span>`)
       .join("");
   }
   const prev = document.querySelector("#reading-prev");
   const next = document.querySelector("#reading-next");
   if (prev) prev.disabled = readingIndex === 0;
-  if (next) next.hidden = readingIndex >= readingPages.length - 1;
-  // The journey is offered at the end of the story, where a parent knows the
-  // characters - not on the way in, where it is an abstract choice.
-  if (readingEnd) {
-    const atEnd = readingIndex >= readingPages.length - 1;
-    readingEnd.hidden = !atEnd || !currentUser || dismissedJourneyOffer || Boolean(currentStory?.seriesId);
-  }
+  if (next) next.hidden = readingIndex >= readingStepCount() - 1;
+  if (readingEnd) readingEnd.hidden = !onPrompt;
+  storyReading?.classList.toggle("on-prompt", onPrompt);
 }
 
 /* ---- The player -------------------------------------------------------- */
@@ -3723,8 +3793,77 @@ document.querySelector("#player-chapters")?.addEventListener("click", () => {
   trackEvent("player_page_jump", { page: next + 1 });
 });
 
+/* Rotating the phone, or the keyboard appearing, changes how much fits. The
+   page being read is kept by remembering where in the text it started. */
+function repaginate() {
+  if (!storyReading || storyReading.hidden || !currentStory) return;
+  const before = readingPages.slice(0, readingIndex).flat().join(" ").length;
+  readingPages = paginateStory(currentStory);
+  let seen = 0;
+  let index = 0;
+  for (let i = 0; i < readingPages.length; i += 1) {
+    if (seen >= before) break;
+    seen += readingPages[i].join(" ").length;
+    index = i;
+  }
+  readingIndex = Math.min(index, readingPages.length - 1);
+  renderReadingPage();
+}
+
+let repaginateTimer = null;
+window.addEventListener("resize", () => {
+  window.clearTimeout(repaginateTimer);
+  repaginateTimer = window.setTimeout(repaginate, 180);
+});
+
+/* Turned like a book: a flick to the left takes you right, a flick to the
+   right takes you back. The chevrons stay, because a gesture nobody is told
+   about is a gesture nobody finds. */
+(() => {
+  let startX = 0;
+  let startY = 0;
+  let tracking = false;
+
+  storyReading?.addEventListener("touchstart", (event) => {
+    if (event.touches.length !== 1) return;
+    startX = event.touches[0].clientX;
+    startY = event.touches[0].clientY;
+    tracking = true;
+  }, { passive: true });
+
+  storyReading?.addEventListener("touchend", (event) => {
+    if (!tracking) return;
+    tracking = false;
+    const touch = event.changedTouches[0];
+    if (!touch) return;
+    const dx = touch.clientX - startX;
+    const dy = touch.clientY - startY;
+    // Horizontal, and clearly horizontal: a thumb coming off the screen at an
+    // angle should not turn the page.
+    if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy) * 1.4) return;
+    turnPage(dx < 0 ? 1 : -1);
+  }, { passive: true });
+
+  document.addEventListener("keydown", (event) => {
+    if (!storyReading || storyReading.hidden) return;
+    if (event.key === "ArrowRight") turnPage(1);
+    if (event.key === "ArrowLeft") turnPage(-1);
+  });
+})();
+
+function turnPage(direction) {
+  const next = readingIndex + direction;
+  if (next < 0 || next >= readingStepCount()) return;
+  readingIndex = next;
+  readingPage?.classList.remove("turn-left", "turn-right");
+  // Reflow between removing and adding, or a second turn in the same
+  // direction plays no animation at all.
+  void readingPage?.offsetWidth;
+  readingPage?.classList.add(direction > 0 ? "turn-left" : "turn-right");
+  renderReadingPage();
+}
+
 function openReading(story, { listen = false } = {}) {
-  readingPages = paginateStory(story);
   readingIndex = 0;
   if (storyReveal) storyReveal.hidden = true;
   if (storyReading) storyReading.hidden = false;
@@ -3732,6 +3871,11 @@ function openReading(story, { listen = false } = {}) {
   // read. Leaving View Library and Create Another Story sitting under the
   // story is the document layout this is meant to replace.
   resultScreen?.classList.add("is-reading");
+  // The shell is pinned to the viewport while reading, the same way the
+  // builder pins it. Without a definite height above it the 1fr page row has
+  // nothing to resolve against and grows to fit its own text - which made
+  // every story measure as a single page and then spill behind the menu.
+  document.body.classList.add("reading-active");
   document.querySelector("#reading-title").textContent = story.title || "";
   const art = document.querySelector("#reading-art-image");
   if (art) art.src = revealArtFor(story, 1);
@@ -3757,7 +3901,15 @@ function openReading(story, { listen = false } = {}) {
       ? `Keep the same characters going with a new bedtime story for ${who}.`
       : "Keep the same characters going, a chapter a night.";
   }
+  /* Paginated here rather than at the top of this function: the box is still
+     display:none until the lines above run, and a box with no height measures
+     every story as a single page. Two more passes follow it, because the
+     height is not final until the webfont has landed and the picture above
+     has a size. */
+  readingPages = paginateStory(story);
   renderReadingPage();
+  document.fonts?.ready?.then(() => repaginate());
+  if (art && !art.complete) art.addEventListener("load", () => repaginate(), { once: true });
   trackEvent("story_reading_opened", { listen });
 }
 
@@ -3767,6 +3919,7 @@ function closeReading() {
   resultScreen?.classList.remove("is-listening");
   if (storyReveal) storyReveal.hidden = false;
   resultScreen?.classList.remove("is-reading");
+  document.body.classList.remove("reading-active");
 }
 
 document.querySelector("#read-together-button")?.addEventListener("click", () => {
@@ -3781,19 +3934,8 @@ document.querySelector("#reveal-listen-button")?.addEventListener("click", () =>
 
 document.querySelector("#reading-close")?.addEventListener("click", closeReading);
 
-document.querySelector("#reading-next")?.addEventListener("click", () => {
-  if (readingIndex < readingPages.length - 1) {
-    readingIndex += 1;
-    renderReadingPage();
-  }
-});
-
-document.querySelector("#reading-prev")?.addEventListener("click", () => {
-  if (readingIndex > 0) {
-    readingIndex -= 1;
-    renderReadingPage();
-  }
-});
+document.querySelector("#reading-next")?.addEventListener("click", () => turnPage(1));
+document.querySelector("#reading-prev")?.addEventListener("click", () => turnPage(-1));
 
 document.querySelector("#reading-end-journey")?.addEventListener("click", () => {
   journeyOfferStart?.click();

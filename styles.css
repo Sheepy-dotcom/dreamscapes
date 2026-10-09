@@ -7851,10 +7851,34 @@ body.night-mode .auth-switch {
 
 /* The type a tired adult reads aloud in a dim room, not the type an article
    is set in. */
+/* A page does not scroll. The pages are measured to fit this box, so anything
+   overflowing it is a pagination fault rather than something to be scrolled
+   past - hidden makes that visible in testing instead of quietly swallowing
+   it. */
 .reading-page {
   min-height: 0;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  overflow: hidden;
+  touch-action: pan-y;
+}
+
+/* The turn. Short, because a page turn that takes longer than the thumb does
+   reads as lag rather than as paper. */
+.reading-page.turn-left {
+  animation: page-turn-left 220ms ease-out;
+}
+
+.reading-page.turn-right {
+  animation: page-turn-right 220ms ease-out;
+}
+
+@keyframes page-turn-left {
+  from { opacity: 0; transform: translateX(26px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes page-turn-right {
+  from { opacity: 0; transform: translateX(-26px); }
+  to { opacity: 1; transform: none; }
 }
 
 .reading-page p {
@@ -8139,6 +8163,11 @@ body.night-mode .auth-switch {
   .player-skip {
     transition: none;
   }
+
+  .reading-page.turn-left,
+  .reading-page.turn-right {
+    animation: none;
+  }
 }
 
 /* Listening replaces the page rather than sitting above it. Reading along is
@@ -8202,4 +8231,36 @@ body.night-mode .auth-switch {
 .player-extra .ui-ic {
   width: 1.15rem;
   height: 1.15rem;
+}
+
+/* Reading pins the shell to the viewport. The pages are measured against the
+   box they are read in, so that box has to have a real height - a 1fr row
+   inside a chain of min-heights resolves to its own content, which measures
+   every story as one page and then spills it behind the menu. */
+body.reading-active .app-shell {
+  position: fixed;
+  inset: 0;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  padding: calc(6px + var(--safe-top)) 0 calc(84px + var(--safe-bottom));
+  overflow: hidden;
+}
+
+body.reading-active .result-screen,
+body.reading-active .result-screen.is-reading {
+  min-height: 0;
+  height: 100%;
+}
+
+/* On the prompt step the page is empty, so the prompt sits in the middle of
+   the room it leaves rather than at the bottom of it. A class rather than
+   :has(), which needs Safari 15.4 - this is a bedtime app on a family phone
+   and some of those are old. */
+.story-reading.on-prompt .reading-page {
+  display: none;
+}
+
+.story-reading.on-prompt {
+  align-content: center;
 }
