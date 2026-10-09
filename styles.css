@@ -9025,3 +9025,446 @@ body.night-mode .builder-step[data-builder-step="8"] .narration-group {
 body.outro-open {
   overflow: hidden;
 }
+
+/* ---- Plans ------------------------------------------------------------- */
+
+.plans-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  padding: 4px 0 2px;
+  text-align: left;
+}
+
+.plans-head h2 {
+  margin: 0;
+  font-size: 1.62rem;
+  line-height: 1.16;
+  font-weight: 900;
+  text-wrap: balance;
+}
+
+.plans-sub {
+  margin: 4px 0 0;
+  color: rgba(199, 209, 255, 0.78);
+  font-size: 0.95rem;
+  line-height: 1.35;
+}
+
+.plans-subhead {
+  margin: 18px 0 0;
+  font-size: 1.18rem;
+  font-weight: 900;
+  text-align: left;
+}
+
+/* ---- The current plan -------------------------------------------------- */
+
+.hero-card {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 18px 16px 16px;
+  border-radius: 26px;
+  border: 1.5px solid rgba(255, 214, 122, 0.62);
+  background: linear-gradient(158deg, #3a2a72 0%, #2a2064 46%, #1d1a52 100%);
+  box-shadow: 0 0 0 1px rgba(255, 214, 122, 0.14), 0 22px 46px rgba(6, 8, 34, 0.5);
+  text-align: left;
+}
+
+/* The decorative mark sits behind the text and must never take a tap that was
+   meant for the button under it. */
+.hero-art {
+  position: absolute;
+  top: -14px;
+  right: -12px;
+  width: 132px;
+  height: 132px;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.hero-art svg {
+  width: 100%;
+  height: 100%;
+}
+
+.hero-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.hero-eyebrow {
+  margin: 0;
+  color: var(--lilac);
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.hero-badge {
+  padding: 4px 11px;
+  border-radius: 999px;
+  background: #8ff0c9;
+  color: #0d3b2b;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.hero-name {
+  position: relative;
+  margin: 0;
+  max-width: 68%;
+  font-size: 1.5rem;
+  line-height: 1.14;
+  font-weight: 900;
+  text-wrap: balance;
+}
+
+.hero-price {
+  margin: 0;
+  color: var(--lilac);
+  font-size: 1.04rem;
+  font-weight: 700;
+}
+
+.hero-price strong {
+  color: var(--white);
+  font-size: 1.44rem;
+  font-weight: 900;
+}
+
+.hero-features {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 4px 0 2px;
+  padding: 0;
+  list-style: none;
+}
+
+.hero-features li {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  min-height: 60px;
+  padding: 9px 10px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(10, 14, 48, 0.42);
+  color: rgba(234, 238, 255, 0.94);
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1.24;
+}
+
+.plan-ic {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  background: rgba(124, 142, 255, 0.2);
+}
+
+.plan-ic svg {
+  width: 20px;
+  height: 20px;
+}
+
+.hero-action {
+  width: 100%;
+  min-height: 52px;
+  margin-top: 2px;
+  border-radius: 24px;
+  font-size: 1.04rem;
+}
+
+/* ---- The other two ----------------------------------------------------- */
+
+.plan-others {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 11px;
+  margin-top: 11px;
+}
+
+.plan-card {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 5px;
+  padding: 16px 12px 14px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(27, 33, 86, 0.6);
+  text-align: center;
+}
+
+/* The paid tier gets the warmer card. Free is not a lesser thing, but it is
+   not the one being offered. */
+.plan-card.plan-card-premier,
+.plan-card.plan-card-plus {
+  border-color: rgba(255, 214, 122, 0.4);
+  background: linear-gradient(162deg, #4a2c73 0%, #33225f 58%, #241b52 100%);
+}
+
+.plan-card-ic {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  margin-bottom: 2px;
+}
+
+.plan-card-ic svg {
+  width: 100%;
+  height: 100%;
+}
+
+.plan-card h4 {
+  margin: 0;
+  font-size: 1.18rem;
+  font-weight: 900;
+}
+
+.plan-card-price {
+  margin: 0;
+  color: rgba(216, 198, 255, 0.9);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.plan-card-price strong {
+  color: var(--white);
+  font-size: 1.1rem;
+  font-weight: 900;
+}
+
+.plan-card-meta {
+  margin: 0 0 6px;
+  color: rgba(199, 209, 255, 0.74);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.plan-card-action {
+  width: 100%;
+  min-height: 44px;
+  border-radius: 20px;
+  font-size: 0.94rem;
+}
+
+/* A tier the parent is already above. It is information, not an offer, so it
+   does not look like something to press. */
+.plan-card-action[disabled] {
+  opacity: 1;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: none;
+  color: rgba(226, 231, 255, 0.78);
+  cursor: default;
+}
+
+/* ---- Compare, folded away ---------------------------------------------- */
+
+.plan-compare {
+  margin-top: 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(27, 33, 86, 0.5);
+  overflow: hidden;
+}
+
+.plan-compare > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  color: var(--white);
+  font-size: 1.02rem;
+  font-weight: 900;
+  cursor: pointer;
+  list-style: none;
+}
+
+.plan-compare > summary::-webkit-details-marker {
+  display: none;
+}
+
+.plan-compare > summary::after {
+  content: "";
+  width: 11px;
+  height: 11px;
+  margin-right: 4px;
+  border-right: 2.4px solid rgba(226, 231, 255, 0.72);
+  border-bottom: 2.4px solid rgba(226, 231, 255, 0.72);
+  border-radius: 2px;
+  transform: translateY(-3px) rotate(45deg);
+  transition: transform 0.18s ease;
+}
+
+.plan-compare[open] > summary::after {
+  transform: translateY(2px) rotate(-135deg);
+}
+
+.plan-compare .plan-table-wrap {
+  padding: 0 10px 12px;
+}
+
+/* ---- Footer links ------------------------------------------------------ */
+
+.plan-foot-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 18px;
+  color: rgba(199, 209, 255, 0.42);
+  font-size: 0.86rem;
+}
+
+.plan-foot-links a,
+.plan-foot-links button {
+  border: 0;
+  padding: 2px 1px;
+  background: none;
+  color: rgba(214, 222, 255, 0.82);
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.plan-foot-links a:hover,
+.plan-foot-links button:hover {
+  color: var(--white);
+  text-decoration: underline;
+}
+
+/* ---- Icon palette ------------------------------------------------------ */
+
+.plan-ic svg,
+.plan-card-ic svg,
+.hero-art svg {
+  fill: none;
+}
+
+.pi-pink { fill: #ff9ec2; }
+.pi-lilac { fill: #b9a6ff; }
+.pi-sky { fill: #8fd0ff; }
+.pi-mint { fill: #8ff0c9; }
+.pi-gold { fill: #ffd16a; }
+.pi-gold-fill { fill: #ffd16a; }
+.pi-ink { fill: rgba(28, 24, 70, 0.62); }
+
+.pi-stroke-lilac {
+  fill: none;
+  stroke: #b9a6ff;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.pi-stroke-mint {
+  fill: none;
+  stroke: #8ff0c9;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+/* Two cards side by side get tight at 340px; one column reads better than two
+   cramped ones. */
+@media (max-width: 340px) {
+  .hero-features,
+  .plan-others {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* The screens are full width, but the plan cards are objects with edges and
+   need a margin to read as such. Scoped here so the rest stay as they are. */
+.upgrade-screen {
+  padding-left: clamp(14px, 4.2vw, 22px);
+  padding-right: clamp(14px, 4.2vw, 22px);
+}
+
+/* Four tiles across two columns at 375px: the label has about 150px, which
+   "30 stories / month" does not fit on one line at the size above. */
+.hero-features li {
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 8px;
+  min-height: 54px;
+  padding: 8px 9px;
+  font-size: 0.78rem;
+}
+
+.hero-features .plan-ic {
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+}
+
+.hero-features .plan-ic svg {
+  width: 18px;
+  height: 18px;
+}
+
+.hero-art {
+  top: -10px;
+  right: -8px;
+  width: 124px;
+  height: 124px;
+  opacity: 0.78;
+}
+
+.plan-tile-text {
+  display: grid;
+  gap: 0;
+  min-width: 0;
+}
+
+.plan-tile-text strong {
+  font-size: 0.84rem;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.plan-tile-text small {
+  color: rgba(199, 209, 255, 0.7);
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+/* The decorative moon used to sit on top of the ACTIVE pill. It belongs behind
+   the card's corner, not in the row the badge occupies. */
+.hero-art {
+  top: 14px;
+  right: -14px;
+  width: 112px;
+  height: 112px;
+  opacity: 0.66;
+}
+
+.hero-top {
+  position: relative;
+  z-index: 1;
+}
+
+/* Gold at two-thirds opacity over this purple mixes to khaki. It is still
+   decoration, so it stays behind the text, but it should read as the colour it
+   was drawn in. */
+.hero-art {
+  opacity: 0.88;
+}

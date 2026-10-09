@@ -22,7 +22,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026101006" />
+    <link rel="stylesheet" href="./styles.css?v=2026101011" />
   </head>
   <body class="home-active night-mode">
     <svg class="art-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -543,22 +543,27 @@
       </section>
 
       <section class="screen upgrade-screen" id="upgrade-screen" aria-labelledby="upgrade-title">
-        <header class="top-bar">
+        <header class="plans-head">
           <button class="logo-button" data-screen-target="welcome" type="button" aria-label="Go to home">
             <img class="mini-logo" src="./assets/dreamscapes-mark.png?v=2026100885" alt="DreamScapes" />
           </button>
           <div>
-            <p class="eyebrow">Packages</p>
-            <h2 id="upgrade-title">Choose a Plan</h2>
+            <p class="eyebrow">Plans</p>
+            <h2 id="upgrade-title">More stories. More magic.</h2>
+            <p class="plans-sub">Choose what fits your family&#8217;s bedtime.</p>
           </div>
         </header>
-        <section class="package-panel" aria-labelledby="package-title">
-          <h3 class="eyebrow" id="package-title">Your plan</h3>
-          <p class="subscription-card">
-            <strong id="current-plan-name">Free</strong>
-            <span id="current-plan-summary">£0, 3 stories/month, up to 10 min</span>
-          </p>
-        </section>
+
+        <!-- Both of these are written by renderPlansScreen from the same plans
+             table the quota checks use, so a limit can never be changed in one
+             place and go on being advertised in the other. -->
+        <div class="plan-hero" id="plan-hero"></div>
+
+        <h3 class="plans-subhead">Other plans</h3>
+        <div class="plan-others" id="plan-others"></div>
+
+        <details class="plan-compare" id="plan-compare">
+          <summary>Compare all features</summary>
         <div class="plan-table-wrap">
           <table class="plan-comparison-table" aria-label="DreamScapes plan comparison">
             <thead>
@@ -636,27 +641,10 @@
                 <td>-</td>
                 <td>200 min</td>
               </tr>
-              <tr class="plan-action-row">
-                <th scope="row">Choose plan</th>
-                <td>
-                  <button class="button secondary-button compact-button" data-plan-preview="free" type="button">
-                    Current
-                  </button>
-                </td>
-                <td>
-                  <button class="button primary-button compact-button" data-purchase-plan="premier" type="button">
-                    Premier
-                  </button>
-                </td>
-                <td>
-                  <button class="button primary-button compact-button" data-purchase-plan="plus" type="button">
-                    Plus
-                  </button>
-                </td>
-              </tr>
             </tbody>
           </table>
         </div>
+        </details>
         <div class="plan-auth-notice" id="plan-auth-notice" role="status" hidden>
           <div>
             <strong id="plan-auth-title">Create a free account first</strong>
@@ -671,20 +659,15 @@
             </button>
           </div>
         </div>
-        <div class="trust-links" aria-label="Trust and support">
-          <button class="button secondary-button" data-screen-target="legal" type="button">
-            Legal & Support
-          </button>
-          <a class="button secondary-button" href="https://www.dreamscapes.cloud/support.html#privacy" target="_blank" rel="noopener">
-            Privacy Policy
-          </a>
-          <a class="button secondary-button" href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" target="_blank" rel="noopener">
-            Terms of Use
-          </a>
-          <button class="button secondary-button" id="restore-purchases-button" type="button">
-            Restore Purchases
-          </button>
-        </div>
+        <nav class="plan-foot-links" aria-label="Trust and support">
+          <button data-screen-target="legal" type="button">Legal</button>
+          <span aria-hidden="true">&#183;</span>
+          <a href="https://www.dreamscapes.cloud/support.html#privacy" target="_blank" rel="noopener">Privacy</a>
+          <span aria-hidden="true">&#183;</span>
+          <a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" target="_blank" rel="noopener">Terms</a>
+          <span aria-hidden="true">&#183;</span>
+          <button id="restore-purchases-button" type="button">Restore</button>
+        </nav>
         <div class="plan-store-links" id="plan-store-links" hidden>
           <p>Premier and Plus are bought in the DreamScapes app. Get it here:</p>
           <div class="plan-store-buttons">
@@ -1262,6 +1245,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026101006"></script>
+    <script src="./app.js?v=2026101011"></script>
   </body>
 </html>

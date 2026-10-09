@@ -24,8 +24,6 @@ const generateStoryButton = document.querySelector("#generate-story-button");
 const statusNote = document.querySelector("#status-note");
 const planNote = document.querySelector("#plan-note");
 const loadingMessage = document.querySelector("#loading-message");
-const currentPlanName = document.querySelector("#current-plan-name");
-const currentPlanSummary = document.querySelector("#current-plan-summary");
 const upgradeNote = document.querySelector("#upgrade-note");
 const planAuthNotice = document.querySelector("#plan-auth-notice");
 const planAuthTitle = document.querySelector("#plan-auth-title");
@@ -3196,14 +3194,144 @@ async function addCloudUsage({ stories = 0, audioSeconds = 0 } = {}) {
   return currentUsage;
 }
 
+/* ---- The Plans screen -------------------------------------------------- */
+/* Both the hero and the other-plan cards are written from the same `plans`
+   table the quota checks read, so a limit cannot be changed in one place and
+   go on being advertised in the other. The comparison table is still here,
+   folded away: it is the most useful thing on the screen for the one parent in
+   twenty who wants it, and the least useful for the other nineteen. */
+
+const PLAN_ICONS = {
+  stories: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="pi-pink" d="M12 6.6C10.2 5.1 7.7 4.6 5 4.9a1 1 0 0 0-.9 1v10.4a1 1 0 0 0 1.1 1c2.3-.25 4.5.2 6.1 1.4h1.4c1.6-1.2 3.8-1.65 6.1-1.4a1 1 0 0 0 1.1-1V5.9a1 1 0 0 0-.9-1c-2.7-.3-5.2.2-7 1.7Z"/><path class="pi-gold" d="m17.9 2.4.7 1.7 1.7.7-1.7.7-.7 1.7-.7-1.7-1.7-.7 1.7-.7Z"/></svg>',
+  duration: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle class="pi-stroke-lilac" cx="12" cy="12" r="8.6"/><path class="pi-stroke-lilac" d="M12 7.2V12l3.4 2"/></svg>',
+  audio: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="pi-stroke-mint" d="M4.4 15v-2.6a7.6 7.6 0 0 1 15.2 0V15"/><rect class="pi-mint" x="2.6" y="14" width="4.6" height="6.4" rx="2.3"/><rect class="pi-mint" x="16.8" y="14" width="4.6" height="6.4" rx="2.3"/></svg>',
+  minutes: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><g class="pi-gold-fill"><rect x="3" y="10" width="2.4" height="4" rx="1.2"/><rect x="7.2" y="7.4" width="2.4" height="9.2" rx="1.2"/><rect x="11.4" y="4.6" width="2.4" height="14.8" rx="1.2"/><rect x="15.6" y="7.4" width="2.4" height="9.2" rx="1.2"/><rect x="19.8" y="10" width="2.4" height="4" rx="1.2"/></g></svg>',
+  saved: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="pi-pink" d="M12 20.3 4.6 13a4.7 4.7 0 0 1 6.6-6.7l.8.8.8-.8A4.7 4.7 0 0 1 19.4 13Z"/></svg>',
+  text: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect class="pi-lilac" x="4.4" y="3.2" width="15.2" height="17.6" rx="2.4"/><g class="pi-ink"><rect x="7.4" y="7.2" width="9.2" height="1.7" rx=".85"/><rect x="7.4" y="11" width="9.2" height="1.7" rx=".85"/><rect x="7.4" y="14.8" width="5.6" height="1.7" rx=".85"/></g></svg>',
+  free: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="pi-sky" d="M6.6 17.6a4 4 0 0 1-.5-8 5.5 5.5 0 0 1 10.6-1.1 3.6 3.6 0 0 1 .5 7.1Z"/><path class="pi-gold" d="m19.4 3.4.6 1.5 1.5.6-1.5.6-.6 1.5-.6-1.5-1.5-.6 1.5-.6Z"/></svg>',
+  premier: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="pi-gold-fill" d="M3.4 8.2 7.5 11l4.5-5.6L16.5 11l4.1-2.8-1.6 10H5Z"/><circle class="pi-gold-fill" cx="12" cy="3.6" r="1.5"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="pi-gold-fill" d="M20.4 14.6A8.8 8.8 0 0 1 9.4 3.6a8.8 8.8 0 1 0 11 11Z"/><path class="pi-gold-fill" d="m18.6 2.6.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7Z"/></svg>',
+};
+
+/* Always four tiles, so the three cards line up however different the plans
+   are. A plan with no audio spends its last two on what it does have. */
+function planFeatureTiles(plan) {
+  /* Split rather than left to wrap. Two columns on a 375pt phone leave the
+     label about 110px, which "30 stories / month" does not fit on one line -
+     and letting it wrap breaks it after the slash, orphaning "month". A line
+     each for the number and the period says the same thing and breaks where
+     it was meant to. */
+  const tiles = [
+    { icon: "stories", label: `${plan.monthlyStories} stories`, sub: "every month" },
+    { icon: "duration", label: `Up to ${plan.maxDuration} min`, sub: "per story" },
+  ];
+  if (plan.canUseAudio) {
+    tiles.push({ icon: "audio", label: "Audio", sub: "narration" });
+    tiles.push({ icon: "minutes", label: `${plan.audioMinutes} minutes`, sub: "of audio" });
+  } else {
+    tiles.push({ icon: "text", label: "Text stories", sub: "read together" });
+    tiles.push({ icon: "saved", label: `${plan.savedLimit} saved`, sub: "stories kept" });
+  }
+  return tiles;
+}
+
+function planPriceMarkup(plan) {
+  // "£4.99/month" in the table, "£4.99 / month" on the card: the amount is the
+  // thing being read, so it gets its own weight.
+  const [amount, period] = String(plan.price).split("/");
+  return period
+    ? `<strong>${escapeHtml(amount.trim())}</strong> <span>/ ${escapeHtml(period.trim())}</span>`
+    : `<strong>${escapeHtml(amount.trim())}</strong>`;
+}
+
+function renderPlansScreen() {
+  const hero = document.querySelector("#plan-hero");
+  const others = document.querySelector("#plan-others");
+  if (!hero || !others) return;
+
+  const planKey = getCurrentPlanKey();
+  const plan = getPlan(planKey);
+  const paid = planKey !== "free";
+
+  hero.innerHTML = `
+    <div class="hero-card plan-card-${planKey}">
+      <div class="hero-art" aria-hidden="true">${PLAN_ICONS[planKey] || ""}</div>
+      <div class="hero-top">
+        <p class="hero-eyebrow">Your current plan</p>
+        <span class="hero-badge">Active</span>
+      </div>
+      <h3 class="hero-name">${escapeHtml(plan.label)}</h3>
+      <p class="hero-price">${planPriceMarkup(plan)}</p>
+      <ul class="hero-features">
+        ${planFeatureTiles(plan)
+          .map(
+            (tile) =>
+              `<li><span class="plan-ic">${PLAN_ICONS[tile.icon]}</span><span class="plan-tile-text"><strong>${escapeHtml(
+                tile.label
+              )}</strong><small>${escapeHtml(tile.sub)}</small></span></li>`
+          )
+          .join("")}
+      </ul>
+      <button class="button primary-button hero-action" id="plan-hero-action" type="button">
+        ${paid ? "Manage plan" : "Compare all plans"}
+      </button>
+    </div>`;
+
+  others.innerHTML = Object.entries(plans)
+    .filter(([key]) => key !== planKey)
+    .map(([key, other]) => {
+      // "Included" rather than a price for a tier the parent is already above:
+      // offering someone a downgrade they did not ask for is not a feature.
+      const below = (planRanks[key] || 0) < (planRanks[planKey] || 0);
+      const action = below
+        ? `<button class="button secondary-button plan-card-action" data-plan-preview="${key}" type="button" disabled>Included</button>`
+        // "Upgrade", not the plan's own name: the name is the heading directly
+        // above it, and a button that repeats its card says nothing.
+        : `<button class="button primary-button plan-card-action" data-purchase-plan="${key}" type="button">Upgrade</button>`;
+      return `
+        <div class="plan-card plan-card-${key}">
+          <span class="plan-card-ic" aria-hidden="true">${PLAN_ICONS[key] || ""}</span>
+          <h4>${escapeHtml(other.label.replace("DreamScapes ", ""))}</h4>
+          <p class="plan-card-price">${planPriceMarkup(other)}</p>
+          <p class="plan-card-meta">${other.monthlyStories} stories &#183; ${other.maxDuration} min</p>
+          ${action}
+        </div>`;
+    })
+    .join("");
+}
+
+document.querySelector("#upgrade-screen")?.addEventListener("click", (event) => {
+  const action = event.target.closest("#plan-hero-action");
+  if (!action) return;
+  if (getCurrentPlanKey() === "free") {
+    const compare = document.querySelector("#plan-compare");
+    if (compare) {
+      compare.open = true;
+      compare.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    return;
+  }
+  openStoreSubscriptions();
+});
+
+/* Cancelling and changing a subscription happen in the store account, not
+   here - the app never sees the card - so "Manage plan" hands them straight
+   to the right page rather than explaining where it is. */
+function openStoreSubscriptions() {
+  const url = isIosNativeApp()
+    ? "itms-apps://apps.apple.com/account/subscriptions"
+    : "https://play.google.com/store/account/subscriptions";
+  trackEvent("manage_plan_opened", { platform: getCapacitorPlatform() });
+  window.open(url, "_blank", "noopener");
+}
+
 function updatePlanFeatures() {
   const planKey = getCurrentPlanKey();
   const plan = getPlan(planKey);
   const audioAllowed = canUseAudioNarration();
 
   if (currentUser) hidePlanAuthNotice();
-  if (currentPlanName) currentPlanName.textContent = plan.label;
-  if (currentPlanSummary) currentPlanSummary.textContent = plan.summary;
+  renderPlansScreen();
   if (planNote) planNote.textContent = "";
   audioToggle.closest(".feature-toggle").classList.toggle("locked", !audioAllowed);
   updateDurationLocks(plan);
@@ -7247,27 +7375,29 @@ document.querySelectorAll("[data-plan-preview]").forEach((button) => {
   });
 });
 
-document.querySelectorAll("[data-purchase-plan]").forEach((button) => {
-  button.addEventListener("click", async () => {
-    if (!currentUser) {
-      showPlanAuthNotice(button.dataset.purchasePlan);
-      return;
-    }
+/* Delegated, because the plan cards are rendered: a listener bound to the
+   buttons at load would attach to the ones that existed then and to none of
+   the ones a plan change draws afterwards. */
+document.querySelector("#upgrade-screen")?.addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-purchase-plan]");
+  if (!button || button.disabled) return;
+  const targetPlan = button.dataset.purchasePlan;
 
-    hidePlanAuthNotice();
-    try {
-      await purchasePlan(button.dataset.purchasePlan);
-    } catch (error) {
-      const message = getRevenueCatErrorMessage(error);
-      console.error("RevenueCat purchase error", error);
-      setPlanStoreLinksVisible(!isNativeMobileApp());
-      upgradeNote.textContent = isNativeMobileApp() ? message : "";
-      trackEvent("revenuecat_purchase_failed", {
-        plan: button.dataset.purchasePlan,
-        message: message.slice(0, 300),
-      });
-    }
-  });
+  if (!currentUser) {
+    showPlanAuthNotice(targetPlan);
+    return;
+  }
+
+  hidePlanAuthNotice();
+  try {
+    await purchasePlan(targetPlan);
+  } catch (error) {
+    const message = getRevenueCatErrorMessage(error);
+    console.error("RevenueCat purchase error", error);
+    setPlanStoreLinksVisible(!isNativeMobileApp());
+    upgradeNote.textContent = isNativeMobileApp() ? message : "";
+    trackEvent("revenuecat_purchase_failed", { plan: targetPlan, message: message.slice(0, 300) });
+  }
 });
 
 document.querySelector("#open-app-button")?.addEventListener("click", () => {
