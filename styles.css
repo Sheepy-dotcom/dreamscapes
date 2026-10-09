@@ -7576,3 +7576,33 @@ body.night-mode .support-card {
     linear-gradient(135deg, rgba(255, 231, 133, 0.1), transparent 36%),
     linear-gradient(225deg, rgba(255, 143, 183, 0.12), transparent 42%);
 }
+
+/* ---- The cards on Plans and Account lose their outlines too -------------- */
+/* Plan cards and the account sections are both .auth-card, so this is one
+   rule for both screens. The fill and the lift stay - a card still needs to
+   read as a surface you can open - but nothing is drawn round it. */
+.auth-card,
+body.night-mode .auth-card,
+body.night-mode .admin-panel,
+body.night-mode .story-card {
+  border: 0;
+}
+
+/* The four figures at the top of Account. Their gradient cap stays: that is a
+   highlight along one edge, not a line round the outside. */
+.account-summary span,
+body.night-mode .account-summary span {
+  border: 0;
+}
+
+.story-card {
+  border: 0;
+}
+
+/* The "New to DreamScapes?" box at the foot of the sign-in card. A container,
+   so it goes the same way; .feature-toggle beside it keeps its outline,
+   because that one is a row you tap. */
+.auth-switch,
+body.night-mode .auth-switch {
+  border: 0;
+}
