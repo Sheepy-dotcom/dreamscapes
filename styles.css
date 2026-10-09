@@ -7522,3 +7522,57 @@ body.night-mode .builder-step-tonight .story-idea-field {
     animation: none;
   }
 }
+
+/* ---- No panels anywhere, including the one the wait sat in --------------- */
+/* Every screen lost its card earlier; this one kept its own. A bordered,
+   lighter box in the middle of the night sky is the last thing in the app
+   still reading as a dialog laid over a page rather than as the page. */
+.loading-scene,
+body.night-mode .loading-scene {
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+/* The stage rows keep an outline only while a stage is the live one - the
+   border was carrying the state as well as drawing a box, so it goes
+   transparent at rest rather than away, and the gold still arrives. */
+.making-steps li {
+  border-color: transparent;
+}
+
+.making-steps li.is-done {
+  border-color: transparent;
+}
+
+/* The two cards on the parent step, the plans table and the support cards. */
+.builder-step-parent .pref-card,
+body.night-mode .builder-step-parent .pref-card {
+  border: 0;
+}
+
+.plan-table-wrap,
+body.night-mode .plan-table-wrap {
+  border: 0;
+}
+
+.support-hero,
+.support-card,
+body.night-mode .support-hero,
+body.night-mode .support-card {
+  border: 0;
+}
+
+/* The last box on the screen was not a border at all. .loading-screen::before
+   laid a flat rgba(255,255,255,0.03) over an inset rounded rectangle, and a
+   flat fill on a box has edges however faint it is - which read as a panel
+   exactly where the panel had just been taken away. The two corner washes stay,
+   because those fade to transparent and never draw a line; only the flat sheet
+   underneath them goes. The glow at the foot is a soft ellipse and keeps its
+   job. */
+.loading-screen::before {
+  background:
+    linear-gradient(135deg, rgba(255, 231, 133, 0.1), transparent 36%),
+    linear-gradient(225deg, rgba(255, 143, 183, 0.12), transparent 42%);
+}
