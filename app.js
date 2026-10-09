@@ -5152,7 +5152,38 @@ function canUseCloudLibrary() {
   return Boolean(currentUser && supabaseClient);
 }
 
+/* Fields the server writes when it creates the story, and that the client has
+   no business clearing. api/story.js saves the row itself with the model's
+   summary and next ideas; the client then updates the same row, and an update
+   carrying `story_summary: null` wipes what the server just wrote. That is how
+   a story ended up in the table with a NULL summary while the response that
+   made it certainly had one - summary is a required field in the story schema,
+   so the server always has it.
+   These are written once, when the story is made. Nothing in the app clears
+   them on purpose, so an empty value here means "I do not have this", not
+   "make it empty" - and is left out of the row rather than sent as null. */
+const CLOUD_WRITE_ONCE_COLUMNS = [
+  "story_summary",
+  "next_ideas",
+  "occasion",
+  "recurring_characters",
+  "series_id",
+  "series_title",
+];
+
+function isEmptyCloudValue(value) {
+  return value === null || value === undefined || value === "" || (Array.isArray(value) && value.length === 0);
+}
+
 function storyToCloudRow(story) {
+  const row = storyToCloudRowFields(story);
+  for (const column of CLOUD_WRITE_ONCE_COLUMNS) {
+    if (isEmptyCloudValue(row[column])) delete row[column];
+  }
+  return row;
+}
+
+function storyToCloudRowFields(story) {
   return {
     user_id: currentUser.id,
     title: story.title,
