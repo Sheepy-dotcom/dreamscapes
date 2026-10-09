@@ -3906,9 +3906,23 @@ document.querySelector("#player-rain")?.addEventListener("click", () => {
   else trackEvent("rain_started", { from: "button" });
 });
 
-/* Again. Children ask for the same story twice, and at that point nobody
-   wants to go back to the card and press Listen. */
-document.querySelector("#player-again")?.addEventListener("click", () => {
+/* Repeat. Armed rather than instant: a child asks for it again while the
+   story is still playing, and nobody wants it to jump back to the start
+   mid-sentence. It is set during the story and acts at the end of it.
+   It disarms itself after the one extra pass. A story that loops all night
+   is not what anyone wants at bedtime, and it would also mean the rain never
+   arrives - the repeat has to end for the thing that comes after it to
+   begin. */
+let repeatArmed = false;
+
+function setRepeatArmed(on) {
+  repeatArmed = Boolean(on);
+  document
+    .querySelector("#player-repeat")
+    ?.setAttribute("aria-pressed", repeatArmed ? "true" : "false");
+}
+
+function replayStory() {
   seekByPercent(0);
   readingIndex = 0;
   renderReadingPage();
@@ -3918,7 +3932,11 @@ document.querySelector("#player-again")?.addEventListener("click", () => {
   // no audio yet that left the clock showing where the scrubber had been
   // rather than the beginning it had just been sent to.
   setAudioProgress(0);
-  trackEvent("story_replayed", {});
+}
+
+document.querySelector("#player-repeat")?.addEventListener("click", () => {
+  setRepeatArmed(!repeatArmed);
+  trackEvent("story_repeat_set", { on: repeatArmed });
 });
 
 /* Dim is the lights-out mode. It cannot touch the screen's own brightness
@@ -4075,6 +4093,7 @@ function openReading(story, { listen = false } = {}) {
 
 function closeReading() {
   Rain.stop();
+  setRepeatArmed(false);
   if (storyReading) storyReading.hidden = true;
   resultScreen?.classList.remove("is-dim");
   resultScreen?.classList.remove("is-listening");
@@ -7378,6 +7397,16 @@ function resetAudioProgress() {
 function finishAudioProgress() {
   pendingAudioSeekPercent = null;
   setAudioProgress(100);
+
+  // Repeat comes first and the rain waits for it: the story is not over until
+  // the last pass is.
+  if (repeatArmed) {
+    setRepeatArmed(false);
+    replayStory();
+    trackEvent("story_repeated", {});
+    return;
+  }
+
   /* The story ends and the room goes quiet with a child who is often still
      awake. That gap is the reason rain is here, so it does not wait to be
      asked - it only starts if the player is open, so finishing a story in the
