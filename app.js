@@ -7021,20 +7021,33 @@ async function renderLibrary() {
           story.seriesTitle ? `${story.seriesTitle} · Chapter ${Number(story.chapterNumber) || 1}` : "",
           story.journeyLength ? `Night ${Number(story.journeyDay) || 1}/${Number(story.journeyLength)}` : "",
         ].filter(Boolean);
+        /* The same picture the story opens with. revealArtFor is keyed off
+           the story's own id, so the shelf and the story agree - a library of
+           ninety text rows was the one screen in the app with nothing to look
+           at, and the art for it already existed. */
         return `
         <article class="library-item ${isNewStory ? "new-story" : ""} ${isFavourite ? "favourite-story" : ""}">
-          <p class="library-when">
-            <span class="library-when-label">${escapeHtml(formatStoryWhen(story))}</span>
-            ${isNewest && !isNewStory ? '<span class="library-newest-badge">Newest</span>' : ""}
-            ${isNewStory ? '<span class="new-story-badge">Just created</span>' : ""}
-            ${isFavourite ? '<span class="favourite-story-badge">Saved</span>' : ""}
-          </p>
-          <h3>${escapeHtml(story.title)}</h3>
-          <p class="library-meta">${escapeHtml(metadata.join(" · "))}</p>
+          <button class="library-open-button" data-library-index="${index}" type="button">
+            <span class="library-art" aria-hidden="true"><img src="${revealArtFor(story)}" alt="" loading="lazy" decoding="async" /></span>
+            <span class="library-copy">
+              <span class="library-when">
+                <span class="library-when-label">${escapeHtml(formatStoryWhen(story))}</span>
+                ${isNewest && !isNewStory ? '<span class="library-newest-badge">Newest</span>' : ""}
+                ${isNewStory ? '<span class="new-story-badge">Just created</span>' : ""}
+              </span>
+              <span class="library-title">${escapeHtml(story.title)}</span>
+              <span class="library-meta">${escapeHtml(metadata.join(" \u00B7 "))}</span>
+            </span>
+          </button>
           <div class="library-actions">
-            <button class="button primary-button library-open-button" data-library-index="${index}" type="button">Open</button>
-            <button class="button secondary-button favourite-button ${isFavourite ? "active" : ""}" data-favourite-index="${index}" type="button" aria-pressed="${isFavourite ? "true" : "false"}">${isFavourite ? "Saved" : "Save"}</button>
-            <button class="button secondary-button delete-button ${isFavourite ? "protected-delete-button" : ""}" data-delete-index="${index}" type="button" aria-label="${isFavourite ? "Saved story locked from deletion" : "Delete story"}">${isFavourite ? "Locked" : "Delete"}</button>
+            <button class="library-icon-button favourite-button ${isFavourite ? "active" : ""}" data-favourite-index="${index}" type="button" aria-pressed="${isFavourite ? "true" : "false"}" aria-label="${isFavourite ? "Saved - tap to unsave" : "Save this story"}" title="${isFavourite ? "Saved" : "Save"}">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 20.6C5.7 16.4 2.5 13.2 2.5 9.4A4.85 4.85 0 0 1 12 6.7 4.85 4.85 0 0 1 21.5 9.4C21.5 13.2 18.3 16.4 12 20.6Z"/></svg>
+            </button>
+            <button class="library-icon-button delete-button ${isFavourite ? "protected-delete-button" : ""}" data-delete-index="${index}" type="button" aria-label="${isFavourite ? "Saved story locked from deletion" : "Delete story"}" title="${isFavourite ? "Locked" : "Delete"}">
+              ${isFavourite
+                ? '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 10V7.4a5 5 0 0 1 10 0V10" fill="none" stroke="currentColor" stroke-width="2"/><rect x="4.6" y="10" width="14.8" height="10.4" rx="2.6" fill="currentColor"/></svg>'
+                : '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4.8 6.6h14.4M9.4 6.6V4.4h5.2v2.2M6.8 6.6l1 13.2h8.4l1-13.2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
+            </button>
           </div>
         </article>
       `;
