@@ -9458,8 +9458,8 @@ body.outro-open {
    SVG. Same box as the icons they replace, so the row's rhythm is unchanged,
    and the same drop shadow that lifted them off the night sky. */
 .point-icon img {
-  width: 26px;
-  height: 26px;
+  width: 32px;
+  height: 32px;
   object-fit: contain;
   display: block;
   filter: drop-shadow(0 3px 8px rgba(6, 8, 32, 0.6));
@@ -9467,8 +9467,8 @@ body.outro-open {
 
 @media (max-height: 700px) {
   .point-icon img {
-    width: 21px;
-    height: 21px;
+    width: 26px;
+    height: 26px;
   }
 }
 
