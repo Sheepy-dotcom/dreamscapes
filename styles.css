@@ -9027,34 +9027,59 @@ body.outro-open {
 }
 
 /* ---- Plans ------------------------------------------------------------- */
+/* The screens are full width, but a plan card is an object with edges and
+   needs a margin to read as one. Scoped here so the rest stay as they are. */
+.upgrade-screen {
+  padding-left: clamp(16px, 4.6vw, 24px);
+  padding-right: clamp(16px, 4.6vw, 24px);
+}
 
 .plans-head {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: 14px;
-  padding: 4px 0 2px;
+  padding: 6px 0 2px;
   text-align: left;
+}
+
+.plans-head .logo-button {
+  padding: 0;
+}
+
+.plans-head .mini-logo {
+  width: 54px;
+  height: auto;
+  filter: drop-shadow(0 6px 16px rgba(255, 196, 92, 0.3));
 }
 
 .plans-head h2 {
   margin: 0;
-  font-size: 1.62rem;
-  line-height: 1.16;
+  font-size: 1.46rem;
+  line-height: 1.14;
   font-weight: 900;
   text-wrap: balance;
 }
 
+.plans-head .eyebrow {
+  margin: 0 0 2px;
+  color: var(--gold);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
 .plans-sub {
-  margin: 4px 0 0;
-  color: rgba(199, 209, 255, 0.78);
-  font-size: 0.95rem;
-  line-height: 1.35;
+  margin: 6px 0 0;
+  color: rgba(190, 200, 255, 0.82);
+  font-size: 0.93rem;
+  line-height: 1.34;
 }
 
 .plans-subhead {
-  margin: 18px 0 0;
-  font-size: 1.18rem;
+  margin: 22px 0 0;
+  font-size: 1.2rem;
   font-weight: 900;
   text-align: left;
 }
@@ -9065,34 +9090,44 @@ body.outro-open {
   position: relative;
   overflow: hidden;
   display: grid;
-  gap: 10px;
-  margin-top: 14px;
-  padding: 18px 16px 16px;
-  border-radius: 26px;
-  border: 1.5px solid rgba(255, 214, 122, 0.62);
-  background: linear-gradient(158deg, #3a2a72 0%, #2a2064 46%, #1d1a52 100%);
-  box-shadow: 0 0 0 1px rgba(255, 214, 122, 0.14), 0 22px 46px rgba(6, 8, 34, 0.5);
+  gap: 12px;
+  margin-top: 16px;
+  padding: 20px 18px 18px;
+  border-radius: 28px;
+  border: 1.5px solid rgba(255, 206, 110, 0.72);
+  background: linear-gradient(156deg, #4a3187 0%, #332474 44%, #241c5c 100%);
+  /* The halo is the thing that makes this read as the lit card rather than a
+     panel with a yellow line round it. */
+  box-shadow: 0 0 0 1px rgba(255, 206, 110, 0.18), 0 0 34px rgba(173, 126, 255, 0.34),
+    0 0 58px rgba(255, 196, 92, 0.12), 0 24px 50px rgba(6, 8, 34, 0.5);
   text-align: left;
 }
 
-/* The decorative mark sits behind the text and must never take a tap that was
+/* The brand mark, not a drawn crescent: it is the same moon on the same clouds
+   the rest of the app uses. It sits behind the text and must never take a tap
    meant for the button under it. */
+/* Inside the card, not bleeding off it: .hero-card clips its overflow, so a
+   negative offset here does not look like art running past the edge - it looks
+   like a cloud with a slice taken out of it. */
 .hero-art {
   position: absolute;
-  top: -14px;
-  right: -12px;
-  width: 132px;
-  height: 132px;
-  opacity: 0.5;
+  top: 56px;
+  right: 4px;
+  width: 128px;
   pointer-events: none;
+  opacity: 0.92;
 }
 
-.hero-art svg {
+.hero-art img {
   width: 100%;
-  height: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 10px 26px rgba(10, 6, 40, 0.45));
 }
 
 .hero-top {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -9101,19 +9136,19 @@ body.outro-open {
 
 .hero-eyebrow {
   margin: 0;
-  color: var(--lilac);
-  font-size: 0.74rem;
+  color: #e9a8f0;
+  font-size: 0.78rem;
   font-weight: 900;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
 }
 
 .hero-badge {
-  padding: 4px 11px;
+  padding: 6px 14px;
   border-radius: 999px;
   background: #8ff0c9;
-  color: #0d3b2b;
-  font-size: 0.68rem;
+  color: #0b3d2c;
+  font-size: 0.72rem;
   font-weight: 900;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -9121,31 +9156,38 @@ body.outro-open {
 
 .hero-name {
   position: relative;
+  z-index: 1;
   margin: 0;
-  max-width: 68%;
-  font-size: 1.5rem;
-  line-height: 1.14;
+  max-width: 72%;
+  font-size: 1.42rem;
+  line-height: 1.12;
   font-weight: 900;
   text-wrap: balance;
 }
 
 .hero-price {
+  position: relative;
+  z-index: 1;
   margin: 0;
-  color: var(--lilac);
-  font-size: 1.04rem;
+  color: rgba(197, 185, 255, 0.78);
+  font-size: 1.02rem;
   font-weight: 700;
 }
 
+/* Periwinkle, not white. The amount is the one number on the card a parent is
+   checking, and white here makes it compete with the plan name above it. */
 .hero-price strong {
-  color: var(--white);
-  font-size: 1.44rem;
+  color: #cbbcff;
+  font-size: 1.56rem;
   font-weight: 900;
 }
 
 .hero-features {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  gap: 10px;
   margin: 4px 0 2px;
   padding: 0;
   list-style: none;
@@ -9153,40 +9195,59 @@ body.outro-open {
 
 .hero-features li {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr);
+  grid-template-columns: 30px minmax(0, 1fr);
   align-items: center;
-  gap: 9px;
-  min-height: 60px;
-  padding: 9px 10px;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(10, 14, 48, 0.42);
-  color: rgba(234, 238, 255, 0.94);
-  font-size: 0.82rem;
-  font-weight: 800;
-  line-height: 1.24;
+  gap: 8px;
+  min-height: 64px;
+  padding: 10px 9px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  background: rgba(14, 16, 54, 0.56);
 }
 
 .plan-ic {
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 11px;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
   background: rgba(124, 142, 255, 0.2);
 }
 
 .plan-ic svg {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
+}
+
+.plan-tile-text {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.plan-tile-text strong {
+  color: var(--white);
+  font-size: 0.85rem;
+  font-weight: 900;
+  line-height: 1.16;
+}
+
+.plan-tile-text small {
+  color: rgba(190, 200, 255, 0.72);
+  font-size: 0.74rem;
+  font-weight: 800;
+  line-height: 1.2;
 }
 
 .hero-action {
+  position: relative;
+  z-index: 1;
   width: 100%;
-  min-height: 52px;
-  margin-top: 2px;
-  border-radius: 24px;
-  font-size: 1.04rem;
+  min-height: 54px;
+  margin-top: 4px;
+  border-radius: 27px;
+  font-size: 1.05rem;
+  font-weight: 900;
 }
 
 /* ---- The other two ----------------------------------------------------- */
@@ -9194,19 +9255,19 @@ body.outro-open {
 .plan-others {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 11px;
-  margin-top: 11px;
+  gap: 13px;
+  margin-top: 13px;
 }
 
 .plan-card {
   display: grid;
   justify-items: center;
   align-content: start;
-  gap: 5px;
-  padding: 16px 12px 14px;
-  border-radius: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(27, 33, 86, 0.6);
+  gap: 6px;
+  padding: 20px 13px 16px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  background: rgba(28, 32, 86, 0.66);
   text-align: center;
 }
 
@@ -9214,74 +9275,77 @@ body.outro-open {
    not the one being offered. */
 .plan-card.plan-card-premier,
 .plan-card.plan-card-plus {
-  border-color: rgba(255, 214, 122, 0.4);
-  background: linear-gradient(162deg, #4a2c73 0%, #33225f 58%, #241b52 100%);
+  border-color: rgba(255, 206, 110, 0.4);
+  background: linear-gradient(160deg, #5b3285 0%, #3d246d 56%, #2a1d5c 100%);
+  box-shadow: 0 0 26px rgba(173, 126, 255, 0.2);
 }
 
 .plan-card-ic {
   display: grid;
   place-items: center;
-  width: 42px;
-  height: 42px;
+  width: 48px;
+  height: 48px;
   margin-bottom: 2px;
 }
 
 .plan-card-ic svg {
   width: 100%;
   height: 100%;
+  filter: drop-shadow(0 6px 14px rgba(8, 6, 34, 0.45));
 }
 
 .plan-card h4 {
   margin: 0;
-  font-size: 1.18rem;
+  font-size: 1.24rem;
   font-weight: 900;
 }
 
 .plan-card-price {
   margin: 0;
-  color: rgba(216, 198, 255, 0.9);
-  font-size: 0.92rem;
+  color: rgba(197, 185, 255, 0.8);
+  font-size: 0.96rem;
   font-weight: 700;
 }
 
 .plan-card-price strong {
   color: var(--white);
-  font-size: 1.1rem;
+  font-size: 1.22rem;
   font-weight: 900;
 }
 
 .plan-card-meta {
-  margin: 0 0 6px;
-  color: rgba(199, 209, 255, 0.74);
-  font-size: 0.8rem;
+  margin: 2px 0 8px;
+  color: rgba(185, 196, 255, 0.72);
+  font-size: 0.86rem;
   font-weight: 700;
 }
 
 .plan-card-action {
   width: 100%;
-  min-height: 44px;
-  border-radius: 20px;
-  font-size: 0.94rem;
+  min-height: 48px;
+  border-radius: 24px;
+  font-size: 1rem;
+  font-weight: 900;
 }
 
 /* A tier the parent is already above. It is information, not an offer, so it
    does not look like something to press. */
 .plan-card-action[disabled] {
   opacity: 1;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.06);
   box-shadow: none;
-  color: rgba(226, 231, 255, 0.78);
+  color: rgba(226, 231, 255, 0.82);
   cursor: default;
 }
 
 /* ---- Compare, folded away ---------------------------------------------- */
 
 .plan-compare {
-  margin-top: 16px;
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(27, 33, 86, 0.5);
+  margin-top: 18px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  background: rgba(28, 32, 86, 0.6);
   overflow: hidden;
 }
 
@@ -9289,9 +9353,9 @@ body.outro-open {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 18px;
+  padding: 18px 20px;
   color: var(--white);
-  font-size: 1.02rem;
+  font-size: 1.08rem;
   font-weight: 900;
   cursor: pointer;
   list-style: none;
@@ -9303,11 +9367,11 @@ body.outro-open {
 
 .plan-compare > summary::after {
   content: "";
-  width: 11px;
-  height: 11px;
+  width: 12px;
+  height: 12px;
   margin-right: 4px;
-  border-right: 2.4px solid rgba(226, 231, 255, 0.72);
-  border-bottom: 2.4px solid rgba(226, 231, 255, 0.72);
+  border-right: 2.6px solid rgba(214, 222, 255, 0.72);
+  border-bottom: 2.6px solid rgba(214, 222, 255, 0.72);
   border-radius: 2px;
   transform: translateY(-3px) rotate(45deg);
   transition: transform 0.18s ease;
@@ -9328,10 +9392,10 @@ body.outro-open {
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  margin-top: 18px;
-  color: rgba(199, 209, 255, 0.42);
-  font-size: 0.86rem;
+  gap: 9px;
+  margin-top: 20px;
+  color: rgba(185, 196, 255, 0.4);
+  font-size: 0.9rem;
 }
 
 .plan-foot-links a,
@@ -9339,9 +9403,9 @@ body.outro-open {
   border: 0;
   padding: 2px 1px;
   background: none;
-  color: rgba(214, 222, 255, 0.82);
+  color: rgba(214, 222, 255, 0.84);
   font-family: inherit;
-  font-size: 0.86rem;
+  font-size: 0.9rem;
   font-weight: 800;
   text-decoration: none;
   cursor: pointer;
@@ -9356,14 +9420,13 @@ body.outro-open {
 /* ---- Icon palette ------------------------------------------------------ */
 
 .plan-ic svg,
-.plan-card-ic svg,
-.hero-art svg {
+.plan-card-ic svg {
   fill: none;
 }
 
 .pi-pink { fill: #ff9ec2; }
 .pi-lilac { fill: #b9a6ff; }
-.pi-sky { fill: #8fd0ff; }
+.pi-sky { fill: #7cc4ff; }
 .pi-mint { fill: #8ff0c9; }
 .pi-gold { fill: #ffd16a; }
 .pi-gold-fill { fill: #ffd16a; }
@@ -9383,88 +9446,14 @@ body.outro-open {
   stroke-linecap: round;
 }
 
-/* Two cards side by side get tight at 340px; one column reads better than two
-   cramped ones. */
-@media (max-width: 340px) {
+/* Two columns get cramped below this; one reads better than two squeezed. */
+@media (max-width: 348px) {
   .hero-features,
   .plan-others {
     grid-template-columns: minmax(0, 1fr);
   }
-}
 
-/* The screens are full width, but the plan cards are objects with edges and
-   need a margin to read as such. Scoped here so the rest stay as they are. */
-.upgrade-screen {
-  padding-left: clamp(14px, 4.2vw, 22px);
-  padding-right: clamp(14px, 4.2vw, 22px);
-}
-
-/* Four tiles across two columns at 375px: the label has about 150px, which
-   "30 stories / month" does not fit on one line at the size above. */
-.hero-features li {
-  grid-template-columns: 30px minmax(0, 1fr);
-  gap: 8px;
-  min-height: 54px;
-  padding: 8px 9px;
-  font-size: 0.78rem;
-}
-
-.hero-features .plan-ic {
-  width: 30px;
-  height: 30px;
-  border-radius: 10px;
-}
-
-.hero-features .plan-ic svg {
-  width: 18px;
-  height: 18px;
-}
-
-.hero-art {
-  top: -10px;
-  right: -8px;
-  width: 124px;
-  height: 124px;
-  opacity: 0.78;
-}
-
-.plan-tile-text {
-  display: grid;
-  gap: 0;
-  min-width: 0;
-}
-
-.plan-tile-text strong {
-  font-size: 0.84rem;
-  font-weight: 900;
-  line-height: 1.2;
-}
-
-.plan-tile-text small {
-  color: rgba(199, 209, 255, 0.7);
-  font-size: 0.72rem;
-  font-weight: 800;
-  line-height: 1.2;
-}
-
-/* The decorative moon used to sit on top of the ACTIVE pill. It belongs behind
-   the card's corner, not in the row the badge occupies. */
-.hero-art {
-  top: 14px;
-  right: -14px;
-  width: 112px;
-  height: 112px;
-  opacity: 0.66;
-}
-
-.hero-top {
-  position: relative;
-  z-index: 1;
-}
-
-/* Gold at two-thirds opacity over this purple mixes to khaki. It is still
-   decoration, so it stays behind the text, but it should read as the colour it
-   was drawn in. */
-.hero-art {
-  opacity: 0.88;
+  .hero-art {
+    opacity: 0.5;
+  }
 }

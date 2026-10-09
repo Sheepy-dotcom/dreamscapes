@@ -3255,7 +3255,7 @@ function renderPlansScreen() {
 
   hero.innerHTML = `
     <div class="hero-card plan-card-${planKey}">
-      <div class="hero-art" aria-hidden="true">${PLAN_ICONS[planKey] || ""}</div>
+      <div class="hero-art" aria-hidden="true"><img src="./assets/dreamscapes-mark.png?v=2026100885" alt="" /></div>
       <div class="hero-top">
         <p class="hero-eyebrow">Your current plan</p>
         <span class="hero-badge">Active</span>
