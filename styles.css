@@ -7606,3 +7606,51 @@ body.night-mode .account-summary span {
 body.night-mode .auth-switch {
   border: 0;
 }
+
+/* ---- The screens run to the edge ---------------------------------------- */
+/* The cards lost their borders, then their frames; this is the last inset.
+   A card that reaches both edges reads as part of the screen rather than as
+   something resting on it, and it is the pattern the builder steps have been
+   using since they went full bleed. */
+.library-screen,
+.upgrade-screen,
+.account-screen,
+.signup-screen,
+.admin-screen,
+.info-screen,
+.result-screen,
+.loading-screen {
+  padding-inline: 0;
+}
+
+/* The gutter moves inward to the things that have no padding of their own.
+   A card has its own; a heading and a line of running text do not, and text
+   against the edge of the glass is unreadable on a phone with rounded
+   corners. */
+.library-screen > .top-bar,
+.upgrade-screen > .top-bar,
+.account-screen > .top-bar,
+.signup-screen > .top-bar,
+.admin-screen > .top-bar,
+.info-screen > .top-bar,
+.library-screen > p,
+.upgrade-screen > p,
+.account-screen > p,
+.signup-screen > p,
+.admin-screen > p,
+.info-screen > p,
+.library-screen > h2,
+.library-screen > .library-toolbar,
+.library-screen > .library-status,
+.account-screen > .account-danger-zone,
+.upgrade-screen > .trust-links {
+  padding-inline: clamp(14px, 4vw, 24px);
+}
+
+/* Reaching the edge, a card has no outside corners to round. */
+.auth-card,
+.story-card,
+.admin-panel,
+.plan-table-wrap {
+  border-radius: 0;
+}
