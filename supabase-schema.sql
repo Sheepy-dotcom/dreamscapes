@@ -96,6 +96,7 @@ create table if not exists public.child_profiles (
   child_age text,
   eye_colour text,
   hair_colour text,
+  pronouns text,
   parent_names text,
   interests text,
   friends text,

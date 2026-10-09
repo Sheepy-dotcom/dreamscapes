@@ -8,6 +8,7 @@ create table if not exists public.child_profiles (
   child_age text,
   eye_colour text,
   hair_colour text,
+  pronouns text,
   parent_names text,
   interests text,
   friends text,
@@ -17,6 +18,9 @@ create table if not exists public.child_profiles (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.child_profiles
+add column if not exists pronouns text;
 
 alter table public.child_profiles
 add column if not exists friends text;

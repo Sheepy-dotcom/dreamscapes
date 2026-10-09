@@ -221,6 +221,20 @@ function shouldTryNextStoryModel(status, message) {
 // One of these is picked per story. They are deliberately different kinds of
 // sentence, not synonyms, because the model will converge on whichever shape it
 // is given room to repeat.
+/* "she, her and her" is the giveaway that a template wrote it, and the object
+   and possessive are the same word for she/her. */
+function listWords(words) {
+  const unique = [...new Set(words)];
+  if (unique.length < 2) return unique.join("");
+  return `${unique.slice(0, -1).join(", ")} and ${unique[unique.length - 1]}`;
+}
+
+const PRONOUNS = {
+  she: { subject: "she", object: "her", possessive: "her" },
+  he: { subject: "he", object: "him", possessive: "his" },
+  they: { subject: "they", object: "them", possessive: "their" },
+};
+
 const TITLE_SHAPES = [
   "name a place from the story, with no verb in it.",
   "use something a character says out loud, in their own words.",
@@ -272,10 +286,26 @@ function buildPrompt(data, section = null) {
   // actually makes a shelf of stories look like a shelf of stories.
   const titleShape = TITLE_SHAPES[Math.floor(Math.random() * TITLE_SHAPES.length)];
 
+  /* Without this the only thing the model has to go on is the name, so it
+     guesses - and for Alex, Sam, Charlie, Riley, or any name it does not know
+     well, it guesses wrong about half the time and then calls the child by the
+     wrong word for the length of the story. An unset field is not a licence to
+     guess; it means write so it does not matter. */
+  const pronouns = PRONOUNS[String(data.pronouns || "").trim().toLowerCase()];
+  const childLabel = cleanText(data.childName, "the child");
+  const pronounRule = pronouns
+    ? `Child pronouns: ${pronouns.subject}/${pronouns.object}. Use ${listWords([
+        pronouns.subject,
+        pronouns.object,
+        pronouns.possessive,
+      ])} for ${childLabel} every time, and never any other pronoun for them.`
+    : `Child pronouns: not given. Do not infer them from the name. Refer to ${childLabel} by name, or use they/them, and keep every other description free of gendered words (no boy, girl, son, daughter, lad, lass, prince or princess for ${childLabel}).`;
+
   return [
     `Write a polished, imaginative children's ${storyType}.`,
     `Story language: ${language.prompt}.`,
     `Child name: ${cleanText(data.childName, "the child")}.`,
+    pronounRule,
     `Child age: ${cleanText(data.childAge, "not specified; use language suitable for a young child")}.`,
     `Child interests: ${interests || "not specified"}.`,
     `Target duration: ${cleanText(data.duration, "5")} minutes of calm narrated audio.`,

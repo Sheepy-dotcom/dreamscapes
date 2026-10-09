@@ -1667,6 +1667,20 @@ function cleanProfileValue(value) {
   return String(value || "").replace(/\s+/g, " ").trim();
 }
 
+/* Stored as one of "", "she", "he" or "they". Empty is not the same as
+   "they": empty means the parent has not said, and the model is then told to
+   write around pronouns rather than guess, which is the one case where
+   guessing produces a story that calls a child by the wrong word for eight
+   hundred words. */
+const PRONOUN_CHOICES = ["she", "he", "they"];
+
+function normalisePronouns(value) {
+  const cleaned = String(value || "").trim().toLowerCase();
+  return PRONOUN_CHOICES.includes(cleaned) ? cleaned : "";
+}
+
+const PRONOUN_LABELS = { she: "she/her", he: "he/him", they: "they/them" };
+
 function normaliseChildProfile(profile = {}) {
   const id = profile.id || profile.localId || createStoryId();
   return {
@@ -1676,6 +1690,7 @@ function normaliseChildProfile(profile = {}) {
     childAge: cleanProfileValue(profile.childAge || profile.child_age),
     eyeColour: cleanProfileValue(profile.eyeColour || profile.eye_colour),
     hairColour: cleanProfileValue(profile.hairColour || profile.hair_colour),
+    pronouns: normalisePronouns(profile.pronouns),
     parentNames: cleanProfileValue(profile.parentNames || profile.parent_names),
     interests: cleanProfileValue(profile.interests),
     friends: cleanProfileValue(profile.friends),
@@ -1716,6 +1731,7 @@ function profileToCloudRow(profile) {
     child_age: profile.childAge || null,
     eye_colour: profile.eyeColour || null,
     hair_colour: profile.hairColour || null,
+    pronouns: profile.pronouns || null,
     parent_names: profile.parentNames || null,
     interests: profile.interests || null,
     friends: profile.friends || null,
@@ -1831,6 +1847,7 @@ function getProfileSummary(profile) {
     profile.childAge ? `Age ${profile.childAge}` : "",
     profile.eyeColour ? `${profile.eyeColour} eyes` : "",
     profile.hairColour ? profile.hairColour : "",
+    profile.pronouns ? PRONOUN_LABELS[profile.pronouns] : "",
     profile.interests ? `Likes ${profile.interests}` : "",
     profile.friends ? `Friends: ${profile.friends}` : "",
     profile.recurringCharacters ? `Story friends: ${profile.recurringCharacters}` : "",
@@ -2029,13 +2046,16 @@ function applySavedChild(profileId) {
 
   const nameInput = document.querySelector("#child-name");
   const ageInput = document.querySelector("#child-age");
+  const pronounInput = document.querySelector("#child-pronouns");
   if (profile) {
     if (nameInput) nameInput.value = profile.childName || "";
     if (ageInput) ageInput.value = profile.childAge || "";
+    if (pronounInput) pronounInput.value = profile.pronouns || "";
   } else if (nameInput?.dataset.fromSavedChild === "true") {
     // Only clear what this control filled; a name typed by hand stays.
     if (nameInput) nameInput.value = "";
     if (ageInput) ageInput.value = "";
+    if (pronounInput) pronounInput.value = "";
   }
   if (nameInput) nameInput.dataset.fromSavedChild = String(Boolean(profile));
 
@@ -2068,6 +2088,7 @@ function fillChildProfileForm(profile) {
   childProfileForm.elements.profileChildAge.value = profile.childAge || "";
   childProfileForm.elements.profileEyeColour.value = profile.eyeColour || "";
   childProfileForm.elements.profileHairColour.value = profile.hairColour || "";
+  childProfileForm.elements.profilePronouns.value = profile.pronouns || "";
   childProfileForm.elements.profileParentNames.value = profile.parentNames || "";
   childProfileForm.elements.profileInterests.value = profile.interests || "";
   childProfileForm.elements.profileFriends.value = profile.friends || "";
@@ -2663,6 +2684,7 @@ function describeChildProfiles(profiles) {
       profile.childAge ? `age ${profile.childAge}` : "",
       profile.eyeColour ? `${profile.eyeColour} eyes` : "",
       profile.hairColour ? `${profile.hairColour} hair` : "",
+      profile.pronouns ? `pronouns: ${PRONOUN_LABELS[profile.pronouns]}` : "",
       profile.parentNames ? `parent names: ${profile.parentNames}` : "",
       profile.interests ? `interests: ${profile.interests}` : "",
       profile.friends ? `friends: ${profile.friends}` : "",
@@ -2680,6 +2702,11 @@ function buildProfileAwareStoryData(selectedPlan, selectedPlanKey) {
   const manualName = getValue("childName");
   const childName = manualName || profileNames;
   const childAge = getValue("childAge") || (selectedProfiles.length === 1 ? selectedProfiles[0].childAge : "");
+  /* Only meaningful for one child. Two children share one field, so their
+     pronouns go through the per-profile details instead. */
+  const pronouns =
+    normalisePronouns(getValue("pronouns")) ||
+    (selectedProfiles.length === 1 ? selectedProfiles[0].pronouns : "");
   const interests = [getValue("interests"), joinProfileValues(selectedProfiles, "interests")]
     .filter(Boolean)
     .join(", ");
@@ -2693,6 +2720,7 @@ function buildProfileAwareStoryData(selectedPlan, selectedPlanKey) {
     plan: selectedPlanKey,
     childName,
     childAge,
+    pronouns,
     interests,
     friends,
     recurringCharacters,
@@ -2712,6 +2740,7 @@ function buildProfileAwareStoryData(selectedPlan, selectedPlanKey) {
       childAge: profile.childAge,
       eyeColour: profile.eyeColour,
       hairColour: profile.hairColour,
+      pronouns: profile.pronouns,
       parentNames: profile.parentNames,
       interests: profile.interests,
       friends: profile.friends,
@@ -6515,6 +6544,7 @@ childProfileForm?.addEventListener("submit", async (event) => {
     childAge: cleanProfileValue(childProfileForm.elements.profileChildAge.value),
     eyeColour: cleanProfileValue(childProfileForm.elements.profileEyeColour.value),
     hairColour: cleanProfileValue(childProfileForm.elements.profileHairColour.value),
+    pronouns: normalisePronouns(childProfileForm.elements.profilePronouns.value),
     parentNames: cleanProfileValue(childProfileForm.elements.profileParentNames.value),
     interests: cleanProfileValue(childProfileForm.elements.profileInterests.value),
     friends: cleanProfileValue(childProfileForm.elements.profileFriends.value),
