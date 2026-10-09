@@ -8592,3 +8592,69 @@ body.night-mode .builder-step[data-builder-step="8"] .narration-group {
   padding: 12px 14px;
   background: rgba(20, 20, 64, 0.6);
 }
+
+/* ---- The three promises get a surface to sit on ------------------------- */
+/* They were bare drawings at 36px on top of a bedspread full of dinosaurs and
+   castles - the busiest part of the busiest screen, which is the one place a
+   line drawing has nothing to hold on to. Each one gets a tile now: the same
+   rounded, tinted ground the lengths and the moods use, so it reads as the
+   app's own furniture rather than a fourth idea. */
+.welcome-points li {
+  gap: 8px;
+}
+
+.point-icon {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 18px;
+  /* Lit from inside rather than flat: a tint, a highlight along the top edge
+     where the light would fall, and a shadow underneath to lift it off the
+     picture. */
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 52%),
+    var(--point-tint, rgba(120, 104, 210, 0.42));
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.34),
+    0 10px 22px rgba(6, 8, 32, 0.46);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.point-icon svg {
+  width: 32px;
+  height: 32px;
+  /* The drawings carry their own colours, so a shadow rather than a glow -
+     a glow on a multicoloured shape muddies it. */
+  filter: drop-shadow(0 2px 4px rgba(6, 8, 32, 0.45));
+}
+
+/* A tint each, taken from the drawing it holds, so the three read as three
+   things rather than one thing repeated. */
+/* Strong enough to tell apart. At a third alpha over a dark blurred backdrop
+   all three came out the same muted purple, which is three tiles doing the
+   work of one. */
+.welcome-points li:nth-child(1) .point-icon { --point-tint: rgba(255, 126, 104, 0.6); }
+.welcome-points li:nth-child(2) .point-icon { --point-tint: rgba(108, 182, 255, 0.56); }
+.welcome-points li:nth-child(3) .point-icon { --point-tint: rgba(255, 196, 74, 0.54); }
+
+/* The words under them step back a little now the tiles carry the weight. */
+.welcome-points li {
+  color: rgba(236, 230, 255, 0.88);
+  font-size: 0.75rem;
+}
+
+@media (max-height: 700px) {
+  .point-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 15px;
+  }
+
+  .point-icon svg {
+    width: 26px;
+    height: 26px;
+  }
+}
