@@ -9094,12 +9094,12 @@ body.outro-open {
   margin-top: 16px;
   padding: 20px 18px 18px;
   border-radius: 28px;
-  border: 1.5px solid rgba(255, 206, 110, 0.72);
-  background: linear-gradient(156deg, #4a3187 0%, #332474 44%, #241c5c 100%);
-  /* The halo is the thing that makes this read as the lit card rather than a
-     panel with a yellow line round it. */
-  box-shadow: 0 0 0 1px rgba(255, 206, 110, 0.18), 0 0 34px rgba(173, 126, 255, 0.34),
-    0 0 58px rgba(255, 196, 92, 0.12), 0 24px 50px rgba(6, 8, 34, 0.5);
+  border: 1.5px solid rgba(255, 214, 128, 0.8);
+  background: linear-gradient(152deg, #6a44b8 0%, #5a37a6 38%, #46288c 72%, #3a2178 100%);
+  /* The halo is what makes this read as the lit card rather than a panel with
+     a yellow line round it. */
+  box-shadow: 0 0 0 1px rgba(255, 214, 128, 0.2), 0 0 40px rgba(186, 118, 255, 0.45),
+    0 0 76px rgba(255, 196, 92, 0.14), 0 24px 54px rgba(6, 8, 34, 0.5);
   text-align: left;
 }
 
@@ -9195,48 +9195,35 @@ body.outro-open {
 
 .hero-features li {
   display: grid;
-  grid-template-columns: 30px minmax(0, 1fr);
+  grid-template-columns: 26px minmax(0, 1fr);
   align-items: center;
   gap: 8px;
-  min-height: 64px;
+  min-height: 62px;
   padding: 10px 9px;
   border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.13);
-  background: rgba(14, 16, 54, 0.56);
+  border: 1px solid rgba(255, 255, 255, 0.17);
+  background: rgba(255, 255, 255, 0.09);
+  color: var(--white);
+  font-size: 0.84rem;
+  font-weight: 800;
+  line-height: 1.24;
+}
+
+.hero-features li > span:last-child {
+  min-width: 0;
+  text-wrap: balance;
 }
 
 .plan-ic {
   display: grid;
   place-items: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 10px;
-  background: rgba(124, 142, 255, 0.2);
+  width: 26px;
+  height: 26px;
 }
 
 .plan-ic svg {
-  width: 18px;
-  height: 18px;
-}
-
-.plan-tile-text {
-  display: grid;
-  gap: 1px;
-  min-width: 0;
-}
-
-.plan-tile-text strong {
-  color: var(--white);
-  font-size: 0.85rem;
-  font-weight: 900;
-  line-height: 1.16;
-}
-
-.plan-tile-text small {
-  color: rgba(190, 200, 255, 0.72);
-  font-size: 0.74rem;
-  font-weight: 800;
-  line-height: 1.2;
+  width: 26px;
+  height: 26px;
 }
 
 .hero-action {
@@ -9332,11 +9319,20 @@ body.outro-open {
    does not look like something to press. */
 .plan-card-action[disabled] {
   opacity: 1;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.07);
   box-shadow: none;
-  color: rgba(226, 231, 255, 0.82);
+  color: var(--white);
   cursor: default;
+}
+
+/* The warmer card keeps the warmer button. "Included" is information either
+   way, so it stays disabled - this is about which card the eye lands on. */
+.plan-card-premier .plan-card-action[disabled],
+.plan-card-plus .plan-card-action[disabled] {
+  border: 0;
+  background: linear-gradient(104deg, #ffd978 0%, #ffbf63 100%);
+  color: #3a2708;
 }
 
 /* ---- Compare, folded away ---------------------------------------------- */
@@ -9456,4 +9452,56 @@ body.outro-open {
   .hero-art {
     opacity: 0.5;
   }
+}
+
+/* The three promises under the home CTA are drawn artwork now, not inline
+   SVG. Same box as the icons they replace, so the row's rhythm is unchanged,
+   and the same drop shadow that lifted them off the night sky. */
+.point-icon img {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 3px 8px rgba(6, 8, 32, 0.6));
+}
+
+@media (max-height: 700px) {
+  .point-icon img {
+    width: 42px;
+    height: 42px;
+  }
+}
+
+/* The night sky carries on across the cards in the drawing, so the cards get
+   their own few stars rather than sitting as flat panels on top of it. */
+.hero-card::after,
+.plan-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ffd978'%3E%3Cpath d='M8 0.8 9.7 6.3 15.2 8 9.7 9.7 8 15.2 6.3 9.7 0.8 8 6.3 6.3Z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat;
+  background-size: 9px 9px, 6px 6px, 7px 7px, 5px 5px;
+  opacity: 0.5;
+}
+
+.hero-card::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ffd978'%3E%3Cpath d='M8 0.8 9.7 6.3 15.2 8 9.7 9.7 8 15.2 6.3 9.7 0.8 8 6.3 6.3Z'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff3c4'%3E%3Cpath d='M8 0.8 9.7 6.3 15.2 8 9.7 9.7 8 15.2 6.3 9.7 0.8 8 6.3 6.3Z'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ffd978'%3E%3Cpath d='M8 0.8 9.7 6.3 15.2 8 9.7 9.7 8 15.2 6.3 9.7 0.8 8 6.3 6.3Z'/%3E%3C/svg%3E");
+  background-position: 64% 11%, 90% 29%, 50% 23%;
+  background-size: 10px 10px, 7px 7px, 6px 6px;
+}
+
+.plan-card {
+  position: relative;
+}
+
+.plan-card::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ffd978'%3E%3Cpath d='M8 0.8 9.7 6.3 15.2 8 9.7 9.7 8 15.2 6.3 9.7 0.8 8 6.3 6.3Z'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ffd978'%3E%3Cpath d='M8 0.8 9.7 6.3 15.2 8 9.7 9.7 8 15.2 6.3 9.7 0.8 8 6.3 6.3Z'/%3E%3C/svg%3E");
+  background-position: 13% 14%, 86% 22%;
+  background-size: 9px 9px, 7px 7px;
+  opacity: 0.62;
 }

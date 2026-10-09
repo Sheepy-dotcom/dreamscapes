@@ -3216,21 +3216,20 @@ const PLAN_ICONS = {
 /* Always four tiles, so the three cards line up however different the plans
    are. A plan with no audio spends its last two on what it does have. */
 function planFeatureTiles(plan) {
-  /* Split rather than left to wrap. Two columns on a 375pt phone leave the
-     label about 110px, which "30 stories / month" does not fit on one line -
-     and letting it wrap breaks it after the slash, orphaning "month". A line
-     each for the number and the period says the same thing and breaks where
-     it was meant to. */
   const tiles = [
-    { icon: "stories", label: `${plan.monthlyStories} stories`, sub: "every month" },
-    { icon: "duration", label: `Up to ${plan.maxDuration} min`, sub: "per story" },
+    /* "a month", not "/ month". Two lines per tile is forced - fitting
+       "30 stories / month" on one at 375pt needs 10.5px type - so the only
+       thing left to choose is where it breaks, and a slash left stranded at
+       the end of the first line is the one break worth avoiding. */
+    { icon: "stories", label: `${plan.monthlyStories} stories a month` },
+    { icon: "duration", label: `Up to ${plan.maxDuration} minutes` },
   ];
   if (plan.canUseAudio) {
-    tiles.push({ icon: "audio", label: "Audio", sub: "narration" });
-    tiles.push({ icon: "minutes", label: `${plan.audioMinutes} minutes`, sub: "of audio" });
+    tiles.push({ icon: "audio", label: "Audio narration" });
+    tiles.push({ icon: "minutes", label: `${plan.audioMinutes} audio minutes` });
   } else {
-    tiles.push({ icon: "text", label: "Text stories", sub: "read together" });
-    tiles.push({ icon: "saved", label: `${plan.savedLimit} saved`, sub: "stories kept" });
+    tiles.push({ icon: "text", label: "Stories to read" });
+    tiles.push({ icon: "saved", label: `${plan.savedLimit} saved stories` });
   }
   return tiles;
 }
@@ -3266,9 +3265,7 @@ function renderPlansScreen() {
         ${planFeatureTiles(plan)
           .map(
             (tile) =>
-              `<li><span class="plan-ic">${PLAN_ICONS[tile.icon]}</span><span class="plan-tile-text"><strong>${escapeHtml(
-                tile.label
-              )}</strong><small>${escapeHtml(tile.sub)}</small></span></li>`
+              `<li><span class="plan-ic">${PLAN_ICONS[tile.icon]}</span><span>${escapeHtml(tile.label)}</span></li>`
           )
           .join("")}
       </ul>
