@@ -869,10 +869,13 @@ const MAKING_LINES = [
    picture a parent has already passed three times on the way here cannot
    build anticipation. */
 const MAKING_ART = {
-  adventure: ["adventure-1.webp", "adventure-2.webp", "adventure-3.webp", "adventure-4.webp"],
-  // One, because this is the stage the interest sets below take over. It is
-  // only ever the fallback for free text or for a chip with no art yet.
-  loves: ["loves-1.webp"],
+  adventure: [
+    "adventure-1.webp", "adventure-2.webp", "adventure-3.webp",
+    "adventure-4.webp", "adventure-5.webp", "adventure-6.webp",
+  ],
+  // The fallback for free text, or for a chip with no art of its own. Every
+  // chip has art now, so in practice this is the free-text set.
+  loves: ["loves-1.webp", "loves-2.webp", "loves-3.webp"],
   star: ["star-1.webp", "star-2.webp", "star-3.webp", "star-4.webp", "star-5.webp", "star-6.webp"],
   ending: ["ending-1.webp", "ending-2.webp", "ending-3.webp", "ending-4.webp", "ending-5.webp"],
 };
@@ -881,9 +884,21 @@ const MAKING_ART = {
    picture they get cannot drift apart. A chip with nothing here falls back to
    the generic set, which is also what free text gets - "Something else?" can
    say anything, and guessing at it would be worse than a good generic. */
-const MAKING_ART_BY_INTEREST = {};
+const MAKING_ART_BY_INTEREST = {
+  dinosaurs: ["interest-dinosaurs-1.webp", "interest-dinosaurs-2.webp"],
+  space: ["interest-space-1.webp", "interest-space-2.webp"],
+  animals: ["interest-animals-1.webp", "interest-animals-2.webp"],
+  princesses: ["interest-princesses-1.webp", "interest-princesses-2.webp"],
+  pirates: ["interest-pirates-1.webp", "interest-pirates-2.webp"],
+  magic: ["interest-magic-1.webp", "interest-magic-2.webp"],
+  "fire-engines": ["interest-fire-engines-1.webp", "interest-fire-engines-2.webp"],
+  "under-the-sea": ["interest-under-the-sea-1.webp", "interest-under-the-sea-2.webp"],
+  football: ["interest-football-1.webp", "interest-football-2.webp"],
+  diggers: ["interest-diggers-1.webp", "interest-diggers-2.webp"],
+  superheroes: ["interest-superheroes-1.webp", "interest-superheroes-2.webp"],
+};
 
-const MAKING_ART_VERSION = "2026100951";
+const MAKING_ART_VERSION = "2026100986";
 
 const makingArt = Array.from(document.querySelectorAll(".making-art"));
 

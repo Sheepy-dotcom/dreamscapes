@@ -8284,3 +8284,84 @@ body.reading-active .result-screen.is-reading {
 }
 
 
+
+/* ---- Each stage looks like it is being worked on ------------------------ */
+/* The rows ticked as they completed but the live one just sat there, so the
+   screen read as four things waiting rather than one thing happening. The
+   active row now has a light travelling across it - indeterminate on purpose,
+   because nobody knows how long a stage will take and a bar that claims to is
+   the thing this screen replaced. */
+.making-steps li {
+  position: relative;
+  overflow: hidden;
+}
+
+.making-steps li.is-active::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 18%, rgba(255, 212, 92, 0.16) 48%, transparent 78%);
+  transform: translateX(-100%);
+  animation: making-sweep 1900ms ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes making-sweep {
+  to { transform: translateX(100%); }
+}
+
+/* The sweep is behind the words, not over them. */
+.making-check,
+.making-ic,
+.making-copy {
+  position: relative;
+  z-index: 1;
+}
+
+/* The drawing on the live stage breathes; the ones still to come sit still
+   and dim, so the eye goes to the one that is happening. */
+.making-steps li.is-active .making-ic svg {
+  animation: making-breathe 2200ms ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes making-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.14); }
+}
+
+.making-steps li:not(.is-active):not(.is-done) .making-ic {
+  opacity: 0.45;
+  filter: saturate(0.5);
+}
+
+/* A stage landing gets a moment: the row lifts and settles rather than the
+   tick simply appearing. */
+.making-steps li.is-done {
+  animation: making-settle 420ms ease-out;
+}
+
+@keyframes making-settle {
+  0% { transform: translateY(-2px); background-color: rgba(141, 107, 255, 0.26); }
+  100% { transform: none; }
+}
+
+/* And the title, when it arrives, is the best news on the screen. */
+.loading-title-reveal {
+  animation: title-arrive 520ms ease both, title-glow 2600ms ease-in-out 520ms infinite;
+}
+
+@keyframes title-glow {
+  0%, 100% { text-shadow: 0 2px 10px rgba(8, 10, 38, 0.6); }
+  50% { text-shadow: 0 2px 18px rgba(255, 212, 92, 0.42); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .making-steps li.is-active::after,
+  .making-steps li.is-active .making-ic svg,
+  .making-steps li.is-done,
+  .loading-title-reveal {
+    animation: none;
+  }
+}
