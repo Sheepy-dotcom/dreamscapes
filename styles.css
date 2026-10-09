@@ -8160,3 +8160,46 @@ body.night-mode .auth-switch {
 .result-screen.is-dim.is-listening .story-reading {
   align-content: center;
 }
+
+/* The drawn icons on the story screens. They take their colour from the text
+   beside them, so a chip, a gold button and a dimmed control all get the
+   right one without a rule each. */
+.ui-ic {
+  flex: 0 0 auto;
+  width: 1em;
+  height: 1em;
+  color: inherit;
+}
+
+.reveal-chips span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.reveal-chips .ui-ic {
+  width: 0.95rem;
+  height: 0.95rem;
+  opacity: 0.9;
+}
+
+.reveal-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.reveal-badge .ui-ic {
+  width: 0.86rem;
+  height: 0.86rem;
+}
+
+.reveal-action-icon {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.player-extra .ui-ic {
+  width: 1.15rem;
+  height: 1.15rem;
+}

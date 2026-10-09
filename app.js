@@ -3525,6 +3525,16 @@ async function createStory(data) {
    different things - a moment of arrival, then large type in short pages,
    and only then a way to carry on tomorrow. */
 
+/* Drawn, not typed. The moods, the lengths and the parent step all use the
+   app's own flat shapes; these screens were using system emoji, which render
+   as Apple's glyphs rather than ours and look borrowed next to the rest. */
+const UI_ICON = {
+  clock:
+    '<svg viewBox="0 0 24 24" class="ui-ic" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="1.9"/><path d="M12 7.2V12l3.2 2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  moon:
+    '<svg viewBox="0 0 24 24" class="ui-ic" aria-hidden="true" focusable="false"><path d="M20.4 15.4A9 9 0 0 1 8.6 3.6a9 9 0 1 0 11.8 11.8Z" fill="currentColor"/></svg>',
+};
+
 const resultScreen = document.querySelector("#result-screen");
 const storyReveal = document.querySelector("#story-reveal");
 const storyReading = document.querySelector("#story-reading");
@@ -3562,13 +3572,18 @@ function paginateStory(story) {
 /* The artwork is the app's own, picked by the story's own id rather than at
    random: a parent who reopens a story should find the same picture waiting,
    or the story does not feel like a thing that exists. */
-function revealArtFor(story) {
+function revealArtFor(story, variant = 0) {
   const pool = [...MAKING_ART.adventure, ...MAKING_ART.star, ...MAKING_ART.ending];
   if (!pool.length) return "";
   const key = String(getStoryIdentity(story) || story?.title || "");
   let hash = 0;
   for (let i = 0; i < key.length; i += 1) hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
-  return `./assets/making/${pool[hash % pool.length]}?v=${MAKING_ART_VERSION}`;
+  /* Reading mode asks for variant 1 and gets a different picture to the card
+     it was opened from - the two were the same image, so every story showed
+     you the same drawing twice in a row. The offset is coprime with nothing in
+     particular; it just has to not be zero, and the modulo keeps it in the
+     pool however long the pool gets. */
+  return `./assets/making/${pool[(hash + variant * 7) % pool.length]}?v=${MAKING_ART_VERSION}`;
 }
 
 let readingPages = [];
@@ -3719,7 +3734,7 @@ function openReading(story, { listen = false } = {}) {
   resultScreen?.classList.add("is-reading");
   document.querySelector("#reading-title").textContent = story.title || "";
   const art = document.querySelector("#reading-art-image");
-  if (art) art.src = revealArtFor(story);
+  if (art) art.src = revealArtFor(story, 1);
   // The old narration panel stays in the DOM and out of sight: the player's
   // buttons forward their clicks to its buttons, which is what keeps the three
   // audio back ends behind one code path.
@@ -3809,7 +3824,7 @@ function renderStory(story) {
   // is. The rest is still here, one tap down in Story details.
   const who = cleanName(story.childName);
   const revealBadge = document.querySelector("#reveal-badge");
-  if (revealBadge) revealBadge.textContent = who ? `\u2605 Made just for ${who}` : "\u2605 Made for you";
+  if (revealBadge) revealBadge.textContent = who ? `Made just for ${who}` : "Made for you";
   const revealArt = document.querySelector("#reveal-art-image");
   if (revealArt) revealArt.src = revealArtFor(story);
   const revealSummary = document.querySelector("#reveal-summary");
@@ -3825,8 +3840,8 @@ function renderStory(story) {
   if (revealChips) {
     const minutes = Number(story.duration) || 0;
     revealChips.innerHTML = [
-      minutes ? `<span>\u23F1 ${minutes} min</span>` : "",
-      `<span>\u{1F319} ${story.storyType === "bedtime" ? "Bedtime" : "Anytime"}</span>`,
+      minutes ? `<span>${UI_ICON.clock}${minutes} min</span>` : "",
+      `<span>${UI_ICON.moon}${story.storyType === "bedtime" ? "Bedtime" : "Anytime"}</span>`,
     ]
       .filter(Boolean)
       .join("");
