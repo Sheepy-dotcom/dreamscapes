@@ -855,6 +855,40 @@ const MAKING_LINES = [
   () => "Adding a magical ending…",
 ];
 
+/* The art rotates, so the same parent does not watch the same four pictures
+   every night. One is drawn at random from each stage's set per story, which
+   is 5 x 5 x 5 x 5 once the sets are full - a different wait most nights
+   without a single picture being made for a particular story.
+   Adding to a set is a filename and nothing else; the picker below does not
+   care how many there are.
+   TEMPORARY: these four are crops of the builder steps' own illustrations,
+   standing in so the screen is not blank. They are being replaced by a set
+   drawn for this screen alone - the brief asks for art that is not used
+   anywhere else in the app, and a picture a parent has already seen three
+   times on the way here cannot build anticipation. */
+const MAKING_ART = [
+  ["making-1.webp"],
+  ["making-2.webp"],
+  ["making-3.webp"],
+  ["making-4.webp"],
+];
+const MAKING_ART_VERSION = "2026100949";
+
+const makingArt = Array.from(document.querySelectorAll(".making-art"));
+
+function pickMakingArt() {
+  makingArt.forEach((img, stage) => {
+    const set = MAKING_ART[stage] || [];
+    if (!set.length) return;
+    const file = set[Math.floor(Math.random() * set.length)];
+    const next = `./assets/making/${file}?v=${MAKING_ART_VERSION}`;
+    // Only the first is wanted immediately; the rest have the best part of a
+    // minute before anyone sees them.
+    if (stage > 0) img.loading = "lazy";
+    if (!img.src.endsWith(next.slice(1))) img.src = next;
+  });
+}
+
 const makingSteps = document.querySelector("#making-steps");
 const loadingScene = document.querySelector("#loading-scene");
 const loadingTitleEl = document.querySelector("#loading-title");
@@ -911,6 +945,7 @@ function startLoadingMessages() {
   makingWho = cleanName(story?.childName) || "your little one";
   makingLoves = describeLoves(story);
 
+  pickMakingArt();
   if (loadingNameEl) loadingNameEl.textContent = `${makingWho}'s `;
   if (loadingTitleReveal) {
     loadingTitleReveal.hidden = true;

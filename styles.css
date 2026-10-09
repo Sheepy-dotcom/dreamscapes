@@ -7443,96 +7443,77 @@ body.night-mode .builder-step-tonight .story-idea-field {
 }
 
 /* ---- The scene fills in behind them ------------------------------------- */
-/* Every piece of this is the app's own furniture - the book, the bear, the
-   stars - drawn once and reused. Nothing is generated from the story, which
-   is the point: the artwork has to exist before the story does. */
-.stage-glow {
-  position: absolute;
-  z-index: 0;
-  left: 50%;
-  top: 56%;
-  width: 190px;
-  height: 190px;
-  transform: translate(-50%, -50%) scale(0.7);
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 212, 92, 0.3), rgba(255, 212, 92, 0) 70%);
-  opacity: 0.45;
-  transition: transform 900ms ease, opacity 900ms ease;
-  pointer-events: none;
+/* Four of the app's own illustrations, one per stage, crossfading as each one
+   lands: the window with the worlds still floating in it, the book with them
+   pouring out, the child lit in the middle of it, and the child asleep. The
+   sequence says what the stages say, in pictures.
+   They are their own files rather than references to the builder steps' art.
+   Those pictures get recropped and replaced as the steps are redesigned - this
+   one has to keep reading as a story being written, and should not change
+   because the mood step did. Nothing here is generated from the story: the
+   picture has to exist before the story does. */
+.making-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 900 / 540;
+  margin: 0 auto 14px;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #141042;
+  /* Meets the page rather than ending on a line. */
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 72%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 72%, transparent 100%);
 }
 
-.loading-scene[data-stage="1"] .stage-glow { transform: translate(-50%, -50%) scale(0.85); opacity: 0.62; }
-.loading-scene[data-stage="2"] .stage-glow { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
-.loading-scene[data-stage="3"] .stage-glow { transform: translate(-50%, -50%) scale(1.14); opacity: 1; }
-
-.stage-spark {
+.making-art {
   position: absolute;
-  z-index: 2;
-  width: 9px;
-  height: 9px;
-  background: #ffe9a8;
-  clip-path: polygon(50% 0%, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0% 50%, 40% 40%);
+  z-index: 1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   opacity: 0;
-  transform: scale(0.4);
-  transition: opacity 500ms ease, transform 500ms ease;
-  pointer-events: none;
+  transform: scale(1.04);
+  transition: opacity 900ms ease, transform 2600ms ease;
 }
 
-.spark-one { left: 14%; top: 22%; }
-.spark-two { right: 16%; top: 16%; }
-.spark-three { right: 10%; bottom: 26%; }
-.spark-four { left: 9%; bottom: 20%; }
-
-/* One more spark lands with each stage, so the scene is visibly further along
-   than it was a moment ago without anything claiming a number. */
-.loading-scene[data-stage="0"] .spark-one,
-.loading-scene[data-stage="1"] .spark-one,
-.loading-scene[data-stage="1"] .spark-two,
-.loading-scene[data-stage="2"] .spark-one,
-.loading-scene[data-stage="2"] .spark-two,
-.loading-scene[data-stage="2"] .spark-three,
-.loading-scene[data-stage="3"] .stage-spark {
+.loading-scene[data-stage="0"] .making-art[data-making-art="0"],
+.loading-scene[data-stage="1"] .making-art[data-making-art="1"],
+.loading-scene[data-stage="2"] .making-art[data-making-art="2"],
+.loading-scene[data-stage="3"] .making-art[data-making-art="3"] {
   opacity: 1;
+  /* A slow drift in while it is the one on screen, so a stage that holds for a
+     while is never completely still. */
   transform: scale(1);
 }
 
-.stage-bear {
+.stage-glow {
   position: absolute;
   z-index: 2;
-  right: 4%;
-  bottom: 2%;
-  width: 62px;
-  opacity: 0;
-  transform: translateY(14px) scale(0.86);
-  transition: opacity 700ms ease, transform 700ms ease;
+  left: 50%;
+  top: 50%;
+  width: 150%;
+  height: 150%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(255, 212, 92, 0.18), rgba(255, 212, 92, 0) 58%);
+  opacity: 0.5;
+  transition: opacity 900ms ease;
   pointer-events: none;
 }
 
-.loading-scene[data-stage="2"] .stage-bear,
-.loading-scene[data-stage="3"] .stage-bear {
-  opacity: 1;
-  transform: none;
-}
-
-.stage-bear svg { display: block; width: 100%; height: auto; }
-.stage-bear .bear-ear { fill: #a9793f; }
-.stage-bear .bear-inner { fill: #e7b980; }
-.stage-bear .bear-head { fill: #c08b4a; }
-.stage-bear .bear-snout { fill: #f2dcb8; }
-.stage-bear .bear-nose { fill: #4b3418; }
-.stage-bear .bear-line {
-  fill: none;
-  stroke: #4b3418;
-  stroke-width: 1.8;
-  stroke-linecap: round;
-}
+.loading-scene[data-stage="1"] .stage-glow { opacity: 0.7; }
+.loading-scene[data-stage="2"] .stage-glow { opacity: 0.85; }
+.loading-scene[data-stage="3"] .stage-glow { opacity: 1; }
 
 @media (prefers-reduced-motion: reduce) {
   .stage-glow,
-  .stage-spark,
-  .stage-bear,
+  .making-art,
   .making-steps li {
     transition: none;
+  }
+
+  .making-art {
+    transform: none;
   }
 
   .making-steps li.is-active .making-check,
