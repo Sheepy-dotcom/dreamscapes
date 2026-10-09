@@ -855,37 +855,78 @@ const MAKING_LINES = [
   () => "Adding a magical ending…",
 ];
 
-/* The art rotates, so the same parent does not watch the same four pictures
-   every night. One is drawn at random from each stage's set per story, which
-   is 5 x 5 x 5 x 5 once the sets are full - a different wait most nights
-   without a single picture being made for a particular story.
-   Adding to a set is a filename and nothing else; the picker below does not
-   care how many there are.
-   TEMPORARY: these four are crops of the builder steps' own illustrations,
-   standing in so the screen is not blank. They are being replaced by a set
-   drawn for this screen alone - the brief asks for art that is not used
-   anywhere else in the app, and a picture a parent has already seen three
-   times on the way here cannot build anticipation. */
-const MAKING_ART = [
-  ["making-1.webp"],
-  ["making-2.webp"],
-  ["making-3.webp"],
-  ["making-4.webp"],
-];
+/* The art rotates, and the second stage tries to match what the child actually
+   asked for.
+   Matching the story is not on the table - interests are multi-select, and
+   there are six moods, eight occasions and a free-text idea box behind them,
+   which is five hundred-odd combinations before anyone types a word. But the
+   interest chips are a closed list of eleven, and that is a lookup rather than
+   a guess. So one stage matches and the other three carry every story.
+   This is still selection from a standard set, not imagery made for a
+   particular story: every file is drawn once, shipped with the app, and shown
+   to whoever picked that chip.
+   A set can hold any number of pictures; one is drawn from it per story, so
+   the same parent does not watch the same wait every night. Adding to a set is
+   a filename and nothing else. */
+const MAKING_ART = {
+  adventure: ["making-1.webp"],
+  loves: ["making-2.webp"],
+  star: ["making-3.webp"],
+  ending: ["making-4.webp"],
+};
+
+/* Keyed by the slugs in INTEREST_IDEAS, so the chip a parent tapped and the
+   picture they get cannot drift apart. A chip with nothing here falls back to
+   the generic set, which is also what free text gets - "Something else?" can
+   say anything, and guessing at it would be worse than a good generic. */
+const MAKING_ART_BY_INTEREST = {};
+
 const MAKING_ART_VERSION = "2026100949";
 
 const makingArt = Array.from(document.querySelectorAll(".making-art"));
 
-function pickMakingArt() {
+function interestSlugs(story) {
+  const chosen = String(story?.interests || "")
+    .split(",")
+    .map((part) => part.trim().toLowerCase())
+    .filter(Boolean);
+  return chosen
+    .map((label) => INTEREST_IDEAS.find(([text]) => text.toLowerCase() === label)?.[1])
+    .filter(Boolean);
+}
+
+function oneOf(set) {
+  return set?.length ? set[Math.floor(Math.random() * set.length)] : "";
+}
+
+function pickMakingArt(story) {
+  const slugs = interestSlugs(story);
+  // The first interest drives "adding the things they love" - the stage that
+  // reads their interests out loud - and the second drives "making them the
+  // star", so a parent who picked two sees both heard.
+  const files = [
+    oneOf(MAKING_ART.adventure),
+    oneOf(MAKING_ART_BY_INTEREST[slugs[0]]) || oneOf(MAKING_ART.loves),
+    oneOf(MAKING_ART_BY_INTEREST[slugs[1]]) || oneOf(MAKING_ART.star),
+    oneOf(MAKING_ART.ending),
+  ];
+
   makingArt.forEach((img, stage) => {
-    const set = MAKING_ART[stage] || [];
-    if (!set.length) return;
-    const file = set[Math.floor(Math.random() * set.length)];
-    const next = `./assets/making/${file}?v=${MAKING_ART_VERSION}`;
+    const file = files[stage];
+    if (!file) return;
+    // A missing file drops back to the generic rather than leaving a hole, so
+    // the set can be filled in a picture at a time without a broken wait in
+    // between.
+    const fallback = [MAKING_ART.adventure, MAKING_ART.loves, MAKING_ART.star, MAKING_ART.ending][stage];
+    img.onerror = () => {
+      img.onerror = null;
+      const safe = oneOf(fallback);
+      if (safe) img.src = `./assets/making/${safe}?v=${MAKING_ART_VERSION}`;
+    };
     // Only the first is wanted immediately; the rest have the best part of a
     // minute before anyone sees them.
     if (stage > 0) img.loading = "lazy";
-    if (!img.src.endsWith(next.slice(1))) img.src = next;
+    img.src = `./assets/making/${file}?v=${MAKING_ART_VERSION}`;
   });
 }
 
@@ -945,7 +986,7 @@ function startLoadingMessages() {
   makingWho = cleanName(story?.childName) || "your little one";
   makingLoves = describeLoves(story);
 
-  pickMakingArt();
+  pickMakingArt(story);
   if (loadingNameEl) loadingNameEl.textContent = `${makingWho}'s `;
   if (loadingTitleReveal) {
     loadingTitleReveal.hidden = true;
