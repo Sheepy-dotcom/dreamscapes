@@ -7010,14 +7010,9 @@ async function renderLibrary() {
           story.seriesTitle ? `${story.seriesTitle} · Chapter ${Number(story.chapterNumber) || 1}` : "",
           story.journeyLength ? `Night ${Number(story.journeyDay) || 1}/${Number(story.journeyLength)}` : "",
         ].filter(Boolean);
-        /* The same picture the story opens with. revealArtFor is keyed off
-           the story's own id, so the shelf and the story agree - a library of
-           ninety text rows was the one screen in the app with nothing to look
-           at, and the art for it already existed. */
         return `
         <article class="library-item ${isNewStory ? "new-story" : ""} ${isFavourite ? "favourite-story" : ""}">
           <button class="library-open-button" data-library-index="${index}" type="button">
-            <span class="library-art" aria-hidden="true"><img src="${revealArtFor(story)}" alt="" loading="lazy" decoding="async" /></span>
             <span class="library-copy">
               <span class="library-when">
                 <span class="library-when-label">${escapeHtml(formatStoryWhen(story))}</span>

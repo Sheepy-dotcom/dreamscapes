@@ -8437,34 +8437,17 @@ body.night-mode .builder-step[data-builder-step="8"] .narration-group {
 /* The whole card opens the story. Open was a button beside two others of the
    same weight, one of which deleted the thing - which is a lot to aim at
    one-handed in the dark. */
+/* No picture on the shelf. The titles are the thing being scanned here, and
+   a column of thumbnails competed with them without telling you anything a
+   title does not. */
 .library-open-button {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: center;
-  gap: 13px;
+  display: block;
   width: 100%;
   border: 0;
-  padding: 10px 84px 10px 10px;
+  padding: 13px 84px 13px 15px;
   background: none;
   text-align: left;
   cursor: pointer;
-}
-
-.library-art {
-  display: block;
-  flex: 0 0 auto;
-  width: 76px;
-  height: 76px;
-  border-radius: 14px;
-  overflow: hidden;
-  background: #161244;
-}
-
-.library-art img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
 .library-copy {
@@ -8490,7 +8473,7 @@ body.night-mode .builder-step[data-builder-step="8"] .narration-group {
   display: block;
   overflow: hidden;
   color: #fffaf0;
-  font-size: 0.98rem;
+  font-size: 1.02rem;
   font-weight: 900;
   line-height: 1.2;
   /* Two lines, then stop: a long title must not push the card out of shape. */
