@@ -7955,3 +7955,208 @@ body.night-mode .auth-switch {
   min-height: 0;
   height: 100%;
 }
+
+/* ---- The player: lights-out, big controls, nothing else moving ---------- */
+.story-player {
+  display: grid;
+  gap: 14px;
+  padding: 2px 0 4px;
+}
+
+.player-sub {
+  margin: 0;
+  color: rgba(226, 220, 252, 0.66);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.player-scrub {
+  display: grid;
+  gap: 4px;
+}
+
+#player-range {
+  width: 100%;
+  height: 26px;
+  margin: 0;
+  background: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+#player-range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(226, 216, 255, 0.24);
+}
+
+#player-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -6px;
+  border: 0;
+  border-radius: 50%;
+  background: #fff6e6;
+  box-shadow: 0 2px 8px rgba(6, 8, 32, 0.5);
+}
+
+.player-times {
+  display: flex;
+  justify-content: space-between;
+  color: rgba(226, 220, 252, 0.6);
+  font-size: 0.76rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.player-transport {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+}
+
+/* Big enough to find without looking, which is the whole point at lights
+   out. */
+.player-play {
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  border: 0;
+  border-radius: 50%;
+  color: #2a1d08;
+  background: linear-gradient(135deg, #ffd45c, #ff9f68);
+  box-shadow: 0 10px 28px rgba(255, 157, 104, 0.26);
+  font-size: 1.7rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.player-skip {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border: 0;
+  border-radius: 50%;
+  color: #f2eeff;
+  background: rgba(34, 30, 88, 0.7);
+  cursor: pointer;
+}
+
+/* The arrow is drawn rather than typed: a circular arrow glyph is a different
+   shape in every font, and half of them have no flat side to hang a number
+   on. */
+.player-skip::before {
+  content: "";
+  position: absolute;
+  inset: 11px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  border-top-color: transparent;
+  opacity: 0.85;
+}
+
+#player-forward::before {
+  transform: scaleX(-1);
+}
+
+.player-skip-num {
+  font-size: 0.7rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.player-extras {
+  display: flex;
+  justify-content: space-around;
+  gap: 8px;
+}
+
+.player-extra {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  border: 0;
+  border-radius: 14px;
+  padding: 6px 10px;
+  color: rgba(226, 220, 252, 0.7);
+  background: none;
+  font-size: 0.7rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.player-extra span:first-child {
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.player-extra[aria-pressed="true"] {
+  color: #ffd45c;
+}
+
+/* Lights out. A web view cannot reach the screen's own brightness, so this
+   does the next best thing: everything but the transport drops away and what
+   is left is barely lit. */
+.result-screen.is-dim .reading-art,
+.result-screen.is-dim .reading-page,
+.result-screen.is-dim .reading-nav,
+.result-screen.is-dim .reading-end,
+.result-screen.is-dim .player-sub {
+  display: none;
+}
+
+.result-screen.is-dim .story-reading {
+  align-content: center;
+}
+
+.result-screen.is-dim .reading-top,
+.result-screen.is-dim .player-times,
+.result-screen.is-dim .player-extras {
+  opacity: 0.32;
+}
+
+.result-screen.is-dim .player-play {
+  background: rgba(255, 212, 92, 0.22);
+  box-shadow: none;
+  color: #ffd45c;
+}
+
+.result-screen.is-dim .player-skip {
+  background: rgba(34, 30, 88, 0.4);
+  opacity: 0.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .player-play,
+  .player-skip {
+    transition: none;
+  }
+}
+
+/* Listening replaces the page rather than sitting above it. Reading along is
+   a different mode, and the one thing a lights-out player must not do is keep
+   a wall of text lit next to the controls. */
+.result-screen.is-listening .reading-page,
+.result-screen.is-listening .reading-nav {
+  display: none;
+}
+
+.result-screen.is-listening .story-reading {
+  grid-template-rows: auto auto auto auto;
+  align-content: start;
+}
+
+/* Dimmed, the transport is the only thing on the screen, so it sits in the
+   middle of it. Needs both classes to beat the listening rule above, which
+   pins the player to the top when there is a page under it. */
+.result-screen.is-dim.is-listening .story-reading {
+  align-content: center;
+}

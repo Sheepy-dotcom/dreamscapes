@@ -3599,6 +3599,115 @@ function renderReadingPage() {
   }
 }
 
+/* ---- The player -------------------------------------------------------- */
+/* Everything here drives the controls that were already on the page rather
+   than touching the audio directly: play and pause forward to the existing
+   buttons, and seeking goes through the same percent-based range the old
+   scrubber used. The audio stack is the one part of this app that handles
+   three back ends - inline tracks, a native plugin and device speech - and
+   reaching past it for a nicer button is how you end up with two of them
+   disagreeing about whether anything is playing. */
+
+const storyPlayer = document.querySelector("#story-player");
+const playerRange = document.querySelector("#player-range");
+const playerToggleIcon = document.querySelector("#player-toggle-icon");
+
+function isNarrationPlaying() {
+  return Boolean((currentAudio && !currentAudio.paused) || nativeAudioActive);
+}
+
+function playerTotalSeconds() {
+  return getSavedAudioDurationSeconds(currentStory) || 0;
+}
+
+function syncPlayerUi() {
+  if (!storyPlayer || storyPlayer.hidden) return;
+  const percent = Number(audioProgress.value) || 0;
+  if (playerRange && document.activeElement !== playerRange) playerRange.value = String(percent);
+
+  const total = playerTotalSeconds();
+  const elapsed = total ? getAiAudioElapsedSeconds(percent) : 0;
+  const elapsedEl = document.querySelector("#player-elapsed");
+  const remainingEl = document.querySelector("#player-remaining");
+  if (elapsedEl) elapsedEl.textContent = total ? formatAudioTime(elapsed) : "0:00";
+  // Counting down rather than up: what is left is the number a parent at the
+  // bedside is actually asking about.
+  if (remainingEl) remainingEl.textContent = total ? `-${formatAudioTime(Math.max(0, total - elapsed))}` : "--:--";
+
+  if (playerToggleIcon) playerToggleIcon.textContent = isNarrationPlaying() ? "\u23F8" : "\u25B6";
+}
+
+window.setInterval(() => {
+  // The icon has to follow a pause that came from the lock screen or a phone
+  // call, neither of which goes through setAudioProgress.
+  if (storyPlayer && !storyPlayer.hidden) syncPlayerUi();
+}, 700);
+
+function seekByPercent(percent) {
+  const safe = Math.max(0, Math.min(100, percent));
+  audioProgress.value = String(Math.round(safe));
+  audioProgress.dispatchEvent(new Event("change"));
+}
+
+function skipSeconds(seconds) {
+  const total = playerTotalSeconds();
+  if (!total) return;
+  const elapsed = getAiAudioElapsedSeconds(Number(audioProgress.value) || 0);
+  seekByPercent(((elapsed + seconds) / total) * 100);
+  trackEvent("audio_skip", { seconds });
+}
+
+document.querySelector("#player-toggle")?.addEventListener("click", () => {
+  if (isNarrationPlaying()) audioPauseButton?.click();
+  else audioPlayButton?.click();
+  window.setTimeout(syncPlayerUi, 120);
+});
+
+document.querySelector("#player-back")?.addEventListener("click", () => skipSeconds(-15));
+document.querySelector("#player-forward")?.addEventListener("click", () => skipSeconds(15));
+
+playerRange?.addEventListener("input", () => {
+  const total = playerTotalSeconds();
+  if (!total) return;
+  const elapsed = getAiAudioElapsedSeconds(Number(playerRange.value) || 0);
+  const elapsedEl = document.querySelector("#player-elapsed");
+  const remainingEl = document.querySelector("#player-remaining");
+  if (elapsedEl) elapsedEl.textContent = formatAudioTime(elapsed);
+  if (remainingEl) remainingEl.textContent = `-${formatAudioTime(Math.max(0, total - elapsed))}`;
+});
+
+playerRange?.addEventListener("change", () => seekByPercent(Number(playerRange.value) || 0));
+
+/* Dim is the lights-out mode. It cannot touch the screen's own brightness
+   from a web view, so it does the next best thing: everything but the
+   transport drops away, and what is left is barely lit. */
+document.querySelector("#player-dim")?.addEventListener("click", (event) => {
+  const on = resultScreen?.classList.toggle("is-dim");
+  event.currentTarget.setAttribute("aria-pressed", on ? "true" : "false");
+  trackEvent("player_dim", { on: Boolean(on) });
+});
+
+document.querySelector("#player-sleep")?.addEventListener("click", () => {
+  document.querySelector(".sleep-timer-panel")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  resultScreen?.classList.remove("is-reading");
+  closeReading();
+});
+
+/* Pages, not chapters: the audio has no chapter marks, and inventing some
+   would be a lie about where you are landing. The story's own pages do have
+   positions, so this seeks to where a page starts as a fraction of the whole
+   text - which is honest about being proportional. */
+document.querySelector("#player-chapters")?.addEventListener("click", () => {
+  if (!readingPages.length) return;
+  const next = (readingIndex + 1) % readingPages.length;
+  readingIndex = next;
+  renderReadingPage();
+  const before = readingPages.slice(0, next).flat().join(" ").length;
+  const whole = readingPages.flat().join(" ").length || 1;
+  if (playerTotalSeconds()) seekByPercent((before / whole) * 100);
+  trackEvent("player_page_jump", { page: next + 1 });
+});
+
 function openReading(story, { listen = false } = {}) {
   readingPages = paginateStory(story);
   readingIndex = 0;
@@ -3611,7 +3720,21 @@ function openReading(story, { listen = false } = {}) {
   document.querySelector("#reading-title").textContent = story.title || "";
   const art = document.querySelector("#reading-art-image");
   if (art) art.src = revealArtFor(story);
-  if (narrationPanel) narrationPanel.hidden = !listen;
+  // The old narration panel stays in the DOM and out of sight: the player's
+  // buttons forward their clicks to its buttons, which is what keeps the three
+  // audio back ends behind one code path.
+  if (narrationPanel) narrationPanel.hidden = true;
+  if (storyPlayer) storyPlayer.hidden = !listen;
+  // Listening and reading are two different things to be doing. The player
+  // takes the screen rather than sitting on top of the page, which is also
+  // what makes dimming it worth anything.
+  resultScreen?.classList.toggle("is-listening", listen);
+  const playerSub = document.querySelector("#player-sub");
+  if (playerSub) {
+    const name = cleanName(story.childName);
+    playerSub.textContent = name ? `Narrated just for ${name}` : "Narrated for you";
+  }
+  syncPlayerUi();
   const copy = document.querySelector("#reading-end-copy");
   if (copy) {
     const who = cleanName(story.childName);
@@ -3625,6 +3748,8 @@ function openReading(story, { listen = false } = {}) {
 
 function closeReading() {
   if (storyReading) storyReading.hidden = true;
+  resultScreen?.classList.remove("is-dim");
+  resultScreen?.classList.remove("is-listening");
   if (storyReveal) storyReveal.hidden = false;
   resultScreen?.classList.remove("is-reading");
 }
@@ -6645,6 +6770,9 @@ function setAudioProgress(percent) {
   const safePercent = Math.max(0, Math.min(100, Number.isFinite(percent) ? percent : 0));
   audioProgress.value = String(Math.round(safePercent));
   audioProgressLabel.textContent = getAudioProgressLabel(safePercent);
+  // The one place every back end reports position, so the player reads it
+  // here rather than polling for it.
+  syncPlayerUi();
 }
 
 function supportsMediaSession() {
