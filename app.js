@@ -1004,15 +1004,26 @@ function startLoadingMessages() {
 
   setMakingStage(0);
   window.clearInterval(loadingMessageTimer);
-  /* Paced so the first three stages are through in about half a minute, which
-     is roughly a short story, and the fourth holds for as long as it takes. A
-     long story arrives at the same four stages by a different route - see
-     setStoryProgress, which moves them on real section boundaries rather than
-     on the clock. */
+  /* Paced so the first three are through in about sixteen seconds and the
+     fourth holds for as long as it takes. Nine seconds a stage meant a short
+     story finished while the screen was still on stage one, and two of the
+     four were never seen at all. A long story arrives at the same four by a
+     different route - see setStoryProgress, which moves them on real section
+     boundaries rather than on the clock. */
   loadingMessageTimer = window.setInterval(() => {
     if (makingStage >= MAKING_STAGES.length - 1) return;
     setMakingStage(makingStage + 1);
-  }, 9000);
+  }, 5500);
+}
+
+/* Whatever the clock got to, every stage is ticked before the story appears.
+   Without it a quick story leaves two of them grey, which reads as work that
+   was skipped rather than work that was fast. Short enough to register and
+   not long enough to be a delay. */
+function finishMakingStages() {
+  stopLoadingMessages();
+  setMakingStage(MAKING_STAGES.length - 1, { complete: true });
+  return new Promise((resolve) => window.setTimeout(resolve, 420));
 }
 
 function stopLoadingMessages() {
@@ -3697,6 +3708,71 @@ const storyPlayer = document.querySelector("#story-player");
 const playerRange = document.querySelector("#player-range");
 const playerToggleIcon = document.querySelector("#player-toggle-icon");
 
+/* ---- The story, following the narration -------------------------------- */
+/* Like a lyrics view: the line being read is lit, the rest are dim, and the
+   column keeps the live line in the same place on screen.
+   Where each line falls in time is worked out from how far through the text
+   it is - the audio has no marks in it, and there is no way to get any
+   without transcribing what was generated. So it is proportional, and it will
+   drift a little where the narrator pauses or hurries. That is why tapping a
+   line seeks to it: the view is a good guess you can correct, not a claim to
+   be exact. */
+
+const playerLines = document.querySelector("#player-lines");
+let lineSpans = [];
+let lineStarts = [];
+let activeLineIndex = -1;
+
+function buildPlayerLines(story) {
+  if (!playerLines) return;
+  const parts = [];
+  for (const paragraph of story?.text || []) {
+    for (const sentence of sentencesOf(paragraph)) {
+      const text = String(sentence).trim();
+      if (text) parts.push(text);
+    }
+  }
+  const whole = parts.join(" ").length || 1;
+  let seen = 0;
+  lineStarts = parts.map((part) => {
+    const at = seen / whole;
+    seen += part.length + 1;
+    return at;
+  });
+  playerLines.innerHTML = parts
+    .map((part, i) => `<p data-line="${i}">${formatParagraphForDisplay(part)}</p>`)
+    .join("");
+  lineSpans = Array.from(playerLines.querySelectorAll("[data-line]"));
+  activeLineIndex = -1;
+}
+
+function syncPlayerLines(percent) {
+  if (!playerLines || !lineSpans.length) return;
+  const through = Math.max(0, Math.min(1, percent / 100));
+  let index = 0;
+  for (let i = 0; i < lineStarts.length; i += 1) {
+    if (lineStarts[i] <= through) index = i;
+    else break;
+  }
+  if (index === activeLineIndex) return;
+  activeLineIndex = index;
+  lineSpans.forEach((line, i) => line.classList.toggle("is-live", i === index));
+  const live = lineSpans[index];
+  if (!live) return;
+  // Held a little above the middle, the way a lyrics view does: what is
+  // coming matters more than what has gone.
+  const target = live.offsetTop - playerLines.clientHeight * 0.38 + live.offsetHeight / 2;
+  playerLines.scrollTo({ top: Math.max(0, target), behavior: "smooth" });
+}
+
+playerLines?.addEventListener("click", (event) => {
+  const line = event.target.closest("[data-line]");
+  if (!line || !playerTotalSeconds()) return;
+  const at = lineStarts[Number(line.dataset.line)] ?? 0;
+  seekByPercent(at * 100);
+  trackEvent("player_line_seek", { line: Number(line.dataset.line) });
+});
+
 function isNarrationPlaying() {
   return Boolean((currentAudio && !currentAudio.paused) || nativeAudioActive);
 }
@@ -3720,6 +3796,7 @@ function syncPlayerUi() {
   if (remainingEl) remainingEl.textContent = total ? `-${formatAudioTime(Math.max(0, total - elapsed))}` : "--:--";
 
   if (playerToggleIcon) playerToggleIcon.textContent = isNarrationPlaying() ? "\u23F8" : "\u25B6";
+  syncPlayerLines(percent);
 }
 
 window.setInterval(() => {
@@ -3884,6 +3961,7 @@ function openReading(story, { listen = false } = {}) {
   // audio back ends behind one code path.
   if (narrationPanel) narrationPanel.hidden = true;
   if (storyPlayer) storyPlayer.hidden = !listen;
+  if (listen) buildPlayerLines(story);
   // Listening and reading are two different things to be doing. The player
   // takes the screen rather than sitting on top of the page, which is also
   // what makes dimming it worth anything.
@@ -5330,6 +5408,7 @@ async function generatePreviewStory() {
   storePendingPreview(currentStory);
   renderStory(currentStory);
   setPreviewCtaVisible(currentStory);
+  await finishMakingStages();
   showScreen("result");
   trackEvent("preview_story_generated", { previewsLeft: story.previewsLeft });
 }
@@ -6656,6 +6735,7 @@ form.addEventListener("submit", async (event) => {
       clearPendingStoryContext();
       if (!canUseCloudLibrary()) incrementStoriesUsed(selectedPlanKey);
       renderStory(currentStory);
+      await finishMakingStages();
       const savedToLibrary = await saveGeneratedStoryToLibrary(currentStory);
       trackEvent("story_generated", {
         plan: selectedPlanKey,

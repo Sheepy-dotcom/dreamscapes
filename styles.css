@@ -7283,6 +7283,18 @@ body.night-mode .builder-step-tonight .story-idea-field {
    says nothing about a story, and when it stalls it makes the same wait feel
    longer than no bar would have. These are four named stages in the child's
    own words, with the scene behind them lighting up as each one lands. */
+/* Nothing on this screen scrolls: it is a wait, and a wait you have to scroll
+   is a wait that looks broken. Everything is sized to fit the shortest phone
+   the app runs on. */
+.loading-screen,
+.loading-scene {
+  overflow: hidden;
+}
+
+.loading-scene {
+  gap: 6px;
+}
+
 .loading-scene #loading-title {
   margin: 0 auto 4px;
   max-width: 18ch;
@@ -7313,7 +7325,7 @@ body.night-mode .builder-step-tonight .story-idea-field {
 /* The title exists a long time before the text does, so it goes up the moment
    it arrives - something real to read while the rest is written. */
 .loading-title-reveal {
-  margin: 10px auto 0;
+  margin: 4px auto 0;
   max-width: 26ch;
   color: #fff6e6;
   font-size: 1.04rem;
@@ -7331,9 +7343,9 @@ body.night-mode .builder-step-tonight .story-idea-field {
 
 .making-steps {
   display: grid;
-  gap: 8px;
+  gap: 5px;
   width: min(420px, 100%);
-  margin: 16px auto 0;
+  margin: 6px auto 0;
   padding: 0;
   list-style: none;
 }
@@ -7344,8 +7356,8 @@ body.night-mode .builder-step-tonight .story-idea-field {
   align-items: center;
   gap: 10px;
   border: 1px solid rgba(226, 216, 255, 0.12);
-  border-radius: 16px;
-  padding: 10px 14px;
+  border-radius: 15px;
+  padding: 7px 12px;
   background: rgba(20, 20, 64, 0.5);
   text-align: left;
   transition: border-color 260ms ease, background-color 260ms ease, opacity 260ms ease;
@@ -7455,8 +7467,14 @@ body.night-mode .builder-step-tonight .story-idea-field {
 .making-stage {
   position: relative;
   width: 100%;
-  aspect-ratio: 900 / 540;
-  margin: 0 auto 14px;
+  /* A height, not an aspect ratio. An aspect-ratio box has a min-content
+     height of zero, so when the scene is taller than the screen the grid
+     squeezes its row to nothing while the picture still draws at full size -
+     and it lands on top of the heading. On a 667pt phone that hid the heading
+     and the message completely. The pictures are object-fit: cover, so they
+     take whatever height they are given. */
+  height: clamp(94px, 17.5vh, 208px);
+  margin: 0 auto 8px;
   border-radius: 18px;
   overflow: hidden;
   background: #141042;
@@ -8263,4 +8281,52 @@ body.reading-active .result-screen.is-reading {
 
 .story-reading.on-prompt {
   align-content: center;
+}
+
+/* The story, following the narration. Spotify's trick: the live line is lit,
+   the rest are dim, and the column moves so the live one stays put. */
+.player-lines {
+  min-height: 0;
+  max-height: 34vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  /* The ends fade rather than being cut, so the column reads as a window on
+     something longer. */
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 14%, #000 84%, transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0%, #000 14%, #000 84%, transparent 100%);
+  scrollbar-width: none;
+}
+
+.player-lines::-webkit-scrollbar {
+  display: none;
+}
+
+.player-lines p {
+  margin: 0 0 14px;
+  color: rgba(226, 220, 252, 0.34);
+  font-size: 1.04rem;
+  font-weight: 600;
+  line-height: 1.45;
+  cursor: pointer;
+  transition: color 240ms ease, transform 240ms ease;
+}
+
+.player-lines p.is-live {
+  color: #fffaf0;
+  font-weight: 800;
+}
+
+.player-lines p:last-child {
+  margin-bottom: 0;
+}
+
+/* Lights out means lights out: the text goes with everything else. */
+.result-screen.is-dim .player-lines {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .player-lines p {
+    transition: none;
+  }
 }
