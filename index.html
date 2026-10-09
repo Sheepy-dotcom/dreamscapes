@@ -22,7 +22,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026100946" />
+    <link rel="stylesheet" href="./styles.css?v=2026100948" />
   </head>
   <body class="home-active night-mode">
     <svg class="art-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -150,7 +150,7 @@
           </section>
 
           <section class="builder-step builder-step-mood" data-builder-step="4" data-step-sub="Pick as many as you like." data-step-title="Mood" aria-labelledby="builder-step-mood-title" hidden>
-            <div class="mood-scene" aria-hidden="true"><img src="./assets/mood-scene.webp?v=2026100946" alt="" /></div><div class="step-foreground mood-foreground">
+            <div class="mood-scene" aria-hidden="true"><img src="./assets/mood-scene.webp?v=2026100948" alt="" /></div><div class="step-foreground mood-foreground">
             <h3 id="builder-step-mood-title">What should it <span>feel like?</span></h3>
             <fieldset class="choice-group builder-group mood-group">
               <legend class="visually-hidden">Moods</legend>
@@ -171,7 +171,7 @@
               <h3 id="builder-step-idea-title" data-preview-title="What do they love?">What shall we <span>explore tonight?</span></h3>
             </div>
             <div class="tonight-window">
-              <img class="tonight-scene" src="./assets/tonight-scene.webp?v=2026100946" alt="" />
+              <img class="tonight-scene" src="./assets/tonight-scene.webp?v=2026100948" alt="" />
               <div class="interest-chips" id="interest-chips" role="group" aria-label="Story ideas"></div>
             </div>
             <div class="tonight-body">
@@ -207,7 +207,7 @@
 
           <section class="builder-step builder-step-parent" data-builder-step="6" data-step-title="Parent controls" aria-labelledby="builder-step-details-title" hidden>
             <div class="parent-banner">
-              <img class="parent-scene" src="./assets/parent-scene.webp?v=2026100946" alt="" />
+              <img class="parent-scene" src="./assets/parent-scene.webp?v=2026100948" alt="" />
               <div class="parent-headline">
                 <h3 id="builder-step-details-title">Make it feel right <span>for them</span></h3>
               </div>
@@ -275,8 +275,9 @@
       </section>
 
       <section class="screen loading-screen" id="loading-screen" aria-live="polite">
-        <div class="loading-scene">
+        <div class="loading-scene" id="loading-scene" data-stage="0">
           <div class="writing-stage" aria-hidden="true">
+            <span class="stage-glow"></span>
             <div class="night-window">
               <span class="window-moon"></span>
               <span class="window-star star-one"></span>
@@ -296,17 +297,39 @@
               </span>
               <span class="writing-pen"></span>
             </div>
+            <span class="stage-spark spark-one"></span>
+            <span class="stage-spark spark-two"></span>
+            <span class="stage-spark spark-three"></span>
+            <span class="stage-spark spark-four"></span>
+            <span class="stage-bear">
+              <svg viewBox="0 0 64 56" focusable="false"><circle class="bear-ear" cx="16" cy="16" r="9"/><circle class="bear-ear" cx="48" cy="16" r="9"/><circle class="bear-inner" cx="16" cy="16" r="4.4"/><circle class="bear-inner" cx="48" cy="16" r="4.4"/><ellipse class="bear-head" cx="32" cy="30" rx="21" ry="19"/><ellipse class="bear-snout" cx="32" cy="37" rx="10" ry="8"/><ellipse class="bear-nose" cx="32" cy="32.6" rx="3.4" ry="2.4"/><path class="bear-line" d="M25 26.5a3.2 3.2 0 0 1 4.6 0M34.4 26.5a3.2 3.2 0 0 1 4.6 0"/><path class="bear-line" d="M32 35v2.2M32 37.2a3.4 3.4 0 0 1-3.4 2.4M32 37.2a3.4 3.4 0 0 0 3.4 2.4"/></svg>
+            </span>
           </div>
-          <h2>Creating your magical story...</h2>
-          <p class="loading-message" id="loading-message">Gathering moonlight and story dust</p>
-          <div class="story-weaver" aria-hidden="true" aria-label="Story progress">
-            <span class="story-weaver-fill"></span>
-          </div>
-          <div class="loading-steps" aria-hidden="true">
-            <span>Characters</span>
-            <span>Adventure</span>
-            <span>Ending</span>
-          </div>
+          <h2 id="loading-title"><span class="loading-name" id="loading-name"></span><span id="loading-head-rest">story is coming to life…</span></h2>
+          <p class="loading-message" id="loading-message"></p>
+          <p class="loading-title-reveal" id="loading-title-reveal" hidden></p>
+          <ol class="making-steps" id="making-steps">
+            <li data-making-step="0">
+              <span class="making-check" aria-hidden="true"></span>
+              <span class="making-ic" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path class="mk-gold" d="M12 2.4 14.7 9l7.1.5-5.4 4.6 1.7 6.9L12 17.2l-6.1 3.8 1.7-6.9L2.2 9.5 9.3 9Z"/></svg></span>
+              <span class="making-copy"><strong>Choosing the adventure</strong><small></small></span>
+            </li>
+            <li data-making-step="1">
+              <span class="making-check" aria-hidden="true"></span>
+              <span class="making-ic" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path class="mk-pink" d="M12 20.6C5.7 16.4 2.5 13.2 2.5 9.4A4.85 4.85 0 0 1 12 6.7 4.85 4.85 0 0 1 21.5 9.4C21.5 13.2 18.3 16.4 12 20.6Z"/></svg></span>
+              <span class="making-copy"><strong></strong><small></small></span>
+            </li>
+            <li data-making-step="2">
+              <span class="making-check" aria-hidden="true"></span>
+              <span class="making-ic" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><circle class="mk-sky" cx="12" cy="8" r="4.4"/><path class="mk-sky" d="M3.4 20.6a8.6 8.6 0 0 1 17.2 0Z"/></svg></span>
+              <span class="making-copy"><strong></strong><small></small></span>
+            </li>
+            <li data-making-step="3">
+              <span class="making-check" aria-hidden="true"></span>
+              <span class="making-ic" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path class="mk-cream" d="M20.4 15.4A9 9 0 0 1 8.6 3.6a9 9 0 1 0 11.8 11.8Z"/></svg></span>
+              <span class="making-copy"><strong>Finishing with a cosy ending</strong><small></small></span>
+            </li>
+          </ol>
         </div>
       </section>
 
@@ -1071,6 +1094,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026100946"></script>
+    <script src="./app.js?v=2026100948"></script>
   </body>
 </html>

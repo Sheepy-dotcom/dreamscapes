@@ -828,97 +828,142 @@ const britishVoiceHints = {
   male: ["daniel", "arthur", "oliver", "george", "tom"],
 };
 
-const loadingMessages = [
-  "Opening the storybook under the stars",
-  "Choosing kind characters and cosy details",
-  "Building the adventure scene by scene",
-  "Sprinkling in gentle surprises",
-  "Checking the story feels close to your chosen time",
-  "Saving the story safely to your library",
-  "Tucking in a warm, happy ending",
+/* The wait is the longest stretch of the whole app, and it used to be spent
+   watching a bar fill and three pills light up - a progress indicator, which
+   says the system is busy and nothing else. Worse, a bar that stalls makes the
+   same wait feel longer than no bar at all.
+   So the screen shows the story being built instead: four named stages, in the
+   child's own words and around the child's own interests, with the scene
+   lighting up behind them as each one lands. Nothing here is generated from
+   the story - the book, the bear and the stars are the app's own, drawn once
+   and reused, exactly as they should be for art that appears before a story
+   exists. */
+const MAKING_STAGES = [
+  { title: () => "Choosing the adventure", detail: () => "Finding the perfect setting…" },
+  {
+    title: (who) => `Adding the things ${who} loves`,
+    detail: (who, loves) => loves || "Picking out kind characters and cosy corners…",
+  },
+  { title: (who) => `Making ${who} the star`, detail: () => "Writing them into every page…" },
+  { title: () => "Finishing with a cosy ending", detail: () => "Tucking everyone in…" },
 ];
 
-// The wait is the longest stretch of the whole app, and a generic message makes
-// it feel like a loading bar for anything. Saying the child's name and what they
-// love turns it into the only minute where the parent watches the thing they
-// asked for being made. Falls back to the generic list when there is nothing to
-// personalise with.
-function buildLoadingMessages(story) {
-  const name = cleanName(story?.childName);
-  const interests = String(story?.interests || "")
-    .split(",")
-    .map((part) => part.trim())
-    .filter(Boolean);
-  if (!name && !interests.length) return loadingMessages;
+const MAKING_LINES = [
+  (who) => `We're creating a bedtime adventure just for ${who}.`,
+  (who, loves) => (loves ? `Adding ${loves.toLowerCase()}…` : `Adding the things ${who} loves…`),
+  (who) => `Making ${who} the star…`,
+  () => "Adding a magical ending…",
+];
 
-  const who = name || "your child";
-  const loves = interests.length
-    ? interests.slice(0, 2).join(" and ").toLowerCase()
-    : "";
-
-  return [
-    "Opening the storybook under the stars",
-    `Writing ${who} into tonight's adventure`,
-    loves ? `Finding the ${loves}` : "Choosing kind characters and cosy details",
-    `Building the adventure around ${who}`,
-    "Sprinkling in gentle surprises",
-    "Tucking in a warm, happy ending",
-  ].filter(Boolean);
-}
+const makingSteps = document.querySelector("#making-steps");
+const loadingScene = document.querySelector("#loading-scene");
+const loadingTitleEl = document.querySelector("#loading-title");
+const loadingNameEl = document.querySelector("#loading-name");
+const loadingHeadRestEl = document.querySelector("#loading-head-rest");
+const loadingTitleReveal = document.querySelector("#loading-title-reveal");
 
 function cleanName(value) {
   const name = String(value || "").trim();
   return name.length > 24 ? "" : name;
 }
 
-// Which of Characters / Adventure / Ending is lit, so the screen shows progress
-// through the writing rather than through a bar that means nothing.
-function setLoadingStage(index) {
-  document.querySelectorAll(".loading-steps span").forEach((pill, i) => {
-    pill.classList.toggle("active", i === index);
-    pill.classList.toggle("done", i < index);
+function describeLoves(story) {
+  const interests = String(story?.interests || "")
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (!interests.length) return "";
+  const first = interests.slice(0, 3);
+  if (first.length === 1) return first[0];
+  return `${first.slice(0, -1).join(", ")} and ${first[first.length - 1]}`;
+}
+
+let makingWho = "your little one";
+let makingLoves = "";
+let makingStage = 0;
+
+/* The last stage is never marked done on a timer. Everything before it can be
+   guessed at, but "finished" is the one claim the screen must not make before
+   the story is actually in hand - which is the same reason there is no
+   percentage. */
+function setMakingStage(index, { complete = false } = {}) {
+  makingStage = Math.max(0, Math.min(Number(index) || 0, MAKING_STAGES.length - 1));
+  loadingScene?.setAttribute("data-stage", String(makingStage));
+  makingSteps?.querySelectorAll("[data-making-step]").forEach((row, i) => {
+    row.classList.toggle("is-done", complete ? true : i < makingStage);
+    row.classList.toggle("is-active", !complete && i === makingStage);
   });
+  if (loadingMessage) {
+    loadingMessage.textContent = MAKING_LINES[makingStage](makingWho, makingLoves);
+  }
+  // The heading stops promising and starts reassuring once the last stage is
+  // the only one left, so a longer wait reads as nearly there rather than as
+  // stuck.
+  const isFinal = makingStage >= MAKING_STAGES.length - 1;
+  loadingTitleEl?.classList.toggle("is-final", isFinal);
+  if (loadingHeadRestEl) {
+    loadingHeadRestEl.textContent = isFinal ? "Just a moment more…" : "story is coming to life…";
+  }
 }
-
-// A long story is written in sections and takes a couple of minutes, which is
-// a long time to watch messages rotate with no sense of progress. The section
-// counter rides along with them rather than replacing them.
-let storyPartLabel = "";
-
-function renderLoadingMessage(index) {
-  if (!loadingMessage) return;
-  loadingMessage.textContent = `${storyPartLabel}${activeLoadingMessages[index]}`;
-}
-
-function setStoryProgress(partIndex, totalParts) {
-  const total = Math.max(1, Number(totalParts) || 1);
-  storyPartLabel = total > 1 ? `Part ${Math.min(Number(partIndex) + 1, total)} of ${total} · ` : "";
-  renderLoadingMessage(0);
-}
-
-let activeLoadingMessages = loadingMessages;
-let pendingStoryData = null;
 
 function startLoadingMessages() {
-  if (!loadingMessage) return;
-  activeLoadingMessages = buildLoadingMessages(pendingStoryData);
-  let index = 0;
-  storyPartLabel = "";
-  renderLoadingMessage(index);
-  setLoadingStage(0);
+  const story = pendingStoryData;
+  makingWho = cleanName(story?.childName) || "your little one";
+  makingLoves = describeLoves(story);
+
+  if (loadingNameEl) loadingNameEl.textContent = `${makingWho}'s `;
+  if (loadingTitleReveal) {
+    loadingTitleReveal.hidden = true;
+    loadingTitleReveal.textContent = "";
+  }
+  makingSteps?.querySelectorAll("[data-making-step]").forEach((row, i) => {
+    const stage = MAKING_STAGES[i];
+    const strong = row.querySelector("strong");
+    const small = row.querySelector("small");
+    if (strong) strong.textContent = stage.title(makingWho, makingLoves);
+    if (small) small.textContent = stage.detail(makingWho, makingLoves);
+  });
+
+  setMakingStage(0);
   window.clearInterval(loadingMessageTimer);
+  /* Paced so the first three stages are through in about half a minute, which
+     is roughly a short story, and the fourth holds for as long as it takes. A
+     long story arrives at the same four stages by a different route - see
+     setStoryProgress, which moves them on real section boundaries rather than
+     on the clock. */
   loadingMessageTimer = window.setInterval(() => {
-    index = (index + 1) % activeLoadingMessages.length;
-    renderLoadingMessage(index);
-    // Three pills across the run of messages, so the stage moves with the words.
-    setLoadingStage(Math.min(2, Math.floor((index / activeLoadingMessages.length) * 3)));
-  }, 2200);
+    if (makingStage >= MAKING_STAGES.length - 1) return;
+    setMakingStage(makingStage + 1);
+  }, 9000);
 }
 
 function stopLoadingMessages() {
   window.clearInterval(loadingMessageTimer);
   loadingMessageTimer = null;
 }
+
+/* A long story comes back in sections, and a section boundary is the one piece
+   of honest progress this screen has. Where it exists, the stages move with it
+   instead of with the clock. */
+function setStoryProgress(partIndex, totalParts) {
+  const total = Math.max(1, Number(totalParts) || 1);
+  if (total <= 1) return;
+  const through = Math.min(1, Number(partIndex) / total);
+  setMakingStage(Math.min(MAKING_STAGES.length - 1, Math.floor(through * MAKING_STAGES.length)));
+}
+
+/* The title comes back with the first section, well before the text does, so
+   it goes on screen the moment it exists: something real to read while the
+   rest is written. */
+function revealStoryTitle(title) {
+  const text = String(title || "").trim();
+  if (!loadingTitleReveal || !text) return;
+  if (loadingTitleReveal.textContent === text) return;
+  loadingTitleReveal.textContent = text;
+  loadingTitleReveal.hidden = false;
+}
+
+let pendingStoryData = null;
 
 // Tapping a single-choice option moves the builder on by itself. The short delay
 // lets the selection register visually before the step changes.
@@ -3354,6 +3399,8 @@ async function createStory(data) {
       // The last section answers with the whole story, the same text the
       // server saved, so the two cannot drift apart.
       aiStory = part;
+      // The title arrives with the first section, long before the text does.
+      revealStoryTitle(part.title);
       paragraphs = part.section?.done ? part.paragraphs : paragraphs.concat(part.paragraphs);
 
       if (!part.section || part.section.done) break;

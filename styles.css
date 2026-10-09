@@ -7277,3 +7277,267 @@ body.night-mode .builder-step-tonight .story-idea-field {
 .builder-step-parent .pref-chips button:nth-child(6) { --chip-tint: #ffb98f; }
 .builder-step-parent .pref-chips button:nth-child(7) { --chip-tint: #b9c6ff; }
 .builder-step-parent .pref-chips button:nth-child(8) { --chip-tint: rgba(226, 216, 255, 0.6); }
+
+/* ---- Making a story: the wait becomes the thing being watched ------------ */
+/* What was here was a bar and three pills. A bar says the system is busy; it
+   says nothing about a story, and when it stalls it makes the same wait feel
+   longer than no bar would have. These are four named stages in the child's
+   own words, with the scene behind them lighting up as each one lands. */
+.loading-scene #loading-title {
+  margin: 0 auto 4px;
+  max-width: 18ch;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.loading-scene .loading-name {
+  color: #ffd45c;
+}
+
+/* On the last stage the heading stops promising and starts reassuring, so a
+   long wait reads as nearly there rather than as stuck. The swap is done in
+   script, not with a content:"" on a zeroed font-size - that trick also zeroes
+   the ch unit the heading's max-width is measured in, which collapsed it to
+   one word per line. */
+.loading-scene #loading-title.is-final .loading-name {
+  display: none;
+}
+
+.loading-scene .loading-message {
+  margin: 0 auto;
+  max-width: 30ch;
+  color: rgba(232, 224, 255, 0.82);
+  text-align: center;
+}
+
+/* The title exists a long time before the text does, so it goes up the moment
+   it arrives - something real to read while the rest is written. */
+.loading-title-reveal {
+  margin: 10px auto 0;
+  max-width: 26ch;
+  color: #fff6e6;
+  font-size: 1.04rem;
+  font-weight: 900;
+  line-height: 1.25;
+  text-align: center;
+  text-shadow: 0 2px 10px rgba(8, 10, 38, 0.6);
+  animation: title-arrive 520ms ease both;
+}
+
+@keyframes title-arrive {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+.making-steps {
+  display: grid;
+  gap: 8px;
+  width: min(420px, 100%);
+  margin: 16px auto 0;
+  padding: 0;
+  list-style: none;
+}
+
+.making-steps li {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(226, 216, 255, 0.12);
+  border-radius: 16px;
+  padding: 10px 14px;
+  background: rgba(20, 20, 64, 0.5);
+  text-align: left;
+  transition: border-color 260ms ease, background-color 260ms ease, opacity 260ms ease;
+}
+
+/* A stage not reached yet is dimmed rather than hidden: the parent can see
+   what is still to come, which is most of the reassurance. */
+.making-steps li {
+  opacity: 0.5;
+}
+
+.making-steps li.is-active,
+.making-steps li.is-done {
+  opacity: 1;
+}
+
+.making-steps li.is-active {
+  border-color: rgba(255, 212, 92, 0.5);
+  background: rgba(44, 34, 96, 0.72);
+}
+
+.making-check {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(226, 216, 255, 0.3);
+  border-radius: 50%;
+}
+
+.making-steps li.is-active .making-check {
+  border-color: #ffd45c;
+  animation: making-pulse 1500ms ease-in-out infinite;
+}
+
+@keyframes making-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 212, 92, 0.34); }
+  50% { box-shadow: 0 0 0 5px rgba(255, 212, 92, 0); }
+}
+
+.making-steps li.is-done .making-check {
+  border-color: transparent;
+  background: #8d6bff
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.6 6.3 4.8 8.5 9.4 3.9' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    center / 12px 12px no-repeat;
+  animation: making-tick 300ms ease both;
+}
+
+@keyframes making-tick {
+  from { transform: scale(0.6); }
+  60% { transform: scale(1.12); }
+  to { transform: scale(1); }
+}
+
+.making-ic {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+}
+
+.making-ic svg {
+  width: 19px;
+  height: 19px;
+}
+
+.making-ic .mk-gold { fill: #ffd45c; }
+.making-ic .mk-pink { fill: #ff8fb7; }
+.making-ic .mk-sky { fill: #8fd0ff; }
+.making-ic .mk-cream { fill: #fff2d8; }
+
+.making-copy {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.making-copy strong {
+  color: #fffaf0;
+  font-size: 0.88rem;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.making-copy small {
+  color: rgba(226, 220, 252, 0.7);
+  font-size: 0.76rem;
+  line-height: 1.25;
+}
+
+/* The detail under a stage is the answer to that stage, so it waits until the
+   stage has been reached. */
+.making-steps li:not(.is-active):not(.is-done) .making-copy small {
+  visibility: hidden;
+}
+
+/* ---- The scene fills in behind them ------------------------------------- */
+/* Every piece of this is the app's own furniture - the book, the bear, the
+   stars - drawn once and reused. Nothing is generated from the story, which
+   is the point: the artwork has to exist before the story does. */
+.stage-glow {
+  position: absolute;
+  z-index: 0;
+  left: 50%;
+  top: 56%;
+  width: 190px;
+  height: 190px;
+  transform: translate(-50%, -50%) scale(0.7);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 212, 92, 0.3), rgba(255, 212, 92, 0) 70%);
+  opacity: 0.45;
+  transition: transform 900ms ease, opacity 900ms ease;
+  pointer-events: none;
+}
+
+.loading-scene[data-stage="1"] .stage-glow { transform: translate(-50%, -50%) scale(0.85); opacity: 0.62; }
+.loading-scene[data-stage="2"] .stage-glow { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
+.loading-scene[data-stage="3"] .stage-glow { transform: translate(-50%, -50%) scale(1.14); opacity: 1; }
+
+.stage-spark {
+  position: absolute;
+  z-index: 2;
+  width: 9px;
+  height: 9px;
+  background: #ffe9a8;
+  clip-path: polygon(50% 0%, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0% 50%, 40% 40%);
+  opacity: 0;
+  transform: scale(0.4);
+  transition: opacity 500ms ease, transform 500ms ease;
+  pointer-events: none;
+}
+
+.spark-one { left: 14%; top: 22%; }
+.spark-two { right: 16%; top: 16%; }
+.spark-three { right: 10%; bottom: 26%; }
+.spark-four { left: 9%; bottom: 20%; }
+
+/* One more spark lands with each stage, so the scene is visibly further along
+   than it was a moment ago without anything claiming a number. */
+.loading-scene[data-stage="0"] .spark-one,
+.loading-scene[data-stage="1"] .spark-one,
+.loading-scene[data-stage="1"] .spark-two,
+.loading-scene[data-stage="2"] .spark-one,
+.loading-scene[data-stage="2"] .spark-two,
+.loading-scene[data-stage="2"] .spark-three,
+.loading-scene[data-stage="3"] .stage-spark {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.stage-bear {
+  position: absolute;
+  z-index: 2;
+  right: 4%;
+  bottom: 2%;
+  width: 62px;
+  opacity: 0;
+  transform: translateY(14px) scale(0.86);
+  transition: opacity 700ms ease, transform 700ms ease;
+  pointer-events: none;
+}
+
+.loading-scene[data-stage="2"] .stage-bear,
+.loading-scene[data-stage="3"] .stage-bear {
+  opacity: 1;
+  transform: none;
+}
+
+.stage-bear svg { display: block; width: 100%; height: auto; }
+.stage-bear .bear-ear { fill: #a9793f; }
+.stage-bear .bear-inner { fill: #e7b980; }
+.stage-bear .bear-head { fill: #c08b4a; }
+.stage-bear .bear-snout { fill: #f2dcb8; }
+.stage-bear .bear-nose { fill: #4b3418; }
+.stage-bear .bear-line {
+  fill: none;
+  stroke: #4b3418;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage-glow,
+  .stage-spark,
+  .stage-bear,
+  .making-steps li {
+    transition: none;
+  }
+
+  .making-steps li.is-active .making-check,
+  .making-steps li.is-done .making-check,
+  .loading-title-reveal {
+    animation: none;
+  }
+}
