@@ -3774,6 +3774,153 @@ playerRange?.addEventListener("input", () => {
 
 playerRange?.addEventListener("change", () => seekByPercent(Number(playerRange.value) || 0));
 
+/* ---- Rain ---------------------------------------------------------------
+   Synthesised rather than shipped. A rain loop is a few megabytes, it has a
+   seam you can hear once you have noticed it, and it needs licensing. Rain is
+   filtered noise, so the browser can make it: no asset, no seam, no repeat,
+   and it works with no network.
+   Pink noise rather than white - white is a hiss, and the falling spectrum of
+   pink is much closer to water. Two layers, a low one for the body and a
+   quieter bright one for the patter, with the filter drifting slowly so it
+   gusts instead of sitting still. */
+const Rain = (() => {
+  const FADE_SECONDS = 2.5;
+  const RUN_MINUTES = 20;
+  let ctx = null;
+  let parts = null;
+  let stopTimer = null;
+
+  function noiseBuffer(context) {
+    const length = context.sampleRate * 3;
+    const buffer = context.createBuffer(1, length, context.sampleRate);
+    const data = buffer.getChannelData(0);
+    let b0 = 0;
+    let b1 = 0;
+    let b2 = 0;
+    for (let i = 0; i < length; i += 1) {
+      const white = Math.random() * 2 - 1;
+      b0 = 0.99765 * b0 + white * 0.099046;
+      b1 = 0.963 * b1 + white * 0.2965164;
+      b2 = 0.57 * b2 + white * 1.0526913;
+      data[i] = (b0 + b1 + b2 + white * 0.1848) * 0.12;
+    }
+    return buffer;
+  }
+
+  function layer(context, buffer, destination, { type, frequency, q, gain }) {
+    const source = context.createBufferSource();
+    source.buffer = buffer;
+    source.loop = true;
+    const filter = context.createBiquadFilter();
+    filter.type = type;
+    filter.frequency.value = frequency;
+    filter.Q.value = q;
+    const level = context.createGain();
+    level.gain.value = gain;
+    source.connect(filter).connect(level).connect(destination);
+    source.start();
+    return { source, filter };
+  }
+
+  function isOn() {
+    return Boolean(parts);
+  }
+
+  function start() {
+    if (parts) return true;
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return false;
+    ctx = ctx || new AudioCtx();
+    // Safari suspends a context created outside a gesture; this runs from a
+    // tap, so resuming here is what unlocks it for the rest of the session.
+    ctx.resume?.();
+
+    const out = ctx.createGain();
+    out.gain.value = 0;
+    out.connect(ctx.destination);
+
+    const buffer = noiseBuffer(ctx);
+    const body = layer(ctx, buffer, out, { type: "lowpass", frequency: 1100, q: 0.7, gain: 0.8 });
+    const patter = layer(ctx, buffer, out, { type: "bandpass", frequency: 3600, q: 0.6, gain: 0.24 });
+
+    // The gusting. Slow and shallow - anything faster reads as a wobble
+    // rather than as weather.
+    const drift = ctx.createOscillator();
+    drift.frequency.value = 0.06;
+    const driftDepth = ctx.createGain();
+    driftDepth.gain.value = 320;
+    drift.connect(driftDepth).connect(body.filter.frequency);
+    drift.start();
+
+    out.gain.linearRampToValueAtTime(0.34, ctx.currentTime + FADE_SECONDS);
+    parts = { out, body, patter, drift };
+
+    // It has to stop by itself, or it runs all night. This is the sleep timer,
+    // moved to the thing that actually needs one.
+    window.clearTimeout(stopTimer);
+    stopTimer = window.setTimeout(() => stop(), RUN_MINUTES * 60 * 1000);
+    return true;
+  }
+
+  function stop() {
+    window.clearTimeout(stopTimer);
+    stopTimer = null;
+    // Whoever called it - the button, the timer, or leaving the screen - the
+    // button has to agree with what is audible.
+    setRainButton(false);
+    if (!parts || !ctx) return;
+    const { out, body, patter, drift } = parts;
+    parts = null;
+    out.gain.cancelScheduledValues(ctx.currentTime);
+    out.gain.setValueAtTime(out.gain.value, ctx.currentTime);
+    out.gain.linearRampToValueAtTime(0, ctx.currentTime + FADE_SECONDS);
+    window.setTimeout(() => {
+      [body.source, patter.source, drift].forEach((node) => {
+        try {
+          node.stop();
+        } catch {
+          /* Already stopped - nothing to do. */
+        }
+      });
+      out.disconnect();
+    }, FADE_SECONDS * 1000 + 120);
+  }
+
+  return { start, stop, isOn };
+})();
+
+function setRainButton(on) {
+  const button = document.querySelector("#player-rain");
+  button?.setAttribute("aria-pressed", on ? "true" : "false");
+}
+
+document.querySelector("#player-rain")?.addEventListener("click", () => {
+  if (Rain.isOn()) {
+    Rain.stop();
+    trackEvent("rain_stopped", {});
+    return;
+  }
+  const started = Rain.start();
+  setRainButton(started);
+  if (!started) statusNote.textContent = "Rain sounds are not available on this device.";
+  else trackEvent("rain_started", { from: "button" });
+});
+
+/* Again. Children ask for the same story twice, and at that point nobody
+   wants to go back to the card and press Listen. */
+document.querySelector("#player-again")?.addEventListener("click", () => {
+  seekByPercent(0);
+  readingIndex = 0;
+  renderReadingPage();
+  if (!isNarrationPlaying()) audioPlayButton?.click();
+  // Said again after the play, not only before it. Whichever back end picks
+  // the story up reports its own position as it starts, and on a story with
+  // no audio yet that left the clock showing where the scrubber had been
+  // rather than the beginning it had just been sent to.
+  setAudioProgress(0);
+  trackEvent("story_replayed", {});
+});
+
 /* Dim is the lights-out mode. It cannot touch the screen's own brightness
    from a web view, so it does the next best thing: everything but the
    transport drops away, and what is left is barely lit. */
@@ -3927,6 +4074,7 @@ function openReading(story, { listen = false } = {}) {
 }
 
 function closeReading() {
+  Rain.stop();
   if (storyReading) storyReading.hidden = true;
   resultScreen?.classList.remove("is-dim");
   resultScreen?.classList.remove("is-listening");
@@ -7230,6 +7378,14 @@ function resetAudioProgress() {
 function finishAudioProgress() {
   pendingAudioSeekPercent = null;
   setAudioProgress(100);
+  /* The story ends and the room goes quiet with a child who is often still
+     awake. That gap is the reason rain is here, so it does not wait to be
+     asked - it only starts if the player is open, so finishing a story in the
+     background does not begin raining at somebody. */
+  if (storyPlayer && !storyPlayer.hidden && !Rain.isOn() && Rain.start()) {
+    setRainButton(true);
+    trackEvent("rain_started", { from: "story_end" });
+  }
 }
 
 function getAiAudioProgress() {
