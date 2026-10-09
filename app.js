@@ -872,9 +872,18 @@ const MAKING_ART = {
   ],
   // The fallback for free text, or for a chip with no art of its own. Every
   // chip has art now, so in practice this is the free-text set.
-  loves: ["loves-1.webp", "loves-2.webp", "loves-3.webp"],
-  star: ["star-1.webp", "star-2.webp", "star-3.webp", "star-4.webp", "star-5.webp", "star-6.webp"],
-  ending: ["ending-1.webp", "ending-2.webp", "ending-3.webp", "ending-4.webp", "ending-5.webp"],
+  loves: [
+    "loves-1.webp", "loves-2.webp", "loves-3.webp",
+    "loves-4.webp", "loves-5.webp", "loves-6.webp", "loves-7.webp", "loves-8.webp",
+  ],
+  star: [
+    "star-1.webp", "star-2.webp", "star-3.webp", "star-4.webp", "star-5.webp", "star-6.webp",
+    "star-7.webp", "star-8.webp", "star-9.webp", "star-10.webp", "star-11.webp",
+  ],
+  ending: [
+    "ending-1.webp", "ending-2.webp", "ending-3.webp", "ending-4.webp", "ending-5.webp",
+    "ending-6.webp", "ending-7.webp", "ending-8.webp", "ending-9.webp", "ending-10.webp",
+  ],
 };
 
 /* Keyed by the slugs in INTEREST_IDEAS, so the chip a parent tapped and the
@@ -882,20 +891,20 @@ const MAKING_ART = {
    the generic set, which is also what free text gets - "Something else?" can
    say anything, and guessing at it would be worse than a good generic. */
 const MAKING_ART_BY_INTEREST = {
-  dinosaurs: ["interest-dinosaurs-1.webp", "interest-dinosaurs-2.webp"],
-  space: ["interest-space-1.webp", "interest-space-2.webp"],
-  animals: ["interest-animals-1.webp", "interest-animals-2.webp"],
-  princesses: ["interest-princesses-1.webp", "interest-princesses-2.webp"],
-  pirates: ["interest-pirates-1.webp", "interest-pirates-2.webp"],
-  magic: ["interest-magic-1.webp", "interest-magic-2.webp"],
-  "fire-engines": ["interest-fire-engines-1.webp", "interest-fire-engines-2.webp"],
-  "under-the-sea": ["interest-under-the-sea-1.webp", "interest-under-the-sea-2.webp"],
-  football: ["interest-football-1.webp", "interest-football-2.webp"],
-  diggers: ["interest-diggers-1.webp", "interest-diggers-2.webp"],
-  superheroes: ["interest-superheroes-1.webp", "interest-superheroes-2.webp"],
+  dinosaurs: ["interest-dinosaurs-1.webp", "interest-dinosaurs-2.webp", "interest-dinosaurs-3.webp"],
+  space: ["interest-space-1.webp", "interest-space-2.webp", "interest-space-3.webp"],
+  animals: ["interest-animals-1.webp", "interest-animals-2.webp", "interest-animals-3.webp"],
+  princesses: ["interest-princesses-1.webp", "interest-princesses-2.webp", "interest-princesses-3.webp"],
+  pirates: ["interest-pirates-1.webp", "interest-pirates-2.webp", "interest-pirates-3.webp"],
+  magic: ["interest-magic-1.webp", "interest-magic-2.webp", "interest-magic-3.webp"],
+  "fire-engines": ["interest-fire-engines-1.webp", "interest-fire-engines-2.webp", "interest-fire-engines-3.webp"],
+  "under-the-sea": ["interest-under-the-sea-1.webp", "interest-under-the-sea-2.webp", "interest-under-the-sea-3.webp"],
+  football: ["interest-football-1.webp", "interest-football-2.webp", "interest-football-3.webp"],
+  diggers: ["interest-diggers-1.webp", "interest-diggers-2.webp", "interest-diggers-3.webp"],
+  superheroes: ["interest-superheroes-1.webp", "interest-superheroes-2.webp", "interest-superheroes-3.webp"],
 };
 
-const MAKING_ART_VERSION = "2026100986";
+const MAKING_ART_VERSION = "2026100998";
 
 const makingArt = Array.from(document.querySelectorAll(".making-art"));
 
