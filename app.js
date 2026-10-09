@@ -3783,12 +3783,6 @@ document.querySelector("#player-dim")?.addEventListener("click", (event) => {
   trackEvent("player_dim", { on: Boolean(on) });
 });
 
-document.querySelector("#player-sleep")?.addEventListener("click", () => {
-  document.querySelector(".sleep-timer-panel")?.scrollIntoView({ behavior: "smooth", block: "center" });
-  resultScreen?.classList.remove("is-reading");
-  closeReading();
-});
-
 /* Pages, not chapters: the audio has no chapter marks, and inventing some
    would be a lie about where you are landing. The story's own pages do have
    positions, so this seeks to where a page starts as a fraction of the whole
