@@ -4164,18 +4164,455 @@ document.querySelector("#reading-next")?.addEventListener("click", () => turnPag
 document.querySelector("#reading-prev")?.addEventListener("click", () => turnPage(-1));
 
 document.querySelector("#reading-end-journey")?.addEventListener("click", () => {
-  // Calls the continuation directly. It used to click the offer's own button,
-  // which only worked while a second, invisible copy of that offer was sitting
-  // under the reveal.
-  trackEvent("journey_offer_accepted", { from: currentStory?.id || "" });
-  if (readingEnd) readingEnd.hidden = true;
-  beginStoryContinuation(currentStory);
+  // The last page hands over to the outro rather than jumping straight into a
+  // new story. Reading is left open underneath: closing the outro should put a
+  // parent back on the page they finished, not out of the book entirely.
+  offerStoryOutro("reading");
 });
 
 document.querySelector("#reading-end-done")?.addEventListener("click", () => {
+  closeReading();
+  trackEvent("story_closed", { from: "reading" });
+});
+
+/* ---- The post-story moment --------------------------------------------- */
+/* A story used to just stop. Reading mode ended on an offer that only readers
+   ever saw - finishing the audio started the rain and nothing else - and the
+   offer itself asked for a seven-night commitment while showing none of it.
+   This is the whole ending: a page that says the story is over, then, once,
+   the week it could become.
+
+   Five steps in one overlay rather than five screens. A parent closing a
+   bedtime story must be able to leave from any step with one tap, and the
+   router's history is not worth fighting for that. */
+
+const JOURNEY_ENDPOINT = resolveApiEndpoint(window.DREAMSCAPES_JOURNEY_ENDPOINT, "/api/journey");
+const JOURNEY_STORAGE_KEY = "dreamscapesJourneys";
+const JOURNEY_NIGHTS = WEEKLY_JOURNEY_LENGTH;
+
+const storyOutro = document.querySelector("#story-outro");
+const outroSteps = Array.from(document.querySelectorAll("[data-outro-step]"));
+const outroBack = document.querySelector("#outro-back");
+let outroHistory = [];
+let outroPlan = null;
+let outroOfferedFor = "";
+
+function readJourneys() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(JOURNEY_STORAGE_KEY) || "[]");
+    return Array.isArray(stored) ? stored : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeJourney(plan) {
+  if (!plan?.seriesId) return;
+  // Newest first, and a short list: a journey is seven nights, so a family
+  // that has run a dozen of them does not need the first one back.
+  const kept = [plan, ...readJourneys().filter((entry) => entry.seriesId !== plan.seriesId)].slice(0, 12);
+  try {
+    localStorage.setItem(JOURNEY_STORAGE_KEY, JSON.stringify(kept));
+  } catch {
+    /* A full quota must not take the journey down with it. */
+  }
+}
+
+function getJourneyForStory(story) {
+  if (!story?.seriesId) return null;
+  return readJourneys().find((entry) => entry.seriesId === story.seriesId) || null;
+}
+
+/* Used when the planner cannot be reached - signed out, offline, or the key is
+   missing. The nights are blander than written ones, but a parent still sees a
+   real week rather than an error, which is the whole point of the screen. */
+function buildLocalJourneyPlan(story) {
+  const who = cleanName(story?.childName) || "your child";
+  const ideas = (Array.isArray(story?.nextIdeas) ? story.nextIdeas : []).filter(Boolean);
+  const shapes = [
+    ["The floating islands", `${who} steps onto islands that drift through the clouds.`],
+    ["The starlight forest", `Every tree in the forest is lit from the inside, and one of them is waiting.`],
+    ["The friendly whale", `A whale the size of a hill offers ${who} a ride across the quiet sea.`],
+    ["The cloud city", `High above the weather there is a city where everything is soft.`],
+    ["The midnight market", `Stalls open only after dark, and they trade in nothing but kindness.`],
+    ["A special surprise", `The last night brings everyone back together for something ${who} will not expect.`],
+  ];
+  const nights = [
+    {
+      night: 1,
+      title: cleanProfileValue(story?.title) || "Tonight's adventure",
+      teaser: getStorySummary(story) || `Where it all began for ${who}.`,
+    },
+  ];
+  for (let index = 0; index < shapes.length; index += 1) {
+    const idea = ideas[index];
+    nights.push({
+      night: index + 2,
+      title: shapes[index][0],
+      teaser: idea || shapes[index][1],
+    });
+  }
+  return {
+    seriesTitle: `${who === "your child" ? "A" : `${who}'s`} Seven-Night DreamScape`,
+    nights,
+    source: "local",
+  };
+}
+
+async function requestJourneyPlan(story) {
+  const fallback = () => ({ ...buildLocalJourneyPlan(story), source: "local" });
+
+  /* Both calls are raced against a clock. getApiHeaders waits on supabase-js,
+     which can sit on its auth lock indefinitely - signed out in a browser it
+     never settles at all - and an unresolved promise here would leave a parent
+     on seven skeleton rows with nothing to tell them it had stopped. */
+  const headers = await withTimeout(getApiHeaders(), 6000, "journey_auth_timeout").catch(() => null);
+  // Planning needs an account. Signed out, the local plan is the answer: the
+  // screen is the same, the week is just less tailored.
+  if (!headers?.Authorization) return fallback();
+
+  try {
+    const response = await withTimeout(
+      fetch(JOURNEY_ENDPOINT, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          childName: story?.childName || "",
+          childAge: story?.childAge || "",
+          interests: story?.interests || "",
+          pronouns: story?.pronouns || "",
+          avoidTopics: story?.avoidTopics || "",
+          storyLanguage: story?.storyLanguage || "en-GB",
+          storyTitle: story?.title || "",
+          storySummary: getStorySummary(story) || "",
+        }),
+      }),
+      20000,
+      "journey_timeout"
+    );
+    if (!response.ok) return fallback();
+    const plan = await response.json();
+    if (!Array.isArray(plan?.nights) || plan.nights.length !== JOURNEY_NIGHTS) return fallback();
+    return { ...plan, source: "ai" };
+  } catch {
+    return fallback();
+  }
+}
+
+function journeyNightArt(story, night) {
+  // variant 0 and 1 are already spoken for by the reveal card and reading mode,
+  // so the nights start past them and each gets its own picture.
+  return revealArtFor(story, night + 1);
+}
+
+/* ---- Steps ------------------------------------------------------------- */
+
+function showOutroStep(name, { remember = true } = {}) {
+  if (!storyOutro) return;
+  const current = outroSteps.find((step) => !step.hidden)?.dataset.outroStep;
+  if (remember && current && current !== name) outroHistory.push(current);
+  outroSteps.forEach((step) => {
+    step.hidden = step.dataset.outroStep !== name;
+  });
+  if (outroBack) outroBack.hidden = outroHistory.length === 0;
+  storyOutro.scrollTop = 0;
+  document.querySelector("#outro-sheet")?.scrollTo?.({ top: 0 });
+}
+
+function openOutro(step = "end") {
+  if (!storyOutro || !currentStory) return;
+  outroHistory = [];
+  renderOutroEnd(currentStory);
+  storyOutro.hidden = false;
+  document.body.classList.add("outro-open");
+  showOutroStep(step, { remember: false });
+  trackEvent("story_outro_opened", { step });
+}
+
+function closeOutro() {
+  if (!storyOutro) return;
+  storyOutro.hidden = true;
+  document.body.classList.remove("outro-open");
+  outroHistory = [];
+}
+
+/* Not the summary. getStorySummary falls back to the story's opening two
+   paragraphs, so a closing screen would print the beginning back at a parent
+   who has just read the end - and even a good summary is a plot recap, which
+   is not what "The End" is for. This is a goodnight, picked by the story's own
+   id so reopening it says the same thing. */
+function storyGoodnight(story) {
+  const who = cleanName(story?.childName);
+  if (!who) return "Sleep well. The adventure will be here tomorrow.";
+  const lines = [
+    `${who} drifted off to sleep, dreaming of faraway places and all the adventures still to come…`,
+    `And ${who} fell asleep smiling, somewhere between this world and the next one.`,
+    `${who} closed their eyes, and the whole adventure folded itself away until tomorrow.`,
+    `The stars kept watch while ${who} slept, holding the story safe till next time.`,
+  ];
+  const key = String(getStoryIdentity(story) || story?.title || "");
+  let hash = 0;
+  for (let index = 0; index < key.length; index += 1) hash = (hash * 31 + key.charCodeAt(index)) >>> 0;
+  return lines[hash % lines.length];
+}
+
+function renderOutroEnd(story) {
+  const who = cleanName(story?.childName);
+  outroText("#outro-end-title", story?.title || "The End");
+  const art = document.querySelector("#outro-end-art");
+  if (art) art.src = revealArtFor(story, 0);
+  outroText("#outro-end-copy", storyGoodnight(story));
+  const saveLabel = document.querySelector("#outro-save-label");
+  if (saveLabel) saveLabel.textContent = isStoryFavourite(story) ? "Saved" : "Save";
+  document.querySelector("#outro-save")?.classList.toggle("is-on", isStoryFavourite(story));
+}
+
+function renderOutroOffer(story) {
+  const who = cleanName(story?.childName);
+  outroText(
+    "#outro-offer-copy",
+    who
+      ? `Continue the adventure tomorrow with a 7-night story journey for ${who}.`
+      : "Continue the adventure tomorrow with a 7-night story journey."
+  );
+  const art = document.querySelector("#outro-offer-art");
+  if (art) art.src = revealArtFor(story, 2);
+}
+
+function renderOutroPlan(plan, story) {
+  const list = document.querySelector("#outro-plan-list");
+  const who = cleanName(story?.childName);
+  outroText(
+    "#outro-plan-copy",
+    who ? `Follow ${who} and friends on a magical 7-night journey.` : "A magical 7-night journey."
+  );
+  if (!list) return;
+  if (!plan) {
+    // Skeleton rows while the planner writes the week: the shape of the answer
+    // is already on screen, so the wait reads as loading rather than nothing.
+    list.innerHTML = Array.from({ length: JOURNEY_NIGHTS })
+      .map(
+        (unused, index) => `
+        <li class="outro-night is-loading">
+          <span class="outro-night-rail" aria-hidden="true"></span>
+          <span class="outro-night-body">
+            <strong>Night ${index + 1}</strong>
+            <span class="outro-night-skeleton"></span>
+          </span>
+          <span class="outro-night-art" aria-hidden="true"></span>
+        </li>`
+      )
+      .join("");
+    return;
+  }
+  list.innerHTML = plan.nights
+    .map(
+      (night) => `
+      <li class="outro-night${night.night === 1 ? " is-first" : ""}">
+        <span class="outro-night-rail" aria-hidden="true"></span>
+        <span class="outro-night-body">
+          <strong>Night ${night.night}</strong>
+          <span>${escapeHtml(night.title)}</span>
+        </span>
+        <span class="outro-night-art"><img src="${journeyNightArt(story, night.night)}" alt="" loading="lazy" /></span>
+      </li>`
+    )
+    .join("");
+}
+
+function renderOutroReady(plan, story) {
+  const next = plan?.nights?.find((night) => night.night === 2);
+  outroText("#outro-ready-title", next ? `Night 2: ${next.title}` : "Your journey is ready");
+  const art = document.querySelector("#outro-ready-art");
+  if (art) art.src = journeyNightArt(story, 2);
+  outroText("#outro-ready-copy", next?.teaser || "");
+  const time = document.querySelector("#reminder-time")?.value || "19:00";
+  outroText(
+    "#outro-ready-note",
+    document.querySelector("#outro-remind")?.checked
+      ? `Night 2 will be ready tomorrow. We will remind you at ${outroClock(time)}.`
+      : "Night 2 will be ready tomorrow, whenever you open DreamScapes."
+  );
+}
+
+function outroClock(value) {
+  const [hour, minute] = String(value || "19:00").split(":").map(Number);
+  if (!Number.isFinite(hour)) return "bedtime";
+  const suffix = hour >= 12 ? "pm" : "am";
+  const display = hour % 12 === 0 ? 12 : hour % 12;
+  return `${display}:${String(minute || 0).padStart(2, "0")}${suffix}`;
+}
+
+function outroText(selector, value) {
+  const node = document.querySelector(selector);
+  if (node) node.textContent = value;
+}
+
+/* ---- Accepting --------------------------------------------------------- */
+
+async function startJourneyFromOutro() {
+  const story = currentStory;
+  if (!story) return;
+  showOutroStep("plan");
+  renderOutroPlan(null, story);
+  outroText("#outro-plan-note", "");
+  trackEvent("journey_plan_requested", {});
+
+  try {
+    outroPlan = await requestJourneyPlan(story);
+  } catch (error) {
+    // requestJourneyPlan already falls back on a failed call; this is the
+    // belt for anything that throws on the way there. Skeleton rows that never
+    // resolve are the one outcome this screen must not have.
+    outroPlan = { ...buildLocalJourneyPlan(story), source: "local" };
+  }
+  renderOutroPlan(outroPlan, story);
+  trackEvent("journey_plan_ready", { source: outroPlan.source });
+}
+
+async function confirmJourney() {
+  const story = currentStory;
+  if (!story || !outroPlan) return;
+
+  /* The story they have just read becomes night 1. Anything else tells a
+     parent the thing they made tonight does not count. */
+  if (!story.seriesId) story.seriesId = createStoryId();
+  story.seriesTitle = outroPlan.seriesTitle || story.seriesTitle || "";
+  story.chapterNumber = Number(story.chapterNumber) || 1;
+  story.journeyLength = JOURNEY_NIGHTS;
+  story.journeyDay = 1;
+  saveStoryToLibrary(story, { silent: true });
+
+  writeJourney({
+    seriesId: story.seriesId,
+    seriesTitle: story.seriesTitle,
+    childName: story.childName || "",
+    nights: outroPlan.nights,
+    source: outroPlan.source,
+    createdAt: new Date().toISOString(),
+  });
+
+  if (document.querySelector("#outro-remind")?.checked) {
+    try {
+      loadReminderSettings();
+      if (reminderEnabled) reminderEnabled.checked = true;
+      await saveBedtimeReminder();
+    } catch (error) {
+      outroText("#outro-plan-note", "Journey saved. Turn on notifications in Settings to be reminded.");
+    }
+  }
+
+  renderOutroReady(outroPlan, story);
+  showOutroStep("ready");
+  trackEvent("journey_started", { source: outroPlan.source, seriesId: story.seriesId });
+}
+
+/* ---- Wiring ------------------------------------------------------------ */
+
+outroBack?.addEventListener("click", () => {
+  const previous = outroHistory.pop();
+  if (!previous) return closeOutro();
+  showOutroStep(previous, { remember: false });
+  if (outroBack) outroBack.hidden = outroHistory.length === 0;
+});
+
+document.querySelector("#outro-close")?.addEventListener("click", closeOutro);
+
+document.querySelector("#outro-read-again")?.addEventListener("click", () => {
+  closeOutro();
+  if (currentStory) openReading(currentStory);
+});
+
+document.querySelector("#outro-listen-again")?.addEventListener("click", () => {
+  closeOutro();
+  if (!currentStory) return;
+  openReading(currentStory, { listen: true });
+  audioPlayButton?.click();
+});
+
+document.querySelector("#outro-save")?.addEventListener("click", async () => {
+  if (!currentStory) return;
+  await toggleStoryFavourite(currentStory);
+  renderOutroEnd(currentStory);
+});
+
+document.querySelector("#outro-share")?.addEventListener("click", () => {
+  if (currentStory) shareStoryWithFamily(currentStory);
+});
+
+document.querySelector("#outro-details")?.addEventListener("click", () => {
+  closeOutro();
+  closeReading();
+  const details = document.querySelector("#story-details");
+  if (details) {
+    details.open = true;
+    details.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+});
+
+document.querySelector("#outro-start-journey")?.addEventListener("click", () => {
+  trackEvent("journey_offer_accepted", { from: "outro" });
+  startJourneyFromOutro();
+});
+
+document.querySelector("#outro-offer-later")?.addEventListener("click", () => {
   dismissedJourneyOffer = true;
-  if (readingEnd) readingEnd.hidden = true;
-  trackEvent("journey_offer_declined", { from: "reading" });
+  trackEvent("journey_offer_declined", { from: "outro" });
+  const art = document.querySelector("#outro-decline-art");
+  if (art && currentStory) art.src = revealArtFor(currentStory, 4);
+  showOutroStep("decline");
+});
+
+document.querySelector("#outro-plan-go")?.addEventListener("click", confirmJourney);
+document.querySelector("#outro-plan-later")?.addEventListener("click", () => {
+  dismissedJourneyOffer = true;
+  trackEvent("journey_offer_declined", { from: "plan" });
+  closeOutro();
+});
+
+document.querySelector("#outro-remind")?.addEventListener("change", () => {
+  loadReminderSettings();
+  const time = document.querySelector("#reminder-time")?.value || "19:00";
+  outroText(
+    "#outro-remind-note",
+    document.querySelector("#outro-remind")?.checked
+      ? `We will nudge you at ${outroClock(time)}.`
+      : "No reminder - open DreamScapes whenever you are ready."
+  );
+});
+
+document.querySelector("#outro-ready-done")?.addEventListener("click", () => {
+  renderOutroPlan(outroPlan, currentStory);
+  showOutroStep("plan");
+});
+document.querySelector("#outro-ready-close")?.addEventListener("click", closeOutro);
+
+document.querySelector("#outro-create-another")?.addEventListener("click", () => {
+  closeOutro();
+  closeReading();
+  showScreen("builder");
+});
+document.querySelector("#outro-decline-close")?.addEventListener("click", closeOutro);
+
+/* The ending is offered once per story. A parent who said no and then replayed
+   the audio should not be asked again on the same night. */
+function offerStoryOutro(from) {
+  if (!currentStory) return;
+  const identity = getStoryIdentity(currentStory) || currentStory.title || "";
+  const alreadyAsked =
+    dismissedJourneyOffer || outroOfferedFor === identity || Boolean(currentStory.journeyLength);
+  openOutro("end");
+  const link = document.querySelector("#outro-next-link");
+  if (link) link.hidden = alreadyAsked;
+  if (!alreadyAsked) {
+    outroOfferedFor = identity;
+    renderOutroOffer(currentStory);
+  }
+  trackEvent("story_finished", { from, offered: !alreadyAsked });
+}
+
+document.querySelector("#outro-next-link")?.addEventListener("click", () => {
+  showOutroStep("offer");
 });
 
 function renderStory(story) {
@@ -5939,14 +6376,32 @@ function beginStoryContinuation(story, choice = "") {
 
   const journeyLength = Number(story.journeyLength) || null;
   const previousJourneyDay = Number(story.journeyDay) || 1;
+  const nextJourneyDay = journeyLength ? Math.min(previousJourneyDay + 1, journeyLength) : null;
+
+  /* A planned journey is a promise: the parent was shown seven named nights
+     and agreed to them. Tonight's story has to be the night they were shown,
+     not whatever the last story happened to suggest - otherwise the week on
+     the offer screen was decoration. An unplanned continuation still falls
+     back to nextIdeas, which is what every series before this used. */
+  const plannedNight = nextJourneyDay
+    ? getJourneyForStory(story)?.nights?.find((night) => night.night === nextJourneyDay)
+    : null;
+  const plannedChoice = plannedNight
+    ? [plannedNight.title, plannedNight.teaser].filter(Boolean).join(": ")
+    : "";
+
   pendingStoryContext = {
     seriesId: story.seriesId,
     seriesTitle: story.seriesTitle,
     chapterNumber: (Number(story.chapterNumber) || 1) + 1,
     continuationSummary: getStorySummary(story),
-    continuationChoice: choice || story.nextIdeas?.[0] || "A new gentle adventure begins where the last story ended.",
+    continuationChoice:
+      choice ||
+      plannedChoice ||
+      story.nextIdeas?.[0] ||
+      "A new gentle adventure begins where the last story ended.",
     journeyLength,
-    journeyDay: journeyLength ? Math.min(previousJourneyDay + 1, journeyLength) : null,
+    journeyDay: nextJourneyDay,
   };
 
   form.elements.childName.value = story.childName || "";
@@ -7537,6 +7992,13 @@ function finishAudioProgress() {
     setRainButton(true);
     trackEvent("rain_started", { from: "story_end" });
   }
+
+  /* The other half of the ending. Listeners used to get the rain and nothing
+     else - the offer lived on the last page of reading mode, which an audio
+     story never turns - so the parents most likely to be building a bedtime
+     habit were the ones never asked about one. The rain keeps running
+     underneath. */
+  offerStoryOutro("audio");
 }
 
 function getAiAudioProgress() {

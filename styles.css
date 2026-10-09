@@ -8621,3 +8621,407 @@ body.night-mode .builder-step[data-builder-step="8"] .narration-group {
     height: 38px;
   }
 }
+
+/* ---- The post-story moment --------------------------------------------- */
+/* An overlay rather than a screen. It sits above the reveal, reading mode and
+   the player all at once, so the rain can keep running and the book stays on
+   the page it finished on while the week is being offered. */
+
+.story-outro {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  align-items: end;
+  padding: calc(var(--safe-top) + 12px) 0 calc(var(--safe-bottom) + 12px);
+  background: rgba(7, 10, 36, 0.72);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  overscroll-behavior: contain;
+}
+
+/* Matches the global [hidden] guard: this element sets display, which would
+   otherwise beat the attribute and leave the overlay up for good. */
+.story-outro[hidden] {
+  display: none;
+}
+
+.outro-sheet {
+  position: relative;
+  width: min(460px, 100%);
+  max-height: 100%;
+  margin: 0 auto;
+  padding: 10px 20px calc(18px + var(--safe-bottom));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 30px 30px 0 0;
+  background: linear-gradient(180deg, #1b2360 0%, #141b4c 58%, #10163f 100%);
+  box-shadow: 0 -24px 60px rgba(4, 6, 28, 0.55);
+  color: var(--white);
+  text-align: center;
+  animation: outro-rise 0.32s cubic-bezier(0.22, 0.9, 0.3, 1) both;
+}
+
+@media (min-width: 620px) {
+  .story-outro {
+    align-items: center;
+    padding: 24px;
+  }
+
+  .outro-sheet {
+    border-radius: 30px;
+    max-height: calc(100% - 48px);
+  }
+}
+
+@keyframes outro-rise {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .outro-sheet {
+    animation: none;
+  }
+}
+
+.outro-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 34px;
+}
+
+.outro-bar .reveal-icon-button {
+  position: static;
+}
+
+.outro-back[hidden] {
+  visibility: hidden;
+  display: inline-flex;
+}
+
+.outro-step {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding-bottom: 4px;
+}
+
+.outro-step[hidden] {
+  display: none;
+}
+
+.outro-eyebrow {
+  margin: 0;
+  color: var(--gold);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.outro-title {
+  margin: 0;
+  font-size: 1.52rem;
+  line-height: 1.22;
+  font-weight: 900;
+  text-wrap: balance;
+}
+
+.outro-copy {
+  margin: 0;
+  max-width: 34ch;
+  color: rgba(226, 231, 255, 0.86);
+  font-size: 0.97rem;
+  line-height: 1.45;
+}
+
+/* An explicit height, not an aspect-ratio: an aspect-ratio box has a
+   min-content height of zero, so a short phone squeezes the picture to
+   nothing while the image itself still draws at full size. */
+.outro-art {
+  width: 100%;
+  height: clamp(118px, 21vh, 208px);
+  border-radius: 22px;
+  overflow: hidden;
+  background: rgba(10, 14, 48, 0.5);
+}
+
+.outro-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.outro-actions {
+  display: grid;
+  gap: 9px;
+  width: 100%;
+  margin-top: 2px;
+}
+
+.outro-actions .button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 54px;
+  border-radius: 26px;
+  font-size: 1.02rem;
+}
+
+.outro-actions .ghost-button {
+  min-height: 42px;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: rgba(226, 231, 255, 0.7);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.outro-actions .ghost-button:hover {
+  color: var(--white);
+}
+
+.outro-icon-row {
+  display: flex;
+  justify-content: center;
+  gap: 26px;
+  width: 100%;
+  padding-top: 2px;
+}
+
+.outro-icon-button {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  border: 0;
+  padding: 4px 2px;
+  background: none;
+  color: rgba(226, 231, 255, 0.76);
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.outro-icon-button svg {
+  width: 22px;
+  height: 22px;
+}
+
+.outro-icon-button.is-on {
+  color: var(--pink);
+}
+
+.outro-next-link {
+  border: 0;
+  padding: 6px 2px;
+  background: none;
+  color: var(--gold);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.outro-points {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+
+.outro-points li {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  align-items: center;
+  gap: 11px;
+  color: rgba(234, 238, 255, 0.92);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.outro-point-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  background: rgba(124, 142, 255, 0.24) center / 17px 17px no-repeat;
+}
+
+.outro-point-book {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23b9a6ff'%3E%3Cpath d='M12 6.6C10.2 5.1 7.7 4.6 5 4.9a1 1 0 0 0-.9 1v10.4a1 1 0 0 0 1.1 1c2.3-.25 4.5.2 6.1 1.4h1.4c1.6-1.2 3.8-1.65 6.1-1.4a1 1 0 0 0 1.1-1V5.9a1 1 0 0 0-.9-1c-2.7-.3-5.2.2-7 1.7Z'/%3E%3C/svg%3E");
+}
+
+.outro-point-moon {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238fd0ff'%3E%3Cpath d='M20 14.4A8.6 8.6 0 0 1 9.6 4 8.6 8.6 0 1 0 20 14.4Z'/%3E%3C/svg%3E");
+}
+
+.outro-point-star {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffd16a'%3E%3Cpath d='M12 2.4 14.7 9l7.1.5-5.4 4.6 1.7 6.9L12 17.2l-6.1 3.8 1.7-6.9L2.2 9.5 9.3 9Z'/%3E%3C/svg%3E");
+}
+
+.outro-point-heart {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ff9ec2'%3E%3Cpath d='M12 20.3 4.6 13a4.7 4.7 0 0 1 6.6-6.7l.8.8.8-.8A4.7 4.7 0 0 1 19.4 13Z'/%3E%3C/svg%3E");
+}
+
+.outro-point-wand {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%238ad7bd'%3E%3Cpath d='M4.6 17.9 14.2 8.3l1.5 1.5-9.6 9.6Z'/%3E%3Cpath d='M17.4 3.2l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9Z'/%3E%3C/svg%3E");
+}
+
+/* ---- The week ---------------------------------------------------------- */
+
+.outro-plan {
+  display: grid;
+  gap: 7px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+
+.outro-night {
+  position: relative;
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) 56px;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 9px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.outro-night.is-first {
+  background: rgba(255, 214, 122, 0.14);
+}
+
+/* The rail is one dot per row plus a connector drawn upward, so the line only
+   ever joins rows that exist - the list is built from whatever the planner
+   returned, and a single element behind it would hang off the last night. */
+.outro-night-rail {
+  position: relative;
+  justify-self: center;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 2px solid rgba(184, 196, 255, 0.5);
+}
+
+.outro-night.is-first .outro-night-rail {
+  border-color: var(--gold);
+  background: var(--gold);
+}
+
+.outro-night + .outro-night .outro-night-rail::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 2px);
+  width: 2px;
+  height: 13px;
+  transform: translateX(-50%);
+  background: rgba(184, 196, 255, 0.32);
+}
+
+.outro-night-body {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.outro-night-body strong {
+  color: var(--gold);
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.outro-night.is-first .outro-night-body strong::after {
+  content: " · tonight";
+  color: rgba(255, 214, 122, 0.7);
+  font-weight: 800;
+}
+
+.outro-night-body span {
+  color: rgba(226, 231, 255, 0.84);
+  font-size: 0.88rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.outro-night-art {
+  width: 56px;
+  height: 38px;
+  border-radius: 9px;
+  overflow: hidden;
+  background: rgba(10, 14, 48, 0.55);
+}
+
+.outro-night-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.outro-night-skeleton {
+  height: 11px;
+  width: 68%;
+  border-radius: 6px;
+  background: rgba(226, 231, 255, 0.14);
+}
+
+.outro-night.is-loading .outro-night-skeleton,
+.outro-night.is-loading .outro-night-art {
+  animation: outro-shimmer 1.3s ease-in-out infinite;
+}
+
+@keyframes outro-shimmer {
+  50% {
+    opacity: 0.42;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .outro-night.is-loading .outro-night-skeleton,
+  .outro-night.is-loading .outro-night-art {
+    animation: none;
+  }
+}
+
+.outro-reminder {
+  width: 100%;
+  margin-top: 2px;
+  text-align: left;
+}
+
+.outro-reminder span small {
+  display: block;
+  color: rgba(226, 231, 255, 0.64);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.outro-note {
+  margin: 0;
+  min-height: 1em;
+  color: rgba(226, 231, 255, 0.66);
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+
+/* The sheet scrolls itself; the page behind it must not. */
+body.outro-open {
+  overflow: hidden;
+}
