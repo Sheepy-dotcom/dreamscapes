@@ -3557,11 +3557,27 @@ document.querySelector("#upgrade-screen")?.addEventListener("click", (event) => 
    here - the app never sees the card - so "Manage plan" hands them straight
    to the right page rather than explaining where it is. */
 function openStoreSubscriptions() {
-  const url = isIosNativeApp()
-    ? "itms-apps://apps.apple.com/account/subscriptions"
-    : "https://play.google.com/store/account/subscriptions";
-  trackEvent("manage_plan_opened", { platform: getCapacitorPlatform() });
-  window.open(url, "_blank", "noopener");
+  const platform = getCapacitorPlatform();
+  trackEvent("manage_plan_opened", { platform });
+
+  if (platform === "ios") {
+    /* A navigation, not window.open. WKWebView ignores window.open for a
+       scheme it does not know, which is why this button did nothing at all;
+       navigating hands itms-apps:// to Capacitor, which passes it to iOS and
+       the App Store opens over the app. */
+    window.location.href = "itms-apps://apps.apple.com/account/subscriptions";
+    return;
+  }
+
+  if (platform === "android") {
+    window.open("https://play.google.com/store/account/subscriptions", "_blank", "noopener");
+    return;
+  }
+
+  /* On the website there is no way to know which store took the payment, so
+     this goes to the page that explains both rather than guessing wrong for
+     half the people who press it. */
+  window.open(`${PRODUCTION_API_BASE}/support.html#subscriptions`, "_blank", "noopener");
 }
 
 function updatePlanFeatures() {
