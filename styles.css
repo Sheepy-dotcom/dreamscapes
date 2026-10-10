@@ -9023,9 +9023,11 @@ body.outro-open {
 /* ---- Plans ------------------------------------------------------------- */
 /* The screens are full width, but a plan card is an object with edges and
    needs a margin to read as one. Scoped here so the rest stay as they are. */
+/* 15px, the same inset .top-bar uses, so the mark sits at the same x here as
+   on every other screen. */
 .upgrade-screen {
-  padding-left: clamp(16px, 4.6vw, 24px);
-  padding-right: clamp(16px, 4.6vw, 24px);
+  padding-left: 15px;
+  padding-right: 15px;
 }
 
 .plans-head {
@@ -9033,7 +9035,9 @@ body.outro-open {
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: 14px;
-  padding: 2px 0 0;
+  /* 4px against this screen's 14px, to equal the 18px the other header
+     screens start with. See the logo-button rule below. */
+  padding: 4px 0 0;
   text-align: left;
 }
 
@@ -9529,4 +9533,14 @@ body.outro-open {
   object-fit: contain;
   display: block;
   filter: drop-shadow(0 6px 14px rgba(8, 6, 34, 0.45));
+}
+
+/* The mark is the one thing on screen that does not change when you switch
+   tabs, so it must not appear to move when you do. Every header centred it
+   against its own text block - two lines on Library, three on Plans, a longer
+   one on Legal - which slid it up to 16px between screens. Pinned to the top
+   of the header instead, it lands in the same place on all of them. */
+.top-bar .logo-button,
+.plans-head .logo-button {
+  align-self: start;
 }
