@@ -1417,16 +1417,21 @@ async function renderAuthProviders() {
       slot.hidden = true;
       return;
     }
-    slot.innerHTML =
-      providers
-        .map(
-          (provider) => `
+    const buttons = providers
+      .map(
+        (provider) => `
             <button class="button provider-button ${provider.className}" data-auth-provider="${provider.id}" type="button">
               ${provider.icon}<span>${escapeHtml(provider.label)}</span>
             </button>
           `
-        )
-        .join("") + '<div class="auth-divider"><span>or use your email</span></div>';
+      )
+      .join("");
+    /* Sign-in puts Apple under the email form, so its rule reads "or" and comes
+       first. Sign-up still leads with Apple, where the divider hands over to
+       the email fields below it. */
+    const dividerFirst = slot.dataset.providerDivider === "before";
+    const divider = `<div class="auth-divider"><span>${dividerFirst ? "or" : "or use your email"}</span></div>`;
+    slot.innerHTML = dividerFirst ? divider + buttons : buttons + divider;
     slot.hidden = false;
   });
 }
@@ -1580,6 +1585,7 @@ function updateAccountUI() {
   const audioLimit = plan.audioMinutes > 0 ? `${plan.audioMinutes} min` : "Plus only";
 
   if (authSignedOut) authSignedOut.hidden = signedIn;
+  document.querySelector("#account-screen")?.classList.toggle("is-signed-out", !signedIn);
   if (authSignedIn) authSignedIn.hidden = !signedIn;
   if (authSignedIn) {
     authSignedIn.classList.toggle("plan-free", plan.key === "free");
