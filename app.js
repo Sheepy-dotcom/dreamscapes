@@ -3344,37 +3344,6 @@ function updatePlanFeatures() {
   updateDurationLocks(plan);
   keepDurationWithinPlan(plan);
   syncDurationChoiceHighlight();
-  updatePlanActionButtons(planKey);
-}
-
-function updatePlanActionButtons(planKey = getCurrentPlanKey()) {
-  const currentRank = planRanks[planKey] || 0;
-
-  document.querySelectorAll("[data-plan-preview]").forEach((button) => {
-    button.textContent = planKey === "free" ? "Current" : "Included";
-    button.disabled = planKey === "free";
-  });
-
-  document.querySelectorAll("[data-purchase-plan]").forEach((button) => {
-    const targetPlan = button.dataset.purchasePlan;
-    const targetRank = planRanks[targetPlan] || 0;
-    const targetLabel = targetPlan === "plus" ? "Plus" : "Premier";
-
-    if (targetPlan === planKey) {
-      button.textContent = "Active";
-      button.disabled = true;
-      return;
-    }
-
-    if (targetRank < currentRank) {
-      button.textContent = "Included";
-      button.disabled = true;
-      return;
-    }
-
-    button.textContent = targetLabel;
-    button.disabled = false;
-  });
 }
 
 function hidePlanAuthNotice() {
@@ -7358,22 +7327,6 @@ document.querySelectorAll("[data-sleep-minutes]").forEach((button) => {
 document.querySelector("#sleep-timer-off")?.addEventListener("click", () => {
   clearSleepTimer();
   trackEvent("sleep_timer_cleared");
-});
-
-document.querySelectorAll("[data-plan-preview]").forEach((button) => {
-  button.addEventListener("click", () => {
-    hidePlanAuthNotice();
-    const planKey = button.dataset.planPreview;
-    const onTheWeb = !isNativeMobileApp();
-    const wantsPaidPlan = planKey !== "free";
-    setPlanStoreLinksVisible(wantsPaidPlan && onTheWeb);
-    upgradeNote.textContent =
-      planKey === "free"
-        ? "Free is the active starter plan."
-        : onTheWeb
-          ? ""
-          : "Choose Premier or Plus inside the iOS and Android app.";
-  });
 });
 
 [["#plan-store-ios", "ios"], ["#plan-store-android", "android"]].forEach(([selector, store]) => {

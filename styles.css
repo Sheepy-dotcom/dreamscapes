@@ -9039,7 +9039,7 @@ body.outro-open {
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: 14px;
-  padding: 6px 0 2px;
+  padding: 2px 0 0;
   text-align: left;
 }
 
@@ -9078,7 +9078,7 @@ body.outro-open {
 }
 
 .plans-subhead {
-  margin: 22px 0 0;
+  margin: 14px 0 0;
   font-size: 1.2rem;
   font-weight: 900;
   text-align: left;
@@ -9090,9 +9090,9 @@ body.outro-open {
   position: relative;
   overflow: hidden;
   display: grid;
-  gap: 12px;
-  margin-top: 16px;
-  padding: 20px 18px 18px;
+  gap: 9px;
+  margin-top: 12px;
+  padding: 16px 16px 15px;
   border-radius: 28px;
   border: 1.5px solid rgba(255, 214, 128, 0.8);
   background: linear-gradient(152deg, #6a44b8 0%, #5a37a6 38%, #46288c 72%, #3a2178 100%);
@@ -9111,9 +9111,9 @@ body.outro-open {
    like a cloud with a slice taken out of it. */
 .hero-art {
   position: absolute;
-  top: 56px;
+  top: 46px;
   right: 4px;
-  width: 128px;
+  width: 120px;
   pointer-events: none;
   opacity: 0.92;
 }
@@ -9187,8 +9187,8 @@ body.outro-open {
   z-index: 1;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  margin: 4px 0 2px;
+  gap: 8px;
+  margin: 2px 0 0;
   padding: 0;
   list-style: none;
 }
@@ -9198,8 +9198,8 @@ body.outro-open {
   grid-template-columns: 26px minmax(0, 1fr);
   align-items: center;
   gap: 8px;
-  min-height: 62px;
-  padding: 10px 9px;
+  min-height: 56px;
+  padding: 9px 9px;
   border-radius: 18px;
   border: 1px solid rgba(255, 255, 255, 0.17);
   background: rgba(255, 255, 255, 0.09);
@@ -9230,9 +9230,9 @@ body.outro-open {
   position: relative;
   z-index: 1;
   width: 100%;
-  min-height: 54px;
-  margin-top: 4px;
-  border-radius: 27px;
+  min-height: 52px;
+  margin-top: 2px;
+  border-radius: 26px;
   font-size: 1.05rem;
   font-weight: 900;
 }
@@ -9242,16 +9242,16 @@ body.outro-open {
 .plan-others {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 13px;
-  margin-top: 13px;
+  gap: 12px;
+  margin-top: 10px;
 }
 
 .plan-card {
   display: grid;
   justify-items: center;
   align-content: start;
-  gap: 6px;
-  padding: 20px 13px 16px;
+  gap: 4px;
+  padding: 14px 12px 13px;
   border-radius: 24px;
   border: 1px solid rgba(255, 255, 255, 0.11);
   background: rgba(28, 32, 86, 0.66);
@@ -9270,9 +9270,9 @@ body.outro-open {
 .plan-card-ic {
   display: grid;
   place-items: center;
-  width: 48px;
-  height: 48px;
-  margin-bottom: 2px;
+  width: 42px;
+  height: 42px;
+  margin-bottom: 0;
 }
 
 .plan-card-ic svg {
@@ -9301,7 +9301,7 @@ body.outro-open {
 }
 
 .plan-card-meta {
-  margin: 2px 0 8px;
+  margin: 1px 0 6px;
   color: rgba(185, 196, 255, 0.72);
   font-size: 0.86rem;
   font-weight: 700;
@@ -9338,7 +9338,7 @@ body.outro-open {
 /* ---- Compare, folded away ---------------------------------------------- */
 
 .plan-compare {
-  margin-top: 18px;
+  margin-top: 14px;
   border-radius: 22px;
   border: 1px solid rgba(255, 255, 255, 0.11);
   background: rgba(28, 32, 86, 0.6);
