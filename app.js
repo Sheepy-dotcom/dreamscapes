@@ -76,7 +76,6 @@ const redeemCodeInput = document.querySelector("#redeem-code");
 const redeemStatus = document.querySelector("#redeem-status");
 const newPassword = document.querySelector("#new-password");
 const accountEmail = document.querySelector("#account-email");
-const accountCloudStatus = document.querySelector("#account-cloud-status");
 const accountPlan = document.querySelector("#account-plan");
 const accountStories = document.querySelector("#account-stories");
 const accountSavedStories = document.querySelector("#account-saved-stories");
@@ -1718,13 +1717,6 @@ function updateAccountUI() {
   const audioRow = document.querySelector("#account-audio-row");
   if (audioRow) audioRow.hidden = !signedIn || plan.audioMinutes <= 0;
   renderAccountTiles();
-  if (accountCloudStatus) {
-    accountCloudStatus.textContent = signedIn
-      ? cloudStoriesLoaded
-        ? "Cloud library connected."
-        : "Account connected. Library totals load when your cloud stories sync."
-      : "Sign in to prepare cloud saving across devices.";
-  }
   updateBuilderAccountNotice();
   if (signedIn) {
     renderStoryMemories();

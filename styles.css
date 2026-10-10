@@ -2147,12 +2147,6 @@ body.night-mode .story-path-button.active {
   grid-column: 1 / -1;
 }
 
-#account-cloud-status {
-  margin: 0 0 10px;
-  font-size: 0.84rem;
-  opacity: 0.72;
-}
-
 /* Five stats in two columns leave the last one alone on its own row; let it use
    the full width instead of sitting beside a gap. The credits stat is hidden on
    iOS, which leaves an even four, so this only applies when it is shown. */
@@ -9955,13 +9949,6 @@ body.night-mode .signin-sheet .provider-button,
 
 .usage-bar i.is-audio {
   background: linear-gradient(90deg, #b9a6ff, #8f7bff);
-}
-
-.account-cloud-note {
-  margin: 0;
-  color: rgba(185, 196, 255, 0.72);
-  font-size: 0.86rem;
-  line-height: 1.35;
 }
 
 /* ---- The four things you can do ----------------------------------------- */
