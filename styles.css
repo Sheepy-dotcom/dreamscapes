@@ -368,10 +368,14 @@ textarea:focus-visible {
   margin-top: 14px;
 }
 
+/* One size on every screen that carries it - library, plans, account,
+   sign-up, admin, legal. It was 88px here, 72px under a media query and 44px
+   on the plans screen, so the same mark changed size as you moved around. */
 .mini-logo {
-  width: 88px;
-  height: 88px;
+  width: 54px;
+  height: auto;
   object-fit: contain;
+  filter: drop-shadow(0 6px 16px rgba(255, 196, 92, 0.3));
 }
 
 .story-form {
@@ -4166,11 +4170,6 @@ body.night-mode .loading-steps span {
     flex-direction: column;
   }
 
-  .mini-logo {
-    width: 72px;
-    height: 72px;
-  }
-
   .builder-actions,
   .result-actions {
     justify-content: stretch;
@@ -4369,11 +4368,6 @@ body.night-mode .loading-steps span {
 
 .upgrade-screen .top-bar h2 {
   font-size: 1.4rem;
-}
-
-.upgrade-screen .mini-logo {
-  width: 44px;
-  height: 44px;
 }
 
 .upgrade-screen .trust-links .button {
@@ -9045,12 +9039,6 @@ body.outro-open {
 
 .plans-head .logo-button {
   padding: 0;
-}
-
-.plans-head .mini-logo {
-  width: 54px;
-  height: auto;
-  filter: drop-shadow(0 6px 16px rgba(255, 196, 92, 0.3));
 }
 
 .plans-head h2 {
