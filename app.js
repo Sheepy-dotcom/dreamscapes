@@ -66,7 +66,6 @@ const authStatus = document.querySelector("#auth-status");
 const signupForm = document.querySelector("#signup-form");
 const signupEmail = document.querySelector("#signup-email");
 const signupPassword = document.querySelector("#signup-password");
-const signupPasswordConfirm = document.querySelector("#signup-password-confirm");
 const signupStatus = document.querySelector("#signup-status");
 const authSignedOut = document.querySelector("#auth-signed-out");
 const authSignedIn = document.querySelector("#auth-signed-in");
@@ -1460,7 +1459,6 @@ function getSignupCredentials() {
   return {
     email: signupEmail?.value.trim() || "",
     password: signupPassword?.value || "",
-    passwordConfirm: signupPasswordConfirm?.value || "",
   };
 }
 
@@ -1475,12 +1473,11 @@ function validateAuthCredentials(email, password, mode = "sign-in") {
   return "";
 }
 
-function validateSignupCredentials(email, password, passwordConfirm) {
-  const validationMessage = validateAuthCredentials(email, password, "sign-up");
-  if (validationMessage) return validationMessage;
-  if (!passwordConfirm) return "Confirm your password.";
-  if (password !== passwordConfirm) return "Passwords do not match.";
-  return "";
+/* No confirm field to check any more. A typo now costs a password reset email
+   rather than a second box on the way in, which is the cheaper of the two for
+   a parent who is here to keep one story. */
+function validateSignupCredentials(email, password) {
+  return validateAuthCredentials(email, password, "sign-up");
 }
 
 function getStoryTargetSeconds(story) {
@@ -6986,8 +6983,8 @@ document.querySelector("#create-account-button")?.addEventListener("click", asyn
     return;
   }
 
-  const { email, password, passwordConfirm } = getSignupCredentials();
-  const validationMessage = validateSignupCredentials(email, password, passwordConfirm);
+  const { email, password } = getSignupCredentials();
+  const validationMessage = validateSignupCredentials(email, password);
 
   if (validationMessage) {
     setSignupStatus(validationMessage, true);
