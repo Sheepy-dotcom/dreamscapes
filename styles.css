@@ -9598,11 +9598,13 @@ body.outro-open {
 .account-screen.is-signed-out .signin-sky {
   position: relative;
   display: block;
-  /* Full bleed: the screen sits inside the shell's gutters, and the scene has
-     to escape them. */
-  width: 100vw;
-  margin-left: 50%;
-  transform: translateX(-50vw);
+  /* The screen already spans the viewport with no horizontal padding, so this
+     is full bleed on its own. It used to be 100vw with margin-left:50% and a
+     translateX(-50vw) to cancel it - two measurements against different boxes,
+     and a transform across the whole width. Focusing the email field made the
+     keyboard open and WebKit scroll the field into view, and the transformed
+     band slid sideways with it. */
+  width: 100%;
   height: min(60vw, 300px);
   overflow: hidden;
 }
@@ -10145,4 +10147,11 @@ body.night-mode .signin-sheet .provider-button,
 .account-avatar {
   width: 40px;
   height: 40px;
+}
+
+/* Nothing on this page is meant to move sideways, so nothing is allowed to.
+   clip rather than hidden: hidden would make the screen a scroll container and
+   take the sticky and fixed children with it. */
+.account-screen {
+  overflow-x: clip;
 }
