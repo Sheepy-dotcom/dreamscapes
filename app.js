@@ -4068,8 +4068,29 @@ function shrinkImageToWebp(base64Png) {
 /* Runs after the story is on screen, never before it. A parent waiting on a
    bedtime story should not also be waiting on a drawing, and a cover that
    never arrives costs them nothing - the bundled artwork is already there. */
+/* Asked once a session. Without the bucket the picture has nowhere to go, and
+   finding that out after the fact means paying for an image that is then
+   thrown away - so the question comes before the spend, not after it. */
+let artBucketReady = null;
+
+async function canStoreStoryArt() {
+  if (artBucketReady !== null) return artBucketReady;
+  if (!canUseCloudLibrary()) return false;
+  try {
+    const { error } = await supabaseClient.storage.from(ART_BUCKET).list("", { limit: 1 });
+    artBucketReady = !error;
+  } catch {
+    artBucketReady = false;
+  }
+  if (!artBucketReady) {
+    console.info("DreamScapes: story covers are off until supabase-story-art.sql has been run.");
+  }
+  return artBucketReady;
+}
+
 async function createStoryCover(story) {
   if (!story || !canUseCloudLibrary() || story.artPath) return;
+  if (!(await canStoreStoryArt())) return;
 
   try {
     const headers = await withTimeout(getApiHeaders(), 6000, "art_auth_timeout");
