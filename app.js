@@ -4531,11 +4531,13 @@ function renderOutroReady(plan, story) {
   if (art) art.src = journeyNightArt(story, 2);
   outroText("#outro-ready-copy", next?.teaser || "");
   const time = document.querySelector("#reminder-time")?.value || "19:00";
+  const reminded = document.querySelector("#outro-remind")?.checked;
+  const onThisDevice = currentUser ? "" : " It is kept on this device.";
   outroText(
     "#outro-ready-note",
-    document.querySelector("#outro-remind")?.checked
-      ? `Night 2 will be ready tomorrow. We will remind you at ${outroClock(time)}.`
-      : "Night 2 will be ready tomorrow, whenever you open DreamScapes."
+    reminded
+      ? `Night 2 will be ready tomorrow. We will remind you at ${outroClock(time)}.${onThisDevice}`
+      : `Night 2 will be ready tomorrow, whenever you open DreamScapes.${onThisDevice}`
   );
 }
 
@@ -5913,26 +5915,69 @@ function clearPendingPreview() {
   }
 }
 
-/* Arriving here from a story and arriving here from the account screen are
-   different errands, and the page should know which one it is. A parent who
-   just read a story is not here to "start an account" - they are here to keep
-   the thing they are holding, and the page says so before it asks for an
-   email. */
-function updateSignupContext() {
-  const title = document.querySelector("#signup-card-title");
-  const note = document.querySelector("#signup-card-note");
-  if (!title || !note) return;
+/* Arriving here from a story, from the Plans screen, or from the Account tab
+   are different errands, and the page should know which one it is. A parent
+   who just read a story is not here to "start an account" - they are here to
+   keep the thing they are holding, and the page says so, benefit first, before
+   it asks for an email.
+
+   Called from showScreen rather than from each route, because showScreen runs
+   last and would otherwise overwrite whatever a route had just written. The
+   route leaves its reason here instead. */
+let signupReason = "";
+
+function setSignupReason(reason) {
+  signupReason = reason || "";
+}
+
+function getSignupCopy() {
   const waiting = readPendingPreviews().length;
-  if (!waiting) {
-    title.textContent = "Start your DreamScapes account";
-    note.textContent = "Save stories, child profiles, and audio across your devices.";
-    return;
+
+  if (signupReason === "plan") {
+    return {
+      eyebrow: "Your plan",
+      title: "First, a free account",
+      cardTitle: "Your package needs somewhere to live",
+      note: "Your plan, your stories and your audio stay linked to your account, so they follow you to a new phone.",
+      action: "Create account",
+    };
   }
-  title.textContent = waiting > 1 ? `Keep ${waiting} stories` : "Keep this story";
-  note.textContent =
-    waiting > 1
-      ? `Create a free account to keep the ${waiting} stories you have made and come back to them any time.`
-      : "Create a free account to keep this story and come back to it any time.";
+
+  if (waiting) {
+    const many = waiting > 1;
+    return {
+      eyebrow: many ? "Keep your stories" : "Keep this story",
+      title: many ? `Save your ${waiting} stories?` : "Save this story?",
+      cardTitle: many ? "Create a free account to keep them" : "Create a free account to keep it",
+      note: many
+        ? `Your ${waiting} stories will be waiting in your library, on every device you sign in on. Free, and it takes a moment.`
+        : "This story will be waiting in your library, on every device you sign in on. Free, and it takes a moment.",
+      action: many ? "Save my stories" : "Save my story",
+    };
+  }
+
+  return {
+    eyebrow: "Account",
+    title: "Create Account",
+    cardTitle: "Start your DreamScapes account",
+    note: "Save stories, child profiles, and audio across your devices.",
+    action: "Create Account",
+  };
+}
+
+function updateSignupContext() {
+  const screen = document.querySelector("#signup-screen");
+  if (!screen) return;
+  const copy = getSignupCopy();
+  const set = (selector, value) => {
+    const node = screen.querySelector(selector);
+    if (node) node.textContent = value;
+  };
+  set(".top-bar .eyebrow", copy.eyebrow);
+  set("#signup-title", copy.title);
+  set("#signup-card-title", copy.cardTitle);
+  set("#signup-card-note", copy.note);
+  set("#create-account-button", copy.action);
 }
 
 // Called once a visitor signs in, so the stories that persuaded them to sign
@@ -6907,11 +6952,13 @@ document.querySelector("#open-sign-up-button")?.addEventListener("click", () => 
   if (signupEmail && email) signupEmail.value = email;
   setAuthStatus("");
   setSignupStatus("");
+  setSignupReason("");
   showScreen("signup");
 });
 
 planAuthCreateButton?.addEventListener("click", () => {
-  setSignupStatus("Create your free account, then choose your DreamScapes package.");
+  setSignupStatus("");
+  setSignupReason("plan");
   showScreen("signup");
 });
 
@@ -6921,9 +6968,10 @@ planAuthSigninButton?.addEventListener("click", () => {
 });
 
 document.querySelector("#preview-create-account-button")?.addEventListener("click", () => {
-  setSignupStatus("Create your free account and this story will be waiting in your library.");
+  setSignupStatus("");
+  setSignupReason("");
   showScreen("signup");
-  trackEvent("preview_account_create_selected");
+  trackEvent("preview_account_create_selected", { waiting: readPendingPreviews().length });
 });
 
 document.querySelector("#preview-sign-in-button")?.addEventListener("click", () => {
