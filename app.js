@@ -6506,6 +6506,14 @@ async function deleteCloudStory(story) {
 
   setStoryFavouriteFlag(story, false);
   cloudStories = cloudStories.filter((savedStory) => savedStory.cloudId !== story.cloudId);
+
+  /* The device's own copy has to go too. The library lists cloud rows merged
+     with local stories, plus any local story no cloud row matches - so deleting
+     only the row promotes the leftover copy to a local-only story and it comes
+     straight back on the next render. Delete looked like it did nothing. */
+  const remaining = getSavedStories().filter((localStory) => !matchesLocalStory(story, localStory));
+  setSavedStories(remaining);
+
   updateAccountUI();
   return true;
 }
