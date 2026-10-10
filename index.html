@@ -22,7 +22,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026101074" />
+    <link rel="stylesheet" href="./styles.css?v=2026101077" />
   </head>
   <body class="home-active night-mode">
     <svg class="art-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -231,15 +231,26 @@
           </section>
 
 
-          <section class="builder-step has-art" data-builder-step="8" data-step-sub="Add a calm voice for lights-out listening." data-step-title="Narration" aria-labelledby="builder-step-audio-title" hidden>
+          <section class="builder-step has-art" data-builder-step="8" data-step-sub="Listen together or enjoy the story hands-free." data-step-title="Narration" aria-labelledby="builder-step-audio-title" hidden>
             <div class="step-art" aria-hidden="true"><svg viewBox="0 0 200 140" focusable="false"><ellipse cx="100" cy="72" rx="80" ry="62" fill="url(#art-halo)" /><use href="#art-crescent" x="50" y="38" width="68" height="68" fill="#ffd96a" /><path d="M118 60q7 12 0 24" fill="none" stroke="#d8c6ff" stroke-width="4" stroke-linecap="round" /><path d="M130 52q13 20 0 40" fill="none" stroke="#d8c6ff" stroke-width="4" stroke-linecap="round" opacity="0.7" /><path d="M142 44q19 28 0 56" fill="none" stroke="#d8c6ff" stroke-width="4" stroke-linecap="round" opacity="0.45" /><use class="twinkle" href="#art-sparkle" x="84" y="58" width="12" height="12" fill="#fff8dc" /><use class="twinkle" href="#art-sparkle" x="36" y="28" width="11" height="11" fill="#ffd96a" /><use class="twinkle" href="#art-sparkle" x="40" y="104" width="9" height="9" fill="#d8c6ff" /><use class="twinkle" href="#art-sparkle" x="100" y="18" width="9" height="9" fill="#ffd96a" /></svg></div>
             <h3 id="builder-step-audio-title">Add narration?</h3>
             <div class="narration-group">
-              <label class="feature-toggle"><input id="audio-narration" name="audioNarration" type="checkbox" /><span><strong>Add audio narration</strong><small>Selecting audio uses DreamScapes Plus</small></span></label>
+              <div class="narration-card">
+              <label class="feature-toggle narration-toggle">
+                <span class="narration-tile" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M4.4 13.6v-1.4a7.6 7.6 0 0 1 15.2 0v1.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="2.9" y="13.2" width="4.6" height="7.2" rx="2.3" fill="currentColor"/><rect x="16.5" y="13.2" width="4.6" height="7.2" rx="2.3" fill="currentColor"/></svg></span>
+                <span class="narration-toggle-text"><strong>Add audio narration</strong><small>Included with DreamScapes Plus</small></span>
+                <input id="audio-narration" name="audioNarration" type="checkbox" />
+                <span class="narration-switch" aria-hidden="true"></span>
+              </label>
               <div class="narration-options" id="narration-options" hidden>
-              <label class="field voice-field">
-                <span>Narrated by</span>
-                <select id="voice-style" name="voiceStyle" data-sheet-select data-sheet-title="Who reads the story?">
+              <p class="narration-section">Voice</p>
+              <button class="narration-row" type="button" data-sheet-trigger-for="voice-style">
+                <span class="narration-dot" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><g fill="currentColor"><rect x="3.2" y="10" width="2.3" height="4" rx="1.15"/><rect x="7.4" y="7.2" width="2.3" height="9.6" rx="1.15"/><rect x="11.6" y="4.4" width="2.3" height="15.2" rx="1.15"/><rect x="15.8" y="7.8" width="2.3" height="8.4" rx="1.15"/><rect x="20" y="10.4" width="2.3" height="3.2" rx="1.15"/></g></svg></span>
+                <span class="narration-row-text"><span class="select-trigger-name"></span><span class="select-trigger-detail"></span></span>
+                <span class="narration-chip"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12.8l4.4 4.4L19 7.6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>Selected</span>
+              </button>
+              <span class="voice-field">
+                <select id="voice-style" name="voiceStyle" aria-label="Narrated by" data-sheet-select data-sheet-title="Who reads the story?">
                   <optgroup label="Female voices">
                     <option value="marin audition" data-detail="Light and clear">Ivy</option>
                     <option value="female calm" data-detail="Warm and friendly">Rosie</option>
@@ -252,9 +263,13 @@
                     <option value="onyx deep" data-detail="Deep and low">Gus</option>
                   </optgroup>
                 </select>
-              </label>
-              <div class="audio-settings"><button class="button secondary-button compact-button" id="voice-preview-button" type="button">Preview voice</button></div>
-              <p class="audio-note">Audio is made by a machine and can occasionally sound uneven. Try again, or email support@dreamscapes.cloud.</p>
+              </span>
+              <button class="narration-row narration-row-action" id="voice-preview-button" type="button">
+                <span class="narration-dot" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M9 6.6l8.4 5.4L9 17.4z" fill="currentColor"/></svg></span>
+                <span class="narration-row-text"><span class="narration-row-name" id="voice-preview-label">Preview voice</span></span>
+              </button>
+              <p class="audio-note">AI narration may occasionally sound uneven.</p>
+              </div>
               </div>
             </div>
           </section>
@@ -1279,6 +1294,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026101074"></script>
+    <script src="./app.js?v=2026101077"></script>
   </body>
 </html>

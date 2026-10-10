@@ -7759,9 +7759,16 @@ function getSelectedVoiceLabel() {
 
 /* The voices have names, so the button offers the one that is actually
    chosen - "Hear Willow" rather than "Preview Voice". */
+function setVoicePreviewLabel(text) {
+  // The button is a row with an icon in it, so its words live in a span -
+  // writing textContent on the button would take the icon with them.
+  const slot = document.querySelector("#voice-preview-label") || voicePreviewButton;
+  slot.textContent = text;
+}
+
 function resetVoicePreviewButton() {
   const label = getSelectedVoiceLabel();
-  voicePreviewButton.textContent = label === "selected voice" ? "Preview voice" : `Hear ${label}`;
+  setVoicePreviewLabel(label === "selected voice" ? "Preview voice" : `Hear ${label}`);
 }
 
 voiceStyle.addEventListener("change", resetVoicePreviewButton);
@@ -7770,7 +7777,7 @@ resetVoicePreviewButton();
 voicePreviewButton.addEventListener("click", async () => {
   const selectedVoiceLabel = getSelectedVoiceLabel();
   voicePreviewButton.disabled = true;
-  voicePreviewButton.textContent = `Playing ${selectedVoiceLabel}...`;
+  setVoicePreviewLabel(`Playing ${selectedVoiceLabel}...`);
   planNote.textContent = `Preparing ${selectedVoiceLabel} preview...`;
 
   try {
@@ -9335,17 +9342,24 @@ function enhanceSheetSelect(select) {
   if (!select || select.sheetTrigger) return;
   select.classList.add("is-sheet-backed");
 
-  // An overlay for the little chevron in the corner of the name box, which
-  // already looks like ours; a full control for the voice, which does not.
+  // A page can write its own trigger and mark it for this select - the
+  // narration step does, because its row carries an icon and a "Selected"
+  // chip. Anything holding .select-trigger-name / -detail is kept in step.
+  const authored = select.id ? document.querySelector(`[data-sheet-trigger-for="${select.id}"]`) : null;
+  // Otherwise: an overlay for the little chevron in the corner of the name
+  // box, which already looks like ours; a full control for anything that does
+  // not.
   const overlay = Boolean(select.closest(".field-saved"));
-  const trigger = document.createElement("button");
-  trigger.type = "button";
-  trigger.className = overlay ? "field-saved-trigger" : "select-trigger";
-  if (!overlay) {
-    trigger.innerHTML =
-      '<span class="select-trigger-text"><span class="select-trigger-name"></span><span class="select-trigger-detail"></span></span><span class="select-trigger-chevron" aria-hidden="true"></span>';
+  const trigger = authored || document.createElement("button");
+  if (!authored) {
+    trigger.type = "button";
+    trigger.className = overlay ? "field-saved-trigger" : "select-trigger";
+    if (!overlay) {
+      trigger.innerHTML =
+        '<span class="select-trigger-text"><span class="select-trigger-name"></span><span class="select-trigger-detail"></span></span><span class="select-trigger-chevron" aria-hidden="true"></span>';
+    }
+    select.insertAdjacentElement("afterend", trigger);
   }
-  select.insertAdjacentElement("afterend", trigger);
   select.sheetTrigger = trigger;
 
   trigger.addEventListener("click", (event) => {
