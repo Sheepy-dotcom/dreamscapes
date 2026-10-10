@@ -5327,6 +5327,15 @@ body.night-mode .provider-google {
   background: rgba(14, 18, 54, 0.52);
 }
 
+/* The child's name box holds four things, not three: the icon, the name, the
+   clear button and the saved-children chevron. In the three-column grid the
+   chevron dropped onto a second row as soon as a name was typed and the clear
+   button appeared beside it. */
+.field-boxed.field-has-picker {
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  gap: 10px;
+}
+
 .field-icon {
   display: grid;
   place-items: center;
