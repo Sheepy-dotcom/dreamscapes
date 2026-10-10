@@ -4226,8 +4226,45 @@ function playerTotalSeconds() {
   return getSavedAudioDurationSeconds(currentStory) || 0;
 }
 
+/* The one message that mattered - "Creating audio. This can take a moment" -
+   was being written to #status-note, which lives inside the Story details
+   accordion and is shut. So pressing play did nothing visible for the best
+   part of a minute while a parent waited at a bedside wondering whether they
+   had missed. It is said on the player now, where the press happened. */
+let playerPreparing = false;
+let playerSubBeforePreparing = "";
+
+function setPlayerPreparing(on, message = "") {
+  playerPreparing = Boolean(on);
+  // Queried here rather than held at the top: #player-sub is already a local
+  // in the function that writes the narrator line, and #player-toggle has no
+  // module-level reference at all.
+  const sub = document.querySelector("#player-sub");
+  const toggle = document.querySelector("#player-toggle");
+  storyPlayer?.classList.toggle("is-preparing", playerPreparing);
+  if (toggle) toggle.disabled = playerPreparing;
+  if (playerToggleIcon && playerPreparing) playerToggleIcon.textContent = "";
+
+  /* syncPlayerUi owns the times and the icon, not this line, so the narrator
+     credit has to be put back by whoever took it - otherwise the player reads
+     "Recording the narration" for the whole story it just finished making. */
+  if (sub) {
+    if (playerPreparing) {
+      playerSubBeforePreparing = sub.textContent;
+      sub.textContent = message;
+    } else if (playerSubBeforePreparing) {
+      sub.textContent = playerSubBeforePreparing;
+      playerSubBeforePreparing = "";
+    }
+  }
+
+  if (!playerPreparing) syncPlayerUi();
+}
+
 function syncPlayerUi() {
   if (!storyPlayer || storyPlayer.hidden) return;
+  // Nothing overwrites the waiting state while it is up.
+  if (playerPreparing) return;
   const percent = Number(audioProgress.value) || 0;
   if (playerRange && document.activeElement !== playerRange) playerRange.value = String(percent);
 
@@ -9018,6 +9055,7 @@ audioPlayButton.addEventListener("click", async () => {
     stopNarration({ clearTimer: false });
     statusNote.textContent = "Creating audio. This can take a moment...";
     narrationNote.textContent = "Creating audio";
+    setPlayerPreparing(true, "Recording the narration\u2026 this takes about a minute.");
     narrationRequestInFlight = true;
     const usedAiNarration = await startAiNarration();
     if (!usedAiNarration) startDeviceNarration();
@@ -9025,8 +9063,10 @@ audioPlayButton.addEventListener("click", async () => {
   } catch (error) {
     statusNote.textContent = getFriendlyFaultMessage(error, "Audio could not start. Try again.");
     narrationNote.textContent = "Audio not created";
+    playerSubBeforePreparing = "The narration could not be made. Press play to try again.";
   } finally {
     narrationRequestInFlight = false;
+    setPlayerPreparing(false);
   }
 });
 

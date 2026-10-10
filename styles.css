@@ -10475,3 +10475,47 @@ body.account-page-open .account-screen {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ---- Waiting for the narration ------------------------------------------ */
+/* A minute of silence after pressing play is the longest minute in the app.
+   The button stops being a button and says so. */
+
+.story-player.is-preparing .player-sub {
+  color: var(--gold);
+  font-weight: 800;
+}
+
+.story-player.is-preparing .player-play {
+  position: relative;
+  opacity: 1;
+  cursor: default;
+}
+
+.story-player.is-preparing .player-play::after {
+  content: "";
+  position: absolute;
+  inset: 22%;
+  border-radius: 50%;
+  border: 3px solid rgba(58, 39, 8, 0.28);
+  border-top-color: #3a2708;
+  animation: player-spin 760ms linear infinite;
+}
+
+@keyframes player-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .story-player.is-preparing .player-play::after {
+    animation-duration: 2.4s;
+  }
+}
+
+/* Scrubbing and skipping have nothing to move through yet. */
+.story-player.is-preparing .player-scrub,
+.story-player.is-preparing .player-skip {
+  opacity: 0.4;
+  pointer-events: none;
+}
