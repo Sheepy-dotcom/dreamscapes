@@ -10,6 +10,9 @@
     },
     "api/journey.js": {
       "maxDuration": 60
+    },
+    "api/story-image.js": {
+      "maxDuration": 60
     }
   },
   "headers": [

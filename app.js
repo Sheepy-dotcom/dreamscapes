@@ -161,6 +161,10 @@ const CLOUD_RETENTION_COLUMNS = [
   "chapter_number",
   "journey_length",
   "journey_day",
+  // Until supabase-story-art.sql runs there is no art_path column, and an
+  // insert naming one is rejected whole. Listed here so the save drops it and
+  // succeeds rather than taking the story down with the cover.
+  "art_path",
 ];
 const PRODUCTION_API_BASE = "https://www.dreamscapes.cloud";
 function resolveApiEndpoint(value, fallbackPath) {
@@ -370,6 +374,7 @@ const SUPABASE_SCRIPT_URLS = [
   "https://unpkg.com/@supabase/supabase-js@2",
 ];
 const AUDIO_BUCKET = "story-audio";
+const ART_BUCKET = "story-art";
 const AI_NARRATION_REQUEST_MAX_LENGTH = 3200;
 const AI_NARRATION_PART_TIMEOUT_MS = 120000;
 const AI_NARRATION_PART_CONCURRENCY = 2;
@@ -4013,6 +4018,113 @@ function paginateStory(story) {
 /* The artwork is the app's own, picked by the story's own id rather than at
    random: a parent who reopens a story should find the same picture waiting,
    or the story does not feel like a thing that exists. */
+const STORY_IMAGE_ENDPOINT = resolveApiEndpoint(window.DREAMSCAPES_STORY_IMAGE_ENDPOINT, "/api/story-image");
+const ART_MAX_EDGE = 768;
+
+/* Covers are kept in the same private bucket pattern as narration audio and
+   read through signed URLs, so one parent's artwork is not served to anyone
+   else. The signed URL is held for the session only; the path is what is
+   saved. */
+const signedArtUrls = new Map();
+
+async function getSignedArtUrl(path) {
+  if (!path || !canUseCloudLibrary()) return "";
+  if (signedArtUrls.has(path)) return signedArtUrls.get(path);
+  try {
+    const { data, error } = await supabaseClient.storage
+      .from(ART_BUCKET)
+      .createSignedUrl(path, 60 * 60 * 6);
+    if (error || !data?.signedUrl) return "";
+    signedArtUrls.set(path, data.signedUrl);
+    return data.signedUrl;
+  } catch {
+    return "";
+  }
+}
+
+/* 1024px of PNG is about a megabyte and a half. The card it lands on is 150px
+   tall, so it goes in at 768 as webp - a tenth of the bytes, no visible
+   difference, and the storage bill stays somewhere near the audio's. */
+function shrinkImageToWebp(base64Png) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => {
+      const scale = Math.min(1, ART_MAX_EDGE / Math.max(image.width, image.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(image.width * scale);
+      canvas.height = Math.round(image.height * scale);
+      canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(
+        (blob) => (blob ? resolve(blob) : reject(new Error("The cover could not be converted."))),
+        "image/webp",
+        0.86
+      );
+    };
+    image.onerror = () => reject(new Error("The cover could not be read."));
+    image.src = `data:image/png;base64,${base64Png}`;
+  });
+}
+
+/* Runs after the story is on screen, never before it. A parent waiting on a
+   bedtime story should not also be waiting on a drawing, and a cover that
+   never arrives costs them nothing - the bundled artwork is already there. */
+async function createStoryCover(story) {
+  if (!story || !canUseCloudLibrary() || story.artPath) return;
+
+  try {
+    const headers = await withTimeout(getApiHeaders(), 6000, "art_auth_timeout");
+    if (!headers?.Authorization) return;
+
+    const response = await withTimeout(
+      fetch(STORY_IMAGE_ENDPOINT, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          title: story.title || "",
+          summary: getStorySummary(story) || "",
+          interests: story.interests || "",
+        }),
+      }),
+      55000,
+      "art_timeout"
+    );
+    if (!response.ok) return;
+
+    const { image } = await response.json();
+    if (!image) return;
+
+    const blob = await shrinkImageToWebp(image);
+    const storyId = story.cloudId || story.id || createStoryId();
+    const path = `${currentUser.id}/${storyId}/cover.webp`;
+    const { error } = await supabaseClient.storage
+      .from(ART_BUCKET)
+      .upload(path, blob, { contentType: "image/webp", upsert: true });
+    if (error) return;
+
+    story.artPath = path;
+    await saveStoryToLibrary(story, { silent: true });
+    await paintStoryCovers();
+    trackEvent("story_cover_created", { bytes: blob.size });
+  } catch {
+    // The bundled artwork is already showing. A cover is a bonus, not a step.
+  }
+}
+
+/* Swaps the bundled artwork for the story's own wherever it is on screen. Done
+   after the fact rather than inside the render, because a signed URL is a
+   round trip and the shelf should not wait on it. */
+async function paintStoryCovers() {
+  const nodes = [...document.querySelectorAll("[data-art-path]")];
+  await Promise.all(
+    nodes.map(async (node) => {
+      const url = await getSignedArtUrl(node.dataset.artPath);
+      if (!url) return;
+      const img = node.tagName === "IMG" ? node : node.querySelector("img");
+      if (img && img.src !== url) img.src = url;
+    })
+  );
+}
+
 function revealArtFor(story, variant = 0) {
   const pool = [...MAKING_ART.adventure, ...MAKING_ART.star, ...MAKING_ART.ending];
   if (!pool.length) return "";
@@ -4969,7 +5081,12 @@ function renderStory(story) {
   const revealBadge = document.querySelector("#reveal-badge");
   if (revealBadge) revealBadge.textContent = who ? `Made just for ${who}` : "Made for you";
   const revealArt = document.querySelector("#reveal-art-image");
-  if (revealArt) revealArt.src = revealArtFor(story);
+  if (revealArt) {
+    revealArt.src = revealArtFor(story);
+    if (story.artPath) revealArt.dataset.artPath = story.artPath;
+    else delete revealArt.dataset.artPath;
+    paintStoryCovers();
+  }
   const revealSummary = document.querySelector("#reveal-summary");
   if (revealSummary) {
     const moodWords = selectedMoods.map((mood) => moodDetails[mood]?.titleWord?.toLowerCase()).filter(Boolean);
@@ -6012,6 +6129,7 @@ function storyToCloudRowFields(story) {
     voice_style: story.voiceStyle || null,
     audio_requested: Boolean(story.audioNarration),
     audio_paths: story.aiAudioPaths || [],
+    art_path: story.artPath || null,
     audio_track_durations: story.aiAudioTrackDurations || [],
     audio_duration_seconds: getSavedAudioDurationSeconds(story) || null,
     audio_generated_at: story.aiAudioGeneratedAt || null,
@@ -6050,6 +6168,7 @@ function cloudRowToStory(row) {
     ),
     aiAudioTracks: [],
     aiAudioPaths: row.audio_paths || [],
+    artPath: row.art_path || "",
     aiAudioTrackDurations: row.audio_track_durations || [],
     aiAudioDurationSeconds: row.audio_duration_seconds || 0,
     aiAudioGeneratedAt: row.audio_generated_at || "",
@@ -7778,6 +7897,10 @@ form.addEventListener("submit", async (event) => {
       renderStory(currentStory);
       await finishMakingStages();
       const savedToLibrary = await saveGeneratedStoryToLibrary(currentStory);
+      /* Not awaited. The story is already on screen and the cover takes the
+         best part of a minute; making a parent wait on it would undo the
+         point of showing the story the moment it is written. */
+      createStoryCover(currentStory);
       trackEvent("story_generated", {
         plan: selectedPlanKey,
         duration: storyData.duration,
@@ -7939,7 +8062,7 @@ async function renderLibrary() {
         <article class="library-card ${isNewStory ? "new-story" : ""} ${isFavourite ? "favourite-story" : ""}">
           <button class="library-card-open" data-library-index="${index}" type="button">
             <span class="library-card-art">
-              <img src="${revealArtFor(story, 0)}" alt="" loading="lazy" />
+              <img src="${revealArtFor(story, 0)}" alt="" loading="lazy" ${story.artPath ? `data-art-path="${escapeHtml(story.artPath)}"` : ""} />
               ${isNewest && !isNewStory ? '<span class="library-card-flag">Newest</span>' : ""}
               ${isNewStory ? '<span class="library-card-flag">Just created</span>' : ""}
             </span>
@@ -7966,6 +8089,8 @@ async function renderLibrary() {
       }
     )
     .join("");
+
+  paintStoryCovers();
 
   libraryList.querySelectorAll("[data-library-index]").forEach((button) => {
     button.addEventListener("click", () => {
