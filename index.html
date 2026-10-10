@@ -22,7 +22,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026101077" />
+    <link rel="stylesheet" href="./styles.css?v=2026101081" />
   </head>
   <body class="home-active night-mode">
     <svg class="art-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -399,7 +399,10 @@
             <img id="reading-art-image" src="" alt="" />
           </div>
           <div class="story-player" id="story-player" hidden>
-            <p class="player-sub" id="player-sub"></p>
+            <div class="player-voice">
+              <span class="player-voice-dot" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><g fill="currentColor"><rect x="3.2" y="10" width="2.3" height="4" rx="1.15"/><rect x="7.4" y="7.2" width="2.3" height="9.6" rx="1.15"/><rect x="11.6" y="4.4" width="2.3" height="15.2" rx="1.15"/><rect x="15.8" y="7.8" width="2.3" height="8.4" rx="1.15"/><rect x="20" y="10.4" width="2.3" height="3.2" rx="1.15"/></g></svg></span>
+              <p class="player-sub" id="player-sub"></p>
+            </div>
             <div class="player-scrub">
               <input id="player-range" type="range" min="0" max="100" value="0" step="1" aria-label="Position in the story" />
               <div class="player-times">
@@ -412,7 +415,7 @@
                 <span class="player-skip-num" aria-hidden="true">15</span>
               </button>
               <button class="player-play" id="player-toggle" type="button" aria-label="Play or pause">
-                <span class="player-play-icon" id="player-toggle-icon" aria-hidden="true">&#9654;</span>
+                <span class="player-play-icon" id="player-toggle-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M8 5.6a1 1 0 0 1 1.52-.85l9 6.4a1 1 0 0 1 0 1.7l-9 6.4A1 1 0 0 1 8 18.4z" fill="currentColor"/></svg></span>
               </button>
               <button class="player-skip" id="player-forward" type="button" aria-label="Forward fifteen seconds">
                 <span class="player-skip-num" aria-hidden="true">15</span>
@@ -1294,6 +1297,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026101077"></script>
+    <script src="./app.js?v=2026101081"></script>
   </body>
 </html>

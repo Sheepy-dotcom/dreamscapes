@@ -4162,6 +4162,19 @@ async function paintStoryCovers() {
   );
 }
 
+/* The story's own cover wherever we show a picture of it. The pool image is
+   what goes up first: the cover lives in private storage and needs a signed
+   URL, and on a story written before covers existed, or one whose cover is
+   still being drawn, the pool image is all there is. paintStoryCovers swaps
+   the real one in when its URL comes back. */
+function setStoryArt(img, story, variant = 0) {
+  if (!img || !story) return;
+  img.src = revealArtFor(story, variant);
+  if (story.artPath) img.dataset.artPath = story.artPath;
+  else delete img.dataset.artPath;
+  paintStoryCovers();
+}
+
 function revealArtFor(story, variant = 0) {
   const pool = [...MAKING_ART.adventure, ...MAKING_ART.star, ...MAKING_ART.ending];
   if (!pool.length) return "";
@@ -4233,6 +4246,10 @@ function renderReadingPage() {
 const storyPlayer = document.querySelector("#story-player");
 const playerRange = document.querySelector("#player-range");
 const playerToggleIcon = document.querySelector("#player-toggle-icon");
+const PLAYER_PLAY_ICON =
+  '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 5.6a1 1 0 0 1 1.52-.85l9 6.4a1 1 0 0 1 0 1.7l-9 6.4A1 1 0 0 1 8 18.4z" fill="currentColor"/></svg>';
+const PLAYER_PAUSE_ICON =
+  '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><g fill="currentColor"><rect x="6.6" y="5" width="4.3" height="14" rx="1.6"/><rect x="13.1" y="5" width="4.3" height="14" rx="1.6"/></g></svg>';
 
 function isNarrationPlaying() {
   return Boolean((currentAudio && !currentAudio.paused) || nativeAudioActive);
@@ -4259,7 +4276,7 @@ function setPlayerPreparing(on, message = "") {
   const toggle = document.querySelector("#player-toggle");
   storyPlayer?.classList.toggle("is-preparing", playerPreparing);
   if (toggle) toggle.disabled = playerPreparing;
-  if (playerToggleIcon && playerPreparing) playerToggleIcon.textContent = "";
+  if (playerToggleIcon && playerPreparing) playerToggleIcon.innerHTML = "";
 
   /* syncPlayerUi owns the times and the icon, not this line, so the narrator
      credit has to be put back by whoever took it - otherwise the player reads
@@ -4293,7 +4310,7 @@ function syncPlayerUi() {
   // bedside is actually asking about.
   if (remainingEl) remainingEl.textContent = total ? `-${formatAudioTime(Math.max(0, total - elapsed))}` : "--:--";
 
-  if (playerToggleIcon) playerToggleIcon.textContent = isNarrationPlaying() ? "\u23F8" : "\u25B6";
+  if (playerToggleIcon) playerToggleIcon.innerHTML = isNarrationPlaying() ? PLAYER_PAUSE_ICON : PLAYER_PLAY_ICON;
 }
 
 window.setInterval(() => {
@@ -4615,8 +4632,7 @@ function openReading(story, { listen = false } = {}) {
   // every story measure as a single page and then spill behind the menu.
   document.body.classList.add("reading-active");
   document.querySelector("#reading-title").textContent = story.title || "";
-  const art = document.querySelector("#reading-art-image");
-  if (art) art.src = revealArtFor(story, 1);
+  setStoryArt(document.querySelector("#reading-art-image"), story, 1);
   // The old narration panel stays in the DOM and out of sight: the player's
   // buttons forward their clicks to its buttons, which is what keeps the three
   // audio back ends behind one code path.
@@ -4876,8 +4892,7 @@ function storyGoodnight(story) {
 function renderOutroEnd(story) {
   const who = cleanName(story?.childName);
   outroText("#outro-end-title", story?.title || "The End");
-  const art = document.querySelector("#outro-end-art");
-  if (art) art.src = revealArtFor(story, 0);
+  setStoryArt(document.querySelector("#outro-end-art"), story, 0);
   outroText("#outro-end-copy", storyGoodnight(story));
   const saveLabel = document.querySelector("#outro-save-label");
   if (saveLabel) saveLabel.textContent = isStoryFavourite(story) ? "Saved" : "Save";
@@ -5154,13 +5169,7 @@ function renderStory(story) {
   const who = cleanName(story.childName);
   const revealBadge = document.querySelector("#reveal-badge");
   if (revealBadge) revealBadge.textContent = who ? `Made just for ${who}` : "Made for you";
-  const revealArt = document.querySelector("#reveal-art-image");
-  if (revealArt) {
-    revealArt.src = revealArtFor(story);
-    if (story.artPath) revealArt.dataset.artPath = story.artPath;
-    else delete revealArt.dataset.artPath;
-    paintStoryCovers();
-  }
+  setStoryArt(document.querySelector("#reveal-art-image"), story, 0);
   const revealSummary = document.querySelector("#reveal-summary");
   if (revealSummary) {
     const moodWords = selectedMoods.map((mood) => moodDetails[mood]?.titleWord?.toLowerCase()).filter(Boolean);

@@ -10535,6 +10535,13 @@ body.account-page-open .account-screen {
   font-weight: 800;
 }
 
+/* The dot goes with the line it belongs to, or half the row waits and half
+   of it does not. */
+.story-player.is-preparing .player-voice-dot {
+  color: var(--gold);
+  background: rgba(255, 212, 92, 0.16);
+}
+
 .story-player.is-preparing .player-play {
   position: relative;
   opacity: 1;
@@ -11084,4 +11091,173 @@ body.choice-sheet-open {
   .narration-row {
     transition: none;
   }
+}
+
+/* --------------------------------------------------------------------------
+   The player, brought into the same card the narration step uses, so the
+   screen a parent sets the voice on and the screen they listen on look like
+   the same app.
+-------------------------------------------------------------------------- */
+.story-player {
+  gap: 16px;
+  padding: 16px 14px 14px;
+  border: 1.5px solid rgba(132, 148, 255, 0.34);
+  border-radius: 22px;
+  background: rgba(16, 21, 58, 0.52);
+}
+
+/* Who is reading, said the way the narration step says it. */
+.player-voice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.player-voice-dot {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(124, 142, 255, 0.22);
+  color: #c3cdff;
+}
+
+.player-voice-dot svg {
+  width: 17px;
+  height: 17px;
+}
+
+.story-player .player-sub {
+  overflow: hidden;
+  color: rgba(226, 231, 255, 0.82);
+  font-size: 0.88rem;
+  font-weight: 800;
+  text-align: left;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Chips rather than bare icons, to match the rows on the narration step. */
+.player-extras {
+  gap: 7px;
+}
+
+.player-extra {
+  flex: 1 1 0;
+  min-width: 0;
+  gap: 5px;
+  border: 1.5px solid rgba(132, 148, 255, 0.28);
+  border-radius: 15px;
+  padding: 9px 4px 8px;
+  background: rgba(255, 255, 255, 0.05);
+  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+
+.player-extra:hover,
+.player-extra:focus-visible {
+  border-color: rgba(255, 212, 92, 0.5);
+  background: rgba(255, 255, 255, 0.08);
+  outline: none;
+}
+
+.player-extra[aria-pressed="true"] {
+  border-color: rgba(255, 212, 92, 0.76);
+  background: rgba(255, 212, 92, 0.14);
+  color: #ffd45c;
+}
+
+/* Lights out means lights out: the card, the voice line and the chips all go,
+   and the transport is left alone on the dark. */
+.result-screen.is-dim .player-voice,
+.result-screen.is-dim .player-extras {
+  display: none;
+}
+
+.result-screen.is-dim .story-player {
+  border-color: transparent;
+  background: none;
+}
+
+/* The play and pause marks are drawn, not typed: U+23F8 has emoji
+   presentation, and iOS painted a blue system glyph in the gold button. */
+.player-play-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+}
+
+.player-play-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   The transport. This is the one control a parent reaches for in a dark room,
+   often without looking, so it is the biggest thing on the screen and it is
+   lit like a physical button: a warm face, a highlight along the top edge, a
+   shadow under the bottom one, and a soft glow on the dark around it.
+-------------------------------------------------------------------------- */
+.player-play {
+  width: 78px;
+  height: 78px;
+  background: radial-gradient(circle at 50% 26%, #ffeeb4 0%, #ffd45c 44%, #ffa96d 100%);
+  box-shadow:
+    0 0 0 1.5px rgba(255, 238, 180, 0.46),
+    0 0 0 9px rgba(255, 176, 102, 0.09),
+    0 14px 32px rgba(255, 150, 92, 0.32),
+    inset 0 2px 3px rgba(255, 255, 255, 0.62),
+    inset 0 -5px 11px rgba(186, 92, 36, 0.2);
+  transition: transform 0.16s cubic-bezier(0.22, 0.9, 0.3, 1), box-shadow 0.16s ease;
+}
+
+.player-play:hover {
+  box-shadow:
+    0 0 0 1.5px rgba(255, 243, 200, 0.6),
+    0 0 0 11px rgba(255, 176, 102, 0.13),
+    0 16px 36px rgba(255, 150, 92, 0.38),
+    inset 0 2px 3px rgba(255, 255, 255, 0.66),
+    inset 0 -5px 11px rgba(186, 92, 36, 0.2);
+}
+
+.player-play:active {
+  transform: scale(0.95);
+  box-shadow:
+    0 0 0 1.5px rgba(255, 238, 180, 0.4),
+    0 6px 16px rgba(255, 150, 92, 0.28),
+    inset 0 3px 8px rgba(186, 92, 36, 0.3);
+}
+
+.player-play:focus-visible {
+  outline: 2px solid #ffd45c;
+  outline-offset: 6px;
+}
+
+.player-play-icon {
+  /* The play triangle is drawn right of its own centre, where the eye reads
+     it as centred in the circle. The pause bars are centred properly. */
+  color: #45290a;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.28));
+}
+
+/* The skips are secondary, so they are outlined rather than filled. */
+.player-skip {
+  border: 1.5px solid rgba(132, 148, 255, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+  transition: border-color 0.16s ease, background 0.16s ease, transform 0.16s ease;
+}
+
+.player-skip:hover,
+.player-skip:focus-visible {
+  border-color: rgba(255, 212, 92, 0.5);
+  background: rgba(255, 255, 255, 0.09);
+  outline: none;
+}
+
+.player-skip:active {
+  transform: scale(0.94);
 }
