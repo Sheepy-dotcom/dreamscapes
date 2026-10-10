@@ -1362,7 +1362,8 @@ function showScreen(name) {
   });
   if (name === "library") {
     renderLibrary().catch(() => {
-      libraryList.innerHTML = `
+      libraryList.classList.add("is-single");
+    libraryList.innerHTML = `
         <article class="library-item">
           <h3>Library needs a refresh</h3>
           <p>DreamScapes could not load your saved stories just now. Try opening the library again.</p>
@@ -7814,6 +7815,12 @@ document.querySelector("#save-story-button")?.addEventListener("click", () => {
   saveStoryToLibrary(currentStory);
 });
 
+function setLibraryCount(total) {
+  const node = document.querySelector("#library-count");
+  if (!node) return;
+  node.textContent = total === 1 ? "1 saved story" : `${total} saved stories`;
+}
+
 async function renderLibrary() {
   if (!libraryList) return;
 
@@ -7822,6 +7829,7 @@ async function renderLibrary() {
   }
 
   if (canUseCloudLibrary() && !cloudStoriesLoaded) {
+    libraryList.classList.add("is-single");
     libraryList.innerHTML = `
       <article class="library-item">
         <h3>Loading your cloud library...</h3>
@@ -7846,11 +7854,15 @@ async function renderLibrary() {
   // the merge into getAllSavedStories took its declaration with it.
   const usingCloudLibrary = canUseCloudLibrary();
   const savedStories = getAllSavedStories();
+  // Set once, where the total is first known, so every branch below - empty,
+  // filtered to nothing, or a full shelf - shows the same number.
+  setLibraryCount(savedStories.length);
   const orderedStories = sortLibraryStories(savedStories);
   const filteredStories = filterLibraryStories(orderedStories);
   const visibleStories = filteredStories.slice(0, MAX_LIBRARY_RENDER_ITEMS);
 
   if (savedStories.length === 0) {
+    libraryList.classList.add("is-single");
     libraryList.innerHTML = `
       <article class="library-item library-empty">
         <img class="library-empty-art" src="./assets/story-loading.png" alt="" />
@@ -7872,15 +7884,14 @@ async function renderLibrary() {
           : currentLibraryFilter === "series"
             ? "story series"
           : "text-only stories";
+    libraryList.classList.add("is-single");
     libraryList.innerHTML = `
       <article class="library-item">
         <h3>No ${emptyLabel} found</h3>
         <p>${currentLibraryFilter === "favourites" ? "Tap Save on a story to protect it here." : "Switch filters or create another story to add more to your library."}</p>
       </article>
     `;
-    if (libraryStatus && !libraryNotice) {
-      libraryStatus.textContent = `${savedStories.length} saved ${savedStories.length === 1 ? "story" : "stories"}.`;
-    }
+    if (libraryStatus && !libraryNotice) libraryStatus.textContent = "";
     return;
   }
 
@@ -7888,16 +7899,20 @@ async function renderLibrary() {
     // Count what is actually rendered, not what passed the filter. These used to
     // be equal only because the cloud fetch limit matched the render cap.
     const shownCount = visibleStories.length;
+    /* The total goes under the title, where it reads as a fact about the
+       library rather than a status message about this render. Only a filter
+       hiding some of them needs a sentence. */
     libraryStatus.textContent =
-      currentLibraryFilter === "favourites"
-        ? `${shownCount} saved and protected ${shownCount === 1 ? "story" : "stories"} shown from ${savedStories.length} in your library.`
-        : `${shownCount} ${shownCount === 1 ? "story" : "stories"} shown from ${savedStories.length} saved.`;
+      shownCount < savedStories.length
+        ? `${shownCount} of ${savedStories.length} shown.`
+        : "";
   }
 
   // Measured against every saved story, not just the filtered page, so the
   // badge keeps meaning when a filter or a different sort is applied.
   const newestStoryTime = savedStories.reduce((latest, item) => Math.max(latest, getStoryTimeValue(item)), 0);
 
+  libraryList.classList.remove("is-single");
   libraryList.innerHTML = visibleStories
     .map(
       (story, index) => {
@@ -7921,27 +7936,30 @@ async function renderLibrary() {
           story.journeyLength ? `Night ${Number(story.journeyDay) || 1}/${Number(story.journeyLength)}` : "",
         ].filter(Boolean);
         return `
-        <article class="library-item ${isNewStory ? "new-story" : ""} ${isFavourite ? "favourite-story" : ""}">
-          <button class="library-open-button" data-library-index="${index}" type="button">
-            <span class="library-copy">
-              <span class="library-when">
-                <span class="library-when-label">${escapeHtml(formatStoryWhen(story))}</span>
-                ${isNewest && !isNewStory ? '<span class="library-newest-badge">Newest</span>' : ""}
-                ${isNewStory ? '<span class="new-story-badge">Just created</span>' : ""}
-              </span>
-              <span class="library-title">${escapeHtml(story.title)}</span>
-              <span class="library-meta">${escapeHtml(metadata.join(" \u00B7 "))}</span>
+        <article class="library-card ${isNewStory ? "new-story" : ""} ${isFavourite ? "favourite-story" : ""}">
+          <button class="library-card-open" data-library-index="${index}" type="button">
+            <span class="library-card-art">
+              <img src="${revealArtFor(story, 0)}" alt="" loading="lazy" />
+              ${isNewest && !isNewStory ? '<span class="library-card-flag">Newest</span>' : ""}
+              ${isNewStory ? '<span class="library-card-flag">Just created</span>' : ""}
             </span>
+            <span class="library-card-title">${escapeHtml(story.title)}</span>
           </button>
-          <div class="library-actions">
-            <button class="library-icon-button favourite-button ${isFavourite ? "active" : ""}" data-favourite-index="${index}" type="button" aria-pressed="${isFavourite ? "true" : "false"}" aria-label="${isFavourite ? "Saved - tap to unsave" : "Save this story"}" title="${isFavourite ? "Saved" : "Save"}">
-              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 20.6C5.7 16.4 2.5 13.2 2.5 9.4A4.85 4.85 0 0 1 12 6.7 4.85 4.85 0 0 1 21.5 9.4C21.5 13.2 18.3 16.4 12 20.6Z"/></svg>
-            </button>
-            <button class="library-icon-button delete-button ${isFavourite ? "protected-delete-button" : ""}" data-delete-index="${index}" type="button" aria-label="${isFavourite ? "Saved story locked from deletion" : "Delete story"}" title="${isFavourite ? "Locked" : "Delete"}">
-              ${isFavourite
-                ? '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 10V7.4a5 5 0 0 1 10 0V10" fill="none" stroke="currentColor" stroke-width="2"/><rect x="4.6" y="10" width="14.8" height="10.4" rx="2.6" fill="currentColor"/></svg>'
-                : '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4.8 6.6h14.4M9.4 6.6V4.4h5.2v2.2M6.8 6.6l1 13.2h8.4l1-13.2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
-            </button>
+          <div class="library-card-foot">
+            <span class="library-card-tags">
+              <span class="library-pill">${escapeHtml(audioLabel)}</span>
+              ${storyLengthSeconds ? `<span class="library-card-time">${escapeHtml(formatAudioTime(storyLengthSeconds))}</span>` : ""}
+            </span>
+            <span class="library-card-actions">
+              <button class="library-icon-button favourite-button ${isFavourite ? "active" : ""}" data-favourite-index="${index}" type="button" aria-pressed="${isFavourite ? "true" : "false"}" aria-label="${isFavourite ? "Saved - tap to unsave" : "Save this story"}" title="${isFavourite ? "Saved" : "Save"}">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 20.6C5.7 16.4 2.5 13.2 2.5 9.4A4.85 4.85 0 0 1 12 6.7 4.85 4.85 0 0 1 21.5 9.4C21.5 13.2 18.3 16.4 12 20.6Z"/></svg>
+              </button>
+              <button class="library-icon-button delete-button ${isFavourite ? "protected-delete-button" : ""}" data-delete-index="${index}" type="button" aria-label="${isFavourite ? "Saved story locked from deletion" : "Delete story"}" title="${isFavourite ? "Locked" : "Delete"}">
+                ${isFavourite
+                  ? '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 10V7.4a5 5 0 0 1 10 0V10" fill="none" stroke="currentColor" stroke-width="2"/><rect x="4.6" y="10" width="14.8" height="10.4" rx="2.6" fill="currentColor"/></svg>'
+                  : '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4.8 6.6h14.4M9.4 6.6V4.4h5.2v2.2M6.8 6.6l1 13.2h8.4l1-13.2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>'}
+              </button>
+            </span>
           </div>
         </article>
       `;
