@@ -9505,3 +9505,40 @@ body.outro-open {
   background-size: 9px 9px, 7px 7px;
   opacity: 0.62;
 }
+
+/* ---- Painted icons ------------------------------------------------------ */
+/* The tab bar, the plan tiles and the plan cards are artwork now. The active
+   state was never a colour swap - it is opacity plus a gold glow - so it
+   carries over to images untouched, which a recolour would not have. */
+
+.tab-icon img {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  display: block;
+  opacity: 0.92;
+  transition: opacity 160ms ease, transform 160ms ease;
+  filter: drop-shadow(0 1px 5px rgba(10, 12, 44, 0.55));
+}
+
+.app-tabbar button.active .tab-icon img {
+  opacity: 1;
+  transform: translateY(-1px);
+  filter: drop-shadow(0 0 8px rgba(255, 216, 128, 0.5)) drop-shadow(0 1px 4px rgba(10, 12, 44, 0.5));
+}
+
+.plan-ic img {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 2px 5px rgba(8, 6, 34, 0.4));
+}
+
+.plan-card-ic img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 6px 14px rgba(8, 6, 34, 0.45));
+}

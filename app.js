@@ -3201,17 +3201,27 @@ async function addCloudUsage({ stories = 0, audioSeconds = 0 } = {}) {
    folded away: it is the most useful thing on the screen for the one parent in
    twenty who wants it, and the least useful for the other nineteen. */
 
+const PLAN_ICON_VERSION = "2026101021";
+
+/* Painted artwork rather than the SVG approximations of it that were here
+   before. The tile icons and the card icons are the same drawings at two
+   sizes, so a crown means the same thing wherever it appears. */
 const PLAN_ICONS = {
-  stories: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="pi-pink" d="M12 6.6C10.2 5.1 7.7 4.6 5 4.9a1 1 0 0 0-.9 1v10.4a1 1 0 0 0 1.1 1c2.3-.25 4.5.2 6.1 1.4h1.4c1.6-1.2 3.8-1.65 6.1-1.4a1 1 0 0 0 1.1-1V5.9a1 1 0 0 0-.9-1c-2.7-.3-5.2.2-7 1.7Z"/><path class="pi-gold" d="m17.9 2.4.7 1.7 1.7.7-1.7.7-.7 1.7-.7-1.7-1.7-.7 1.7-.7Z"/></svg>',
-  duration: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle class="pi-stroke-lilac" cx="12" cy="12" r="8.6"/><path class="pi-stroke-lilac" d="M12 7.2V12l3.4 2"/></svg>',
-  audio: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="pi-stroke-mint" d="M4.4 15v-2.6a7.6 7.6 0 0 1 15.2 0V15"/><rect class="pi-mint" x="2.6" y="14" width="4.6" height="6.4" rx="2.3"/><rect class="pi-mint" x="16.8" y="14" width="4.6" height="6.4" rx="2.3"/></svg>',
-  minutes: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><g class="pi-gold-fill"><rect x="3" y="10" width="2.4" height="4" rx="1.2"/><rect x="7.2" y="7.4" width="2.4" height="9.2" rx="1.2"/><rect x="11.4" y="4.6" width="2.4" height="14.8" rx="1.2"/><rect x="15.6" y="7.4" width="2.4" height="9.2" rx="1.2"/><rect x="19.8" y="10" width="2.4" height="4" rx="1.2"/></g></svg>',
-  saved: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="pi-pink" d="M12 20.3 4.6 13a4.7 4.7 0 0 1 6.6-6.7l.8.8.8-.8A4.7 4.7 0 0 1 19.4 13Z"/></svg>',
-  text: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect class="pi-lilac" x="4.4" y="3.2" width="15.2" height="17.6" rx="2.4"/><g class="pi-ink"><rect x="7.4" y="7.2" width="9.2" height="1.7" rx=".85"/><rect x="7.4" y="11" width="9.2" height="1.7" rx=".85"/><rect x="7.4" y="14.8" width="5.6" height="1.7" rx=".85"/></g></svg>',
-  free: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="pi-sky" d="M6.6 17.6a4 4 0 0 1-.5-8 5.5 5.5 0 0 1 10.6-1.1 3.6 3.6 0 0 1 .5 7.1Z"/><path class="pi-gold" d="m19.4 3.4.6 1.5 1.5.6-1.5.6-.6 1.5-.6-1.5-1.5-.6 1.5-.6Z"/></svg>',
-  premier: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="pi-gold-fill" d="M3.4 8.2 7.5 11l4.5-5.6L16.5 11l4.1-2.8-1.6 10H5Z"/><circle class="pi-gold-fill" cx="12" cy="3.6" r="1.5"/></svg>',
-  plus: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="pi-gold-fill" d="M20.4 14.6A8.8 8.8 0 0 1 9.4 3.6a8.8 8.8 0 1 0 11 11Z"/><path class="pi-gold-fill" d="m18.6 2.6.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7Z"/></svg>',
+  stories: "plan-ic-stories",
+  duration: "plan-ic-duration",
+  audio: "plan-ic-audio",
+  minutes: "plan-ic-minutes",
+  text: "plan-ic-text",
+  saved: "plan-ic-saved",
+  free: "plan-card-free",
+  premier: "plan-card-premier",
+  plus: "plan-card-plus",
 };
+
+function planIcon(name) {
+  const file = PLAN_ICONS[name];
+  return file ? `<img src="./assets/${file}.webp?v=${PLAN_ICON_VERSION}" alt="" />` : "";
+}
 
 /* Always four tiles, so the three cards line up however different the plans
    are. A plan with no audio spends its last two on what it does have. */
@@ -3265,7 +3275,7 @@ function renderPlansScreen() {
         ${planFeatureTiles(plan)
           .map(
             (tile) =>
-              `<li><span class="plan-ic">${PLAN_ICONS[tile.icon]}</span><span>${escapeHtml(tile.label)}</span></li>`
+              `<li><span class="plan-ic">${planIcon(tile.icon)}</span><span>${escapeHtml(tile.label)}</span></li>`
           )
           .join("")}
       </ul>
@@ -3287,7 +3297,7 @@ function renderPlansScreen() {
         : `<button class="button primary-button plan-card-action" data-purchase-plan="${key}" type="button">Upgrade</button>`;
       return `
         <div class="plan-card plan-card-${key}">
-          <span class="plan-card-ic" aria-hidden="true">${PLAN_ICONS[key] || ""}</span>
+          <span class="plan-card-ic" aria-hidden="true">${planIcon(key)}</span>
           <h4>${escapeHtml(other.label.replace("DreamScapes ", ""))}</h4>
           <p class="plan-card-price">${planPriceMarkup(other)}</p>
           <p class="plan-card-meta">${other.monthlyStories} stories &#183; ${other.maxDuration} min</p>
