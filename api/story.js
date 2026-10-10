@@ -308,13 +308,33 @@ function buildPrompt(data, section = null) {
       ])} for ${childLabel} every time, and never any other pronoun for them.`
     : `Child pronouns: not given. If ${childLabel} is a name whose gender is unmistakable to you, use the matching pronouns consistently. If it is unisex, unfamiliar, a nickname, or one you are at all unsure of, do not guess: refer to ${childLabel} by name or use they/them, and keep gendered words out of the description (no boy, girl, son, daughter, lad, lass, prince or princess for ${childLabel}). A wrong guess is far worse here than a neutral story.`;
 
+  /* Only the fields a parent actually filled in. Most stories are made from
+     the first screen alone, so the rest used to arrive as ten lines of
+     "none selected" and "not specified" - a fifth of the prompt saying
+     nothing, competing for attention with the interests and the idea, which
+     are the whole point. A field that was left blank is simply not mentioned. */
+  const optional = [
+    data.occasion && `Special occasion or life moment: ${cleanText(data.occasion)}.`,
+    data.recurringCharacters && `Recurring story characters: ${cleanText(data.recurringCharacters)}.`,
+    data.seriesTitle && `Series title: ${cleanText(data.seriesTitle)}, chapter ${cleanText(data.chapterNumber, "1")}.`,
+    data.continuationSummary && `Previous adventure: ${cleanText(data.continuationSummary)}`,
+    data.continuationChoice && `Chosen direction for this chapter: ${cleanText(data.continuationChoice)}.`,
+    data.journeyLength &&
+      `Seven-night journey progress: night ${cleanText(data.journeyDay, "1")} of ${cleanText(data.journeyLength, "7")}.`,
+    childProfileSummary.length && `Selected child profile details: ${childProfileSummary.join(" | ")}.`,
+    data.friends && `Friends who may appear naturally: ${cleanText(data.friends)}.`,
+    data.avoidTopics && `Topics to avoid: ${cleanText(data.avoidTopics)}.`,
+    data.preferredLesson && `Preferred lesson: ${cleanText(data.preferredLesson)}.`,
+    data.calmMode && "Bedtime calm mode: on. Keep the whole story especially still and quiet.",
+  ].filter(Boolean);
+
   return [
     `Write a polished, imaginative children's ${storyType}.`,
     `Story language: ${language.prompt}.`,
     `Child name: ${cleanText(data.childName, "the child")}.`,
     pronounRule,
     `Child age: ${cleanText(data.childAge, "not specified; use language suitable for a young child")}.`,
-    `Child interests: ${interests || "not specified"}.`,
+    interests ? `Child interests: ${interests}.` : null,
     `Target duration: ${cleanText(data.duration, "5")} minutes of calm narrated audio.`,
     `Word count target: ${target.words} words. Acceptable range: ${target.minWords}-${target.maxWords} words.`,
     // Measured: without this the model writes about 30% over the target, which
@@ -325,18 +345,7 @@ function buildPrompt(data, section = null) {
     "Timing rule: the selected duration is for slow narrated audio, so the story must be long enough when read aloud calmly with pauses.",
     `Mood blend: ${moods.length ? moods.join(", ") : "relaxing"}.`,
     `Story idea from parent: ${storyIdea}.`,
-    `Special occasion or life moment: ${cleanText(data.occasion, "none selected")}.`,
-    `Recurring story characters: ${cleanText(data.recurringCharacters, "none selected")}.`,
-    `Series title: ${cleanText(data.seriesTitle, "new standalone story")}.`,
-    `Series chapter: ${cleanText(data.chapterNumber, "1")}.`,
-    `Previous adventure: ${cleanText(data.continuationSummary, "none; begin a fresh adventure")}.`,
-    `Chosen direction for this chapter: ${cleanText(data.continuationChoice, "follow the parent's story idea")}.`,
-    `Seven-night journey progress: ${data.journeyLength ? `night ${cleanText(data.journeyDay, "1")} of ${cleanText(data.journeyLength, "7")}` : "not part of a journey"}.`,
-    `Selected child profile details: ${childProfileSummary.length ? childProfileSummary.join(" | ") : "not selected"}.`,
-    `Friends who may appear naturally: ${cleanText(data.friends, "not specified")}.`,
-    `Topics to avoid: ${cleanText(data.avoidTopics, "none specified")}.`,
-    `Preferred lesson: ${cleanText(data.preferredLesson, "a gentle moral that fits naturally")}.`,
-    `Bedtime calm mode: ${data.calmMode ? "yes" : "no"}.`,
+    ...optional,
     "",
     "Quality requirements:",
     "- Make it feel like a real children's story, not a template.",
@@ -354,17 +363,31 @@ function buildPrompt(data, section = null) {
     "- Use warm, sensory, magical language with clear scenes and character moments.",
     "- Keep it age-appropriate, safe, non-frightening, and parent-friendly.",
     "- Give the child small choices, feelings, and discoveries.",
-    "- If interests are given, build the story around them. They should shape the setting, the characters, or the problem to solve, and be recognisable from the first paragraph. A passing mention is not enough - a child who loves dinosaurs should get a story about dinosaurs, not a generic adventure with one dinosaur in it.",
-    "- If friends are provided, include them naturally only when it suits the story. Do not force every friend into every scene.",
-    "- Use selected profile details naturally where helpful, but do not list physical details awkwardly or make appearance the focus.",
-    "- If multiple child profiles are selected, include each child as an important character and give each a kind moment.",
+    // Each of these only makes sense when the matching field was filled in.
+    // Left in unconditionally they are instructions about nothing, which is
+    // how "do not force every friend into every scene" ends up in a prompt
+    // that was never given a friend.
+    interests
+      ? "- Build the story around the child's interests. They should shape the setting, the characters, or the problem to solve, and be recognisable from the first paragraph. A passing mention is not enough - a child who loves dinosaurs should get a story about dinosaurs, not a generic adventure with one dinosaur in it."
+      : null,
+    data.friends
+      ? "- Include the named friends naturally, only where it suits the story. Do not force every friend into every scene."
+      : null,
+    childProfileSummary.length
+      ? "- Use the profile details naturally where helpful, but do not list physical details awkwardly or make appearance the focus."
+      : null,
+    childProfileSummary.length > 1
+      ? "- Include each named child as an important character and give each a kind moment."
+      : null,
     "- Use short, gentle sentences with frequent natural pauses between phrases for bedtime narration.",
     section
       ? `- Write part ${section.index + 1} of ${section.count} only. Write the whole of this part and nothing beyond it.`
       : "- Do not finish early. The story should feel complete and should land inside the requested word range, especially for 20 and 30 minute stories.",
     "- Longer durations must include more complete scenes, not just longer sentences.",
     "- Include a positive ending and a gentle lesson without sounding preachy.",
-    "- If this continues a series, preserve established characters and warmly acknowledge what happened before without repeating the previous story.",
+    data.seriesTitle || data.continuationSummary
+      ? "- This continues a series: preserve established characters and warmly acknowledge what happened before without repeating the previous story."
+      : null,
     section && section.index < section.count - 1
       ? "- Do NOT end the story. This is one part of a longer story and another part follows, so stop at a natural moment mid-adventure with something still to come. Put two ideas in nextIdeas anyway; they are ignored until the last part."
       : "- End the main story peacefully and completely, then provide two short, child-friendly ideas for a possible next adventure in the JSON nextIdeas field.",
@@ -394,7 +417,9 @@ function buildPrompt(data, section = null) {
           "Return the summary field as a synopsis of what has happened so far; the next part is given it and nothing else.",
         ]
       : []),
-  ].join("\n");
+  ]
+    .filter((line) => line !== null)
+    .join("\n");
 }
 
 function buildExpansionPrompt(data, story) {
@@ -423,6 +448,34 @@ function buildExpansionPrompt(data, story) {
     "Existing story JSON:",
     JSON.stringify({ title: story.title, summary: story.summary, paragraphs: story.paragraphs }, null, 2),
   ].join("\n");
+}
+
+/* Models hand back titles wrapped in quotation marks often enough to matter,
+   and a library card reading "The Quarry at Dusk" with the quotes showing
+   looks like a mistake. Asking in the prompt is not reliable for formatting,
+   so it is stripped here instead, where it cannot come back. Quotes inside a
+   title are left alone - only a matched pair around the whole thing goes. */
+const TITLE_QUOTE_PAIRS = [
+  ['"', '"'],
+  ["\u201c", "\u201d"],
+  ["'", "'"],
+  ["\u2018", "\u2019"],
+  ["\u00ab", "\u00bb"],
+];
+
+function cleanStoryTitle(value, fallback) {
+  let title = cleanText(value, fallback);
+  let stripped = true;
+  while (stripped) {
+    stripped = false;
+    for (const [open, close] of TITLE_QUOTE_PAIRS) {
+      if (title.length > 2 && title.startsWith(open) && title.endsWith(close)) {
+        title = title.slice(open.length, -close.length).trim();
+        stripped = true;
+      }
+    }
+  }
+  return title || cleanText(fallback);
 }
 
 function countWords(paragraphs) {
@@ -630,7 +683,7 @@ async function requestStoryWithPrompt(data, prompt, maxWordsOverride = 0) {
     }
 
     return {
-      title: cleanText(story.title, "A DreamScapes Story"),
+      title: cleanStoryTitle(story.title, "A DreamScapes Story"),
       summary: cleanText(story.summary),
       nextIdeas: cleanList(story.nextIdeas).slice(0, 2),
       paragraphs,
@@ -801,3 +854,10 @@ module.exports.requestStory = requestStory;
 module.exports.createStory = createStory;
 module.exports.createStorySection = createStorySection;
 module.exports.getSectionCount = getSectionCount;
+
+// Exported so the prompt can be read without spending a story on it:
+//   node -e 'console.log(require("./api/story.js").buildPrompt({childName:"Arthur",duration:"5"}))'
+// Worth doing before changing any of the rules above - several of them exist
+// because of a measured failure and are easy to undo by accident.
+module.exports.buildPrompt = buildPrompt;
+module.exports.storySchema = storySchema;
