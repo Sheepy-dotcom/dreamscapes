@@ -83,6 +83,7 @@ const accountSavedStories = document.querySelector("#account-saved-stories");
 const accountAudio = document.querySelector("#account-audio");
 const accountAudioCreditStat = document.querySelector("#account-audio-credit-stat");
 const accountAudioCredits = document.querySelector("#account-audio-credits");
+const accountActions = document.querySelector("#account-actions");
 const deleteAccountButton = document.querySelector("#delete-account-button");
 const deleteAccountStatus = document.querySelector("#delete-account-status");
 const openAdminButton = document.querySelector("#open-admin-button");
@@ -1198,6 +1199,65 @@ function updateWelcomeOffer() {
   if (welcomeOffer) welcomeOffer.hidden = Boolean(currentUser);
 }
 
+/* The four (or five) things a parent can actually do with their account, as a
+   grid rather than a column of closed accordions. The tiles are written from
+   the sections themselves, so one that is hidden for this account - redeem
+   codes without the entitlement, say - has no tile either, and a section can
+   never be advertised and then not be there. */
+const ACCOUNT_SECTIONS = [
+  { id: "child-profiles-card", label: "Child profiles", note: "Manage your children's profiles", icon: "acct-ic-profiles" },
+  { id: "story-memories-card", label: "Story memories", note: "Revisit your favourite stories", icon: "acct-ic-memories" },
+  { id: "story-settings-card", label: "Story settings", note: "Customise the story experience", icon: "acct-ic-settings" },
+  { id: "reminder-card", label: "Bedtime reminder", note: "Set a reminder for story time", icon: "acct-ic-reminder" },
+  { id: "redeem-card", label: "Redeem code", note: "Add audio credits to your account", icon: "acct-ic-redeem" },
+];
+
+function renderAccountTiles() {
+  const grid = document.querySelector("#account-tiles");
+  if (!grid) return;
+  const available = ACCOUNT_SECTIONS.filter((section) => {
+    const node = document.querySelector(`#${section.id}`);
+    return node && !node.hidden;
+  });
+  grid.hidden = available.length === 0;
+  grid.innerHTML = available
+    .map(
+      (section) => `
+      <button class="account-tile" type="button" data-account-section="${section.id}">
+        <span class="account-tile-ic" aria-hidden="true"><img src="./assets/${section.icon}.webp?v=${PLAN_ICON_VERSION}" alt="" /></span>
+        <span class="account-tile-head"><strong>${escapeHtml(section.label)}</strong><span class="account-tile-chev" aria-hidden="true"></span></span>
+        <span class="account-tile-note">${escapeHtml(section.note)}</span>
+      </button>`
+    )
+    .join("");
+}
+
+/* A tile opens its section and leaves the others shut, so the page stays the
+   length of one answer rather than five. */
+document.querySelector("#account-screen")?.addEventListener("click", (event) => {
+  const tile = event.target.closest("[data-account-section]");
+  if (!tile) return;
+  const target = document.querySelector(`#${tile.dataset.accountSection}`);
+  if (!target) return;
+  const wasOpen = target.open;
+  ACCOUNT_SECTIONS.forEach((section) => {
+    const node = document.querySelector(`#${section.id}`);
+    if (node) node.open = false;
+  });
+  target.open = !wasOpen;
+  document.querySelectorAll(".account-tile").forEach((node) => {
+    node.classList.toggle("is-open", node === tile && target.open);
+  });
+  if (target.open) target.scrollIntoView({ behavior: "smooth", block: "start" });
+});
+
+function setUsageBar(selector, used, limit) {
+  const bar = document.querySelector(selector);
+  if (!bar) return;
+  const share = limit > 0 ? Math.min(1, Math.max(0, used / limit)) : 0;
+  bar.style.width = `${Math.round(share * 100)}%`;
+}
+
 function updateBuilderAccountNotice() {
   // Signed-out visitors get real stories before being asked for anything, so
   // there is no gate here any more. The panel that used to cover the form has
@@ -1643,11 +1703,21 @@ function updateAccountUI() {
   if (accountEmail) accountEmail.textContent = currentUser?.email || "";
   if (accountPlan) accountPlan.textContent = plan.label;
   if (accountStories) accountStories.textContent = `${storiesUsed}/${plan.monthlyStories}`;
-  if (accountSavedStories) accountSavedStories.textContent = `${stories.length}/${plan.savedLimit}`;
+  if (accountSavedStories) accountSavedStories.textContent = String(stories.length);
   if (accountAudio) accountAudio.textContent = `${audioUsedLabel} / ${audioLimit}`;
-  if (accountAudioCreditStat) accountAudioCreditStat.hidden = !canUseRedeemCodes();
+  if (accountAudioCreditStat) accountAudioCreditStat.hidden = !signedIn || !canUseRedeemCodes();
   if (accountAudioCredits) accountAudioCredits.textContent = String(signedIn ? getAudioStoryCredits() : 0);
   if (openAdminButton) openAdminButton.hidden = !isCurrentUserAdmin();
+  if (accountActions) accountActions.hidden = !signedIn;
+
+  /* A bar is only honest where there is a ceiling to be a fraction of. The
+     audio row goes entirely for a plan with no narration, rather than showing
+     a full bar over nothing. */
+  setUsageBar("#account-stories-bar", storiesUsed, plan.monthlyStories);
+  setUsageBar("#account-audio-bar", getAudioSecondsUsed() / 60, plan.audioMinutes);
+  const audioRow = document.querySelector("#account-audio-row");
+  if (audioRow) audioRow.hidden = !signedIn || plan.audioMinutes <= 0;
+  renderAccountTiles();
   if (accountCloudStatus) {
     accountCloudStatus.textContent = signedIn
       ? cloudStoriesLoaded
