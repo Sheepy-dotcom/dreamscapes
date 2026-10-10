@@ -10142,3 +10142,85 @@ body.night-mode .signin-sheet .provider-button,
 .account-screen {
   overflow-x: clip;
 }
+
+/* ---- A section as its own page ------------------------------------------ */
+/* Sits above the account screen and below the tab bar, which stays reachable:
+   this is a page pushed on top, not a screen change. */
+
+.account-page {
+  position: fixed;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  background: linear-gradient(180deg, #141c4e 0%, #101841 60%, #0d1338 100%);
+  transform: translateX(100%);
+  transition: transform 300ms cubic-bezier(0.22, 0.9, 0.3, 1);
+  will-change: transform;
+}
+
+.account-page[hidden] {
+  display: none;
+}
+
+.account-page.is-open {
+  transform: none;
+  box-shadow: -18px 0 46px rgba(4, 6, 28, 0.5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .account-page {
+    transition: none;
+  }
+}
+
+.account-page-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: calc(var(--safe-top) + 14px) 16px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.account-page-bar h3 {
+  margin: 0;
+  font-size: 1.24rem;
+  font-weight: 900;
+}
+
+.account-page-back {
+  position: static;
+  flex: 0 0 auto;
+}
+
+.account-page-body {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px 15px calc(104px + var(--safe-bottom));
+}
+
+/* Inside the page the section is just its content: the page bar already says
+   which one it is, so the summary row and the card's own frame come off. */
+.account-page-body .account-section {
+  margin: 0;
+  border: 0;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.account-page-body .account-section > summary {
+  display: none;
+}
+
+/* The account screen does not scroll behind the page. */
+body.account-page-open .account-screen {
+  overflow: hidden;
+}
+
+/* The sections exist only as pages now. Left in the flow they showed as a
+   column of summary rows under the tiles, saying the same four things twice.
+   Scoped to the grid, so the one moved into the page still shows. */
+.account-screen .auth-grid > .account-section {
+  display: none;
+}

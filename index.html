@@ -806,6 +806,20 @@
                section that is hidden for this account has no tile either. -->
           <div class="account-tiles" id="account-tiles" hidden></div>
 
+          <!-- A section opens as its own page over the account rather than
+               unfolding underneath it. The chosen <details> is moved in here
+               and put back on the way out, so its fields keep the listeners
+               they were given when the screen was built. -->
+          <div class="account-page" id="account-page" aria-hidden="true">
+            <div class="account-page-bar">
+              <button class="reveal-icon-button account-page-back" id="account-page-back" type="button" aria-label="Back to account">
+                <span aria-hidden="true">&#8249;</span>
+              </button>
+              <h3 id="account-page-title"></h3>
+            </div>
+            <div class="account-page-body" id="account-page-body"></div>
+          </div>
+
           <div class="account-actions" id="account-actions" hidden>
             <button class="button primary-button account-open-library" data-screen-target="library" type="button">
               <svg class="ui-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 6.6C10.2 5.1 7.7 4.6 5 4.9a1 1 0 0 0-.9 1v10.4a1 1 0 0 0 1.1 1c2.3-.25 4.5.2 6.1 1.4h1.4c1.6-1.2 3.8-1.65 6.1-1.4a1 1 0 0 0 1.1-1V5.9a1 1 0 0 0-.9-1c-2.7-.3-5.2.2-7 1.7Z" fill="currentColor"/></svg>
@@ -1264,6 +1278,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026101049"></script>
+    <script src="./app.js?v=2026101054"></script>
   </body>
 </html>

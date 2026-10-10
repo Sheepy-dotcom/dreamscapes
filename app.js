@@ -1231,24 +1231,74 @@ function renderAccountTiles() {
     .join("");
 }
 
-/* A tile opens its section and leaves the others shut, so the page stays the
-   length of one answer rather than five. */
+/* A tile opens its section as a page of its own, sliding in from the right,
+   rather than unfolding under the grid and pushing everything else down. The
+   <details> is moved into the page and put back where it was on the way out,
+   which keeps every listener its fields were given when the screen was built -
+   moving a node does not detach them, rebuilding it would. */
+let openAccountSectionEl = null;
+let accountSectionSlot = null;
+
+function openAccountSection(sectionId) {
+  const section = document.querySelector(`#${sectionId}`);
+  const page = document.querySelector("#account-page");
+  const body = document.querySelector("#account-page-body");
+  if (!section || !page || !body) return;
+  if (openAccountSectionEl) closeAccountPage();
+
+  const meta = ACCOUNT_SECTIONS.find((entry) => entry.id === sectionId);
+  const title = document.querySelector("#account-page-title");
+  if (title) title.textContent = meta?.label || "";
+
+  accountSectionSlot = document.createComment("account-section");
+  section.parentNode.insertBefore(accountSectionSlot, section);
+  body.appendChild(section);
+  section.open = true;
+  openAccountSectionEl = section;
+
+  page.hidden = false;
+  page.setAttribute("aria-hidden", "false");
+  /* Read a layout property to flush the style change, so the transition has a
+     closed position to start from. requestAnimationFrame would do the same
+     job, but it is throttled when the view is not painting and the page then
+     sits off-screen until the callback finally runs. */
+  void page.offsetWidth;
+  page.classList.add("is-open");
+  document.body.classList.add("account-page-open");
+  body.scrollTop = 0;
+  trackEvent("account_section_opened", { section: sectionId });
+}
+
+function closeAccountPage() {
+  const page = document.querySelector("#account-page");
+  if (!page || !openAccountSectionEl) return;
+  const section = openAccountSectionEl;
+
+  section.open = false;
+  if (accountSectionSlot?.parentNode) {
+    accountSectionSlot.parentNode.insertBefore(section, accountSectionSlot);
+    accountSectionSlot.remove();
+  }
+  accountSectionSlot = null;
+  openAccountSectionEl = null;
+
+  page.classList.remove("is-open");
+  page.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("account-page-open");
+  document.querySelectorAll(".account-tile").forEach((tile) => tile.classList.remove("is-open"));
+  // Out of the way only once it has finished sliding out.
+  window.setTimeout(() => {
+    if (!page.classList.contains("is-open")) page.hidden = true;
+  }, 320);
+}
+
 document.querySelector("#account-screen")?.addEventListener("click", (event) => {
   const tile = event.target.closest("[data-account-section]");
   if (!tile) return;
-  const target = document.querySelector(`#${tile.dataset.accountSection}`);
-  if (!target) return;
-  const wasOpen = target.open;
-  ACCOUNT_SECTIONS.forEach((section) => {
-    const node = document.querySelector(`#${section.id}`);
-    if (node) node.open = false;
-  });
-  target.open = !wasOpen;
-  document.querySelectorAll(".account-tile").forEach((node) => {
-    node.classList.toggle("is-open", node === tile && target.open);
-  });
-  if (target.open) target.scrollIntoView({ behavior: "smooth", block: "start" });
+  openAccountSection(tile.dataset.accountSection);
 });
+
+document.querySelector("#account-page-back")?.addEventListener("click", closeAccountPage);
 
 function setUsageBar(selector, used, limit) {
   const bar = document.querySelector(selector);
@@ -1323,6 +1373,7 @@ function showScreen(name) {
   if (name === "account") refreshAccountSummary();
   if (name === "admin") loadAdminDashboard();
   if (name === "loading") startLoadingMessages();
+  if (name !== "account") closeAccountPage();
   if (name === "signup") updateSignupContext();
   if ((name === "account" || name === "signup") && !authProvidersSettled) renderAuthProviders();
 
@@ -6525,7 +6576,15 @@ async function deleteCloudStory(story) {
      only the row promotes the leftover copy to a local-only story and it comes
      straight back on the next render. Delete looked like it did nothing. */
   const remaining = getSavedStories().filter((localStory) => !matchesLocalStory(story, localStory));
-  setSavedStories(remaining);
+  /* Written straight to storage rather than through setSavedStories. That
+     trims to MAX_LOCAL_SAVED_STORIES on every write, which is right when
+     saving a new story and badly wrong here: removing one story must not
+     quietly drop others off the end of the device's list. */
+  try {
+    localStorage.setItem("dreamscapesStories", JSON.stringify(remaining));
+  } catch {
+    // A full quota must not stop the cloud row being gone.
+  }
 
   updateAccountUI();
   return true;
