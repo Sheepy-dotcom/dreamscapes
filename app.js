@@ -380,7 +380,15 @@ const AI_NARRATION_PART_TIMEOUT_MS = 120000;
 const AI_NARRATION_PART_CONCURRENCY = 2;
 const AUDIO_UPLOAD_CONCURRENCY = 3;
 const AUDIO_CREDIT_MAX_MINUTES = 10;
-const VOICE_PREVIEW_TEXT = "Hello from DreamScapes. Settle in, take a gentle breath, and let the story begin.";
+/* {name} is the voice's own name from the picker. A parent choosing between
+   seven voices is choosing a person to read to their child, so each one says
+   who it is - the button already says "Hear Ivy". */
+const VOICE_PREVIEW_TEXT =
+  "Hello, I'm {name}. Settle in, take a gentle breath, and let the story begin.";
+
+function voicePreviewTextFor(name) {
+  return VOICE_PREVIEW_TEXT.replace("{name}", String(name || "").trim() || "your storyteller");
+}
 // Generated previews are kept so a voice is only ever synthesised once. Saved
 // stories compete for the same localStorage budget, so the cache is capped and
 // every write is allowed to fail without breaking playback.
@@ -388,20 +396,26 @@ const VOICE_PREVIEW_STORAGE_KEY = "dreamscapesVoicePreviews";
 const MAX_STORED_VOICE_PREVIEWS = 8;
 const MAX_VOICE_PREVIEW_BYTES = 400000;
 const VOICE_PREVIEW_GAIN = 0.82;
-// The model does not record every voice at the same level: measured across the
-// clips, sage comes out 11dB quieter than the loudest and coral 9dB quieter, so
-// picking one of those sounded like the app had gone wrong. These bring each
-// clip to about -23dB RMS, which leaves every one of them peaking below -3dBFS.
-// Re-measure after rebuilding the previews; voices within 1.5dB of the target
-// are left on VOICE_PREVIEW_GAIN.
+// The model does not record every voice at the same level, so picking a quiet
+// one sounded like the app had gone wrong. These bring each clip to about
+// -23dB RMS while keeping every peak below -3dBFS. Re-measure after rebuilding
+// the previews; voices within 1.5dB of the target are left on
+// VOICE_PREVIEW_GAIN.
+//
+// Measured on the 2026-10-10 clips: Ivy -22.7, Rosie -20.1 and Willow -21.5
+// are all within 1.5dB of the target and need nothing. Hugo is the exception
+// below - matching his RMS would want 1.15, but he already peaks at -3.6dBFS,
+// so he is capped at the peak instead and sits a little under the others.
 const VOICE_PREVIEW_GAINS = {
-  "male calm": 1.03,
-  "female calm": 0.61,
+  "cedar audition": 1.1,
+  "male calm": 1.07,
+  "ash storyteller": 1.12,
+  "onyx deep": 1.22,
 };
 // Clips live under /assets, which is served immutable for a year, so a rebuilt
 // preview keeps its filename and would go on playing the old recording for
 // anyone who has heard it once. Bump this whenever the clips are rebuilt.
-const VOICE_PREVIEW_VERSION = "2026100302";
+const VOICE_PREVIEW_VERSION = "2026101001";
 
 const VOICE_PREVIEW_FILES = {
   "female calm": "./assets/voice-preview-female-calm.mp3",
@@ -7723,7 +7737,7 @@ async function playAiVoicePreview() {
     method: "POST",
     headers: await getApiHeaders(),
     body: JSON.stringify({
-      text: VOICE_PREVIEW_TEXT,
+      text: voicePreviewTextFor(getSelectedVoiceLabel()),
       storyLanguage: "en-GB",
       voice: getAiNarrationVoice(selectedVoiceStyle),
       chargeAudio: false,
@@ -7754,7 +7768,7 @@ function playDeviceVoicePreview() {
   }
 
   stopPreviewAudio();
-  const preview = new SpeechSynthesisUtterance(VOICE_PREVIEW_TEXT);
+  const preview = new SpeechSynthesisUtterance(voicePreviewTextFor(getSelectedVoiceLabel()));
   applyNarrationSettings(preview, {
     voiceStyle: voiceStyle.value,
   });

@@ -15,9 +15,14 @@ const root = path.resolve(__dirname, "..");
 const appJsPath = path.join(root, "app.js");
 const assetsDir = path.join(root, "assets");
 const force = process.argv.includes("--force");
+// --emit-bodies <dir> writes the exact request body for each voice and sends
+// nothing. Useful for seeing what a voice will actually be asked to do before
+// paying for it, and for generating the clips from somewhere else.
+const emitIndex = process.argv.indexOf("--emit-bodies");
+const emitDir = emitIndex === -1 ? null : process.argv[emitIndex + 1];
 
 const apiKey = process.env.OPENAI_API_KEY;
-if (!apiKey) {
+if (!apiKey && !emitDir) {
   console.error("OPENAI_API_KEY is not set. Copy it from the Vercel project settings.");
   process.exit(1);
 }
@@ -25,7 +30,7 @@ if (!apiKey) {
 const appJs = fs.readFileSync(appJsPath, "utf8");
 
 function readConst(name) {
-  const match = appJs.match(new RegExp(`const ${name} = "([^"]*)"`));
+  const match = appJs.match(new RegExp(`const ${name} =\\s*"([^"]*)"`));
   if (!match) throw new Error(`Could not find ${name} in app.js`);
   return match[1];
 }
@@ -50,7 +55,10 @@ function withNarrationPauses(text) {
   return shaped.join("\n\n\n");
 }
 
-const previewInput = withNarrationPauses(previewText);
+// Each clip says its own name, so the text is built per voice rather than once.
+function previewInputFor(name) {
+  return withNarrationPauses(previewText.replace("{name}", name));
+}
 // These must track api/narrate.js, or a parent picks a voice from a preview
 // that is not what their stories will sound like. The speed in particular was
 // 0.95 here: that is the value that made every preview sound fuzzy, because
@@ -95,8 +103,12 @@ const picker = indexHtml.slice(
   indexHtml.indexOf('id="voice-style"'),
   indexHtml.indexOf("</select>", indexHtml.indexOf('id="voice-style"'))
 );
-const selectable = new Set([...picker.matchAll(/<option value="([^"]+)"/g)].map((m) => m[1]));
-const voices = allVoices.filter((profile) => selectable.has(profile.style));
+const optionPattern = /<option value="([^"]+)"[^>]*>([^<]*)<\/option>/g;
+const nameByStyle = new Map([...picker.matchAll(optionPattern)].map((m) => [m[1], m[2].trim()]));
+const selectable = new Set(nameByStyle.keys());
+const voices = allVoices
+  .filter((profile) => selectable.has(profile.style))
+  .map((profile) => ({ ...profile, name: nameByStyle.get(profile.style) }));
 
 if (voices.length === 0) {
   console.error("No profile matched VOICE_PREVIEW_FILES. Are the style keys still the same?");
@@ -116,24 +128,29 @@ function buildInstructions(profile) {
     profile.accent === "british"
       ? "Keep the spoken accent clearly UK/British English throughout and do not drift into American pronunciation."
       : "",
+    `Your name is ${profile.name}. Say it naturally, as a person introducing themselves.`,
     "This is a voice preview. Read only this exact preview sentence and stop after the word begin.",
   ]
     .filter(Boolean)
     .join(" ");
 }
 
+function requestBody(profile) {
+  return {
+    model,
+    voice: profile.voice,
+    input: previewInputFor(profile.name),
+    instructions: buildInstructions(profile),
+    speed,
+    response_format: "mp3",
+  };
+}
+
 async function generate(profile) {
   const response = await fetch("https://api.openai.com/v1/audio/speech", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model,
-      voice: profile.voice,
-      input: previewInput,
-      instructions: buildInstructions(profile),
-      speed,
-      response_format: "mp3",
-    }),
+    body: JSON.stringify(requestBody(profile)),
   });
 
   if (!response.ok) throw new Error(`${response.status} ${await response.text()}`);
@@ -141,6 +158,17 @@ async function generate(profile) {
 }
 
 (async () => {
+  if (emitDir) {
+    fs.mkdirSync(emitDir, { recursive: true });
+    for (const profile of voices) {
+      const out = path.join(emitDir, `${profile.style.replace(/\s+/g, "-")}.json`);
+      fs.writeFileSync(out, JSON.stringify(requestBody(profile), null, 2));
+      console.log(`body   ${profile.style.padEnd(18)} -> ${out}  (${profile.name}, voice=${profile.voice})`);
+    }
+    console.log(`\nWrote ${voices.length} request bodies. Nothing was sent.`);
+    return;
+  }
+
   const written = [];
 
   for (const profile of voices) {
