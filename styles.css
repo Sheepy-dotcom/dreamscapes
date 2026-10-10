@@ -10416,52 +10416,88 @@ body.account-page-open .account-screen {
   line-height: 1.22;
 }
 
+/* Two cards to a 375px row leaves 166px here, and "Audio" plus a running time
+   plus two round buttons was more than that: the buttons ended up over the
+   card's edge. Everything comes in a little so the longest story a plan allows
+   fits, and the row is laid out so that it cannot push past the card again -
+   the buttons and the time hold their size, and the word is what gives way. */
 .library-card-foot {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  padding: 9px 9px 10px 11px;
+  gap: 6px;
+  /* The card is a grid, so this row's default min-width is its own min-content:
+     without this the grid hands the row the width it asks for and the row
+     hangs over the card's edge instead of the contents giving way inside it. */
+  min-width: 0;
+  padding: 8px 8px 9px 10px;
 }
 
 .library-card-tags {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   min-width: 0;
+  overflow: hidden;
 }
 
 .library-pill {
-  flex: 0 0 auto;
-  padding: 4px 10px;
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  padding: 3px 9px;
   border-radius: 999px;
   background: rgba(124, 142, 255, 0.24);
   color: rgba(226, 231, 255, 0.94);
-  font-size: 0.72rem;
+  font-size: 0.71rem;
   font-weight: 900;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-.library-card-time {
-  color: rgba(185, 196, 255, 0.76);
-  font-size: 0.74rem;
+/* How long the story runs, read off the saved audio. It sits on the picture
+   because the foot below is only 146px wide and already holds the pill and
+   two buttons - a 30:45 in there pushed them over the card's edge. */
+.library-card-length {
+  position: absolute;
+  right: 7px;
+  bottom: 7px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px 3px 6px;
+  border-radius: 999px;
+  background: rgba(7, 10, 34, 0.74);
+  color: rgba(234, 238, 255, 0.95);
+  font-size: 0.68rem;
   font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
   white-space: nowrap;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.library-card-length svg {
+  width: 12px;
+  height: 12px;
+  color: rgba(197, 208, 255, 0.92);
 }
 
 .library-card-actions {
   display: flex;
   flex: 0 0 auto;
-  gap: 4px;
+  gap: 3px;
 }
 
 .library-card .library-icon-button {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
 }
 
 .library-card .library-icon-button svg {
-  width: 17px;
-  height: 17px;
+  width: 16px;
+  height: 16px;
 }
 
 /* The empty state is one card, not half a shelf. A class rather than :has(),
@@ -10518,4 +10554,296 @@ body.account-page-open .account-screen {
 .story-player.is-preparing .player-skip {
   opacity: 0.4;
   pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   The picker sheet, and the triggers that open it.
+   See the note above enhanceSheetSelect in app.js: the native <select> is
+   still there and still the source of truth, just not allowed to open the
+   operating system's white picker over a dark blue screen.
+-------------------------------------------------------------------------- */
+select.is-sheet-backed {
+  pointer-events: none;
+}
+
+/* Kept in the layout, and so in the form, but out of sight behind the
+   trigger. The chevron in the name box has its own rules for this already. */
+.voice-field select.is-sheet-backed,
+.sheet-field select.is-sheet-backed {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.voice-field,
+.sheet-field {
+  position: relative;
+}
+
+.select-trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid rgba(132, 148, 255, 0.34);
+  border-radius: 16px;
+  background: linear-gradient(170deg, rgba(31, 38, 92, 0.92) 0%, rgba(21, 26, 68, 0.94) 100%);
+  color: #eef1ff;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.18s ease, transform 0.18s ease;
+}
+
+.select-trigger:hover,
+.select-trigger:focus-visible {
+  border-color: rgba(255, 212, 92, 0.72);
+  outline: none;
+}
+
+.select-trigger:active {
+  transform: scale(0.99);
+}
+
+.select-trigger-text {
+  display: grid;
+  gap: 1px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.select-trigger-name {
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.select-trigger-detail {
+  overflow: hidden;
+  color: rgba(185, 196, 255, 0.78);
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.select-trigger-chevron {
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  border-right: 2.4px solid rgba(226, 231, 255, 0.72);
+  border-bottom: 2.4px solid rgba(226, 231, 255, 0.72);
+  transform: translateY(-3px) rotate(45deg);
+}
+
+/* Sits exactly where the invisible <select> used to, over the chevron. */
+.field-saved-trigger {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  appearance: none;
+}
+
+.field-saved-trigger:focus-visible {
+  outline: none;
+}
+
+.field-saved:focus-within .field-saved-chevron {
+  border-color: #ffd45c;
+}
+
+.choice-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 1400;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.choice-sheet-veil {
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 6, 24, 0.66);
+  opacity: 0;
+  transition: opacity 0.22s ease;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.choice-sheet.is-open .choice-sheet-veil {
+  opacity: 1;
+}
+
+.choice-sheet-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: min(520px, 100%);
+  max-height: min(76vh, 620px);
+  /* Clears the home indicator on a phone without a gap on a desktop. */
+  padding: 10px 14px calc(16px + env(safe-area-inset-bottom));
+  border: 1px solid rgba(132, 148, 255, 0.3);
+  border-bottom: 0;
+  border-radius: 26px 26px 0 0;
+  background: linear-gradient(176deg, #222a66 0%, #161b4a 58%, #121641 100%);
+  box-shadow: 0 -22px 60px rgba(4, 6, 26, 0.62);
+  transform: translateY(14px);
+  opacity: 0;
+  transition: transform 0.26s cubic-bezier(0.22, 0.9, 0.3, 1), opacity 0.22s ease;
+}
+
+.choice-sheet.is-open .choice-sheet-panel {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.choice-sheet-grip {
+  width: 42px;
+  height: 4px;
+  margin: 2px auto 8px;
+  border-radius: 999px;
+  background: rgba(176, 188, 255, 0.4);
+}
+
+.choice-sheet-title {
+  margin: 0 0 8px;
+  padding: 0 4px;
+  color: #fff;
+  font-size: 1.14rem;
+  font-weight: 900;
+  text-align: center;
+}
+
+.choice-sheet-list {
+  display: grid;
+  gap: 6px;
+  overflow-y: auto;
+  padding: 2px 2px 6px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.choice-sheet-group {
+  margin: 8px 0 2px;
+  padding: 0 6px;
+  color: rgba(176, 188, 255, 0.72);
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.choice-sheet-group:first-child {
+  margin-top: 0;
+}
+
+.choice-sheet-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid transparent;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #eef1ff;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+}
+
+.choice-sheet-item:hover,
+.choice-sheet-item:focus-visible {
+  border-color: rgba(255, 212, 92, 0.5);
+  background: rgba(255, 255, 255, 0.09);
+  outline: none;
+}
+
+.choice-sheet-item:active {
+  transform: scale(0.99);
+}
+
+.choice-sheet-item.is-current {
+  border-color: rgba(255, 212, 92, 0.76);
+  background: rgba(255, 212, 92, 0.14);
+}
+
+.choice-sheet-item-text {
+  display: grid;
+  gap: 2px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.choice-sheet-item-name {
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.choice-sheet-item-detail {
+  color: rgba(185, 196, 255, 0.8);
+  font-size: 0.83rem;
+  font-weight: 700;
+}
+
+.choice-sheet-tick {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  color: #ffd45c;
+  opacity: 0;
+  transition: opacity 0.16s ease;
+}
+
+.choice-sheet-item.is-current .choice-sheet-tick {
+  opacity: 1;
+}
+
+.choice-sheet-tick svg {
+  width: 18px;
+  height: 18px;
+}
+
+.choice-sheet-cancel {
+  margin-top: 8px;
+  padding: 13px;
+  border: 1.5px solid rgba(132, 148, 255, 0.3);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(214, 221, 255, 0.9);
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.choice-sheet-cancel:hover,
+.choice-sheet-cancel:focus-visible {
+  border-color: rgba(255, 212, 92, 0.56);
+  color: #fff;
+  outline: none;
+}
+
+body.choice-sheet-open {
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .choice-sheet-panel,
+  .choice-sheet-veil,
+  .choice-sheet-item,
+  .select-trigger {
+    transition: none;
+  }
 }

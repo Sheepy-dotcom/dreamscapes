@@ -7679,7 +7679,11 @@ clearProfileSelectionButton?.addEventListener("click", () => {
   });
   // And back to the single picker, which is where the button's label points.
   setSeveralChildrenOpen(false);
-  if (childSavedSelect) childSavedSelect.value = "";
+  if (childSavedSelect) {
+    childSavedSelect.value = "";
+    // Setting .value fires nothing, so the trigger is told by hand.
+    syncSheetSelectTrigger(childSavedSelect);
+  }
 });
 
 async function playAiVoicePreview() {
@@ -7753,6 +7757,16 @@ function getSelectedVoiceLabel() {
   return voiceStyle.options[voiceStyle.selectedIndex]?.textContent?.trim() || "selected voice";
 }
 
+/* The voices have names, so the button offers the one that is actually
+   chosen - "Hear Willow" rather than "Preview Voice". */
+function resetVoicePreviewButton() {
+  const label = getSelectedVoiceLabel();
+  voicePreviewButton.textContent = label === "selected voice" ? "Preview voice" : `Hear ${label}`;
+}
+
+voiceStyle.addEventListener("change", resetVoicePreviewButton);
+resetVoicePreviewButton();
+
 voicePreviewButton.addEventListener("click", async () => {
   const selectedVoiceLabel = getSelectedVoiceLabel();
   voicePreviewButton.disabled = true;
@@ -7770,7 +7784,7 @@ voicePreviewButton.addEventListener("click", async () => {
     // Fall through to device preview.
   } finally {
     voicePreviewButton.disabled = false;
-    voicePreviewButton.textContent = "Preview Voice";
+    resetVoicePreviewButton();
   }
 
   if (playDeviceVoicePreview()) {
@@ -8119,11 +8133,10 @@ async function renderLibrary() {
         // One line has to survive a phone, so it carries what tells two stories
         // apart - how long, whether there is audio, where it sits in a series.
         // The plan that made it and the exact date are on the story itself.
-        const audioLabel = story.audioNarration
-          ? savedAudioDuration
-            ? `Audio ${formatAudioTime(savedAudioDuration)}`
-            : "Audio"
-          : "Text only";
+        /* The type only. This used to carry the duration too, which the card
+           then printed again beside it - "Audio 3:55  3:55" - and the pair
+           pushed the heart and the bin past the card's right edge. */
+        const audioLabel = story.audioNarration ? "Audio" : "Text";
         const storyLengthSeconds = getStoryActualDurationSeconds(story);
         const isNewest = newestStoryTime > 0 && getStoryTimeValue(story) === newestStoryTime;
         const metadata = [
@@ -8139,13 +8152,15 @@ async function renderLibrary() {
               <img src="${revealArtFor(story, 0)}" alt="" loading="lazy" ${story.artPath ? `data-art-path="${escapeHtml(story.artPath)}"` : ""} />
               ${isNewest && !isNewStory ? '<span class="library-card-flag">Newest</span>' : ""}
               ${isNewStory ? '<span class="library-card-flag">Just created</span>' : ""}
+              ${savedAudioDuration
+                ? `<span class="library-card-length"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4.4 13.6v-1.4a7.6 7.6 0 0 1 15.2 0v1.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="2.9" y="13.2" width="4.4" height="7" rx="2.2" fill="currentColor"/><rect x="16.7" y="13.2" width="4.4" height="7" rx="2.2" fill="currentColor"/></svg>${escapeHtml(formatAudioTime(savedAudioDuration))}</span>`
+                : ""}
             </span>
             <span class="library-card-title">${escapeHtml(story.title)}</span>
           </button>
           <div class="library-card-foot">
             <span class="library-card-tags">
               <span class="library-pill">${escapeHtml(audioLabel)}</span>
-              ${storyLengthSeconds ? `<span class="library-card-time">${escapeHtml(formatAudioTime(storyLengthSeconds))}</span>` : ""}
             </span>
             <span class="library-card-actions">
               <button class="library-icon-button favourite-button ${isFavourite ? "active" : ""}" data-favourite-index="${index}" type="button" aria-pressed="${isFavourite ? "true" : "false"}" aria-label="${isFavourite ? "Saved - tap to unsave" : "Save this story"}" title="${isFavourite ? "Saved" : "Save"}">
@@ -9178,3 +9193,175 @@ updatePlanFeatures();
 updateAccountUI();
 ensureSupabaseClient();
 renderAuthProviders();
+
+/* ---------------------------------------------------------------------------
+   Styled pickers for the selects a parent actually uses.
+
+   A <select> opens the operating system's own picker - a white wheel on iOS, a
+   white list on Android - which lands in the middle of a dark blue screen
+   looking like it belongs to a different app. These two are the ones a parent
+   meets while making a story, so they get a sheet of our own.
+
+   The native <select> stays exactly where it was and stays the source of
+   truth: it is still in the form, FormData still finds it, .value still reads
+   it, and picking from the sheet sets it and fires the same "change" event it
+   always fired. Nothing downstream knows this exists. It is only stopped from
+   opening its own picker, and hidden behind a trigger of ours.
+--------------------------------------------------------------------------- */
+const SHEET_SELECT_TICK =
+  '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12.8l4.4 4.4L19 7.6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+let choiceSheet = null;
+let choiceSheetSelect = null;
+let choiceSheetReturnFocus = null;
+
+function getChoiceSheet() {
+  if (choiceSheet) return choiceSheet;
+  choiceSheet = document.createElement("div");
+  choiceSheet.className = "choice-sheet";
+  choiceSheet.hidden = true;
+  choiceSheet.innerHTML = `
+    <div class="choice-sheet-veil" data-sheet-close></div>
+    <div class="choice-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="choice-sheet-title">
+      <span class="choice-sheet-grip" aria-hidden="true"></span>
+      <h2 class="choice-sheet-title" id="choice-sheet-title"></h2>
+      <div class="choice-sheet-list"></div>
+      <button class="choice-sheet-cancel" type="button" data-sheet-close>Cancel</button>
+    </div>`;
+  document.body.appendChild(choiceSheet);
+
+  choiceSheet.addEventListener("click", (event) => {
+    if (event.target.closest("[data-sheet-close]")) {
+      closeChoiceSheet();
+      return;
+    }
+    const item = event.target.closest(".choice-sheet-item");
+    if (!item || !choiceSheetSelect) return;
+    const select = choiceSheetSelect;
+    closeChoiceSheet();
+    if (select.value === item.dataset.value) return;
+    select.value = item.dataset.value;
+    syncSheetSelectTrigger(select);
+    // The same event the native picker fired, so every existing listener runs.
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+  return choiceSheet;
+}
+
+function openChoiceSheet(select) {
+  const sheet = getChoiceSheet();
+  choiceSheetSelect = select;
+  choiceSheetReturnFocus = document.activeElement;
+  sheet.querySelector(".choice-sheet-title").textContent =
+    select.dataset.sheetTitle || select.getAttribute("aria-label") || "Choose";
+
+  // Read the options every time it opens: the saved-children list is rebuilt
+  // whenever a profile is added or removed.
+  const list = sheet.querySelector(".choice-sheet-list");
+  const groups = select.querySelectorAll("optgroup");
+  const render = (options) =>
+    [...options]
+      .map((option) => {
+        const detail = option.dataset.detail || "";
+        const current = option.value === select.value;
+        return `
+          <button class="choice-sheet-item ${current ? "is-current" : ""}" type="button" data-value="${escapeHtml(option.value)}" aria-pressed="${current ? "true" : "false"}">
+            <span class="choice-sheet-item-text">
+              <span class="choice-sheet-item-name">${escapeHtml(option.textContent.trim())}</span>
+              ${detail ? `<span class="choice-sheet-item-detail">${escapeHtml(detail)}</span>` : ""}
+            </span>
+            <span class="choice-sheet-tick" aria-hidden="true">${SHEET_SELECT_TICK}</span>
+          </button>`;
+      })
+      .join("");
+
+  list.innerHTML = groups.length
+    ? [...groups]
+        .map(
+          (group) =>
+            `<p class="choice-sheet-group">${escapeHtml(group.label)}</p>${render(group.querySelectorAll("option"))}`
+        )
+        .join("")
+    : render(select.options);
+
+  sheet.hidden = false;
+  // Forced reflow rather than rAF: rAF is throttled when the view is not
+  // painting and the sheet would appear already open, with no slide.
+  void sheet.offsetWidth;
+  sheet.classList.add("is-open");
+  document.body.classList.add("choice-sheet-open");
+  (list.querySelector(".is-current") || list.querySelector(".choice-sheet-item"))?.focus();
+}
+
+function closeChoiceSheet() {
+  if (!choiceSheet || choiceSheet.hidden) return;
+  choiceSheet.classList.remove("is-open");
+  document.body.classList.remove("choice-sheet-open");
+  const returnTo = choiceSheetReturnFocus;
+  choiceSheetSelect = null;
+  choiceSheetReturnFocus = null;
+  window.setTimeout(() => {
+    if (choiceSheet && !choiceSheet.classList.contains("is-open")) choiceSheet.hidden = true;
+  }, 240);
+  if (returnTo && typeof returnTo.focus === "function") returnTo.focus();
+}
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && choiceSheet && !choiceSheet.hidden) closeChoiceSheet();
+});
+
+/* Puts the trigger back in step with the select, for when something other
+   than the sheet changes it. */
+function syncSheetSelectTrigger(select) {
+  const trigger = select.sheetTrigger;
+  if (!trigger) return;
+  const option = select.options[select.selectedIndex];
+  const name = trigger.querySelector(".select-trigger-name");
+  const detail = trigger.querySelector(".select-trigger-detail");
+  if (name) name.textContent = option ? option.textContent.trim() : "";
+  if (detail) {
+    detail.textContent = option?.dataset.detail || "";
+    detail.hidden = !option?.dataset.detail;
+  }
+  if (!name && !detail) {
+    trigger.setAttribute(
+      "aria-label",
+      `${select.getAttribute("aria-label") || "Choose"}${option ? `, ${option.textContent.trim()}` : ""}`
+    );
+  }
+}
+
+function enhanceSheetSelect(select) {
+  if (!select || select.sheetTrigger) return;
+  select.classList.add("is-sheet-backed");
+
+  // An overlay for the little chevron in the corner of the name box, which
+  // already looks like ours; a full control for the voice, which does not.
+  const overlay = Boolean(select.closest(".field-saved"));
+  const trigger = document.createElement("button");
+  trigger.type = "button";
+  trigger.className = overlay ? "field-saved-trigger" : "select-trigger";
+  if (!overlay) {
+    trigger.innerHTML =
+      '<span class="select-trigger-text"><span class="select-trigger-name"></span><span class="select-trigger-detail"></span></span><span class="select-trigger-chevron" aria-hidden="true"></span>';
+  }
+  select.insertAdjacentElement("afterend", trigger);
+  select.sheetTrigger = trigger;
+
+  trigger.addEventListener("click", (event) => {
+    // Both of these sit inside a <label>. Without this the click is forwarded
+    // to the label's own control - the child's name box - which opens the
+    // keyboard underneath the sheet.
+    event.preventDefault();
+    event.stopPropagation();
+    openChoiceSheet(select);
+  });
+
+  // The saved-children list is rebuilt from scratch whenever a profile
+  // changes, so watch for it rather than making that code call back here.
+  new MutationObserver(() => syncSheetSelectTrigger(select)).observe(select, { childList: true });
+  select.addEventListener("change", () => syncSheetSelectTrigger(select));
+  syncSheetSelectTrigger(select);
+}
+
+document.querySelectorAll("select[data-sheet-select]").forEach(enhanceSheetSelect);

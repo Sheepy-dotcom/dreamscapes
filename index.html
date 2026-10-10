@@ -22,7 +22,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026101066" />
+    <link rel="stylesheet" href="./styles.css?v=2026101073" />
   </head>
   <body class="home-active night-mode">
     <svg class="art-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -94,7 +94,7 @@
                   <span class="field-icon field-icon-child" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><circle class="ic-fill-lilac" cx="12" cy="8" r="4.2" /><path class="ic-fill-sky" d="M3.6 21.4c0-4.6 3.8-7.4 8.4-7.4s8.4 2.8 8.4 7.4z" /></svg></span>
                   <span class="field-body"><span class="field-label">Child’s name</span><input id="child-name" name="childName" type="text" autocomplete="off" /></span>
                   <button class="field-clear" id="clear-child-name" type="button" aria-label="Clear name" hidden><svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M9 9l6 6M15 9l-6 6" /></svg></button>
-                  <span class="field-saved" id="child-saved-picker" hidden><span class="field-saved-chevron" aria-hidden="true"></span><select id="child-saved-select" aria-label="Use a saved child"></select></span>
+                  <span class="field-saved" id="child-saved-picker" hidden><span class="field-saved-chevron" aria-hidden="true"></span><select id="child-saved-select" aria-label="Use a saved child" data-sheet-select data-sheet-title="Who is this story for?"></select></span>
                 </label>
                 <label class="field field-boxed">
                   <span class="field-icon field-icon-age" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path class="ic-fill-pink" d="M3.4 20.6v-5.2c0-1 .8-1.8 1.8-1.8h13.6c1 0 1.8.8 1.8 1.8v5.2z" /><path class="ic-fill-cream" d="M5.8 13.6v-2.2c0-1 .8-1.8 1.8-1.8h8.8c1 0 1.8.8 1.8 1.8v2.2z" /><path class="ic-stroke-gold" d="M12 9.6V6.4" /><path class="ic-fill-gold" d="M12 2.2c1.5 1.4 2.2 2.4 2.2 3.1a2.2 2.2 0 0 1-4.4 0c0-.7.7-1.7 2.2-3.1z" /></svg></span>
@@ -238,22 +238,22 @@
               <label class="feature-toggle"><input id="audio-narration" name="audioNarration" type="checkbox" /><span><strong>Add audio narration</strong><small>Selecting audio uses DreamScapes Plus</small></span></label>
               <div class="narration-options" id="narration-options" hidden>
               <label class="field voice-field">
-                <span>Narration voice</span>
-                <select id="voice-style" name="voiceStyle">
+                <span>Narrated by</span>
+                <select id="voice-style" name="voiceStyle" data-sheet-select data-sheet-title="Who reads the story?">
                   <optgroup label="Female voices">
-                    <option value="marin audition">Light &amp; Clear</option>
-                    <option value="female calm">Warm &amp; Friendly</option>
-                    <option value="shimmer soft">Hushed &amp; Sleepy</option>
+                    <option value="marin audition" data-detail="Light and clear">Ivy</option>
+                    <option value="female calm" data-detail="Warm and friendly">Rosie</option>
+                    <option value="shimmer soft" data-detail="Hushed and sleepy">Willow</option>
                   </optgroup>
                   <optgroup label="Male voices">
-                    <option value="cedar audition">Smooth &amp; Steady</option>
-                    <option value="male calm">Rich &amp; Rounded</option>
-                    <option value="ash storyteller">Calm &amp; Even</option>
-                    <option value="onyx deep">Deep &amp; Low</option>
+                    <option value="cedar audition" data-detail="Smooth and steady">Jasper</option>
+                    <option value="male calm" data-detail="Rich and rounded">Hugo</option>
+                    <option value="ash storyteller" data-detail="Calm and even">Arlo</option>
+                    <option value="onyx deep" data-detail="Deep and low">Gus</option>
                   </optgroup>
                 </select>
               </label>
-              <div class="audio-settings"><button class="button secondary-button compact-button" id="voice-preview-button" type="button">Preview Voice</button></div>
+              <div class="audio-settings"><button class="button secondary-button compact-button" id="voice-preview-button" type="button">Preview voice</button></div>
               <p class="audio-note">Audio is made by a machine and can occasionally sound uneven. Try again, or email support@dreamscapes.cloud.</p>
               </div>
             </div>
@@ -876,10 +876,10 @@
                   <input id="profile-hair-colour" name="profileHairColour" type="text" />
                 </label>
               </div>
-              <label class="field">
+              <label class="field sheet-field">
                 <span>Pronouns <small>optional</small></span>
-                <select id="profile-pronouns" name="profilePronouns">
-                  <option value="">Not set</option>
+                <select id="profile-pronouns" name="profilePronouns" data-sheet-select data-sheet-title="How should we say it?">
+                  <option value="" data-detail="We will use their name instead">Not set</option>
                   <option value="she">She / her</option>
                   <option value="he">He / him</option>
                   <option value="they">They / them</option>
@@ -1279,6 +1279,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026101066"></script>
+    <script src="./app.js?v=2026101073"></script>
   </body>
 </html>
