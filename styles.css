@@ -9603,7 +9603,7 @@ body.outro-open {
   width: 100vw;
   margin-left: 50%;
   transform: translateX(-50vw);
-  height: clamp(186px, 31vh, 300px);
+  height: min(60vw, 330px);
   overflow: hidden;
 }
 
@@ -9611,7 +9611,7 @@ body.outro-open {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 56%;
+  object-position: center;
   display: block;
 }
 
@@ -9628,7 +9628,7 @@ body.outro-open {
 
 .signin-brand {
   position: absolute;
-  top: clamp(16px, 5vh, 40px);
+  top: clamp(14px, 3.4vh, 30px);
   left: 0;
   right: 0;
   z-index: 1;
@@ -9638,17 +9638,9 @@ body.outro-open {
 }
 
 .signin-brand img {
-  width: 62px;
+  width: min(172px, 46vw);
   height: auto;
-  filter: drop-shadow(0 6px 18px rgba(255, 196, 92, 0.34));
-}
-
-.signin-brand span {
-  color: var(--white);
-  font-size: 1.44rem;
-  font-weight: 900;
-  letter-spacing: 0.01em;
-  text-shadow: 0 3px 14px rgba(8, 10, 40, 0.7);
+  filter: drop-shadow(0 8px 22px rgba(8, 10, 40, 0.6));
 }
 
 .signin-stage {
@@ -9664,9 +9656,9 @@ body.outro-open {
 .signin-sheet {
   position: relative;
   z-index: 2;
-  margin: -50px auto 0;
+  margin: -44px auto 0;
   width: min(430px, 100%);
-  padding: 22px 18px 18px;
+  padding: 26px 20px 22px;
   border-radius: 28px;
   border: 1px solid rgba(197, 185, 255, 0.34);
   background: rgba(32, 40, 104, 0.58);
@@ -9686,14 +9678,14 @@ body.outro-open {
 }
 
 .signin-sheet > p {
-  margin: 5px 0 16px;
+  margin: 6px 0 18px;
   color: rgba(199, 209, 255, 0.9);
   font-size: 1.02rem;
 }
 
 .signin-sheet .auth-form {
   display: grid;
-  gap: 12px;
+  gap: 14px;
 }
 
 /* A field with its symbol inside it, the way the drawing has them. */
@@ -9704,7 +9696,7 @@ body.outro-open {
 
 .field-iconed input {
   width: 100%;
-  min-height: 54px;
+  min-height: 58px;
   padding: 0 16px 0 50px;
   border-radius: 18px;
   border: 1px solid rgba(197, 185, 255, 0.3);
@@ -9767,7 +9759,7 @@ body.outro-open {
 
 .signin-submit {
   width: 100%;
-  min-height: 54px;
+  min-height: 58px;
   border-radius: 28px;
   font-size: 1.14rem;
   font-weight: 900;
@@ -9784,7 +9776,7 @@ body.outro-open {
 body.night-mode .signin-sheet .provider-button,
 .signin-sheet .provider-button {
   width: 100%;
-  min-height: 52px;
+  min-height: 56px;
   border-radius: 27px;
   border: 1px solid rgba(197, 185, 255, 0.46);
   background: rgba(255, 255, 255, 0.05);
