@@ -6501,8 +6501,21 @@ async function toggleStoryFavourite(story) {
 async function deleteCloudStory(story) {
   if (!canUseCloudLibrary() || !story?.cloudId) return false;
 
-  const { error } = await supabaseClient.from("stories").delete().eq("id", story.cloudId);
+  /* .select() so the row comes back. A delete without it returns no error and
+     no data whether it removed a row or removed nothing, so a policy that
+     allows select but not delete looks exactly like success - and the next
+     render refetches the row and puts the story back. */
+  const { data, error } = await supabaseClient
+    .from("stories")
+    .delete()
+    .eq("id", story.cloudId)
+    .select("id");
   if (error) throw error;
+  if (!data || data.length === 0) {
+    const refused = new Error("The story was not removed. Check the delete policy on the stories table.");
+    refused.code = "delete_refused";
+    throw refused;
+  }
 
   setStoryFavouriteFlag(story, false);
   cloudStories = cloudStories.filter((savedStory) => savedStory.cloudId !== story.cloudId);
@@ -7770,6 +7783,9 @@ async function renderLibrary() {
     }
   }
 
+  // Still needed by the empty state and the delete handler below; extracting
+  // the merge into getAllSavedStories took its declaration with it.
+  const usingCloudLibrary = canUseCloudLibrary();
   const savedStories = getAllSavedStories();
   const orderedStories = sortLibraryStories(savedStories);
   const filteredStories = filterLibraryStories(orderedStories);
