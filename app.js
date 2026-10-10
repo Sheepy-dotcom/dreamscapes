@@ -1265,6 +1265,9 @@ function showScreen(name) {
   if (name === "admin") loadAdminDashboard();
   if (name === "loading") startLoadingMessages();
   if (name === "signup") updateSignupContext();
+  if ((name === "account" || name === "signup") && !authProvidersSettled) renderAuthProviders();
+
+
   else stopLoadingMessages();
   /* Leaving the story stops the rain. closeReading only runs from the X on
      the player, so tapping a tab while it was raining left it playing with
@@ -1302,11 +1305,33 @@ const AUTH_PROVIDERS = [
   },
 ];
 
+let appleSignInPlugin = null;
+
+/* ios/App/App/AppleSignInPlugin.swift, ours rather than a community plugin:
+   the published ones either pin an older capacitor-swift-pm than RevenueCat
+   needs, or bring the Google and Facebook SDKs with them.
+
+   Capacitor.Plugins is the right place to look - the native bridge fills it
+   from what it has registered. The reason it was empty is on the native side,
+   not here: see ios/App/App/ViewController.swift. registerPlugin is a fallback
+   for the case where the bridge offers the method; the injected global does
+   not have it, so in the app the first branch is the one that answers. */
 function getAppleSignInPlugin() {
-  // ios/App/App/AppleSignInPlugin.swift, ours rather than a community plugin:
-  // the published ones either pin an older capacitor-swift-pm than RevenueCat
-  // needs, or bring the Google and Facebook SDKs with them.
-  return window.Capacitor?.Plugins?.AppleSignIn || null;
+  if (appleSignInPlugin) return appleSignInPlugin;
+  const capacitor = window.Capacitor;
+  if (!capacitor) return null;
+
+  const registered = capacitor.Plugins?.AppleSignIn;
+  if (registered) {
+    appleSignInPlugin = registered;
+    return appleSignInPlugin;
+  }
+
+  const advertised = capacitor.PluginHeaders?.some((header) => header.name === "AppleSignIn");
+  if (!advertised || typeof capacitor.registerPlugin !== "function") return null;
+
+  appleSignInPlugin = capacitor.registerPlugin("AppleSignIn");
+  return appleSignInPlugin;
 }
 
 // Apple is given the hash and Supabase the original. Getting that the wrong way
@@ -1336,6 +1361,14 @@ async function signInWithNativeApple() {
   if (error) throw error;
 }
 
+/* Whether the list is settled, not whether it is empty. renderAuthProviders
+   used to run once at the bottom of this file, during the first pass of the
+   script, and on a native build that is a race with Capacitor populating
+   window.Capacitor.Plugins: lose it and getAppleSignInPlugin returns null, the
+   slot is hidden, and nothing ever looks again - Apple sign-in just is not
+   there for that launch. */
+let authProvidersSettled = false;
+
 async function getEnabledAuthProviders() {
   // In the app only Apple, only on iOS, and only when the native sheet is
   // actually there. The web redirect cannot come back into the app - it asks to
@@ -1344,7 +1377,13 @@ async function getEnabledAuthProviders() {
   // parent signed in on the website with the app none the wiser. Android keeps
   // email only until Google sign-in gets the same native treatment.
   if (isNativeMobileApp()) {
-    if (getCapacitorPlatform() !== "ios" || !getAppleSignInPlugin()) return [];
+    // Android has no native provider yet, so there is nothing to wait for.
+    if (getCapacitorPlatform() !== "ios") {
+      authProvidersSettled = true;
+      return [];
+    }
+    if (!getAppleSignInPlugin()) return [];
+    authProvidersSettled = true;
     return AUTH_PROVIDERS.filter((provider) => provider.id === "apple");
   }
 
@@ -1354,6 +1393,7 @@ async function getEnabledAuthProviders() {
     });
     if (!response.ok) return [];
     const settings = await response.json();
+    authProvidersSettled = true;
     return AUTH_PROVIDERS.filter((provider) => settings?.external?.[provider.id]);
   } catch {
     // Offline, or the project cannot be reached: email sign-in still works, so
