@@ -1674,14 +1674,77 @@ function isPasswordRecoveryUrl() {
   return hash.get("type") === "recovery" || query.get("type") === "recovery";
 }
 
+/* The one list of what a parent actually has. The library built this inline
+   and the account page counted cloudStories on its own, so a story saved on
+   the device but not yet in the cloud was in one total and not the other, and
+   the two screens disagreed about how many stories were saved.
+
+   Where both copies of a story exist they are merged rather than the cloud one
+   simply winning. The device keeps the whole object; the row keeps the columns
+   the table has. If the two ever disagree - a column that did not save, a field
+   added since the row was written - the cloud copy is missing something the
+   device still has, and taking it wholesale throws that away. This showed up as
+   a story losing its summary the moment it was reopened: the generated object
+   had one, and the copy that came back did not. Cloud wins on anything it
+   actually has; local fills the gaps. */
+function matchesLocalStory(cloudStory, localStory) {
+  return (
+    cloudStory.id === localStory.id ||
+    (cloudStory.cloudId && cloudStory.cloudId === localStory.cloudId) ||
+    cloudStory.cloudId === localStory.id
+  );
+}
+
+function mergeCloudAndLocalStory(cloudStory, localStory) {
+  if (!localStory) return cloudStory;
+  const merged = { ...cloudStory };
+  for (const [key, value] of Object.entries(localStory)) {
+    const cloudValue = merged[key];
+    const cloudHasIt =
+      cloudValue !== undefined &&
+      cloudValue !== null &&
+      cloudValue !== "" &&
+      !(Array.isArray(cloudValue) && cloudValue.length === 0);
+    if (!cloudHasIt && value !== undefined) merged[key] = value;
+  }
+  // Identity always comes from the row, or a later save writes a new one.
+  merged.id = cloudStory.id;
+  merged.cloudId = cloudStory.cloudId;
+  return merged;
+}
+
+function getAllSavedStories() {
+  const localStories = getSavedStories();
+  if (!canUseCloudLibrary()) return localStories;
+  return [
+    ...cloudStories.map((cloudStory) =>
+      mergeCloudAndLocalStory(
+        cloudStory,
+        localStories.find((localStory) => matchesLocalStory(cloudStory, localStory))
+      )
+    ),
+    ...localStories.filter(
+      (localStory) => !cloudStories.some((cloudStory) => matchesLocalStory(cloudStory, localStory))
+    ),
+  ];
+}
+
 function updateAccountUI() {
   const signedIn = Boolean(currentUser);
-  const stories = signedIn ? cloudStories : [];
+  const stories = signedIn ? getAllSavedStories() : [];
   const plan = getPlan(getCurrentPlanKey());
   const storiesUsed = signedIn ? getStoriesUsed(getCurrentPlanKey()) : 0;
   const audioUsed = signedIn ? getAudioSecondsUsed() : 0;
   const audioUsedLabel = formatPlanMinutesFromSeconds(audioUsed);
   const audioLimit = plan.audioMinutes > 0 ? `${plan.audioMinutes} min` : "Plus only";
+
+  /* refreshAccountSummary fetches the month's usage and the cloud library when
+     this screen opens, and until both land every total here is zero. Showing
+     those zeros says "no stories, none used" to someone with sixty-six saved
+     and three quarters of the month gone - a wrong answer stated plainly,
+     which is worse than no answer. Dashes until it is actually known. */
+  const totalsReady = !canUseCloudLibrary() || (Boolean(currentUsage) && cloudStoriesLoaded);
+  const pending = "\u2014";
 
   if (authSignedOut) authSignedOut.hidden = signedIn;
   document.querySelector("#account-screen")?.classList.toggle("is-signed-out", !signedIn);
@@ -1701,19 +1764,26 @@ function updateAccountUI() {
   }
   if (accountEmail) accountEmail.textContent = currentUser?.email || "";
   if (accountPlan) accountPlan.textContent = plan.label;
-  if (accountStories) accountStories.textContent = `${storiesUsed}/${plan.monthlyStories}`;
-  if (accountSavedStories) accountSavedStories.textContent = String(stories.length);
-  if (accountAudio) accountAudio.textContent = `${audioUsedLabel} / ${audioLimit}`;
+  if (accountStories) {
+    accountStories.textContent = totalsReady
+      ? `${storiesUsed}/${plan.monthlyStories}`
+      : `${pending}/${plan.monthlyStories}`;
+  }
+  if (accountSavedStories) accountSavedStories.textContent = totalsReady ? String(stories.length) : pending;
+  if (accountAudio) accountAudio.textContent = `${totalsReady ? audioUsedLabel : pending} / ${audioLimit}`;
   if (accountAudioCreditStat) accountAudioCreditStat.hidden = !signedIn || !canUseRedeemCodes();
-  if (accountAudioCredits) accountAudioCredits.textContent = String(signedIn ? getAudioStoryCredits() : 0);
+  if (accountAudioCredits) {
+    accountAudioCredits.textContent = totalsReady ? String(signedIn ? getAudioStoryCredits() : 0) : pending;
+  }
   if (openAdminButton) openAdminButton.hidden = !isCurrentUserAdmin();
   if (accountActions) accountActions.hidden = !signedIn;
 
   /* A bar is only honest where there is a ceiling to be a fraction of. The
      audio row goes entirely for a plan with no narration, rather than showing
      a full bar over nothing. */
-  setUsageBar("#account-stories-bar", storiesUsed, plan.monthlyStories);
-  setUsageBar("#account-audio-bar", getAudioSecondsUsed() / 60, plan.audioMinutes);
+  // A bar at zero is a claim too, so it waits for the same answer.
+  setUsageBar("#account-stories-bar", storiesUsed, totalsReady ? plan.monthlyStories : 0);
+  setUsageBar("#account-audio-bar", getAudioSecondsUsed() / 60, totalsReady ? plan.audioMinutes : 0);
   const audioRow = document.querySelector("#account-audio-row");
   if (audioRow) audioRow.hidden = !signedIn || plan.audioMinutes <= 0;
   renderAccountTiles();
@@ -6356,6 +6426,9 @@ async function loadCloudStories() {
 
   cloudStories = (data || []).map(cloudRowToStory);
   cloudStoriesLoaded = true;
+  // Whoever asked for the library, the account screen's saved count came from
+  // it and has been waiting on this.
+  updateAccountUI();
   return cloudStories;
 }
 
@@ -7689,49 +7762,7 @@ async function renderLibrary() {
     }
   }
 
-  const usingCloudLibrary = canUseCloudLibrary();
-  const localStories = getSavedStories();
-  /* Where both copies of a story exist, they are merged rather than the cloud
-     one simply winning. The device keeps the whole object; the row keeps the
-     columns the table has. If the two ever disagree - a column that did not
-     save, a field added since the row was written - the cloud copy is missing
-     something the device still has, and taking it wholesale throws that away.
-     This showed up as a story losing its summary the moment it was reopened:
-     the generated object had one, and the copy that came back did not.
-     Cloud wins on anything it actually has; local fills the gaps. */
-  const matchesLocal = (cloudStory, localStory) =>
-    cloudStory.id === localStory.id ||
-    (cloudStory.cloudId && cloudStory.cloudId === localStory.cloudId) ||
-    cloudStory.cloudId === localStory.id;
-
-  const mergeStories = (cloudStory, localStory) => {
-    if (!localStory) return cloudStory;
-    const merged = { ...cloudStory };
-    for (const [key, value] of Object.entries(localStory)) {
-      const cloudValue = merged[key];
-      const cloudHasIt =
-        cloudValue !== undefined &&
-        cloudValue !== null &&
-        cloudValue !== "" &&
-        !(Array.isArray(cloudValue) && cloudValue.length === 0);
-      if (!cloudHasIt && value !== undefined) merged[key] = value;
-    }
-    // Identity always comes from the row, or a later save writes a new one.
-    merged.id = cloudStory.id;
-    merged.cloudId = cloudStory.cloudId;
-    return merged;
-  };
-
-  const savedStories = usingCloudLibrary
-    ? [
-        ...cloudStories.map((cloudStory) =>
-          mergeStories(cloudStory, localStories.find((localStory) => matchesLocal(cloudStory, localStory)))
-        ),
-        ...localStories.filter(
-          (localStory) => !cloudStories.some((cloudStory) => matchesLocal(cloudStory, localStory))
-        ),
-      ]
-    : localStories;
+  const savedStories = getAllSavedStories();
   const orderedStories = sortLibraryStories(savedStories);
   const filteredStories = filterLibraryStories(orderedStories);
   const visibleStories = filteredStories.slice(0, MAX_LIBRARY_RENDER_ITEMS);
