@@ -893,20 +893,20 @@ const MAKING_ART = {
    the generic set, which is also what free text gets - "Something else?" can
    say anything, and guessing at it would be worse than a good generic. */
 const MAKING_ART_BY_INTEREST = {
-  dinosaurs: ["interest-dinosaurs-1.webp", "interest-dinosaurs-2.webp", "interest-dinosaurs-3.webp"],
-  space: ["interest-space-1.webp", "interest-space-2.webp", "interest-space-3.webp"],
+  dinosaurs: ["interest-dinosaurs-1.webp", "interest-dinosaurs-2.webp", "interest-dinosaurs-3.webp", "interest-dinosaurs-4.webp"],
+  space: ["interest-space-1.webp", "interest-space-2.webp", "interest-space-3.webp", "interest-space-4.webp"],
   animals: ["interest-animals-1.webp", "interest-animals-2.webp", "interest-animals-3.webp"],
   princesses: ["interest-princesses-1.webp", "interest-princesses-2.webp", "interest-princesses-3.webp"],
   pirates: ["interest-pirates-1.webp", "interest-pirates-2.webp", "interest-pirates-3.webp"],
   magic: ["interest-magic-1.webp", "interest-magic-2.webp", "interest-magic-3.webp"],
-  "fire-engines": ["interest-fire-engines-1.webp", "interest-fire-engines-2.webp", "interest-fire-engines-3.webp"],
+  "fire-engines": ["interest-fire-engines-1.webp", "interest-fire-engines-2.webp", "interest-fire-engines-3.webp", "interest-fire-engines-4.webp"],
   "under-the-sea": ["interest-under-the-sea-1.webp", "interest-under-the-sea-2.webp", "interest-under-the-sea-3.webp"],
   football: ["interest-football-1.webp", "interest-football-2.webp", "interest-football-3.webp"],
-  diggers: ["interest-diggers-1.webp", "interest-diggers-2.webp", "interest-diggers-3.webp"],
+  diggers: ["interest-diggers-1.webp", "interest-diggers-2.webp", "interest-diggers-3.webp", "interest-diggers-4.webp"],
   superheroes: ["interest-superheroes-1.webp", "interest-superheroes-2.webp", "interest-superheroes-3.webp"],
 };
 
-const MAKING_ART_VERSION = "2026100998";
+const MAKING_ART_VERSION = "2026101065";
 
 const makingArt = Array.from(document.querySelectorAll(".making-art"));
 
