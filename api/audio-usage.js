@@ -1,4 +1,4 @@
-const { enforceNarrationAccess, handleCorsPreflight, incrementUsage, sendApiError } = require("./auth");
+const { enforceNarrationAccess, handleCorsPreflight, incrementUsage, sendApiError } = require("../lib/auth");
 
 function getAudioSeconds(body) {
   const seconds = Number(body.audioSeconds || body.audio_seconds || 0);

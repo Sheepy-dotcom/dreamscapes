@@ -14,7 +14,7 @@
  * signed out or offline.
  */
 const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
-const { getAccountContext, handleCorsPreflight, sendApiError } = require("./auth");
+const { getAccountContext, handleCorsPreflight, sendApiError } = require("../lib/auth");
 
 const JOURNEY_NIGHTS = 7;
 

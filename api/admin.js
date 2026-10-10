@@ -3,7 +3,7 @@ const {
   handleCorsPreflight,
   sendApiError,
   supabaseServiceRequest,
-} = require("./auth");
+} = require("../lib/auth");
 
 const DEFAULT_ADMIN_EMAILS = "shaunrussett@gmail.com";
 

@@ -1,5 +1,5 @@
 const OPENAI_SPEECH_URL = "https://api.openai.com/v1/audio/speech";
-const { enforceNarrationAccess, handleCorsPreflight, incrementUsage, sendApiError } = require("./auth");
+const { enforceNarrationAccess, handleCorsPreflight, incrementUsage, sendApiError } = require("../lib/auth");
 // Pinned rather than using the undated alias: narration voices were tuned by
 // ear over many takes, and an alias can be repointed at a new snapshot without
 // warning, changing how every story sounds. This snapshot reports about a third

@@ -7,7 +7,7 @@
 // written to the story tables.
 
 const crypto = require("crypto");
-const { handleCorsPreflight, sendApiError, supabaseServiceRequest, ApiError } = require("./auth");
+const { handleCorsPreflight, sendApiError, supabaseServiceRequest, ApiError } = require("../lib/auth");
 const { requestStory } = require("./story");
 
 const PREVIEW_DURATION_MINUTES = 5;

@@ -5,7 +5,7 @@ const {
   incrementUsage,
   sendApiError,
   supabaseRequest,
-} = require("./auth");
+} = require("../lib/auth");
 // Measured, not assumed. The eight voices in the picker read this model's
 // output at 145 to 182 words per minute with the app's own instructions, mean
 // about 167; the value below is a touch under that so a story runs slightly

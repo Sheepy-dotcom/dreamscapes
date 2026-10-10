@@ -10,7 +10,7 @@
  * one image, once, at medium.
  */
 const OPENAI_IMAGES_URL = "https://api.openai.com/v1/images/generations";
-const { getAccountContext, handleCorsPreflight, sendApiError } = require("./auth");
+const { getAccountContext, handleCorsPreflight, sendApiError } = require("../lib/auth");
 
 function cleanText(value, fallback = "") {
   return String(value || fallback)

@@ -5,7 +5,7 @@
 // That makes it a write endpoint anyone can call, so everything below is about
 // keeping what lands in the table small, bounded and free of anything personal.
 
-const { handleCorsPreflight, sendApiError, supabaseServiceRequest, ApiError } = require("./auth");
+const { handleCorsPreflight, sendApiError, supabaseServiceRequest, ApiError } = require("../lib/auth");
 
 const MAX_EVENTS_PER_BATCH = 40;
 const MAX_NAME_LENGTH = 64;

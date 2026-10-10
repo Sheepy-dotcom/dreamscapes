@@ -3,7 +3,7 @@ const {
   handleCorsPreflight,
   sendApiError,
   supabaseServiceRequest,
-} = require("./auth");
+} = require("../lib/auth");
 
 const AUDIO_BUCKET = "story-audio";
 
