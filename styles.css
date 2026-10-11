@@ -11273,3 +11273,240 @@ body.choice-sheet-open {
   color: rgba(226, 220, 252, 0.42);
   font-size: 0.92rem;
 }
+
+/* --------------------------------------------------------------------------
+   Tablets.
+
+   Until now this stylesheet had no min-width breakpoint anywhere in it: the
+   app was drawn for a phone, and on an iPad every element simply sat at phone
+   size in the middle of a 1024pt screen - a 314px headline, a 420px button,
+   small type read at arm's length. Nothing was broken, it just looked like a
+   phone screenshot someone had left on a tablet.
+
+   This does not reflow the app into a tablet layout. It gives it a column
+   that suits the distance it is held at: wider where width helps, larger type
+   throughout, and a shelf that uses the room it has.
+-------------------------------------------------------------------------- */
+@media (min-width: 768px) {
+  .screen {
+    padding-left: max(5vw, 40px);
+    padding-right: max(5vw, 40px);
+  }
+
+  /* The reading measure, not the screen: a line of text this far from the eye
+     is still only comfortable for so long. */
+  .welcome-copy,
+  .reveal-summary,
+  .builder-group,
+  .pref-card,
+  .narration-card,
+  .story-player {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .welcome-headline {
+    max-width: 22ch;
+    font-size: clamp(2.3rem, 4.2vw, 3.1rem);
+  }
+
+  .welcome-copy p,
+  .welcome-sub {
+    font-size: 1.12rem;
+  }
+
+  .welcome-points {
+    width: min(720px, 100%);
+    gap: 18px;
+  }
+
+  .welcome-points li {
+    font-size: 1rem;
+  }
+
+  /* These size to their label, so a max-width alone does nothing to them -
+     they have to be told to take the room first. */
+  .button.primary-button,
+  .builder-actions .button,
+  #builder-step-next {
+    flex: 0 1 auto;
+    width: min(560px, 100%);
+    max-width: 560px;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 1.14rem;
+  }
+
+  /* The shelf is the one screen that genuinely wants the width. */
+  .library-list.library-shelf,
+  .library-shelf {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+  }
+
+  .library-card-title {
+    font-size: 1.06rem;
+  }
+
+  .app-tabbar {
+    width: min(720px, calc(100% - var(--safe-left) - var(--safe-right)));
+  }
+
+  .app-tabbar span {
+    font-size: 0.86rem;
+  }
+
+  /* The builder's pictures and the story's own cover were sized for a phone
+     and looked like stamps on a tablet. */
+  .tonight-window,
+  .parent-banner,
+  .step-art,
+  .reveal-art,
+  .reading-art {
+    max-width: 760px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .narration-card,
+  .story-player,
+  .builder-group,
+  .pref-card {
+    max-width: 760px;
+  }
+
+  .result-screen #story-title {
+    max-width: 24ch;
+    font-size: clamp(2.2rem, 4vw, 3rem);
+  }
+
+  .reading-page {
+    max-width: 44ch;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 1.3rem;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Nothing in this app scrolls sideways.
+
+   No element anywhere has a horizontal scroller - checked across every screen
+   - and no page is wider than the window. The drag was the web view's own
+   scroll view panning content that had nowhere to go, which reads as the
+   screen coming loose. touch-action settles it at the gesture, before the
+   scroll view ever sees it, and leaves vertical scrolling alone for the
+   screens that genuinely need it.
+-------------------------------------------------------------------------- */
+html,
+body {
+  overscroll-behavior: none;
+}
+
+body {
+  touch-action: pan-y;
+}
+
+/* The making screen and the player both fit their window exactly, so there is
+   nothing to scroll in either direction and any movement is a glitch. */
+body.loading-active,
+body.loading-active .app-shell {
+  overflow: hidden;
+  touch-action: none;
+}
+
+.result-screen.is-listening {
+  touch-action: none;
+}
+
+/* The scrubber is dragged on purpose, so it keeps its own gestures. */
+input[type="range"] {
+  touch-action: auto;
+}
+
+/* Words: listening hides the page, and this puts it back without touching the
+   audio - the text and the voice together, which is what following along is. */
+.result-screen.is-listening.show-words .reading-page {
+  display: block;
+  max-height: 34vh;
+  overflow-y: auto;
+}
+
+.result-screen.is-listening.show-words .story-player {
+  margin-bottom: 10px;
+}
+
+/* The rain level. Under the chips, only while it is raining. */
+.player-rain-level {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 2px 4px 0;
+}
+
+.player-rain-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  color: rgba(185, 196, 255, 0.78);
+}
+
+.player-rain-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+#player-rain-volume {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 22px;
+  margin: 0;
+  background: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+#player-rain-volume::-webkit-slider-runnable-track {
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(226, 216, 255, 0.24);
+}
+
+#player-rain-volume::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -5.5px;
+  border: 0;
+  border-radius: 50%;
+  background: #c3cdff;
+}
+
+.result-screen.is-dim .player-rain-level {
+  opacity: 0.32;
+}
+
+/* The back button sits on the picture rather than in a row of its own above
+   it. That row cost about 70px, which was the difference between Read
+   together and Listen to story both being on screen and the second one
+   needing a scroll. */
+.reveal-art {
+  position: relative;
+}
+
+.reveal-art .reveal-back {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 2;
+  /* It is over artwork now, not over the page's own background, so it carries
+     its own shade - the pictures are dark at the top but not reliably. */
+  background: rgba(8, 10, 34, 0.56);
+  color: #f2f4ff;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}

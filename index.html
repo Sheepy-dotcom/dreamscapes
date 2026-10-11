@@ -22,7 +22,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026101113" />
+    <link rel="stylesheet" href="./styles.css?v=2026101119" />
   </head>
   <body class="home-active night-mode">
     <svg class="art-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -328,13 +328,11 @@
         <!-- The reveal. Nothing to read yet: the title, who it is for, and the
              two things you can do with it. -->
         <div class="story-reveal" id="story-reveal">
-          <div class="reveal-top">
-            <button class="reveal-icon-button" data-screen-target="library" type="button" aria-label="Back to library">
+          <div class="reveal-art">
+            <img id="reveal-art-image" src="" alt="" aria-hidden="true" />
+            <button class="reveal-icon-button reveal-back" data-screen-target="library" type="button" aria-label="Back to library">
               <span aria-hidden="true">&#8249;</span>
             </button>
-          </div>
-          <div class="reveal-art" aria-hidden="true">
-            <img id="reveal-art-image" src="" alt="" />
           </div>
           <h2 id="story-title"></h2>
           <p class="reveal-summary" id="reveal-summary"></p>
@@ -430,12 +428,16 @@
               <button class="player-extra" id="player-rain" type="button" aria-pressed="false">
                 <svg class="ui-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7.4 14.2a4.2 4.2 0 0 1-.5-8.37 5.5 5.5 0 0 1 10.5-1.1 3.8 3.8 0 0 1-.2 9.47Z" fill="currentColor"/><path d="M8.6 17.2 7.4 20.4M12 17.2l-1.2 3.2M15.4 17.2l-1.2 3.2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg><span>Rain</span>
               </button>
-              <button class="player-extra" id="player-chapters" type="button">
-                <svg class="ui-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.6 3.4h10.8a1 1 0 0 1 1 1v16.2l-6.4-4-6.4 4V4.4a1 1 0 0 1 1-1Z" fill="currentColor"/></svg><span>Pages</span>
+              <button class="player-extra" id="player-chapters" type="button" aria-pressed="false">
+                <svg class="ui-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.6 3.4h10.8a1 1 0 0 1 1 1v16.2l-6.4-4-6.4 4V4.4a1 1 0 0 1 1-1Z" fill="currentColor"/></svg><span>Words</span>
               </button>
               <button class="player-extra" id="player-dim" type="button" aria-pressed="false">
                 <svg class="ui-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.4 15.4A9 9 0 0 1 8.6 3.6a9 9 0 1 0 11.8 11.8Z" fill="currentColor"/></svg><span>Dim</span>
               </button>
+            </div>
+            <div class="player-rain-level" id="player-rain-level" hidden>
+              <span class="player-rain-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M7.4 14.2a4.2 4.2 0 0 1-.5-8.37 5.5 5.5 0 0 1 10.5-1.1 3.8 3.8 0 0 1-.2 9.47Z" fill="currentColor"/><path d="M8.6 17.2 7.4 20.4M12 17.2l-1.2 3.2M15.4 17.2l-1.2 3.2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg></span>
+              <input id="player-rain-volume" type="range" min="5" max="100" step="5" value="60" aria-label="Rain volume" />
             </div>
           </div>
           <div class="narration-panel" id="narration-panel" hidden>
@@ -1299,6 +1301,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026101113"></script>
+    <script src="./app.js?v=2026101119"></script>
   </body>
 </html>

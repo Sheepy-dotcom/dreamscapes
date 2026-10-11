@@ -1378,6 +1378,9 @@ function showScreen(name) {
     updateBuilderAccountNotice();
   }
   document.body.classList.toggle("home-active", name === "welcome");
+  // The making screen is a thing to watch, not a page to read: nothing on it
+  // is below the fold, so it should not move at all while it works.
+  document.body.classList.toggle("loading-active", name === "loading");
   // The step is laid out while its screen is still display:none, where every
   // box measures zero, so the scene is placed again once it actually has one.
   if (name === "builder") {
@@ -4423,9 +4426,19 @@ playerRange?.addEventListener("change", () => seekByPercent(Number(playerRange.v
    pink is much closer to water. Two layers, a low one for the body and a
    quieter bright one for the patter, with the filter drifting slowly so it
    gusts instead of sitting still. */
+const RAIN_LEVEL_KEY = "dreamscapesRainLevel";
+
 const Rain = (() => {
   const FADE_SECONDS = 2.5;
   const RUN_MINUTES = 20;
+  const MAX_GAIN = 0.34;
+  let level = 0.6;
+  try {
+    const saved = Number(localStorage.getItem(RAIN_LEVEL_KEY));
+    if (saved > 0 && saved <= 1) level = saved;
+  } catch {
+    /* A remembered level is a convenience, not a requirement. */
+  }
   let ctx = null;
   let parts = null;
   let stopTimer = null;
@@ -4492,7 +4505,7 @@ const Rain = (() => {
     drift.connect(driftDepth).connect(body.filter.frequency);
     drift.start();
 
-    out.gain.linearRampToValueAtTime(0.34, ctx.currentTime + FADE_SECONDS);
+    out.gain.linearRampToValueAtTime(MAX_GAIN * level, ctx.currentTime + FADE_SECONDS);
     parts = { out, body, patter, drift };
 
     // It has to stop by itself, or it runs all night. This is the sleep timer,
@@ -4508,6 +4521,7 @@ const Rain = (() => {
     // Whoever called it - the button, the timer, or leaving the screen - the
     // button has to agree with what is audible.
     setRainButton(false);
+    setRainLevelVisible(false);
     if (!parts || !ctx) return;
     const { out, body, patter, drift } = parts;
     parts = null;
@@ -4526,7 +4540,26 @@ const Rain = (() => {
     }, FADE_SECONDS * 1000 + 120);
   }
 
-  return { start, stop, isOn };
+  function getLevel() {
+    return level;
+  }
+
+  /* Takes effect while it is raining, so the slider is heard as it moves
+     rather than at the next tap. */
+  function setLevel(next) {
+    level = Math.min(1, Math.max(0.05, Number(next) || 0));
+    try {
+      localStorage.setItem(RAIN_LEVEL_KEY, String(level));
+    } catch {
+      /* Not worth failing over. */
+    }
+    if (parts && ctx) {
+      parts.out.gain.cancelScheduledValues(ctx.currentTime);
+      parts.out.gain.setTargetAtTime(MAX_GAIN * level, ctx.currentTime, 0.08);
+    }
+  }
+
+  return { start, stop, isOn, getLevel, setLevel };
 })();
 
 function setRainButton(on) {
@@ -4534,14 +4567,29 @@ function setRainButton(on) {
   button?.setAttribute("aria-pressed", on ? "true" : "false");
 }
 
+/* The slider only exists while it is raining: a volume control for silence is
+   a puzzle, and the chip row is short enough already. */
+function setRainLevelVisible(on) {
+  const row = document.querySelector("#player-rain-level");
+  if (row) row.hidden = !on;
+}
+
+document.querySelector("#player-rain-volume")?.addEventListener("input", (event) => {
+  Rain.setLevel(Number(event.target.value) / 100);
+});
+
 document.querySelector("#player-rain")?.addEventListener("click", () => {
   if (Rain.isOn()) {
     Rain.stop();
+    setRainLevelVisible(false);
     trackEvent("rain_stopped", {});
     return;
   }
   const started = Rain.start();
   setRainButton(started);
+  setRainLevelVisible(started);
+  const slider = document.querySelector("#player-rain-volume");
+  if (slider) slider.value = String(Math.round(Rain.getLevel() * 100));
   if (!started) statusNote.textContent = "Rain sounds are not available on this device.";
   else trackEvent("rain_started", { from: "button" });
 });
@@ -4588,19 +4636,22 @@ document.querySelector("#player-dim")?.addEventListener("click", (event) => {
   trackEvent("player_dim", { on: Boolean(on) });
 });
 
-/* Pages, not chapters: the audio has no chapter marks, and inventing some
-   would be a lie about where you are landing. The story's own pages do have
-   positions, so this seeks to where a page starts as a fraction of the whole
-   text - which is honest about being proportional. */
+/* This used to turn a page and seek the audio to roughly where that page
+   began. Roughly is the problem: the jump landed mid-sentence and threw away
+   where you were, which is a lot to ask of a button pressed in the dark.
+
+   Listening already has the words - it just hides them. So this shows them
+   instead, and the audio is not touched at all. Following the text while it
+   is read is the thing a parent actually wanted here. */
 document.querySelector("#player-chapters")?.addEventListener("click", () => {
-  if (!readingPages.length) return;
-  const next = (readingIndex + 1) % readingPages.length;
-  readingIndex = next;
-  renderReadingPage();
-  const before = readingPages.slice(0, next).flat().join(" ").length;
-  const whole = readingPages.flat().join(" ").length || 1;
-  if (playerTotalSeconds()) seekByPercent((before / whole) * 100);
-  trackEvent("player_page_jump", { page: next + 1 });
+  if (!resultScreen) return;
+  const showing = resultScreen.classList.toggle("show-words");
+  const button = document.querySelector("#player-chapters");
+  button?.setAttribute("aria-pressed", showing ? "true" : "false");
+  const label = button?.querySelector("span:not(.ui-ic)");
+  if (label) label.textContent = showing ? "Hide" : "Words";
+  if (showing) renderReadingPage();
+  trackEvent("player_words", { showing });
 });
 
 /* Rotating the phone, or the keyboard appearing, changes how much fits. The
@@ -8063,12 +8114,19 @@ form.addEventListener("submit", async (event) => {
       clearPendingStoryContext();
       if (!canUseCloudLibrary()) incrementStoriesUsed(selectedPlanKey);
       renderStory(currentStory);
+      /* Started here rather than after the save, because drawing it takes the
+         better part of twenty seconds and everything below this line is work
+         we are doing anyway: the last making stages, then writing the story to
+         the library. Asking for the picture first means it is usually on the
+         story by the time a parent has finished reading the title, instead of
+         appearing twenty seconds into a screen they may already have left.
+
+         Still not awaited - a story must never wait on its cover. The save
+         below starts later and finishes long before, so the artPath this
+         writes afterwards lands on top of it rather than under it. */
+      createStoryCover(currentStory);
       await finishMakingStages();
       const savedToLibrary = await saveGeneratedStoryToLibrary(currentStory);
-      /* Not awaited. The story is already on screen and the cover takes the
-         best part of a minute; making a parent wait on it would undo the
-         point of showing the story the moment it is written. */
-      createStoryCover(currentStory);
       trackEvent("story_generated", {
         plan: selectedPlanKey,
         duration: storyData.duration,

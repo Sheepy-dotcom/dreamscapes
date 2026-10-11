@@ -114,7 +114,11 @@ public class DreamAudioPlugin: CAPPlugin, CAPBridgedPlugin {
 
     private func configureAudioSession() {
         do {
-            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .spokenAudio, options: [])
+            // .mixWithOthers because the rain is not ours to interrupt: it is Web Audio
+            // inside the web view, which has an audio session of its own. Taking
+            // .playback exclusively silenced it, so the button worked in a browser
+            // and could never be heard in the app.
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .spokenAudio, options: [.mixWithOthers])
             try AVAudioSession.sharedInstance().setActive(true)
         } catch {
             notifyError("iOS audio session could not start.")
