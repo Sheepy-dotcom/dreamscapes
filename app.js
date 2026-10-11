@@ -410,7 +410,6 @@ const VOICE_PREVIEW_GAINS = {
   "cedar audition": 1.1,
   "male calm": 1.07,
   "ash storyteller": 1.12,
-  "onyx deep": 1.22,
 };
 // Clips live under /assets, which is served immutable for a year, so a rebuilt
 // preview keeps its filename and would go on playing the old recording for
@@ -421,7 +420,6 @@ const VOICE_PREVIEW_FILES = {
   "female calm": "./assets/voice-preview-female-calm.mp3",
   "male calm": "./assets/voice-preview-male-calm.mp3",
   "ash storyteller": "./assets/voice-preview-ash-storyteller.mp3",
-  "onyx deep": "./assets/voice-preview-onyx-deep.mp3",
   "cedar audition": "./assets/voice-preview-cedar-audition.mp3",
   "marin audition": "./assets/voice-preview-marin-audition.mp3",
   "shimmer soft": "./assets/voice-preview-shimmer-soft.mp3",
@@ -432,8 +430,9 @@ const VOICE_PREVIEW_FILES = {
 const DEFAULT_VOICE_STYLE = "marin audition";
 // Thirteen voices made the list a wall of near-identical choices, so the picker
 // now offers a short list. The ones it dropped - coral, ballad, verse, alloy,
-// echo and sage - keep their profiles below: stories already saved in those
-// voices have to go on narrating in the voice they were written in. Only the
+// echo, sage and onyx - keep their profiles below: stories already saved in
+// those voices have to go on narrating in the voice they were written in.
+// Only the
 // styles in VOICE_PREVIEW_FILES are selectable.
 //
 // Sage went last and for a different reason. It records about 10dB below every
@@ -491,6 +490,8 @@ const AI_VOICE_PROFILES = {
     direction:
       "Use the same consistent voice every time: a warm, rounded female voice with a soft smile in it, close and comfortable like a favourite aunt at the end of the bed. Keep it low and easy throughout, letting each sentence fall away gently rather than lifting. Stay calm and cosy rather than bright or chatty.",
   },
+  // Retired from the picker (it was "Gus"). Kept because stories already
+  // narrated in it must go on sounding the way they were made.
   "onyx deep": {
     voice: "onyx",
     accent: "british",
