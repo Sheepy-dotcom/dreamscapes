@@ -7687,13 +7687,13 @@ body.night-mode .auth-switch {
   font-weight: 900;
 }
 
+/* The fade that used to run up the bottom quarter is gone. It made the
+   picture meet the page nicely, but it also meant a quarter of the cover the
+   story just paid to have drawn was never seen. The whole picture shows. */
 .reveal-art {
   width: 100%;
   border-radius: 20px;
   overflow: hidden;
-  /* Meets the page rather than ending on a line, like every other picture. */
-  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 76%, transparent 100%);
-  mask-image: linear-gradient(180deg, #000 0%, #000 76%, transparent 100%);
 }
 
 .reveal-art img {
@@ -11080,6 +11080,8 @@ body.choice-sheet-open {
   justify-content: center;
   gap: 9px;
   min-width: 0;
+  /* Keeps a long status off the card's edges while it wraps. */
+  padding: 0 4px;
 }
 
 .player-voice-dot {
@@ -11098,14 +11100,18 @@ body.choice-sheet-open {
   height: 17px;
 }
 
+/* This line is not always a name. While the audio is being made it carries
+   "Recording the narration... this takes about a minute.", and if that fails,
+   a sentence telling the parent to press play again. Holding it on one line
+   cut those in half and, because the row is centred, pushed what was left of
+   it off to one side. It wraps. */
 .story-player .player-sub {
-  overflow: hidden;
+  min-width: 0;
   color: rgba(226, 231, 255, 0.82);
   font-size: 0.88rem;
   font-weight: 800;
-  text-align: left;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  line-height: 1.35;
+  text-align: center;
 }
 
 /* Chips rather than bare icons, to match the rows on the narration step. */
@@ -11137,10 +11143,11 @@ body.choice-sheet-open {
   color: #ffd45c;
 }
 
-/* Lights out means lights out: the card, the voice line and the chips all go,
-   and the transport is left alone on the dark. */
-.result-screen.is-dim .player-voice,
-.result-screen.is-dim .player-extras {
+/* Lights out: the card and the voice line go, the same way the line alone
+   used to. The chips stay - they only fade, which is how they were before -
+   because Dim is one of them and hiding it leaves no way back out of the
+   dark. */
+.result-screen.is-dim .player-voice {
   display: none;
 }
 
@@ -11227,4 +11234,29 @@ body.choice-sheet-open {
 
 .player-skip:active {
   transform: scale(0.94);
+}
+
+/* The story idea is the one field on this step that writes the story, so it
+   leads it: the whole row, a taller box, and a placeholder that shows what
+   belongs in it. It used to sit in half a row under "Something else?", which
+   read like an afterthought next to the Occasion menu. */
+.builder-step-tonight .story-idea-field {
+  grid-column: 1 / -1;
+}
+
+.builder-step-tonight .story-idea-field > span {
+  color: #ffd45c;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.builder-step-tonight .story-idea-field textarea {
+  min-height: 92px;
+  font-size: 0.98rem;
+  line-height: 1.4;
+}
+
+.builder-step-tonight .story-idea-field textarea::placeholder {
+  color: rgba(226, 220, 252, 0.42);
+  font-size: 0.92rem;
 }

@@ -5187,13 +5187,14 @@ function renderStory(story) {
   const actualLengthSeconds = getStoryActualDurationSeconds(story);
   document.querySelector("#story-title").textContent = story.title;
 
-  // The reveal: who it is for, a line about it, and two chips. The review's
+  // The reveal: the picture, a line about it, and two chips. The review's
   // point about metadata is that nine chips is a specification sheet - the two
   // that matter before reading are how long it is and what kind of story it
   // is. The rest is still here, one tap down in Story details.
-  const who = cleanName(story.childName);
-  const revealBadge = document.querySelector("#reveal-badge");
-  if (revealBadge) revealBadge.textContent = who ? `Made just for ${who}` : "Made for you";
+  //
+  // The "Made just for ..." line above the picture is gone: it said what the
+  // screen already shows, and it cost the height that kept Read together and
+  // Listen to story from both being on screen at once.
   setStoryArt(document.querySelector("#reveal-art-image"), story, 0);
   const revealSummary = document.querySelector("#reveal-summary");
   if (revealSummary) {

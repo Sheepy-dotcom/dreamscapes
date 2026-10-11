@@ -22,7 +22,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026101103" />
+    <link rel="stylesheet" href="./styles.css?v=2026101108" />
   </head>
   <body class="home-active night-mode">
     <svg class="art-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -149,23 +149,6 @@
             </div>
           </section>
 
-          <section class="builder-step builder-step-mood" data-builder-step="4" data-step-sub="Pick as many as you like." data-step-title="Mood" aria-labelledby="builder-step-mood-title" hidden>
-            <div class="mood-scene" aria-hidden="true"><img src="./assets/mood-scene.webp?v=2026100969" alt="" /></div><div class="step-foreground mood-foreground">
-            <h3 id="builder-step-mood-title">What should it <span>feel like?</span></h3>
-            <fieldset class="choice-group builder-group mood-group">
-              <legend class="visually-hidden">Moods</legend>
-              <div class="mood-grid" aria-label="Story moods">
-                <label><input type="checkbox" name="moods" value="relaxing" checked /><span><svg class="mi" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><g class="mi-fill"><circle cx="8.8" cy="13.4" r="4.1"/><circle cx="14.4" cy="11.6" r="5.2"/><rect x="4.7" y="13.2" width="14.6" height="5.8" rx="2.9"/></g><path class="mi-accent" d="M19.6 4.2 20.4 6.3 22.5 7.1 20.4 7.9 19.6 10 18.8 7.9 16.7 7.1 18.8 6.3Z"/></svg>Calm</span></label>
-                <label><input type="checkbox" name="moods" value="magical" /><span><svg class="mi" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="mi-stroke" d="M4.6 19.6 13.4 10.8"/><path class="mi-accent" d="M16.8 4 18.2 7.6 21.8 9 18.2 10.4 16.8 14 15.4 10.4 11.8 9 15.4 7.6Z"/><circle class="mi-fill" cx="6.6" cy="6.4" r="1.4"/><circle class="mi-fill" cx="20.4" cy="17.2" r="1.1"/></svg>Magical</span></label>
-                <label><input type="checkbox" name="moods" value="funny" /><span><svg class="mi" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle class="mi-fill" cx="12" cy="12" r="8.8"/><circle class="mi-ink" cx="9.1" cy="10.1" r="1.3"/><circle class="mi-ink" cx="14.9" cy="10.1" r="1.3"/><path class="mi-ink-stroke" d="M7.9 13.9a4.8 4.8 0 0 0 8.2 0"/></svg>Funny</span></label>
-                <label><input type="checkbox" name="moods" value="adventurous" /><span><svg class="mi" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="mi-fill" d="M21.4 2.6 2.6 10.5l7 2.9 2.9 7Z"/><path class="mi-ink-stroke" d="M21.4 2.6 9.6 13.4"/><path class="mi-accent" d="M4.6 18.4 5.3 20.2 7.1 20.9 5.3 21.6 4.6 23.4 3.9 21.6 2.1 20.9 3.9 20.2Z"/></svg>Adventurous</span></label>
-                <label><input type="checkbox" name="moods" value="educational" /><span><svg class="mi" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="mi-fill" d="M12 7.6C10.1 6 7.5 5.4 4.7 5.7a1.1 1.1 0 0 0-1 1.1v9.8a1.1 1.1 0 0 0 1.2 1.1c2.3-.25 4.6.2 6.2 1.4h1.8c1.6-1.2 3.9-1.65 6.2-1.4a1.1 1.1 0 0 0 1.2-1.1V6.8a1.1 1.1 0 0 0-1-1.1c-2.8-.3-5.4.3-7.3 1.9Z"/><path class="mi-ink-stroke" d="M12 7.8v11.3"/><path class="mi-accent" d="M19.2 1.4 19.9 3.3 21.8 4 19.9 4.7 19.2 6.6 18.5 4.7 16.6 4 18.5 3.3Z"/></svg>Curious</span></label>
-                <label><input type="checkbox" name="moods" value="sleepy bedtime" /><span><svg class="mi" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="mi-stroke" d="M3.4 14.4h5.4l-5.4 5.8h5.4"/><path class="mi-stroke" d="M11 8.2h4.3l-4.3 4.6h4.3"/><path class="mi-accent-stroke" d="M17 2.6h3.4l-3.4 3.6h3.4"/></svg>Sleepy</span></label>
-              </div>
-            </fieldset>
-            </div>
-          </section>
-
           <section class="builder-step builder-step-tonight" data-builder-step="5" data-step-sub="Pick one or more ideas, or type your own." data-step-title="Tonight" data-preview-step-title="Interests" aria-labelledby="builder-step-idea-title" hidden>
             <div class="tonight-headline">
               <h3 id="builder-step-idea-title" data-preview-title="What do they love?">What shall we <span>explore tonight?</span></h3>
@@ -177,16 +160,16 @@
             <div class="tonight-body">
               <div class="builder-group builder-group-sky builder-fields-block">
                 <div class="form-grid tonight-grid">
+                  <label class="field story-idea-field builder-group builder-group-pink" data-full-builder-only>
+                    <span>Story idea</span>
+                    <textarea id="story-idea" name="storyIdea" rows="2" placeholder="A dragon who is afraid of the dark, a lost welly, a trip to the moon..."></textarea>
+                  </label>
                   <div class="field interest-field">
                     <label class="field interest-custom">
                       <span>Something else?</span>
                       <input name="interests" type="text" placeholder="Type what they love..." />
                     </label>
                   </div>
-                  <label class="field story-idea-field builder-group builder-group-pink" data-full-builder-only>
-                <span>Story idea</span>
-                <textarea id="story-idea" name="storyIdea" rows="2"></textarea>
-              </label>
                   <label class="field" data-full-builder-only>
                     <span>Occasion</span>
                     <select id="story-occasion" name="occasion">
@@ -202,6 +185,23 @@
                   </label>
                 </div>
               </div>
+            </div>
+          </section>
+
+          <section class="builder-step builder-step-mood" data-builder-step="4" data-step-sub="Pick as many as you like." data-step-title="Mood" aria-labelledby="builder-step-mood-title" hidden>
+            <div class="mood-scene" aria-hidden="true"><img src="./assets/mood-scene.webp?v=2026100969" alt="" /></div><div class="step-foreground mood-foreground">
+            <h3 id="builder-step-mood-title">What should it <span>feel like?</span></h3>
+            <fieldset class="choice-group builder-group mood-group">
+              <legend class="visually-hidden">Moods</legend>
+              <div class="mood-grid" aria-label="Story moods">
+                <label><input type="checkbox" name="moods" value="relaxing" checked /><span><svg class="mi" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><g class="mi-fill"><circle cx="8.8" cy="13.4" r="4.1"/><circle cx="14.4" cy="11.6" r="5.2"/><rect x="4.7" y="13.2" width="14.6" height="5.8" rx="2.9"/></g><path class="mi-accent" d="M19.6 4.2 20.4 6.3 22.5 7.1 20.4 7.9 19.6 10 18.8 7.9 16.7 7.1 18.8 6.3Z"/></svg>Calm</span></label>
+                <label><input type="checkbox" name="moods" value="magical" /><span><svg class="mi" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="mi-stroke" d="M4.6 19.6 13.4 10.8"/><path class="mi-accent" d="M16.8 4 18.2 7.6 21.8 9 18.2 10.4 16.8 14 15.4 10.4 11.8 9 15.4 7.6Z"/><circle class="mi-fill" cx="6.6" cy="6.4" r="1.4"/><circle class="mi-fill" cx="20.4" cy="17.2" r="1.1"/></svg>Magical</span></label>
+                <label><input type="checkbox" name="moods" value="funny" /><span><svg class="mi" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle class="mi-fill" cx="12" cy="12" r="8.8"/><circle class="mi-ink" cx="9.1" cy="10.1" r="1.3"/><circle class="mi-ink" cx="14.9" cy="10.1" r="1.3"/><path class="mi-ink-stroke" d="M7.9 13.9a4.8 4.8 0 0 0 8.2 0"/></svg>Funny</span></label>
+                <label><input type="checkbox" name="moods" value="adventurous" /><span><svg class="mi" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="mi-fill" d="M21.4 2.6 2.6 10.5l7 2.9 2.9 7Z"/><path class="mi-ink-stroke" d="M21.4 2.6 9.6 13.4"/><path class="mi-accent" d="M4.6 18.4 5.3 20.2 7.1 20.9 5.3 21.6 4.6 23.4 3.9 21.6 2.1 20.9 3.9 20.2Z"/></svg>Adventurous</span></label>
+                <label><input type="checkbox" name="moods" value="educational" /><span><svg class="mi" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="mi-fill" d="M12 7.6C10.1 6 7.5 5.4 4.7 5.7a1.1 1.1 0 0 0-1 1.1v9.8a1.1 1.1 0 0 0 1.2 1.1c2.3-.25 4.6.2 6.2 1.4h1.8c1.6-1.2 3.9-1.65 6.2-1.4a1.1 1.1 0 0 0 1.2-1.1V6.8a1.1 1.1 0 0 0-1-1.1c-2.8-.3-5.4.3-7.3 1.9Z"/><path class="mi-ink-stroke" d="M12 7.8v11.3"/><path class="mi-accent" d="M19.2 1.4 19.9 3.3 21.8 4 19.9 4.7 19.2 6.6 18.5 4.7 16.6 4 18.5 3.3Z"/></svg>Curious</span></label>
+                <label><input type="checkbox" name="moods" value="sleepy bedtime" /><span><svg class="mi" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="mi-stroke" d="M3.4 14.4h5.4l-5.4 5.8h5.4"/><path class="mi-stroke" d="M11 8.2h4.3l-4.3 4.6h4.3"/><path class="mi-accent-stroke" d="M17 2.6h3.4l-3.4 3.6h3.4"/></svg>Sleepy</span></label>
+              </div>
+            </fieldset>
             </div>
           </section>
 
@@ -328,7 +328,6 @@
             <button class="reveal-icon-button" data-screen-target="library" type="button" aria-label="Back to library">
               <span aria-hidden="true">&#8249;</span>
             </button>
-            <p class="reveal-badge"><svg class="ui-ic" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2.4 14.7 9l7.1.5-5.4 4.6 1.7 6.9L12 17.2l-6.1 3.8 1.7-6.9L2.2 9.5 9.3 9Z" fill="currentColor"/></svg><span id="reveal-badge"></span></p>
           </div>
           <div class="reveal-art" aria-hidden="true">
             <img id="reveal-art-image" src="" alt="" />
@@ -1296,6 +1295,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026101103"></script>
+    <script src="./app.js?v=2026101108"></script>
   </body>
 </html>
