@@ -1362,6 +1362,14 @@ function showScreen(name) {
   stopPreviewAudio();
   setPlanStoreLinksVisible(false);
   setOpenAppPanelVisible(false);
+  /* Leaving the story by a tab rather than by its close button used to leave
+     reading-active on the body, and that class keeps the result screen laid
+     out however the screens are switched - so the player sat faintly behind
+     whatever was opened next. Closing here covers every way out, not just the
+     four that remembered to ask. */
+  if (name !== "result" && document.body.classList.contains("reading-active")) {
+    closeReading();
+  }
   Object.values(screens).forEach((screen) => screen.classList.remove("active"));
   screens[name].classList.add("active");
   if (name === "builder") {
@@ -3272,13 +3280,31 @@ function renderInterestChips() {
          <span>${label}</span>
        </button>`
   ).join("");
+  /* Two at a time. A story built around six things is not built around any of
+     them, and the prompt says so in as many words: a child who loves dinosaurs
+     should get a story about dinosaurs, not one dinosaur in a list.
+
+     Tapping a third swaps out the one chosen first rather than doing nothing.
+     A chip that refuses to respond reads as broken; one that trades places
+     teaches the limit in a single tap. Typing in the field by hand is left
+     alone - that is the parent being deliberate. */
+  const MAX_CHIP_IDEAS = 2;
+  const isChipIdea = (item) =>
+    INTEREST_IDEAS.some(([label]) => label.toLowerCase() === item.toLowerCase());
+
   interestChips.querySelectorAll("button").forEach((chip) => {
     chip.addEventListener("click", () => {
       const value = chip.dataset.interest;
       const current = readInterests();
       const index = current.findIndex((item) => item.toLowerCase() === value.toLowerCase());
-      if (index >= 0) current.splice(index, 1);
-      else current.push(value);
+      if (index >= 0) {
+        current.splice(index, 1);
+      } else {
+        while (current.filter(isChipIdea).length >= MAX_CHIP_IDEAS) {
+          current.splice(current.findIndex(isChipIdea), 1);
+        }
+        current.push(value);
+      }
       writeInterests(current);
       trackEvent("interest_chip", { interest: value, on: index < 0 });
     });

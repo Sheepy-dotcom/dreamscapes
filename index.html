@@ -22,7 +22,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026101109" />
+    <link rel="stylesheet" href="./styles.css?v=2026101112" />
   </head>
   <body class="home-active night-mode">
     <svg class="art-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -149,7 +149,7 @@
             </div>
           </section>
 
-          <section class="builder-step builder-step-tonight" data-builder-step="5" data-step-sub="Pick one or more ideas, or type your own." data-step-title="Tonight" data-preview-step-title="Interests" aria-labelledby="builder-step-idea-title" hidden>
+          <section class="builder-step builder-step-tonight" data-builder-step="5" data-step-sub="Pick up to two ideas, or type your own." data-step-title="Tonight" data-preview-step-title="Interests" aria-labelledby="builder-step-idea-title" hidden>
             <div class="tonight-headline">
               <h3 id="builder-step-idea-title" data-preview-title="What do they love?">What shall we <span>explore tonight?</span></h3>
             </div>
@@ -170,19 +170,7 @@
                       <input name="interests" type="text" placeholder="Type what they love..." />
                     </label>
                   </div>
-                  <label class="field" data-full-builder-only>
-                    <span>Occasion</span>
-                    <select id="story-occasion" name="occasion">
-                      <option value="">None</option>
-                      <option value="birthday">Birthday</option>
-                      <option value="first day at school">First day at school</option>
-                      <option value="holiday">Holiday</option>
-                      <option value="lost tooth">Lost tooth</option>
-                      <option value="new sibling">Welcoming a new sibling</option>
-                      <option value="confidence">Building confidence</option>
-                      <option value="friendship">Friendship</option>
-                    </select>
-                  </label>
+                  
                 </div>
               </div>
             </div>
@@ -214,6 +202,22 @@
               <button class="step-skip" id="skip-parent-controls" type="button">Skip</button>
             </div>
             <div class="parent-body">
+              <div class="pref-card">
+                <h4 class="chip-group-title">Is tonight a special one?</h4>
+                <label class="field occasion-field sheet-field" data-full-builder-only>
+                    <span class="visually-hidden">Occasion</span>
+                    <select id="story-occasion" name="occasion" aria-label="Occasion" data-sheet-select data-sheet-title="Is tonight a special one?">
+                      <option value="">None</option>
+                      <option value="birthday">Birthday</option>
+                      <option value="first day at school">First day at school</option>
+                      <option value="holiday">Holiday</option>
+                      <option value="lost tooth">Lost tooth</option>
+                      <option value="new sibling">Welcoming a new sibling</option>
+                      <option value="confidence">Building confidence</option>
+                      <option value="friendship">Friendship</option>
+                    </select>
+                  </label>
+              </div>
               <div class="pref-card">
                 <h4 class="chip-group-title"><span class="pref-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path class="pc-accent" d="M12 1.8 14.9 8.6 22.2 9.2 16.6 14 18.3 21.2 12 17.3 5.7 21.2 7.4 14 1.8 9.2 9.1 8.6Z"/></svg></span>Anything to encourage?</h4>
                 <div class="pref-chips" id="lesson-chips" role="group" aria-label="Themes to encourage"></div>
@@ -1295,6 +1299,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026101109"></script>
+    <script src="./app.js?v=2026101112"></script>
   </body>
 </html>
