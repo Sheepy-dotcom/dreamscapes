@@ -108,6 +108,23 @@ const storyMemoryGrid = document.querySelector("#story-memory-grid");
 const reminderCard = document.querySelector("#reminder-card");
 const reminderForm = document.querySelector("#reminder-form");
 const reminderTime = document.querySelector("#reminder-time");
+
+/* The reminder used to be <input type="time">, which opens the operating
+   system's white wheel - the last of those left in the app. It is a list of
+   bedtimes now, so it opens the same sheet as everything else.
+
+   A time saved by the old control might not be on that list. Rather than let
+   the select quietly fall back to seven o'clock and change someone's reminder
+   behind their back, the saved time is added to it. */
+function ensureReminderOption(time) {
+  if (!reminderTime || !/^\d{2}:\d{2}$/.test(String(time || ""))) return;
+  if ([...reminderTime.options].some((option) => option.value === time)) return;
+  const [hours, minutes] = time.split(":").map(Number);
+  const suffix = hours < 12 ? "am" : "pm";
+  const option = new Option(`${hours % 12 || 12}:${String(minutes).padStart(2, "0")} ${suffix}`, time);
+  const after = [...reminderTime.options].findIndex((existing) => existing.value > time);
+  reminderTime.add(option, after === -1 ? undefined : after);
+}
 const reminderEnabled = document.querySelector("#reminder-enabled");
 const reminderStatus = document.querySelector("#reminder-status");
 let currentStory = null;
@@ -7229,10 +7246,17 @@ function getReminderStorageKey() {
 function loadReminderSettings() {
   try {
     const settings = JSON.parse(localStorage.getItem(getReminderStorageKey()) || "{}");
-    if (reminderTime) reminderTime.value = settings.time || "19:00";
+    if (reminderTime) {
+      ensureReminderOption(settings.time);
+      reminderTime.value = settings.time || "19:00";
+      syncSheetSelectTrigger(reminderTime);
+    }
     if (reminderEnabled) reminderEnabled.checked = Boolean(settings.enabled);
   } catch {
-    if (reminderTime) reminderTime.value = "19:00";
+    if (reminderTime) {
+      reminderTime.value = "19:00";
+      syncSheetSelectTrigger(reminderTime);
+    }
     if (reminderEnabled) reminderEnabled.checked = false;
   }
 }

@@ -22,7 +22,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026101119" />
+    <link rel="stylesheet" href="./styles.css?v=2026101120" />
   </head>
   <body class="home-active night-mode">
     <svg class="art-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -979,9 +979,30 @@
             <summary><span class="section-head"><span class="section-ic" aria-hidden="true"><img src="./assets/acct-ic-reminder.webp?v=2026101029" alt="" /></span>Bedtime reminder</span></summary>
             <p>Choose an optional daily time for the next DreamScapes adventure.</p>
             <form class="reminder-form" id="reminder-form">
-              <label class="field">
+              <label class="field sheet-field">
                 <span>Reminder time</span>
-                <input id="reminder-time" type="time" value="19:00" />
+                <select id="reminder-time" aria-label="Reminder time" data-sheet-select data-sheet-title="When is bedtime?">
+                  <option value="17:00">5:00 pm</option>
+                  <option value="17:15">5:15 pm</option>
+                  <option value="17:30">5:30 pm</option>
+                  <option value="17:45">5:45 pm</option>
+                  <option value="18:00">6:00 pm</option>
+                  <option value="18:15">6:15 pm</option>
+                  <option value="18:30">6:30 pm</option>
+                  <option value="18:45">6:45 pm</option>
+                  <option value="19:00" selected>7:00 pm</option>
+                  <option value="19:15">7:15 pm</option>
+                  <option value="19:30">7:30 pm</option>
+                  <option value="19:45">7:45 pm</option>
+                  <option value="20:00">8:00 pm</option>
+                  <option value="20:15">8:15 pm</option>
+                  <option value="20:30">8:30 pm</option>
+                  <option value="20:45">8:45 pm</option>
+                  <option value="21:00">9:00 pm</option>
+                  <option value="21:15">9:15 pm</option>
+                  <option value="21:30">9:30 pm</option>
+                  <option value="21:45">9:45 pm</option>
+                </select>
               </label>
               <label class="feature-toggle compact-toggle">
                 <input id="reminder-enabled" type="checkbox" />
@@ -1301,6 +1322,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026101119"></script>
+    <script src="./app.js?v=2026101120"></script>
   </body>
 </html>
