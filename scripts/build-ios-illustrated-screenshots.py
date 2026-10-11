@@ -20,6 +20,10 @@ import store_screenshot_design as d
 
 ROOT = Path(__file__).resolve().parents[1]
 ART_DIR = ROOT / "store-assets" / "source" / "illustrated"
+# A panel finished elsewhere, headline and all. Anything in here wins over
+# compositing, so a hand-made screenshot is not quietly rebuilt over the next
+# time this runs - it is only resized to the size the store asks for.
+FINISHED_DIR = ROOT / "store-assets" / "source" / "finished"
 UI_DIR = ROOT / "store-assets" / "source" / "ui"
 OUTPUT_DIR = ROOT / "store-assets" / "ios" / "screenshots-illustrated"
 
@@ -66,6 +70,14 @@ def scrim(canvas, height, strength):
 
 
 def build(output, art_name, accent_name, lines, phone, extras):
+    finished = FINISHED_DIR / output
+    if finished.exists():
+        OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+        art = Image.open(finished).convert("RGB")
+        d.cover(art, (WIDTH, HEIGHT)).save(OUTPUT_DIR / output, "PNG", optimize=True)
+        print(f"  {output}  (finished panel, {art.width}x{art.height} -> {WIDTH}x{HEIGHT})")
+        return
+
     accent = d.ACCENTS[accent_name]
     art = Image.open(ART_DIR / art_name).convert("RGBA")
     canvas = d.cover(art, (WIDTH, HEIGHT)).convert("RGBA")
@@ -90,6 +102,7 @@ def build(output, art_name, accent_name, lines, phone, extras):
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     canvas.convert("RGB").save(OUTPUT_DIR / output, "PNG", optimize=True)
+    print(f"  {output}  (composited)")
 
 
 def main():
@@ -100,7 +113,6 @@ def main():
             stale.unlink()
     for screen in SCREENS:
         build(*screen)
-        print(f"  {screen[0]}")
 
 
 if __name__ == "__main__":
