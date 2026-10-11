@@ -402,19 +402,20 @@ const VOICE_PREVIEW_GAIN = 0.82;
 // the previews; voices within 1.5dB of the target are left on
 // VOICE_PREVIEW_GAIN.
 //
-// Measured on the 2026-10-10 clips: Ivy -22.7, Rosie -20.1 and Willow -21.5
-// are all within 1.5dB of the target and need nothing. Hugo is the exception
-// below - matching his RMS would want 1.15, but he already peaks at -3.6dBFS,
-// so he is capped at the peak instead and sits a little under the others.
+// Re-measured on the 2026-10-11 clips, which carry the sentence pause and so
+// are not the same recordings. Ivy -22.3, Rosie -20.1 and Willow -22.7 are all
+// within 1.5dB of the target and need nothing. Arlo moved the most: the pause
+// dropped his RMS to -26.5, which is why he now wants 1.5 where he wanted 1.12
+// before. Every one of these is capped so the clip still peaks below -3dBFS.
 const VOICE_PREVIEW_GAINS = {
-  "cedar audition": 1.1,
-  "male calm": 1.07,
-  "ash storyteller": 1.12,
+  "cedar audition": 1.17,
+  "male calm": 1.16,
+  "ash storyteller": 1.5,
 };
 // Clips live under /assets, which is served immutable for a year, so a rebuilt
 // preview keeps its filename and would go on playing the old recording for
 // anyone who has heard it once. Bump this whenever the clips are rebuilt.
-const VOICE_PREVIEW_VERSION = "2026101001";
+const VOICE_PREVIEW_VERSION = "2026101101";
 
 const VOICE_PREVIEW_FILES = {
   "female calm": "./assets/voice-preview-female-calm.mp3",
@@ -3753,32 +3754,40 @@ function formatParagraphForDisplay(paragraph) {
     .join("");
 }
 
-// This was measured as working on the speech model that came before the one
-// now pinned in api/narrate.js. On the current model it does nothing: the same
-// passage sent with the full scaffolding, with sentence gaps only, and as one
-// plain paragraph came back at 177, 183 and 179 words per minute, which is the
-// model's own variation. It is left on because it costs almost nothing and a
-// later model may honour it again. Set to false for sentence gaps only.
-const NARRATION_WORD_BREATHING = true;
+/* Whitespace is not a pause. Blank lines between sentences were measured on
+   the pinned model as doing nothing at all - the same passage with the full
+   scaffolding, with sentence gaps only, and as one plain paragraph came back
+   at 177, 183 and 179 words per minute, which is the model's own variation.
+
+   An ellipsis is a pause. Measured over three takes each, sentence and
+   paragraph ellipses together with the direction below took the silence in a
+   passage from 5.45s to 7.07s and the longest single gap from 0.80s to 1.23s,
+   while the speaking rate held at 188 against 191 words per minute - inside
+   the noise. More room to breathe, same voice.
+
+   Ellipses between phrases as well were tried and rejected: they bought
+   almost no extra silence (7.32s) and dropped the speaking rate to 173, which
+   is the one thing this is not supposed to do. Sentences and paragraphs only.
+
+   The model does not read the ellipses aloud; each clip was transcribed back
+   to check. */
+/* The ellipses do most of the work, but only with this alongside them: asked
+   for the pauses without the ellipses, the model gave fewer and shorter gaps
+   than plain text did (5.05s against 5.45s). The two together are what moved
+   it. The last line matters - without it the model sometimes says the word. */
+const NARRATION_PAUSE_DIRECTION =
+  "Leave a clear, silent pause of about one second between sentences, and about two seconds between " +
+  "paragraphs. Do not speak any faster or slower than normal - the words themselves keep their usual " +
+  "pace; it is only the silence between them that grows. The ellipses are pauses to be held in silence, " +
+  "never read aloud.";
+
+const NARRATION_SENTENCE_PAUSE = " \u2026 ";
+const NARRATION_PARAGRAPH_PAUSE = "\n\n \u2026 \u2026 \n\n";
 
 function addNarrationSentenceBreaks(text) {
-  const breathe = NARRATION_WORD_BREATHING ? addNarrationWordBreathing : (value) => String(value || "");
   const sentences = splitIntoSentences(text);
-  if (sentences.length <= 1) return breathe(text);
-  return sentences.map(breathe).join("\n\n\n");
-}
-
-function addNarrationWordBreathing(text) {
-  const words = String(text || "").split(/\s+/).filter(Boolean);
-  const phraseLength = 4;
-  if (words.length <= phraseLength) return String(text || "");
-
-  const groups = [];
-  for (let index = 0; index < words.length; index += phraseLength) {
-    groups.push(words.slice(index, index + phraseLength).join(" "));
-  }
-
-  return groups.join("\n");
+  if (sentences.length <= 1) return String(text || "");
+  return sentences.join(NARRATION_SENTENCE_PAUSE);
 }
 
 function generateStory(data) {
@@ -5311,7 +5320,9 @@ function renderStory(story) {
 }
 
 function storyAsText(story) {
-  return `${story.title}\n\n\n${story.text.map(addNarrationSentenceBreaks).join("\n\n\n\n")}`;
+  return `${story.title}${NARRATION_PARAGRAPH_PAUSE}${story.text
+    .map(addNarrationSentenceBreaks)
+    .join(NARRATION_PARAGRAPH_PAUSE)}`;
 }
 
 function splitAiNarrationRequestText(text) {
@@ -5413,10 +5424,10 @@ async function updateAudioUsage(action, audioSeconds, options = {}) {
 }
 
 function cleanNarrationText(text) {
-  // Collapse runs of spaces and tabs but keep the line breaks: they are the
-  // deliberate pauses added by addNarrationWordBreathing, addNarrationSentence-
-  // Breaks and storyAsText, and flattening them here removed every gap the
-  // narration was meant to have.
+  // Collapse runs of spaces and tabs but keep the line breaks and the
+  // ellipses: they are the deliberate pauses added by
+  // addNarrationSentenceBreaks and storyAsText, and flattening them here
+  // removed every gap the narration was meant to have.
   return text
     .replace(/[ \t]+/g, " ")
     .replace(/ ?\n ?/g, "\n")
@@ -5972,6 +5983,7 @@ function getAiNarrationInstructions(story) {
     `Child age: ${getChildAgePrompt(story.childAge)}.`,
     language.narration,
     englishAccentDirection,
+    NARRATION_PAUSE_DIRECTION,
     "Do not add extra words that are not in the story.",
     "Do not add farewell sign-offs such as ta-ta, ta ta for now, bye, or goodbye.",
   ].join(" ");

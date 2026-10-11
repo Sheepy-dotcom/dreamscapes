@@ -38,21 +38,19 @@ function readConst(name) {
 const previewText = readConst("VOICE_PREVIEW_TEXT");
 
 // Mirror the pauses the app puts into a real story, so a preview sounds like
-// the narration it is previewing rather than a faster, gapless version.
-const wordBreathing = /const NARRATION_WORD_BREATHING = true/.test(appJs);
+// the narration it is previewing rather than a faster, gapless version. Read
+// from app.js rather than repeated here, so the two cannot drift.
+function readPause(name) {
+  const match = appJs.match(new RegExp(`const ${name} =\\s*"((?:[^"\\\\]|\\\\.)*)"`));
+  if (!match) throw new Error(`Could not find ${name} in app.js`);
+  return JSON.parse(`"${match[1]}"`);
+}
+
+const SENTENCE_PAUSE = readPause("NARRATION_SENTENCE_PAUSE");
 
 function withNarrationPauses(text) {
-  const sentences = text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [text];
-  const shaped = sentences.map((sentence) => {
-    const trimmed = sentence.trim();
-    if (!wordBreathing) return trimmed;
-    const words = trimmed.split(/\s+/).filter(Boolean);
-    if (words.length <= 4) return trimmed;
-    const groups = [];
-    for (let i = 0; i < words.length; i += 4) groups.push(words.slice(i, i + 4).join(" "));
-    return groups.join("\n");
-  });
-  return shaped.join("\n\n\n");
+  const sentences = (text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [text]).map((s) => s.trim());
+  return sentences.join(SENTENCE_PAUSE);
 }
 
 // Each clip says its own name, so the text is built per voice rather than once.
@@ -67,6 +65,11 @@ const model = process.env.OPENAI_TTS_MODEL || "gpt-4o-mini-tts-2025-12-15";
 const speed = Number(process.env.OPENAI_TTS_SPEED || 1);
 
 // The shared direction every voice gets, so a preview matches the real thing.
+const pauseDirection = (() => {
+  const match = appJs.match(/const NARRATION_PAUSE_DIRECTION =\s*([\s\S]*?);\n/);
+  return match ? (match[1].match(/"([^"]*)"/g) || []).map((part) => part.slice(1, -1)).join("") : "";
+})();
+
 const sharedMatch = appJs.match(/const AI_VOICE_SHARED_DIRECTION = \[([\s\S]*?)\]\.join\(" "\);/);
 const shared = sharedMatch
   ? (sharedMatch[1].match(/"([^"]+)"/g) || []).map((line) => line.slice(1, -1)).join(" ")
@@ -128,6 +131,7 @@ function buildInstructions(profile) {
     profile.accent === "british"
       ? "Keep the spoken accent clearly UK/British English throughout and do not drift into American pronunciation."
       : "",
+    pauseDirection,
     `Your name is ${profile.name}. Say it naturally, as a person introducing themselves.`,
     "This is a voice preview. Read only this exact preview sentence and stop after the word begin.",
   ]
