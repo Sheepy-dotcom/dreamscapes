@@ -4120,12 +4120,21 @@ async function canStoreStoryArt() {
 }
 
 async function createStoryCover(story) {
-  if (!story || !canUseCloudLibrary() || story.artPath) return;
-  if (!(await canStoreStoryArt())) return;
+  // Every way this can fail used to be a bare return, so a story without a
+  // cover looked identical to one that had never been asked for. The parent
+  // is still told nothing - the bundled artwork is already on screen - but
+  // the reason is on the console now rather than nowhere.
+  const giveUp = (reason) => {
+    console.info(`DreamScapes: no cover for "${story?.title || "story"}" (${reason}).`);
+  };
+
+  if (!story || story.artPath) return;
+  if (!canUseCloudLibrary()) return giveUp("not signed in");
+  if (!(await canStoreStoryArt())) return giveUp("story-art bucket unavailable");
 
   try {
     const headers = await withTimeout(getApiHeaders(), 6000, "art_auth_timeout");
-    if (!headers?.Authorization) return;
+    if (!headers?.Authorization) return giveUp("no auth token");
 
     const response = await withTimeout(
       fetch(STORY_IMAGE_ENDPOINT, {
@@ -4140,10 +4149,10 @@ async function createStoryCover(story) {
       55000,
       "art_timeout"
     );
-    if (!response.ok) return;
+    if (!response.ok) return giveUp(`story-image returned ${response.status}`);
 
     const { image } = await response.json();
-    if (!image) return;
+    if (!image) return giveUp("no image in the response");
 
     const blob = await shrinkImageToWebp(image);
     const storyId = story.cloudId || story.id || createStoryId();
@@ -4151,14 +4160,15 @@ async function createStoryCover(story) {
     const { error } = await supabaseClient.storage
       .from(ART_BUCKET)
       .upload(path, blob, { contentType: "image/webp", upsert: true });
-    if (error) return;
+    if (error) return giveUp(`upload failed: ${error.message}`);
 
     story.artPath = path;
     await saveStoryToLibrary(story, { silent: true });
     await paintStoryCovers();
     trackEvent("story_cover_created", { bytes: blob.size });
-  } catch {
+  } catch (error) {
     // The bundled artwork is already showing. A cover is a bonus, not a step.
+    giveUp(error?.message || "unexpected error");
   }
 }
 
