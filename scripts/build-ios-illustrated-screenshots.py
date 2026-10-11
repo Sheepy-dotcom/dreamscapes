@@ -28,20 +28,23 @@ HEAD_TOP, HEAD_SIZE, HEAD_GAP = 196, 122, 14
 BEZEL, RADIUS = 20, 78
 
 # (output, artwork, accent, headline lines, phone or None, extras)
-# A phone is (ui capture, screen width, centre x, top y, tilt).
+# A phone is (ui capture, screen width, centre x, top y, tilt, crop_bottom).
+# The phones sit low and are cropped rather than shrunk: the artwork's faces
+# are the reason anyone looks at these, and a phone over a face is the one
+# thing that makes a store panel feel like a mock-up instead of a bedtime.
 SCREENS = [
     ("01-read-together.png", "01-read-together.png", "gold",
      [("Read it", False), ("together…", True)], None, "brand"),
     ("02-let-them-listen.png", "02-let-them-listen.png", "sky",
      [("…or let", False), ("them listen", True)],
-     ("ui-player.png", 560, WIDTH // 2 + 250, 1430, -4), None),
+     ("ui-player.png", 560, WIDTH // 2 + 250, 1760, -4, 580), None),
     ("03-theyre-the-star.png", "03-theyre-the-star.png", "pink",
      [("They’re", False), ("the star…", True)], None, None),
     ("04-anything-they-love.png", "04-anything-they-love.png", "mint",
      [("…in anything", False), ("they love", True)], None, None),
     ("05-every-night.png", "05-new-story-every-night.png", "lilac",
      [("A new story", False), ("every night", True)],
-     ("ui-library.png", 580, WIDTH // 2, 1300, 0), None),
+     ("ui-library.png", 530, WIDTH // 2 + 110, 1700, 0, 520), None),
     ("06-drift-off.png", "06-until-they-drift-off.png", "peach",
      [("…until", False), ("they drift off", True)], None, None),
 ]
@@ -71,9 +74,9 @@ def build(output, art_name, accent_name, lines, phone, extras):
     d.draw_headline(canvas, HEAD_TOP, lines, accent, HEAD_SIZE, HEAD_GAP)
 
     if phone:
-        ui_name, screen_w, centre_x, top_y, tilt = phone
+        ui_name, screen_w, centre_x, top_y, tilt, crop_bottom = phone
         source = Image.open(UI_DIR / ui_name).convert("RGBA")
-        frame, _ = d.device(source, screen_w, BEZEL, RADIUS)
+        frame, _ = d.device(source, screen_w, BEZEL, RADIUS, crop_bottom=crop_bottom)
         shadow, pad = d.soft_shadow(frame.size, RADIUS, blur=52, alpha=215)
         if tilt:
             frame = frame.rotate(tilt, resample=Image.Resampling.BICUBIC, expand=True)
