@@ -246,6 +246,60 @@ const TITLE_SHAPES = [
   "use a small, specific detail a child would notice before an adult would.",
 ];
 
+/* The age was being handed over as a bare number with one bullet saying to
+   keep things age-appropriate, which leaves the model to decide what that
+   means - and it decides much the same thing for a three-year-old as for a
+   ten-year-old. These say what it means, in the terms that actually change
+   the prose: how long a sentence runs, how hard a word is allowed to be, and
+   how much story a child of that age can hold in their head at bedtime. */
+function getAgeGuidance(value) {
+  const age = parseInt(String(value || "").replace(/[^0-9]/g, ""), 10);
+  if (!Number.isFinite(age)) {
+    return "Write for a young child of about five: short sentences, everyday words, one simple thread to follow.";
+  }
+  if (age <= 3) {
+    return [
+      "This child is very young. Short sentences, six to ten words, one idea in each.",
+      "Everyday words only - nothing a toddler would not already say.",
+      "One thing happens at a time, in the order it happens. No subplots, no flashbacks, no irony.",
+      "Repeat a phrase or a sound as the story goes, the way the best board books do; small children love to hear it coming.",
+      "Name what can be seen, heard and touched rather than what anyone is thinking.",
+    ].join(" ");
+  }
+  if (age <= 5) {
+    return [
+      "Short sentences, about eight to twelve words, and one clear thread from beginning to end.",
+      "Simple, familiar vocabulary; if a lovely word is worth using, show what it means in the same breath.",
+      "One small problem, solved kindly. Feelings named plainly - happy, worried, brave.",
+      "A little repetition is welcome. Nothing ironic, nothing that needs holding in mind across pages.",
+    ].join(" ");
+  }
+  if (age <= 7) {
+    return [
+      "Fuller sentences, about twelve to eighteen words, with some variety in how they open.",
+      "A richer vocabulary is good here - one or two words they may not know, made clear by the sentence around them.",
+      "One proper problem with a turn in the middle, and room for a character to change their mind.",
+      "Feelings can be shown through what someone does, not only named.",
+    ].join(" ");
+  }
+  if (age <= 9) {
+    return [
+      "Longer, varied sentences, and paragraphs that carry a thought rather than a line.",
+      "Real vocabulary, including words worth learning, used where the meaning is carried by the scene.",
+      "A proper arc: something is wanted, something gets in the way, something is understood by the end.",
+      "A small subplot or a second character with their own reason for acting is welcome.",
+      "Humour can be dry. The lesson should never be stated outright - let it be felt.",
+    ].join(" ");
+  }
+  return [
+    "Write for an older child. Longer sentences and paragraphs, with rhythm and deliberate pacing.",
+    "A full vocabulary, including figurative language and imagery.",
+    "A real arc with a turn they do not see coming, and a character whose feelings are mixed rather than simple.",
+    "Subtler humour, and an ending that resolves without spelling out its meaning.",
+    "Still calm, still kind, still safe for bedtime - grown-up in craft, not in content.",
+  ].join(" ");
+}
+
 function buildPrompt(data, section = null) {
   // A section is written to its own share of the word count; the whole-story
   // target would have one request try to write the lot.
@@ -333,7 +387,8 @@ function buildPrompt(data, section = null) {
     `Story language: ${language.prompt}.`,
     `Child name: ${cleanText(data.childName, "the child")}.`,
     pronounRule,
-    `Child age: ${cleanText(data.childAge, "not specified; use language suitable for a young child")}.`,
+    `Child age: ${cleanText(data.childAge, "not specified")}.`,
+    `Writing for this age: ${getAgeGuidance(data.childAge)}`,
     interests ? `Child interests: ${interests}.` : null,
     `Target duration: ${cleanText(data.duration, "5")} minutes of calm narrated audio.`,
     `Word count target: ${target.words} words. Acceptable range: ${target.minWords}-${target.maxWords} words.`,

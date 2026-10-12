@@ -11510,3 +11510,23 @@ input[type="range"] {
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
 }
+
+/* The making screen sat with a band of empty sky above the picture and a
+   larger one below the stages, because the screen centres its content and
+   the card centres its own rows inside that. While a story is being written
+   the picture is the thing to look at, so it goes to the top and the stages
+   follow it down the screen. */
+.loading-screen {
+  align-content: start;
+  padding-top: 10px;
+}
+
+.loading-scene {
+  align-content: start;
+  max-height: none;
+}
+
+/* Flush with the top of the card rather than inset from it. */
+.making-stage {
+  margin-top: 0;
+}

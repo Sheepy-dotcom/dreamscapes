@@ -582,14 +582,14 @@ const plans = {
   free: {
     label: "Free",
     price: "£0",
-    summary: "£0, 3 stories/month, up to 10 min",
-    monthlyStories: 3,
+    summary: "£0, one free story, up to 10 min",
+    monthlyStories: 1,
     maxDuration: 10,
     canSave: true,
     canUseAudio: false,
     savedLimit: 3,
     audioMinutes: 0,
-    note: "Free package: 3 stories this month, 3 saved stories, no audio narration.",
+    note: "Free package: one story to try, 3 saved stories, no audio narration.",
   },
   premier: {
     label: "Premier",
@@ -3525,7 +3525,12 @@ function planFeatureTiles(plan) {
        "30 stories / month" on one at 375pt needs 10.5px type - so the only
        thing left to choose is where it breaks, and a slash left stranded at
        the end of the first line is the one break worth avoiding. */
-    { icon: "stories", label: `${plan.monthlyStories} stories a month` },
+    {
+      icon: "stories",
+      // Free is one story rather than one a month, and "1 stories a month"
+      // reads like a bug on the tile a parent is deciding from.
+      label: plan.monthlyStories === 1 ? "One free story" : `${plan.monthlyStories} stories a month`,
+    },
     { icon: "duration", label: `Up to ${plan.maxDuration} minutes` },
   ];
   if (plan.canUseAudio) {
@@ -4775,7 +4780,8 @@ function openReading(story, { listen = false } = {}) {
   // every story measure as a single page and then spill behind the menu.
   document.body.classList.add("reading-active");
   document.querySelector("#reading-title").textContent = story.title || "";
-  setStoryArt(document.querySelector("#reading-art-image"), story, 1);
+  const art = document.querySelector("#reading-art-image");
+  setStoryArt(art, story, 1);
   // The old narration panel stays in the DOM and out of sight: the player's
   // buttons forward their clicks to its buttons, which is what keeps the three
   // audio back ends behind one code path.
@@ -8092,7 +8098,14 @@ form.addEventListener("submit", async (event) => {
   const audioSecondsUsed = getAudioSecondsUsed();
 
   if (usedStories >= selectedPlan.monthlyStories) {
-    planNote.textContent = `${selectedPlan.label} has reached its ${selectedPlan.monthlyStories} story monthly limit. Choose another package to continue.`;
+    /* The duration limit has always opened Plans; this one only printed a line
+       and left the parent on a form that would not submit, with "choose
+       another package" and nowhere to choose it. It goes to the same place. */
+    planNote.textContent =
+      selectedPlan.monthlyStories === 1
+        ? "That was your free story. Choose a plan to keep making them."
+        : `${selectedPlan.label} gives you ${selectedPlan.monthlyStories} stories a month, and they are used up. Choose a plan to keep going.`;
+    showScreen("upgrade");
     return;
   }
 
