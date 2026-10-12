@@ -11545,3 +11545,23 @@ input[type="range"] {
 .reading-top {
   min-width: 0;
 }
+
+/* The making pictures are 900x540, and the stage was a 153px band with
+   object-fit: cover - so a third of every one of them was cropped away, and a
+   mask faded out what was left of the bottom. The box is sized to the
+   artwork's own shape now (its width times 0.6), and the pictures are
+   contained rather than cropped, so whatever shape a future one arrives in it
+   is shown whole rather than trimmed to fit.
+
+   Still an explicit height rather than aspect-ratio: an aspect-ratio box has a
+   min-content height of zero, and the grid above would squeeze it to nothing
+   while the picture carried on drawing at full size. */
+.making-stage {
+  height: clamp(180px, 58vw, 300px);
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+.making-art {
+  object-fit: contain;
+}
