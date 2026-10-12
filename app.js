@@ -4418,10 +4418,27 @@ function skipSeconds(seconds) {
   trackEvent("audio_skip", { seconds });
 }
 
+/* Temporary, alongside the rain one: says how the narration is being played,
+   so "it never loads" can be told apart from "it loads and is inaudible". The
+   three that matter are whether the bridge advertises DreamAudio at all,
+   whether it is on Capacitor.Plugins, and which of the two is answering. */
+function describeAudioRoute() {
+  if (!isNativeMobileApp()) return "web audio element";
+  const capacitor = window.Capacitor;
+  const advertised = Boolean(capacitor?.PluginHeaders?.some((h) => h.name === "DreamAudio"));
+  const onPlugins = Boolean(capacitor?.Plugins?.DreamAudio);
+  const resolved = Boolean(getNativeAudioPlugin());
+  const usable = canUseNativeAudioPlayer();
+  return `hdr:${advertised} plg:${onPlugins} got:${resolved} use:${usable} inline:${hasInlineAudioTracks()}`;
+}
+
 document.querySelector("#player-toggle")?.addEventListener("click", () => {
   if (isNarrationPlaying()) audioPauseButton?.click();
   else audioPlayButton?.click();
   window.setTimeout(syncPlayerUi, 120);
+  window.setTimeout(() => {
+    statusNote.textContent = `Audio: ${describeAudioRoute()}`;
+  }, 600);
 });
 
 document.querySelector("#player-back")?.addEventListener("click", () => skipSeconds(-15));
@@ -8622,9 +8639,34 @@ function clearMediaSession() {
   }
 }
 
+/* The same two-step the Apple plugin does, and for the same reason: the bridge
+   does not always have the plugin on Capacitor.Plugins by the time this is
+   asked, and when it does not, this used to answer "no native player" and the
+   narration had nowhere to go. Sign-in had the fallback and worked; audio did
+   not and never loaded. Registering from PluginHeaders is what closes the gap.
+
+   Cached, because registerPlugin builds a fresh proxy each time it is called
+   and the listeners below are attached to whichever object came back. */
+let nativeAudioPlugin = null;
+
 function getNativeAudioPlugin() {
   if (!isNativeMobileApp()) return null;
-  return window.Capacitor?.Plugins?.DreamAudio || null;
+  if (nativeAudioPlugin) return nativeAudioPlugin;
+
+  const capacitor = window.Capacitor;
+  if (!capacitor) return null;
+
+  const registered = capacitor.Plugins?.DreamAudio;
+  if (registered) {
+    nativeAudioPlugin = registered;
+    return nativeAudioPlugin;
+  }
+
+  const advertised = capacitor.PluginHeaders?.some((header) => header.name === "DreamAudio");
+  if (!advertised || typeof capacitor.registerPlugin !== "function") return null;
+
+  nativeAudioPlugin = capacitor.registerPlugin("DreamAudio");
+  return nativeAudioPlugin;
 }
 
 function isInlineAudioTrack(track) {
