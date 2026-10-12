@@ -11530,3 +11530,18 @@ input[type="range"] {
 .making-stage {
   margin-top: 0;
 }
+
+/* The reading grid had rows declared but no column, so the column was auto -
+   sized to the widest thing in it at its natural width. The header's title
+   can shrink and ellipsise, but "can" is not "must": the column grew to the
+   full title instead, and the art, the player and the scrubber all inherited
+   it. On a 402pt screen a long title made the view 459pt wide, which is the
+   sideways slide - not a pan, an overflow. One column that cannot exceed its
+   container settles all of it. */
+.story-reading {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.reading-top {
+  min-width: 0;
+}
