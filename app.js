@@ -4576,7 +4576,16 @@ const Rain = (() => {
     }
   }
 
-  return { start, stop, isOn, getLevel, setLevel };
+  /* Temporary, while we work out why this is inaudible on a device. The code
+     reaching the end of start() proves nothing: a suspended context, or one
+     playing into a session the phone has muted, looks identical from here. */
+  function diagnose() {
+    if (!ctx) return "no audio context";
+    const gain = parts ? parts.out.gain.value.toFixed(3) : "n/a";
+    return `${ctx.state}, gain ${gain}, rate ${ctx.sampleRate}`;
+  }
+
+  return { start, stop, isOn, getLevel, setLevel, diagnose };
 })();
 
 function setRainButton(on) {
@@ -4607,6 +4616,12 @@ document.querySelector("#player-rain")?.addEventListener("click", () => {
   setRainLevelVisible(started);
   const slider = document.querySelector("#player-rain-volume");
   if (slider) slider.value = String(Math.round(Rain.getLevel() * 100));
+  // Temporary diagnostic - see Rain.diagnose above.
+  if (started) {
+    window.setTimeout(() => {
+      statusNote.textContent = `Rain: ${Rain.diagnose()}`;
+    }, 400);
+  }
   if (!started) statusNote.textContent = "Rain sounds are not available on this device.";
   else trackEvent("rain_started", { from: "button" });
 });
