@@ -22,7 +22,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026101206" />
+    <link rel="stylesheet" href="./styles.css?v=2026101401" />
   </head>
   <body class="home-active night-mode">
     <svg class="art-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -591,42 +591,36 @@
           <table class="plan-comparison-table" aria-label="DreamScapes plan comparison">
             <thead>
               <tr>
-                <th scope="col">Benefits</th>
-                <th scope="col">
-                  <strong>Free</strong>
-                  <span>£0</span>
-                  <em>Starter</em>
-                </th>
-                <th scope="col">
-                  <strong>Premier</strong>
-                  <span>£4.99/month</span>
-                  <em>Most popular</em>
-                </th>
-                <th scope="col">
-                  <strong>Plus</strong>
-                  <span>£9.99/month</span>
-                  <em>Best for audio</em>
-                </th>
+                <th scope="col"><span class="visually-hidden">Feature</span></th>
+                <th scope="col"><strong>Free</strong><span>£0</span></th>
+                <th scope="col"><strong>Premier</strong><span>£4.99</span></th>
+                <th scope="col" class="plan-col-best"><strong>Plus</strong><span>£9.99</span></th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <th scope="row">Stories / month</th>
-                <td>3</td>
+                <th scope="row">Stories a month</th>
+                <td>1</td>
                 <td>15</td>
                 <td>30</td>
               </tr>
               <tr>
-                <th scope="row">Max length</th>
+                <th scope="row">Longest story</th>
                 <td>10 min</td>
                 <td>20 min</td>
                 <td>30 min</td>
               </tr>
               <tr>
-                <th scope="row">Text stories</th>
+                <th scope="row">A picture for every story</th>
                 <td><span class="plan-check" aria-label="Included">✓</span></td>
                 <td><span class="plan-check" aria-label="Included">✓</span></td>
                 <td><span class="plan-check" aria-label="Included">✓</span></td>
+              </tr>
+              <tr>
+                <th scope="row">Saved in your library</th>
+                <td>3</td>
+                <td>15</td>
+                <td>30</td>
               </tr>
               <tr>
                 <th scope="row">Child profiles</th>
@@ -635,34 +629,22 @@
                 <td><span class="plan-check" aria-label="Included">✓</span></td>
               </tr>
               <tr>
-                <th scope="row">Multiple profiles</th>
-                <td><span class="plan-check" aria-label="Included">✓</span></td>
-                <td><span class="plan-check" aria-label="Included">✓</span></td>
-                <td><span class="plan-check" aria-label="Included">✓</span></td>
-              </tr>
-              <tr>
-                <th scope="row">Story library</th>
-                <td><span class="plan-check" aria-label="Included">✓</span></td>
-                <td><span class="plan-check" aria-label="Included">✓</span></td>
-                <td><span class="plan-check" aria-label="Included">✓</span></td>
-              </tr>
-              <tr>
-                <th scope="row">Saved stories</th>
-                <td>3</td>
-                <td>15</td>
-                <td>30</td>
-              </tr>
-              <tr>
                 <th scope="row">Audio narration</th>
-                <td><span class="plan-miss" aria-label="Not included">-</span></td>
-                <td><span class="plan-miss" aria-label="Not included">-</span></td>
+                <td><span class="plan-miss" aria-label="Not included">–</span></td>
+                <td><span class="plan-miss" aria-label="Not included">–</span></td>
                 <td><span class="plan-check" aria-label="Included">✓</span></td>
               </tr>
               <tr>
-                <th scope="row">Audio mins</th>
-                <td>-</td>
-                <td>-</td>
-                <td>200 min</td>
+                <th scope="row">Narrator voices</th>
+                <td><span class="plan-miss" aria-label="Not included">–</span></td>
+                <td><span class="plan-miss" aria-label="Not included">–</span></td>
+                <td>6</td>
+              </tr>
+              <tr>
+                <th scope="row">Audio minutes</th>
+                <td><span class="plan-miss" aria-label="Not included">–</span></td>
+                <td><span class="plan-miss" aria-label="Not included">–</span></td>
+                <td>200</td>
               </tr>
             </tbody>
           </table>
@@ -1322,6 +1304,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026101206"></script>
+    <script src="./app.js?v=2026101401"></script>
   </body>
 </html>
