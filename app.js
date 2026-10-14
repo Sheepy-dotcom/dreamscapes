@@ -4179,58 +4179,90 @@ async function canStoreStoryArt() {
   return artBucketReady;
 }
 
-async function createStoryCover(story) {
-  // Every way this can fail used to be a bare return, so a story without a
-  // cover looked identical to one that had never been asked for. The parent
-  // is still told nothing - the bundled artwork is already on screen - but
-  // the reason is on the console now rather than nowhere.
-  const giveUp = (reason) => {
-    console.info(`DreamScapes: no cover for "${story?.title || "story"}" (${reason}).`);
+/* A cover takes about seventeen seconds to draw and a story takes thirty to
+   sixty to write, so the picture can be ready before the story is - but only
+   if it does not wait for it. It used to be asked for once the story came
+   back, which guaranteed it arrived second.
+
+   It does not actually need the story. The prompt is built from the title,
+   what happens, and what the child loves, and the last of those is the one
+   doing the work - the covers are pictures of dinosaurs and diggers and
+   paper boats, which the parent typed before a word was written. So the
+   drawing starts with the story request, from the brief, and the story's own
+   title is folded in later only if it happens to arrive first.
+
+   The reason the request and the storing are separate functions: the request
+   is the slow part and can run against nothing but a brief, while the storing
+   needs a story to hang the file on. */
+function coverBriefFromStoryData(data = {}) {
+  const idea = cleanProfileValue(data.storyIdea);
+  const interests = cleanProfileValue(data.interests);
+  return {
+    title: idea || (interests ? `a bedtime adventure about ${interests}` : "a gentle bedtime adventure"),
+    summary: idea,
+    interests,
   };
+}
 
-  if (!story || story.artPath) return;
-  if (!canUseCloudLibrary()) return giveUp("not signed in");
-  if (!(await canStoreStoryArt())) return giveUp("story-art bucket unavailable");
+async function requestCoverImage(brief) {
+  if (!canUseCloudLibrary()) return null;
+  if (!(await canStoreStoryArt())) return null;
 
-  try {
-    const headers = await withTimeout(getApiHeaders(), 6000, "art_auth_timeout");
-    if (!headers?.Authorization) return giveUp("no auth token");
+  const headers = await withTimeout(getApiHeaders(), 6000, "art_auth_timeout");
+  if (!headers?.Authorization) return null;
 
-    const response = await withTimeout(
-      fetch(STORY_IMAGE_ENDPOINT, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          title: story.title || "",
-          summary: getStorySummary(story) || "",
-          interests: story.interests || "",
-        }),
+  const response = await withTimeout(
+    fetch(STORY_IMAGE_ENDPOINT, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        title: brief.title || "",
+        summary: brief.summary || "",
+        interests: brief.interests || "",
       }),
-      55000,
-      "art_timeout"
-    );
-    if (!response.ok) return giveUp(`story-image returned ${response.status}`);
+    }),
+    55000,
+    "art_timeout"
+  );
+  if (!response.ok) throw new Error(`story-image returned ${response.status}`);
 
-    const { image } = await response.json();
-    if (!image) return giveUp("no image in the response");
+  const { image } = await response.json();
+  if (!image) throw new Error("no image in the response");
+  return image;
+}
 
+/* Starts a cover the moment the builder is submitted and hands back a promise
+   that never rejects - a cover is a bonus, and a rejection here would surface
+   as a failed story. */
+function startCoverForBrief(data) {
+  return requestCoverImage(coverBriefFromStoryData(data)).catch((error) => {
+    console.info(`DreamScapes: no cover (${error?.message || "unknown"}).`);
+    return null;
+  });
+}
+
+async function attachCoverImage(story, image) {
+  if (!story || !image || story.artPath) return;
+  try {
     const blob = await shrinkImageToWebp(image);
     const storyId = story.cloudId || story.id || createStoryId();
     const path = `${currentUser.id}/${storyId}/cover.webp`;
     const { error } = await supabaseClient.storage
       .from(ART_BUCKET)
       .upload(path, blob, { contentType: "image/webp", upsert: true });
-    if (error) return giveUp(`upload failed: ${error.message}`);
-
+    if (error) {
+      console.info(`DreamScapes: cover upload failed (${error.message}).`);
+      return;
+    }
     story.artPath = path;
     await saveStoryToLibrary(story, { silent: true });
     await paintStoryCovers();
     trackEvent("story_cover_created", { bytes: blob.size });
   } catch (error) {
-    // The bundled artwork is already showing. A cover is a bonus, not a step.
-    giveUp(error?.message || "unexpected error");
+    console.info(`DreamScapes: cover could not be stored (${error?.message || "unknown"}).`);
   }
 }
+
 
 /* Swaps the bundled artwork for the story's own wherever it is on screen. Done
    after the fact rather than inside the render, because a signed URL is a
@@ -8152,6 +8184,11 @@ form.addEventListener("submit", async (event) => {
   pendingStoryData = storyData;
   showScreen("loading");
 
+  /* Started here, beside the story rather than after it. The story takes
+     thirty to sixty seconds and the picture about seventeen, so by the time
+     there is a story to put it on, the picture is usually already drawn. */
+  const coverPromise = startCoverForBrief(storyData);
+
   window.setTimeout(async () => {
     let generatedStory = null;
     try {
@@ -8183,19 +8220,19 @@ form.addEventListener("submit", async (event) => {
       clearPendingStoryContext();
       if (!canUseCloudLibrary()) incrementStoriesUsed(selectedPlanKey);
       renderStory(currentStory);
-      /* Started here rather than after the save, because drawing it takes the
-         better part of twenty seconds and everything below this line is work
-         we are doing anyway: the last making stages, then writing the story to
-         the library. Asking for the picture first means it is usually on the
-         story by the time a parent has finished reading the title, instead of
-         appearing twenty seconds into a screen they may already have left.
-
-         Still not awaited - a story must never wait on its cover. The save
-         below starts later and finishes long before, so the artPath this
-         writes afterwards lands on top of it rather than under it. */
-      createStoryCover(currentStory);
+      /* The picture was started with the story request, so this is usually
+         already resolved and costs nothing to wait for. The cap is there for
+         the case where it is not: a slow drawing may delay the stages by a
+         few seconds, never hold the story hostage. If it misses the cap it
+         still lands - attachCoverImage runs when it arrives. */
+      const coverImage = await withTimeout(coverPromise, 6000, "cover_wait").catch(() => null);
       await finishMakingStages();
       const savedToLibrary = await saveGeneratedStoryToLibrary(currentStory);
+      if (coverImage) {
+        await attachCoverImage(currentStory, coverImage);
+      } else {
+        coverPromise.then((late) => attachCoverImage(currentStory, late)).catch(() => {});
+      }
       trackEvent("story_generated", {
         plan: selectedPlanKey,
         duration: storyData.duration,
