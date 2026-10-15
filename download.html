@@ -322,6 +322,34 @@
         /* Finding the ... menu is a lot to ask of someone who just wanted the
            app. Copying the link lets them paste it into Safari instead, which
            is the one route out of here that always works. */
+        /* One attempt at getting round it before falling back to the note.
+           The https link is a universal link, and that is the thing these
+           browsers refuse: it asks iOS to leave the webview for a native app.
+           itms-apps:// is a plain custom scheme, a different mechanism, and
+           some of them pass it through.
+
+           If it is also blocked the tap does nothing at all, which is worse
+           than an error, so the https link follows a beat later. When the
+           scheme does work the page is hidden by then - the App Store is in
+           front of it - and the fallback is cancelled. */
+        var apple = document.querySelector(".badge-apple");
+        if (apple) {
+          apple.addEventListener("click", function (event) {
+            event.preventDefault();
+            var web = apple.getAttribute("href");
+            var left = false;
+            var onHide = function () {
+              if (document.hidden) left = true;
+            };
+            document.addEventListener("visibilitychange", onHide);
+            window.location.href = "itms-apps://apps.apple.com/app/id6784545562?ct=download";
+            window.setTimeout(function () {
+              document.removeEventListener("visibilitychange", onHide);
+              if (!left && !document.hidden) window.location.href = web;
+            }, 900);
+          });
+        }
+
         var button = document.getElementById("copy-link");
         var link = "https://www.dreamscapes.cloud/download";
         if (!button) return;
