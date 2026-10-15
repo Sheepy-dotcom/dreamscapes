@@ -185,6 +185,23 @@
         line-height: 1.45;
       }
 
+      .copy-link {
+        display: block;
+        margin: 12px auto 0;
+        padding: 10px 18px;
+        border: 1.5px solid rgba(255, 212, 92, 0.6);
+        border-radius: 999px;
+        background: rgba(255, 212, 92, 0.16);
+        color: var(--gold);
+        font: inherit;
+        font-weight: 900;
+        cursor: pointer;
+      }
+
+      .copy-link:active {
+        transform: scale(0.98);
+      }
+
       .inapp-note strong {
         color: var(--gold);
         font-weight: 900;
@@ -239,6 +256,14 @@
 
       <span class="free">★ The first story is free</span>
 
+      <p class="inapp-note" id="inapp-note" hidden>
+        You are in TikTok's browser, which cannot open the App Store. Tap
+        <strong>&#183;&#183;&#183;</strong> above and choose
+        <strong>Open in browser</strong>, or copy the link and paste it into
+        Safari.
+        <button class="copy-link" id="copy-link" type="button">Copy link</button>
+      </p>
+
       <div class="stores">
         <!-- Apple's and Google's own artwork, unaltered, as both brand
              guidelines require. Straight to the stores rather than through
@@ -268,13 +293,6 @@
         </a>
       </div>
 
-      <p class="inapp-note" id="inapp-note" hidden>
-        Opening from TikTok or Instagram? Tap the
-        <strong>&#183;&#183;&#183;</strong> menu and choose
-        <strong>Open in browser</strong>. Their built-in browser cannot open
-        the App Store.
-      </p>
-
       <footer>
         <a href="https://www.dreamscapes.cloud/">Open in your browser</a>
         <span aria-hidden="true">·</span>
@@ -296,10 +314,45 @@
         var ua = navigator.userAgent || "";
         var inApp = /musical_ly|Bytedance|TikTok|Instagram|FBAN|FBAV|Line\/|Snapchat/i.test(ua);
         var ios = /iPhone|iPad|iPod/i.test(ua);
-        if (inApp && ios) {
-          var note = document.getElementById("inapp-note");
-          if (note) note.hidden = false;
-        }
+        if (!inApp || !ios) return;
+
+        var note = document.getElementById("inapp-note");
+        if (note) note.hidden = false;
+
+        /* Finding the ... menu is a lot to ask of someone who just wanted the
+           app. Copying the link lets them paste it into Safari instead, which
+           is the one route out of here that always works. */
+        var button = document.getElementById("copy-link");
+        var link = "https://www.dreamscapes.cloud/download";
+        if (!button) return;
+        button.addEventListener("click", function () {
+          var done = function () {
+            button.textContent = "Copied. Now paste it into Safari";
+          };
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(link).then(done, fallback);
+          } else {
+            fallback();
+          }
+          function fallback() {
+            // Older in-app webviews have no clipboard API; this one is ancient
+            // enough to work in all of them.
+            var field = document.createElement("textarea");
+            field.value = link;
+            field.setAttribute("readonly", "");
+            field.style.position = "fixed";
+            field.style.opacity = "0";
+            document.body.appendChild(field);
+            field.select();
+            try {
+              document.execCommand("copy");
+              done();
+            } catch (error) {
+              button.textContent = link;
+            }
+            document.body.removeChild(field);
+          }
+        });
       })();
     </script>
   </body>
