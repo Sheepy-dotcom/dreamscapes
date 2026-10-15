@@ -215,27 +215,6 @@
         transform: scale(0.98);
       }
 
-      /* The badge for the other kind of phone, once the page knows which one
-         you are holding. Quiet on purpose: it is for the person buying for
-         somebody else, not the decision this page is asking for. */
-      .other-store {
-        margin: -8px 0 0;
-      }
-
-      .other-store a {
-        color: rgba(185, 196, 255, 0.78);
-        font-size: 0.92rem;
-        font-weight: 700;
-        text-decoration: none;
-        border-bottom: 1px solid rgba(185, 196, 255, 0.3);
-      }
-
-      .other-store a:hover,
-      .other-store a:focus-visible {
-        color: var(--white);
-        outline: none;
-      }
-
       footer {
         display: flex;
         flex-wrap: wrap;
@@ -325,9 +304,6 @@
         </a>
       </div>
 
-      <p class="other-store" id="other-store" hidden>
-        <a id="other-store-link" href="#">Also on Google Play</a>
-      </p>
 
       <footer>
         <a href="https://www.dreamscapes.cloud/support.html">Support</a>
@@ -337,31 +313,7 @@
     </main>
 
     <script>
-      /* Both badges are in the markup and the script hides one, rather than
-         the other way round - with no JavaScript, or on a device nobody
-         anticipated, you still get both and the page still works. */
       var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent || "");
-      var isAndroid = /Android/i.test(navigator.userAgent || "");
-
-      (function () {
-        /* Two buttons is a choice nobody on a phone needs to make: iOS cannot
-           install from Play and Android cannot install from the App Store. So
-           the page shows the one that applies and keeps the other as a quiet
-           line underneath, for the parent buying for somebody else's phone. */
-        if (!isIOS && !isAndroid) return;
-
-        var apple = document.querySelector(".badge-apple");
-        var google = document.querySelector(".badge-google");
-        var other = document.getElementById("other-store");
-        var otherLink = document.getElementById("other-store-link");
-        if (!apple || !google || !other || !otherLink) return;
-
-        var spare = isIOS ? google : apple;
-        spare.hidden = true;
-        otherLink.href = spare.getAttribute("href");
-        otherLink.textContent = isIOS ? "Also on Google Play" : "Also on the App Store";
-        other.hidden = false;
-      })();
 
       (function () {
         /* Why the App Store link fails inside TikTok, and what actually fixes
