@@ -215,11 +215,6 @@
         transform: scale(0.98);
       }
 
-      .inapp-note strong {
-        color: var(--gold);
-        font-weight: 900;
-      }
-
       /* The badge for the other kind of phone, once the page knows which one
          you are holding. Quiet on purpose: it is for the person buying for
          somebody else, not the decision this page is asking for. */
@@ -296,7 +291,8 @@
       <span class="free">★ The first story is free</span>
 
       <p class="inapp-note" id="inapp-note" hidden>
-        TikTok's browser cannot open the App Store.
+        This browser will not open the App Store. Copy the link and paste it
+        into Safari.
         <button class="copy-link" id="copy-link" type="button">Copy link</button>
       </p>
 
@@ -341,18 +337,17 @@
     </main>
 
     <script>
-      /* Two buttons is a choice nobody on a phone needs to make: iOS cannot
-         install from Play and Android cannot install from the App Store. So
-         the page shows the one that applies and keeps the other as a quiet
-         line underneath, for the parent buying for somebody else's phone.
-
-         Both badges are in the markup and this hides one, rather than the
-         other way round - with no JavaScript, or on a device nobody
+      /* Both badges are in the markup and the script hides one, rather than
+         the other way round - with no JavaScript, or on a device nobody
          anticipated, you still get both and the page still works. */
+      var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent || "");
+      var isAndroid = /Android/i.test(navigator.userAgent || "");
+
       (function () {
-        var ua = navigator.userAgent || "";
-        var isIOS = /iPhone|iPad|iPod/i.test(ua);
-        var isAndroid = /Android/i.test(ua);
+        /* Two buttons is a choice nobody on a phone needs to make: iOS cannot
+           install from Play and Android cannot install from the App Store. So
+           the page shows the one that applies and keeps the other as a quiet
+           line underneath, for the parent buying for somebody else's phone. */
         if (!isIOS && !isAndroid) return;
 
         var apple = document.querySelector(".badge-apple");
@@ -368,52 +363,61 @@
         other.hidden = false;
       })();
 
-      /* An App Store link has to hand off to a native app. The browsers inside
-         TikTok, Instagram and Facebook often refuse that on iOS, and the
-         visitor gets "the action cannot be completed" - which is why the Play
-         link works from the same post and this one does not: Android treats it
-         as an ordinary URL and never needs the handoff.
-         Nothing here can force the handoff, so the page says what to do
-         instead, and only to the people it affects. */
       (function () {
-        var ua = navigator.userAgent || "";
-        var inApp = /musical_ly|Bytedance|TikTok|Instagram|FBAN|FBAV|Line\/|Snapchat/i.test(ua);
-        var ios = /iPhone|iPad|iPod/i.test(ua);
-        if (!inApp || !ios) return;
+        /* Why the App Store link fails inside TikTok, and what actually fixes
+           it.
 
-        var note = document.getElementById("inapp-note");
-        if (note) note.hidden = false;
+           Ask apps.apple.com for this app with an iPhone user agent and it
+           does not serve a page. It answers:
 
-        /* Finding the ... menu is a lot to ask of someone who just wanted the
-           app. Copying the link lets them paste it into Safari instead, which
-           is the one route out of here that always works. */
-        /* One attempt at getting round it before falling back to the note.
-           The https link is a universal link, and that is the thing these
-           browsers refuse: it asks iOS to leave the webview for a native app.
-           itms-apps:// is a plain custom scheme, a different mechanism, and
-           some of them pass it through.
+               301  Location: itms-appss://apps.apple.com/app/id6784545562
 
-           If it is also blocked the tap does nothing at all, which is worse
-           than an error, so the https link follows a beat later. When the
-           scheme does work the page is hidden by then - the App Store is in
-           front of it - and the fallback is cancelled. */
+           - a custom scheme. Safari follows it and the App Store opens. An
+           in-app webview is handed a scheme it will not follow, and that is
+           exactly the "action cannot be completed" people were getting. It
+           also means an https link is useless as a fallback, because it leads
+           straight back to the same redirect.
+
+           So on iOS the button carries that scheme directly instead of being
+           redirected into it. A plain anchor, no tap handler in the way: a
+           webview decides about a custom scheme on its own, and handing it one
+           is the best chance of it passing the tap to the App Store.
+
+           The markup keeps the https link, which is right for desktop and for
+           anyone without JavaScript. */
+        if (!isIOS) return;
         var apple = document.querySelector(".badge-apple");
-        if (apple) {
-          apple.addEventListener("click", function (event) {
-            event.preventDefault();
-            var web = apple.getAttribute("href");
-            var left = false;
-            var onHide = function () {
-              if (document.hidden) left = true;
-            };
-            document.addEventListener("visibilitychange", onHide);
-            window.location.href = "itms-apps://apps.apple.com/app/id6784545562?ct=download";
-            window.setTimeout(function () {
-              document.removeEventListener("visibilitychange", onHide);
-              if (!left && !document.hidden) window.location.href = web;
-            }, 900);
-          });
-        }
+        if (!apple) return;
+
+        /* No country in the path, matching the redirect above: the App Store
+           then opens in whichever storefront the device belongs to, rather
+           than sending a British visitor to a US listing. ct=download is kept,
+           so the campaign still counts. */
+        apple.href = "itms-appss://apps.apple.com/app/id6784545562?ct=download";
+
+        /* If the webview refuses it, nothing visibly happens - so the escape
+           route appears at the moment it is needed, instead of sitting on the
+           page warning everybody in advance.
+
+           It only ever reveals a note, so being wrong is cheap: a visitor who
+           left and came back sees one extra line. That is why this waits for
+           evidence of failure rather than guessing from the user agent, which
+           is what it used to do. */
+        apple.addEventListener("click", function () {
+          var left = false;
+          var onHide = function () {
+            if (document.hidden) left = true;
+          };
+          document.addEventListener("visibilitychange", onHide);
+          window.setTimeout(function () {
+            document.removeEventListener("visibilitychange", onHide);
+            if (left || document.hidden) return;
+            var note = document.getElementById("inapp-note");
+            if (!note) return;
+            note.hidden = false;
+            note.scrollIntoView({ block: "center", behavior: "smooth" });
+          }, 1200);
+        });
 
         var button = document.getElementById("copy-link");
         var link = "https://www.dreamscapes.cloud/download";
