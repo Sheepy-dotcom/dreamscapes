@@ -107,54 +107,53 @@
       }
 
       .stores {
-        display: grid;
-        gap: 12px;
-        width: 100%;
-      }
-
-      .store {
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
         justify-content: center;
-        gap: 12px;
-        padding: 16px 20px;
-        border: 1.5px solid var(--line);
-        border-radius: 18px;
-        background: rgba(16, 21, 58, 0.62);
-        color: var(--white);
-        font-size: 1.04rem;
-        font-weight: 800;
-        text-decoration: none;
-        transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+        gap: 14px;
       }
 
-      .store:hover,
-      .store:focus-visible {
-        border-color: rgba(255, 212, 92, 0.72);
-        background: rgba(26, 32, 78, 0.78);
+      /* Both badges are used as supplied and only scaled. Apple's SVG is the
+         badge itself; Google's PNG carries its own mandated clear space, 41px
+         of padding around a 564x168 badge - two thirds of the canvas - so
+         rendering them at the same height would leave Google's looking a
+         third smaller. Google's is set taller by exactly that ratio, which
+         lands both visible badges on the same 52px. */
+      .badge {
+        display: inline-flex;
+        border-radius: 10px;
+        transition: transform 0.18s ease, opacity 0.18s ease;
+      }
+
+      .badge img {
+        display: block;
+        height: auto;
+      }
+
+      .badge-apple img {
+        height: 52px;
+      }
+
+      .badge-google img {
+        height: 77px;
+        /* Cancels the clear space so the two sit on the same baseline. */
+        margin: -12px 0;
+      }
+
+      .badge:hover,
+      .badge:focus-visible {
+        opacity: 0.88;
         outline: none;
       }
 
-      .store:active {
-        transform: scale(0.99);
+      .badge:focus-visible {
+        outline: 2px solid var(--gold);
+        outline-offset: 4px;
       }
 
-      .store svg {
-        width: 24px;
-        height: 24px;
-        flex: 0 0 auto;
-      }
-
-      .store small {
-        display: block;
-        color: var(--soft);
-        font-size: 0.78rem;
-        font-weight: 700;
-      }
-
-      .store-text {
-        text-align: left;
-        line-height: 1.25;
+      .badge:active {
+        transform: scale(0.98);
       }
 
       .free {
@@ -219,32 +218,24 @@
       <span class="free">★ The first story is free</span>
 
       <div class="stores">
-        <!-- Straight to the stores rather than through /app: someone on a
-             laptop choosing which phone to install on should see both. -->
-        <a class="store" href="https://apps.apple.com/app/id6784545562?mt=8&amp;ct=download">
-          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor">
-            <path d="M16.37 12.78c.02-2.1 1.72-3.11 1.8-3.16-1-1.45-2.53-1.65-3.08-1.67-1.31-.13-2.56.77-3.22.77-.67 0-1.69-.75-2.78-.73-1.43.02-2.75.83-3.48 2.1-1.48 2.57-.38 6.37 1.07 8.45.71 1.02 1.56 2.17 2.67 2.13 1.07-.04 1.48-.69 2.78-.69s1.66.69 2.79.67c1.15-.02 1.88-1.04 2.59-2.07.81-1.19 1.15-2.34 1.17-2.4-.03-.01-2.24-.86-2.26-3.4zM14.3 6.49c.59-.72.99-1.71.88-2.7-.85.03-1.88.57-2.49 1.28-.55.63-1.03 1.64-.9 2.6.95.08 1.92-.48 2.51-1.18z" />
-          </svg>
-          <span class="store-text">
-            Download on the App Store
-            <small>iPhone and iPad</small>
-          </span>
+        <!-- Apple's and Google's own artwork, unaltered, as both brand
+             guidelines require. Straight to the stores rather than through
+             /app: that one guesses from the user agent, which is right for a
+             link in a profile, but someone on a laptop wants to see both. -->
+        <a
+          class="badge badge-apple"
+          href="https://apps.apple.com/app/id6784545562?mt=8&amp;ct=download"
+          aria-label="Download DreamScapes on the App Store"
+        >
+          <img src="./assets/badges/app-store-badge.svg?v=2026101501" alt="Download on the App Store" />
         </a>
 
         <a
-          class="store"
+          class="badge badge-google"
           href="https://play.google.com/store/apps/details?id=cloud.dreamscapes.app&amp;referrer=utm_source%3Ddownload%26utm_medium%3Dweb"
+          aria-label="Get DreamScapes on Google Play"
         >
-          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor">
-            <path d="M3.6 2.3c-.25.26-.4.67-.4 1.2v17c0 .53.15.94.4 1.2l.09.08L13.2 12v-.2L3.69 2.22l-.09.08z" opacity="0.75" />
-            <path d="M16.4 15.2 13.2 12v-.2l3.2-3.2.08.05 3.79 2.15c1.08.62 1.08 1.62 0 2.24l-3.79 2.15-.08.06z" />
-            <path d="M16.48 15.14 13.2 11.9 3.6 21.5c.36.38.94.42 1.6.05l11.28-6.41z" opacity="0.9" />
-            <path d="M16.48 8.66 5.2 2.25c-.66-.37-1.24-.33-1.6.05l9.6 9.6 3.28-3.24z" opacity="0.6" />
-          </svg>
-          <span class="store-text">
-            Get it on Google Play
-            <small>Android phones and tablets</small>
-          </span>
+          <img src="./assets/badges/google-play-badge.png?v=2026101501" alt="Get it on Google Play" />
         </a>
       </div>
 
