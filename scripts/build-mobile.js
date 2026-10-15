@@ -24,6 +24,11 @@ function copyFolder(source, destination) {
     const sourcePath = path.join(source, item.name);
     const destinationPath = path.join(destination, item.name);
 
+    // Finder leaves .DS_Store in any folder it has been opened in, and the
+    // copy below is indiscriminate, so they were riding along into both app
+    // bundles. Nothing reads them and they are not ours to ship.
+    if (item.name === ".DS_Store") continue;
+
     if (item.isDirectory()) {
       if (skipFolders.has(item.name)) continue;
       copyFolder(sourcePath, destinationPath);

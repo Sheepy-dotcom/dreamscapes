@@ -138,7 +138,7 @@ button {
     /* Taller than the box and anchored high, so the visible slice is the sky
        and the story world rising from the book - the child stays at the foot,
        mostly behind the scrim, rather than sitting under the feature text. */
-    url("./assets/home-hero.jpg") center 32% / auto 114% no-repeat,
+    url("./assets/home-hero.jpg?v=2026101505") center 32% / auto 114% no-repeat,
     linear-gradient(180deg, #171a4d 0%, #0f0d2c 100%);
   color: var(--white);
   text-align: center;
@@ -5148,7 +5148,7 @@ body.night-mode .provider-google {
        story world up the right, so it is zoomed far less than the old one: just
        enough to cover the width, anchored low enough that the aeroplane clears
        the headline instead of flying through it. */
-    url("./assets/home-hero.jpg") center 32% / auto 114% no-repeat,
+    url("./assets/home-hero.jpg?v=2026101505") center 32% / auto 114% no-repeat,
     linear-gradient(180deg, #171a4d 0%, #0f0d2c 100%);
 }
 

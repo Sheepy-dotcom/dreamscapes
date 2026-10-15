@@ -386,7 +386,7 @@ const SUPABASE_URL = "https://khgzzrixhetaontmdhez.supabase.co";
 const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtoZ3p6cml4aGV0YW9udG1kaGV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5OTkwMjMsImV4cCI6MjA5NTU3NTAyM30.Zij8eBhzxNecuPRsMliWChxYmogLBFbd1GScpKPM_5g";
 const SUPABASE_SCRIPT_URLS = [
-  "./assets/supabase.js",
+  "./assets/supabase.js?v=2026101505",
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2",
   "https://unpkg.com/@supabase/supabase-js@2",
 ];
@@ -435,12 +435,12 @@ const VOICE_PREVIEW_GAINS = {
 const VOICE_PREVIEW_VERSION = "2026101101";
 
 const VOICE_PREVIEW_FILES = {
-  "female calm": "./assets/voice-preview-female-calm.mp3",
-  "male calm": "./assets/voice-preview-male-calm.mp3",
-  "ash storyteller": "./assets/voice-preview-ash-storyteller.mp3",
-  "cedar audition": "./assets/voice-preview-cedar-audition.mp3",
-  "marin audition": "./assets/voice-preview-marin-audition.mp3",
-  "shimmer soft": "./assets/voice-preview-shimmer-soft.mp3",
+  "female calm": "./assets/voice-preview-female-calm.mp3?v=2026101505",
+  "male calm": "./assets/voice-preview-male-calm.mp3?v=2026101505",
+  "ash storyteller": "./assets/voice-preview-ash-storyteller.mp3?v=2026101505",
+  "cedar audition": "./assets/voice-preview-cedar-audition.mp3?v=2026101505",
+  "marin audition": "./assets/voice-preview-marin-audition.mp3?v=2026101505",
+  "shimmer soft": "./assets/voice-preview-shimmer-soft.mp3?v=2026101505",
 };
 // OpenAI rates marin and cedar highest for audio quality, so they lead each
 // group in the picker and marin is what a parent gets without choosing. Keep
@@ -8388,7 +8388,7 @@ async function renderLibrary() {
     libraryList.classList.add("is-single");
     libraryList.innerHTML = `
       <article class="library-item library-empty">
-        <img class="library-empty-art" src="./assets/story-loading.png" alt="" />
+        <img class="library-empty-art" src="./assets/story-loading.png?v=2026101505" alt="" />
         <h3>No saved stories yet</h3>
         <p>${usingCloudLibrary ? "Stories you create while signed in will save to your cloud library." : "Free saves up to 3 stories here. Premier and Plus save more."}</p>
         <button class="button primary-button" data-screen-target="builder" type="button">Create a Story</button>
@@ -8597,8 +8597,8 @@ function supportsMediaSession() {
 }
 
 function getMediaArtwork() {
-  const iconUrl = new URL("./assets/apple-touch-icon.png", window.location.href).href;
-  const faviconUrl = new URL("./assets/favicon.png", window.location.href).href;
+  const iconUrl = new URL("./assets/apple-touch-icon.png?v=2026101505", window.location.href).href;
+  const faviconUrl = new URL("./assets/favicon.png?v=2026101505", window.location.href).href;
 
   return [
     { src: faviconUrl, sizes: "64x64", type: "image/png" },
@@ -8840,7 +8840,7 @@ async function playNativeAiAudioQueue() {
     artist: currentStory?.childName ? `DreamScapes for ${currentStory.childName}` : "DreamScapes",
     album: currentStory?.storyType === "bedtime" ? "Bedtime Story" : "Anytime Story",
     duration: getSavedAudioDurationSeconds(currentStory) || getPlaybackDurationSeconds(currentAudioTrackDurations, currentStory),
-    artwork: new URL("./assets/apple-touch-icon.png", window.location.href).href,
+    artwork: new URL("./assets/apple-touch-icon.png?v=2026101505", window.location.href).href,
   });
   setMediaSessionState("playing");
   return true;
