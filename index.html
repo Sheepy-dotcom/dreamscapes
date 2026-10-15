@@ -13,6 +13,21 @@
     <meta name="apple-mobile-web-app-title" content="DreamScapes" />
     <meta name="application-name" content="DreamScapes" />
     <title>DreamScapes | Personalised Bedtime Stories</title>
+
+    <!-- Without these a pasted link shows whatever a crawler picks out of the
+         page, which for an app shell is usually nothing at all. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="DreamScapes - personalised bedtime stories" />
+    <meta
+      property="og:description"
+      content="A story written for your child tonight, read aloud in a voice you choose. The first one is free."
+    />
+    <meta property="og:url" content="https://www.dreamscapes.cloud/" />
+    <meta property="og:image" content="https://www.dreamscapes.cloud/assets/link-preview.jpg?v=2026101501" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="DreamScapes - a parent and child reading a glowing storybook at bedtime" />
+    <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" type="image/png" sizes="64x64" href="./assets/favicon.png?v=2026100885" />
     <link rel="apple-touch-icon" sizes="180x180" href="./assets/apple-touch-icon.png?v=2026100885" />
     <link rel="manifest" href="./manifest.webmanifest" />
@@ -22,7 +37,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026101402" />
+    <link rel="stylesheet" href="./styles.css?v=2026101502" />
   </head>
   <body class="home-active night-mode">
     <svg class="art-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -1304,6 +1319,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js"></script>
-    <script src="./app.js?v=2026101402"></script>
+    <script src="./app.js?v=2026101502"></script>
   </body>
 </html>
