@@ -224,10 +224,17 @@
         <!-- Apple's and Google's own artwork, unaltered, as both brand
              guidelines require. Straight to the stores rather than through
              /app: that one guesses from the user agent, which is right for a
-             link in a profile, but someone on a laptop wants to see both. -->
+             link in a profile, but someone on a laptop wants to see both.
+
+             No mt=8 on the Apple link. It is a legacy hint that pushes the
+             link at the App Store application rather than the web listing,
+             and on a Mac that application cannot show an iPhone-only app - it
+             answers "the action cannot be completed". Without it the listing
+             opens as a web page, which is what a desktop visitor can
+             actually use. ct=download stays, so the campaign still counts. -->
         <a
           class="badge badge-apple"
-          href="https://apps.apple.com/app/id6784545562?mt=8&amp;ct=download"
+          href="https://apps.apple.com/app/id6784545562?ct=download"
           aria-label="Download DreamScapes on the App Store"
         >
           <img src="./assets/badges/app-store-badge.svg?v=2026101501" alt="Download on the App Store" />
