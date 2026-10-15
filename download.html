@@ -171,6 +171,25 @@
         font-weight: 900;
       }
 
+      /* Only shown to the browsers that need it - see the script below. */
+      .inapp-note {
+        margin: -6px 0 0;
+        max-width: 36ch;
+        padding: 12px 16px;
+        border: 1.5px solid rgba(255, 212, 92, 0.42);
+        border-radius: 16px;
+        background: rgba(255, 212, 92, 0.1);
+        color: rgba(255, 240, 200, 0.92);
+        font-size: 0.92rem;
+        font-weight: 700;
+        line-height: 1.45;
+      }
+
+      .inapp-note strong {
+        color: var(--gold);
+        font-weight: 900;
+      }
+
       footer {
         display: flex;
         flex-wrap: wrap;
@@ -249,6 +268,13 @@
         </a>
       </div>
 
+      <p class="inapp-note" id="inapp-note" hidden>
+        Opening from TikTok or Instagram? Tap the
+        <strong>&#183;&#183;&#183;</strong> menu and choose
+        <strong>Open in browser</strong>. Their built-in browser cannot open
+        the App Store.
+      </p>
+
       <footer>
         <a href="https://www.dreamscapes.cloud/">Open in your browser</a>
         <span aria-hidden="true">·</span>
@@ -257,5 +283,24 @@
         <a href="https://www.dreamscapes.cloud/support.html#privacy">Privacy</a>
       </footer>
     </main>
+
+    <script>
+      /* An App Store link has to hand off to a native app. The browsers inside
+         TikTok, Instagram and Facebook often refuse that on iOS, and the
+         visitor gets "the action cannot be completed" - which is why the Play
+         link works from the same post and this one does not: Android treats it
+         as an ordinary URL and never needs the handoff.
+         Nothing here can force the handoff, so the page says what to do
+         instead, and only to the people it affects. */
+      (function () {
+        var ua = navigator.userAgent || "";
+        var inApp = /musical_ly|Bytedance|TikTok|Instagram|FBAN|FBAV|Line\/|Snapchat/i.test(ua);
+        var ios = /iPhone|iPad|iPod/i.test(ua);
+        if (inApp && ios) {
+          var note = document.getElementById("inapp-note");
+          if (note) note.hidden = false;
+        }
+      })();
+    </script>
   </body>
 </html>
