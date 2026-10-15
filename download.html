@@ -82,6 +82,19 @@
         justify-items: center;
       }
 
+      /* The hidden attribute is how this page shows and hides things, and the
+         browser's own [hidden] rule is the weakest there is - any display here
+         beats it, which is how .badge{display:inline-flex} kept a badge on
+         screen after the script hid it. */
+      [hidden] {
+        display: none !important;
+      }
+
+      .home {
+        display: block;
+        line-height: 0;
+      }
+
       .logo {
         width: min(300px, 76%);
         height: auto;
@@ -207,6 +220,27 @@
         font-weight: 900;
       }
 
+      /* The badge for the other kind of phone, once the page knows which one
+         you are holding. Quiet on purpose: it is for the person buying for
+         somebody else, not the decision this page is asking for. */
+      .other-store {
+        margin: -8px 0 0;
+      }
+
+      .other-store a {
+        color: rgba(185, 196, 255, 0.78);
+        font-size: 0.92rem;
+        font-weight: 700;
+        text-decoration: none;
+        border-bottom: 1px solid rgba(185, 196, 255, 0.3);
+      }
+
+      .other-store a:hover,
+      .other-store a:focus-visible {
+        color: var(--white);
+        outline: none;
+      }
+
       footer {
         display: flex;
         flex-wrap: wrap;
@@ -239,13 +273,18 @@
   </head>
   <body>
     <main>
-      <img
-        class="logo"
-        src="./assets/dreamscapes-logo.png?v=2026101501"
-        alt="DreamScapes"
-        width="900"
-        height="394"
-      />
+      <!-- The logo is the way to the web app, so the footer does not need a
+           link for it. A logo going home is a convention people already
+           know, and it costs the page nothing. -->
+      <a class="home" href="https://www.dreamscapes.cloud/">
+        <img
+          class="logo"
+          src="./assets/dreamscapes-logo.png?v=2026101501"
+          alt="DreamScapes"
+          width="900"
+          height="394"
+        />
+      </a>
 
       <h1>A bedtime story<span>made just for them</span></h1>
 
@@ -257,10 +296,7 @@
       <span class="free">★ The first story is free</span>
 
       <p class="inapp-note" id="inapp-note" hidden>
-        You are in TikTok's browser, which cannot open the App Store. Tap
-        <strong>&#183;&#183;&#183;</strong> above and choose
-        <strong>Open in browser</strong>, or copy the link and paste it into
-        Safari.
+        TikTok's browser cannot open the App Store.
         <button class="copy-link" id="copy-link" type="button">Copy link</button>
       </p>
 
@@ -293,9 +329,11 @@
         </a>
       </div>
 
+      <p class="other-store" id="other-store" hidden>
+        <a id="other-store-link" href="#">Also on Google Play</a>
+      </p>
+
       <footer>
-        <a href="https://www.dreamscapes.cloud/">Open in your browser</a>
-        <span aria-hidden="true">·</span>
         <a href="https://www.dreamscapes.cloud/support.html">Support</a>
         <span aria-hidden="true">·</span>
         <a href="https://www.dreamscapes.cloud/support.html#privacy">Privacy</a>
@@ -303,6 +341,33 @@
     </main>
 
     <script>
+      /* Two buttons is a choice nobody on a phone needs to make: iOS cannot
+         install from Play and Android cannot install from the App Store. So
+         the page shows the one that applies and keeps the other as a quiet
+         line underneath, for the parent buying for somebody else's phone.
+
+         Both badges are in the markup and this hides one, rather than the
+         other way round - with no JavaScript, or on a device nobody
+         anticipated, you still get both and the page still works. */
+      (function () {
+        var ua = navigator.userAgent || "";
+        var isIOS = /iPhone|iPad|iPod/i.test(ua);
+        var isAndroid = /Android/i.test(ua);
+        if (!isIOS && !isAndroid) return;
+
+        var apple = document.querySelector(".badge-apple");
+        var google = document.querySelector(".badge-google");
+        var other = document.getElementById("other-store");
+        var otherLink = document.getElementById("other-store-link");
+        if (!apple || !google || !other || !otherLink) return;
+
+        var spare = isIOS ? google : apple;
+        spare.hidden = true;
+        otherLink.href = spare.getAttribute("href");
+        otherLink.textContent = isIOS ? "Also on Google Play" : "Also on the App Store";
+        other.hidden = false;
+      })();
+
       /* An App Store link has to hand off to a native app. The browsers inside
          TikTok, Instagram and Facebook often refuse that on iOS, and the
          visitor gets "the action cannot be completed" - which is why the Play
