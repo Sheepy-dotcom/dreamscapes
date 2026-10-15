@@ -2483,8 +2483,36 @@ function canUseRedeemCodes() {
   return !isIosNativeApp();
 }
 
+let revenueCatPlugin = null;
+
+/* Capacitor.Plugins starts empty and is only ever filled in by registerPlugin.
+   The native side advertises this plugin as "Purchases" in PluginHeaders, but
+   the only thing that calls registerPlugin("Purchases") is RevenueCat's own ES
+   module - and this app has no bundler, so that module is never loaded.
+   Reading Capacitor.Plugins.Purchases therefore found nothing on every device,
+   and no purchase could ever start.
+
+   Same resolution as getNativeAudioPlugin: take the registered plugin if some
+   other code has already asked for it, otherwise register it here from the
+   header the native side advertises. */
 function getRevenueCatPlugin() {
-  return window.Capacitor?.Plugins?.Purchases || null;
+  if (!isNativeMobileApp()) return null;
+  if (revenueCatPlugin) return revenueCatPlugin;
+
+  const capacitor = window.Capacitor;
+  if (!capacitor) return null;
+
+  const registered = capacitor.Plugins?.Purchases;
+  if (registered) {
+    revenueCatPlugin = registered;
+    return revenueCatPlugin;
+  }
+
+  const advertised = capacitor.PluginHeaders?.some((header) => header.name === "Purchases");
+  if (!advertised || typeof capacitor.registerPlugin !== "function") return null;
+
+  revenueCatPlugin = capacitor.registerPlugin("Purchases");
+  return revenueCatPlugin;
 }
 
 function getRevenueCatApiKey() {
@@ -7331,13 +7359,39 @@ function loadReminderSettings() {
   }
 }
 
+let localNotificationsPlugin = null;
+
+/* Same resolution as getAppleSignInPlugin and getNativeAudioPlugin: nothing in
+   this app calls registerPlugin("LocalNotifications"), because the plugin's own
+   ES module is never loaded without a bundler, so Capacitor.Plugins was empty
+   here and the reminder was saved but never actually scheduled. */
+function getLocalNotificationsPlugin() {
+  if (!isNativeMobileApp()) return null;
+  if (localNotificationsPlugin) return localNotificationsPlugin;
+
+  const capacitor = window.Capacitor;
+  if (!capacitor) return null;
+
+  const registered = capacitor.Plugins?.LocalNotifications;
+  if (registered) {
+    localNotificationsPlugin = registered;
+    return localNotificationsPlugin;
+  }
+
+  const advertised = capacitor.PluginHeaders?.some((header) => header.name === "LocalNotifications");
+  if (!advertised || typeof capacitor.registerPlugin !== "function") return null;
+
+  localNotificationsPlugin = capacitor.registerPlugin("LocalNotifications");
+  return localNotificationsPlugin;
+}
+
 async function saveBedtimeReminder() {
   const enabled = Boolean(reminderEnabled?.checked);
   const time = reminderTime?.value || "19:00";
   const [hour, minute] = time.split(":").map(Number);
   localStorage.setItem(getReminderStorageKey(), JSON.stringify({ enabled, time }));
 
-  const notifications = window.Capacitor?.Plugins?.LocalNotifications;
+  const notifications = getLocalNotificationsPlugin();
   if (notifications) {
     await notifications.cancel({ notifications: [{ id: BEDTIME_REMINDER_NOTIFICATION_ID }] }).catch(() => {});
     if (enabled) {
