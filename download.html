@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta
+      name="description"
+      content="Download DreamScapes for iPhone, iPad and Android. Personalised children's bedtime stories, read aloud in a voice you choose. The first story is free."
+    />
+    <meta name="theme-color" content="#16184a" />
+    <title>Download DreamScapes</title>
+
+    <link rel="icon" type="image/png" sizes="64x64" href="./assets/favicon.png?v=2026100885" />
+    <link rel="apple-touch-icon" sizes="180x180" href="./assets/apple-touch-icon.png?v=2026100885" />
+
+    <!-- The app's own two faces: Baloo for the brand, Nunito for the reading. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Shared when the link is pasted into a message or a profile. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="DreamScapes — personalised bedtime stories" />
+    <meta
+      property="og:description"
+      content="A story written for your child tonight, read aloud in a voice you choose. The first one is free."
+    />
+    <meta property="og:url" content="https://www.dreamscapes.cloud/download" />
+    <meta property="og:image" content="https://www.dreamscapes.cloud/assets/home-hero.jpg?v=2026101501" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- Self-contained on purpose. styles.css is ~9,700 lines written for the
+         app itself; a page with a logo and two buttons should not wait on it,
+         and the palette and type below are taken from it so the two still look
+         like the same product. -->
+    <style>
+      :root {
+        --night: #10143c;
+        --night-deep: #0a0e2c;
+        --gold: #ffd96a;
+        --white: #fffefe;
+        --soft: rgba(226, 231, 255, 0.78);
+        --line: rgba(132, 148, 255, 0.34);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        /* The same night sky the app opens on. */
+        min-height: 100svh;
+        display: grid;
+        place-items: center;
+        padding: 32px 20px calc(32px + env(safe-area-inset-bottom));
+        background:
+          radial-gradient(1100px 620px at 50% -10%, rgba(124, 142, 255, 0.26), transparent 70%),
+          linear-gradient(176deg, #1b2160 0%, var(--night) 52%, var(--night-deep) 100%);
+        background-attachment: fixed;
+        color: var(--white);
+        font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        -webkit-font-smoothing: antialiased;
+        text-align: center;
+      }
+
+      main {
+        width: min(460px, 100%);
+        display: grid;
+        gap: 26px;
+        justify-items: center;
+      }
+
+      .logo {
+        width: min(300px, 76%);
+        height: auto;
+      }
+
+      h1 {
+        margin: 0;
+        font-family: "Baloo 2", "Nunito", sans-serif;
+        font-size: clamp(1.7rem, 7vw, 2.3rem);
+        font-weight: 700;
+        line-height: 1.18;
+      }
+
+      h1 span {
+        display: block;
+        color: var(--gold);
+      }
+
+      p.lead {
+        margin: 0;
+        max-width: 34ch;
+        color: var(--soft);
+        font-size: 1.04rem;
+        font-weight: 600;
+        line-height: 1.5;
+      }
+
+      .stores {
+        display: grid;
+        gap: 12px;
+        width: 100%;
+      }
+
+      .store {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        padding: 16px 20px;
+        border: 1.5px solid var(--line);
+        border-radius: 18px;
+        background: rgba(16, 21, 58, 0.62);
+        color: var(--white);
+        font-size: 1.04rem;
+        font-weight: 800;
+        text-decoration: none;
+        transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+      }
+
+      .store:hover,
+      .store:focus-visible {
+        border-color: rgba(255, 212, 92, 0.72);
+        background: rgba(26, 32, 78, 0.78);
+        outline: none;
+      }
+
+      .store:active {
+        transform: scale(0.99);
+      }
+
+      .store svg {
+        width: 24px;
+        height: 24px;
+        flex: 0 0 auto;
+      }
+
+      .store small {
+        display: block;
+        color: var(--soft);
+        font-size: 0.78rem;
+        font-weight: 700;
+      }
+
+      .store-text {
+        text-align: left;
+        line-height: 1.25;
+      }
+
+      .free {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 16px;
+        border-radius: 999px;
+        background: linear-gradient(104deg, #ffd978 0%, #ffbf63 100%);
+        color: #3a2708;
+        font-size: 0.9rem;
+        font-weight: 900;
+      }
+
+      footer {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        color: rgba(185, 196, 255, 0.64);
+        font-size: 0.86rem;
+        font-weight: 700;
+      }
+
+      footer a {
+        color: inherit;
+        text-decoration: none;
+        border-bottom: 1px solid rgba(185, 196, 255, 0.28);
+      }
+
+      footer a:hover,
+      footer a:focus-visible {
+        color: var(--white);
+        outline: none;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .store {
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img
+        class="logo"
+        src="./assets/dreamscapes-logo.png?v=2026101501"
+        alt="DreamScapes"
+        width="900"
+        height="394"
+      />
+
+      <h1>A bedtime story<span>made just for them</span></h1>
+
+      <p class="lead">
+        Their name, their favourite things, and a storyteller you choose — read
+        aloud at lights-out, or together on the page.
+      </p>
+
+      <span class="free">★ The first story is free</span>
+
+      <div class="stores">
+        <!-- Straight to the stores rather than through /app: someone on a
+             laptop choosing which phone to install on should see both. -->
+        <a class="store" href="https://apps.apple.com/app/id6784545562?mt=8&amp;ct=download">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor">
+            <path d="M16.37 12.78c.02-2.1 1.72-3.11 1.8-3.16-1-1.45-2.53-1.65-3.08-1.67-1.31-.13-2.56.77-3.22.77-.67 0-1.69-.75-2.78-.73-1.43.02-2.75.83-3.48 2.1-1.48 2.57-.38 6.37 1.07 8.45.71 1.02 1.56 2.17 2.67 2.13 1.07-.04 1.48-.69 2.78-.69s1.66.69 2.79.67c1.15-.02 1.88-1.04 2.59-2.07.81-1.19 1.15-2.34 1.17-2.4-.03-.01-2.24-.86-2.26-3.4zM14.3 6.49c.59-.72.99-1.71.88-2.7-.85.03-1.88.57-2.49 1.28-.55.63-1.03 1.64-.9 2.6.95.08 1.92-.48 2.51-1.18z" />
+          </svg>
+          <span class="store-text">
+            Download on the App Store
+            <small>iPhone and iPad</small>
+          </span>
+        </a>
+
+        <a
+          class="store"
+          href="https://play.google.com/store/apps/details?id=cloud.dreamscapes.app&amp;referrer=utm_source%3Ddownload%26utm_medium%3Dweb"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor">
+            <path d="M3.6 2.3c-.25.26-.4.67-.4 1.2v17c0 .53.15.94.4 1.2l.09.08L13.2 12v-.2L3.69 2.22l-.09.08z" opacity="0.75" />
+            <path d="M16.4 15.2 13.2 12v-.2l3.2-3.2.08.05 3.79 2.15c1.08.62 1.08 1.62 0 2.24l-3.79 2.15-.08.06z" />
+            <path d="M16.48 15.14 13.2 11.9 3.6 21.5c.36.38.94.42 1.6.05l11.28-6.41z" opacity="0.9" />
+            <path d="M16.48 8.66 5.2 2.25c-.66-.37-1.24-.33-1.6.05l9.6 9.6 3.28-3.24z" opacity="0.6" />
+          </svg>
+          <span class="store-text">
+            Get it on Google Play
+            <small>Android phones and tablets</small>
+          </span>
+        </a>
+      </div>
+
+      <footer>
+        <a href="https://www.dreamscapes.cloud/">Open in your browser</a>
+        <span aria-hidden="true">·</span>
+        <a href="https://www.dreamscapes.cloud/support.html">Support</a>
+        <span aria-hidden="true">·</span>
+        <a href="https://www.dreamscapes.cloud/support.html#privacy">Privacy</a>
+      </footer>
+    </main>
+  </body>
+</html>
