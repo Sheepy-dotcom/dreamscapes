@@ -3707,7 +3707,21 @@ function showPlanAuthNotice(planKey) {
   if (planAuthCopy) {
     planAuthCopy.textContent = `${plan.label} needs a DreamScapes account so your package, stories, and audio stay linked to you.`;
   }
-  if (planAuthNotice) planAuthNotice.hidden = false;
+  /* The notice is the answer to the tap, so it has to be where the parent is
+     looking. It sits under the plan cards now rather than below the whole
+     comparison block, and this brings it into view either way - the upgrade
+     screen is taller than a phone, and a notice revealed off-screen reads as
+     the button having done nothing at all.
+
+     Not a smooth scroll, unlike the rest of the file. Smooth scrolling is
+     animated, so it is silently dropped whenever animation is not running -
+     a backgrounded webview is the easy one to reproduce - and a scroll that
+     quietly does nothing leaves the notice exactly where it could not be
+     seen. This one has to land. */
+  if (planAuthNotice) {
+    planAuthNotice.hidden = false;
+    planAuthNotice.scrollIntoView({ block: "center" });
+  }
   trackEvent("plan_account_required", { plan: planKey });
 }
 
