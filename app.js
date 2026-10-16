@@ -5761,6 +5761,16 @@ function renderAdminBadge(count) {
   return count > 0 ? `<span class="admin-badge">${count} new</span>` : "";
 }
 
+/* Neither role is stored on a profile - both are lists of addresses in the
+   environment - so without this the dashboard gives no way at all to tell who
+   can do what, and the only check was to ask the person to sign in and look. */
+const ADMIN_ROLE_LABELS = { admin: "Admin", credits: "Credits" };
+
+function renderAdminRoleTag(role) {
+  const label = ADMIN_ROLE_LABELS[role];
+  return label ? `<span class="admin-role-tag admin-role-${escapeHtml(role)}">${escapeHtml(label)}</span>` : "";
+}
+
 function renderAdminSection(title, content, footnote = "", options = {}) {
   const badge = renderAdminBadge(options.newCount || 0);
 
@@ -5889,10 +5899,25 @@ function renderAdminDashboard(data) {
     errorPanel,
     previewPanel,
     renderAdminSection(
+      "Who has access",
+      renderAdminList(
+        Array.isArray(data.access) ? data.access : [],
+        "Nobody is configured, so only the owner fallback in api/admin.js applies.",
+        (row) => `
+          <div class="admin-row">
+            <strong>${escapeHtml(row.email)}${renderAdminRoleTag(row.role)}</strong>
+            <span>${row.hasAccount ? "Account ready" : "No DreamScapes account yet - access does nothing until they sign up on this address"}</span>
+          </div>
+        `
+      ),
+      "Set in the ADMIN_EMAILS and CREDIT_ADMIN_EMAILS environment variables. Changing them needs a redeploy.",
+      { collapsible: true }
+    ),
+    renderAdminSection(
       "Recent Users",
       renderAdminList(tables.profiles, "No users found.", (profile) => `
         <div class="admin-row">
-          <strong>${escapeHtml(profile.email || profile.id)}</strong>
+          <strong>${escapeHtml(profile.email || profile.id)}${renderAdminRoleTag(profile.role)}</strong>
           <span>${escapeHtml(getAdminPlanLabel(profile.plan))} · Credits ${Number(profile.audio_story_credits || 0)} · ${escapeHtml(formatAdminDate(profile.created_at))}</span>
         </div>
       `),

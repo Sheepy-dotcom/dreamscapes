@@ -244,6 +244,26 @@ module.exports = async function handler(request, response) {
         safeServiceRpc("/rest/v1/rpc/analytics_builder_steps", { p_days: 30 }, tableErrors, "builder steps"),
       ]);
 
+    /* Neither role is stored in the database - both are lists of addresses in
+       the environment - so nothing on a profile row says who can do what, and
+       the only way to check used to be to ask the person to sign in and look.
+       This reports it: a tag on the rows that have a role, and the configured
+       addresses with whether an account exists for each yet, since an address
+       can be granted access long before anybody signs up on it. */
+    const roleFor = (email) => {
+      if (isAdminEmail(email)) return "admin";
+      if (isCreditOnlyEmail(email)) return "credits";
+      return null;
+    };
+
+    const knownEmails = new Set(
+      profiles.map((profile) => String(profile.email || "").trim().toLowerCase()).filter(Boolean)
+    );
+    const access = [
+      ...getAdminEmails().map((email) => ({ email, role: "admin" })),
+      ...getCreditOnlyEmails().map((email) => ({ email, role: "credits" })),
+    ].map((row) => ({ ...row, hasAccount: knownEmails.has(row.email) }));
+
     const currentUsage = usageRows.filter((row) => row.month_key === currentMonth);
     const recentAudioStories = stories.filter((story) => story.audio_requested || Number(story.audio_duration_seconds || 0) > 0);
 
@@ -263,6 +283,7 @@ module.exports = async function handler(request, response) {
         openFeedback: feedbackReports.filter((report) => report.status === "open").length,
         redeemedCredits: sumBy(redemptions, "audio_story_credits"),
       },
+      access,
       previewFunnel: buildPreviewFunnel(Array.isArray(eventCounts) ? eventCounts : []),
       analytics: {
         windowDays: 30,
@@ -270,7 +291,7 @@ module.exports = async function handler(request, response) {
         builderSteps: Array.isArray(builderStepCounts) ? builderStepCounts : [],
       },
       tables: {
-        profiles: profiles.slice(0, 40),
+        profiles: profiles.slice(0, 40).map((profile) => ({ ...profile, role: roleFor(profile.email) })),
         stories: stories.slice(0, 40),
         usage: usageRows.slice(0, 60),
         audioIssues,
