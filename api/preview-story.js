@@ -125,9 +125,13 @@ module.exports = async function handler(request, response) {
           `(address ${ipCount}/${PREVIEW_IP_DAILY_LIMIT}, today ${globalCount}/${PREVIEW_GLOBAL_DAILY_LIMIT}).`
       );
       return response.status(429).json({
+        // This is the last thing a stranger ever reads if it sounds like the
+        // shop is shut, and it arrives at the moment they were most interested.
+        // The account path is not capped, and a new free account can write a
+        // story immediately, so say that rather than leading with the refusal.
         error: reachedGlobal
-          ? "DreamScapes has given away all of today's free stories. Create a free account to keep going."
-          : "You have used all of today's free stories. Create a free account to keep going.",
+          ? "Tonight's free stories have all been taken. Create a free account and your story is ready straight away."
+          : "You have used today's free stories. Create a free account and your story is ready straight away.",
         limit: reachedGlobal ? "global" : "address",
       });
     }
