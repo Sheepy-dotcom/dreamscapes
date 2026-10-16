@@ -96,6 +96,8 @@ const adminCreditForm = document.querySelector("#admin-credit-form");
 const adminCreditEmail = document.querySelector("#admin-credit-email");
 const adminCreditAmount = document.querySelector("#admin-credit-amount");
 const adminCreditStatus = document.querySelector("#admin-credit-status");
+const adminCreditRemoveButton = document.querySelector("#admin-credit-remove");
+const adminCreditHolders = document.querySelector("#admin-credit-holders");
 const childProfilesCard = document.querySelector("#child-profiles-card");
 const childProfileForm = document.querySelector("#child-profile-form");
 const childProfileList = document.querySelector("#child-profile-list");
@@ -5839,6 +5841,7 @@ function renderAdminDashboard(data) {
   const funnel = data.previewFunnel || {};
   const analytics = data.analytics || {};
   const builderSteps = Array.isArray(analytics.builderSteps) ? analytics.builderSteps : [];
+  renderAdminCreditHolders(data.creditHolders);
   const firstStepVisits = Number(builderSteps[0]?.visits || 0);
 
   const previewPanel = renderAdminSection(
@@ -5990,6 +5993,34 @@ function renderAdminDashboard(data) {
    not have are taken off it rather than left to fail: asking for the dashboard
    would only earn a 403, and an error where a page should be reads as broken
    rather than as not-for-you. */
+/* Who is holding credits. A credits-only account cannot see the dashboard, so
+   without this there is no way to tell whether a top-up landed, or to find the
+   balance being corrected. Tapping a row fills the form with that address,
+   because retyping a stranger's email to take 5 credits back off them is how
+   the wrong person loses their credits. */
+function renderAdminCreditHolders(holders) {
+  if (!adminCreditHolders) return;
+  const rows = Array.isArray(holders) ? holders : [];
+
+  if (!rows.length) {
+    adminCreditHolders.innerHTML = '<p class="helper-text">Nobody is holding audio credits.</p>';
+    return;
+  }
+
+  adminCreditHolders.innerHTML = `
+    <h4>Accounts holding credits</h4>
+    ${rows
+      .map((row) => {
+        const credits = Number(row.audio_story_credits || 0);
+        return `
+          <button class="admin-credit-holder" type="button" data-credit-email="${escapeHtml(row.email || "")}">
+            <strong>${escapeHtml(row.email || "(no email)")}</strong>
+            <span>${credits} ${credits === 1 ? "credit" : "credits"}</span>
+          </button>`;
+      })
+      .join("")}`;
+}
+
 function applyAdminRoleToScreen() {
   const fullAdmin = isCurrentUserAdmin();
   if (adminTitle) adminTitle.textContent = fullAdmin ? "DreamScapes Admin" : "Give audio credits";
@@ -6002,15 +6033,24 @@ async function loadAdminDashboard() {
   applyAdminRoleToScreen();
 
   if (!isCurrentUserAdmin()) {
-    // Not an error for this account: the credits form above is the whole of it.
-    setAdminStatus(
-      canCurrentUserGiveCredits()
-        ? "Enter a parent's email address and the number of audio credits to add."
-        : "Admin access is not enabled for this account.",
-      !canCurrentUserGiveCredits()
-    );
     if (adminSummary) adminSummary.innerHTML = "";
     if (adminDashboard) adminDashboard.innerHTML = "";
+
+    if (!canCurrentUserGiveCredits()) {
+      setAdminStatus("Admin access is not enabled for this account.", true);
+      return;
+    }
+
+    // The dashboard is refused for this role, but the credit holders are not.
+    try {
+      const response = await fetch(ADMIN_ENDPOINT, { method: "GET", headers: await getApiHeaders() });
+      if (!response.ok) throw new Error(await readApiError(response, "Credits could not be loaded."));
+      const data = await response.json();
+      renderAdminCreditHolders(data.creditHolders);
+      setAdminStatus("Enter a parent's email address and the number of audio credits to add or remove.");
+    } catch (error) {
+      setAdminStatus(error.message || "Credits could not be loaded.", true);
+    }
     return;
   }
 
@@ -6035,11 +6075,16 @@ async function loadAdminDashboard() {
   }
 }
 
-async function addAdminAudioCredits() {
-  if (!isCurrentUserAdmin()) {
-    if (adminCreditStatus) adminCreditStatus.textContent = "Admin access is not enabled for this account.";
+async function addAdminAudioCredits(direction = "add") {
+  // canCurrentUserGiveCredits, not isCurrentUserAdmin: this is the whole job a
+  // credits-only account exists to do, and gating it on full admin showed them
+  // the form and then refused it.
+  if (!canCurrentUserGiveCredits()) {
+    if (adminCreditStatus) adminCreditStatus.textContent = "Audio credits are not enabled for this account.";
     return false;
   }
+
+  const removing = direction === "remove";
 
   const email = adminCreditEmail?.value.trim() || "";
   const credits = Math.max(0, Math.floor(Number(adminCreditAmount?.value || 0)));
@@ -6054,31 +6099,31 @@ async function addAdminAudioCredits() {
     return false;
   }
 
-  if (adminCreditStatus) adminCreditStatus.textContent = "Adding credits...";
+  if (adminCreditStatus) adminCreditStatus.textContent = removing ? "Removing credits..." : "Adding credits...";
 
   try {
     const response = await fetch(ADMIN_ENDPOINT, {
       method: "POST",
       headers: await getApiHeaders(),
       body: JSON.stringify({
-        action: "addAudioCredits",
+        action: removing ? "removeAudioCredits" : "addAudioCredits",
         email,
         credits,
       }),
     });
 
     if (!response.ok) {
-      throw new Error(await readApiError(response, "Credits could not be added."));
+      throw new Error(await readApiError(response, `Credits could not be ${removing ? "removed" : "added"}.`));
     }
 
     const data = await response.json();
-    if (adminCreditStatus) adminCreditStatus.textContent = data.message || "Credits added.";
+    if (adminCreditStatus) adminCreditStatus.textContent = data.message || (removing ? "Credits removed." : "Credits added.");
     if (adminCreditAmount) adminCreditAmount.value = "1";
     await loadAdminDashboard();
-    trackEvent("admin_audio_credits_added", { credits });
+    trackEvent(removing ? "admin_audio_credits_removed" : "admin_audio_credits_added", { credits });
     return true;
   } catch (error) {
-    if (adminCreditStatus) adminCreditStatus.textContent = error.message || "Credits could not be added.";
+    if (adminCreditStatus) adminCreditStatus.textContent = error.message || `Credits could not be ${removing ? "removed" : "added"}.`;
     return false;
   }
 }
@@ -7748,7 +7793,23 @@ refreshAdminButton?.addEventListener("click", () => {
 
 adminCreditForm?.addEventListener("submit", async (event) => {
   event.preventDefault();
-  await addAdminAudioCredits();
+  await addAdminAudioCredits("add");
+});
+
+adminCreditRemoveButton?.addEventListener("click", async () => {
+  await addAdminAudioCredits("remove");
+});
+
+/* Delegated: the rows are rendered, so a listener bound now would attach to
+   the ones that exist now and to none of the ones a refresh draws after. */
+adminCreditHolders?.addEventListener("click", (event) => {
+  const row = event.target.closest("[data-credit-email]");
+  if (!row || !adminCreditEmail) return;
+  adminCreditEmail.value = row.dataset.creditEmail;
+  adminCreditEmail.focus();
+  if (adminCreditStatus) {
+    adminCreditStatus.textContent = `Editing credits for ${row.dataset.creditEmail}.`;
+  }
 });
 
 document.querySelector("#sign-in-button")?.addEventListener("click", async () => {

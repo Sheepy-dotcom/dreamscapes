@@ -37,7 +37,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026101604" />
+    <link rel="stylesheet" href="./styles.css?v=2026101605" />
   </head>
   <body class="home-active night-mode">
     <svg class="art-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -1083,7 +1083,7 @@
         </div>
         <p class="status-note admin-status" id="admin-status" role="status"></p>
         <article class="admin-panel admin-credit-panel">
-          <h3>Add audio credits</h3>
+          <h3>Audio credits</h3>
           <form class="admin-credit-form" id="admin-credit-form">
             <label class="field">
               <span>User email</span>
@@ -1094,8 +1094,10 @@
               <input id="admin-credit-amount" type="number" min="1" max="100" value="1" />
             </label>
             <button class="button primary-button" type="submit">Add Credits</button>
+            <button class="button secondary-button" id="admin-credit-remove" type="button">Remove Credits</button>
           </form>
           <p class="helper-text" id="admin-credit-status" role="status"></p>
+          <div class="admin-credit-holders" id="admin-credit-holders"></div>
         </article>
         <div class="admin-summary-grid" id="admin-summary"></div>
         <div class="admin-dashboard" id="admin-dashboard"></div>
@@ -1320,6 +1322,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js?v=2026101505"></script>
-    <script src="./app.js?v=2026101604"></script>
+    <script src="./app.js?v=2026101605"></script>
   </body>
 </html>

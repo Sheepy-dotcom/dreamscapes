@@ -122,7 +122,12 @@ async function getVerifiedAdminAccount(request) {
   return { account, email, allowed: false, canSeeDashboard: false };
 }
 
-async function addAudioCreditsToProfile(body) {
+/* Credits are given out by hand when something has gone wrong for a family, so
+   they have to be takeable back by hand too - a typo that grants 50 instead of
+   5 was previously only fixable in the database. Removing floors at zero rather
+   than erroring, because the intent of "remove 10" from a balance of 3 is
+   plainly to clear it. */
+async function changeAudioCreditsOnProfile(body, direction) {
   const email = String(body.email || "")
     .trim()
     .toLowerCase();
@@ -146,7 +151,8 @@ async function addAudioCreditsToProfile(body) {
   }
 
   const previousCredits = Math.max(0, Number(profile.audio_story_credits || 0));
-  const nextCredits = previousCredits + credits;
+  const nextCredits =
+    direction === "remove" ? Math.max(0, previousCredits - credits) : previousCredits + credits;
   const updated = await supabaseServiceRequest(`/rest/v1/profiles?id=eq.${profile.id}&select=*`, {
     method: "PATCH",
     prefer: "return=representation",
@@ -160,10 +166,17 @@ async function addAudioCreditsToProfile(body) {
     body: {
       ok: true,
       profile: updated?.[0] || { ...profile, audio_story_credits: nextCredits },
-      creditsAdded: credits,
+      creditsChanged: credits,
+      direction,
       previousCredits,
       nextCredits,
-      message: `${credits} audio ${credits === 1 ? "credit has" : "credits have"} been added to ${profile.email || email}.`,
+      // The resulting balance is the thing worth confirming: it is what the
+      // parent will actually have, and it is how a floored removal explains
+      // itself without an error.
+      message:
+        direction === "remove"
+          ? `${profile.email || email} now has ${nextCredits} audio ${nextCredits === 1 ? "credit" : "credits"}.`
+          : `${credits} audio ${credits === 1 ? "credit has" : "credits have"} been added to ${profile.email || email}. They now have ${nextCredits}.`,
     },
   };
 }
@@ -185,18 +198,35 @@ module.exports = async function handler(request, response) {
 
     if (request.method === "POST") {
       const body = typeof request.body === "string" ? JSON.parse(request.body) : request.body || {};
-      if (body.action !== "addAudioCredits") {
+      const directions = { addAudioCredits: "add", removeAudioCredits: "remove" };
+      const direction = directions[body.action];
+      if (!direction) {
         return response.status(400).json({ error: "Unknown admin action." });
       }
 
-      const result = await addAudioCreditsToProfile(body);
+      const result = await changeAudioCreditsOnProfile(body, direction);
       return response.status(result.status).json(result.body);
     }
 
-    // Everything below reads the whole user base, so it is refused here rather
-    // than filtered: a credits-only account never receives the rows at all.
+    /* Who is holding credits, which is the one part of the user base a
+       credits-only account legitimately needs: without it they cannot tell
+       whether a top-up landed, or find the balance they are about to correct.
+       Only accounts that actually hold credits, and only the address and the
+       number - not the plan, the stories or anything else on the row. */
+    const creditHolders = await safeServiceRequest(
+      "/rest/v1/profiles?audio_story_credits=gt.0&select=email,audio_story_credits&order=audio_story_credits.desc&limit=200",
+      [],
+      "credit holders"
+    );
+
     if (!admin.canSeeDashboard) {
-      return response.status(403).json({ error: "This account can add audio credits, but not open the dashboard." });
+      return response.status(200).json({
+        ok: true,
+        adminEmail: admin.email,
+        generatedAt: new Date().toISOString(),
+        creditsOnly: true,
+        creditHolders,
+      });
     }
 
     const tableErrors = [];
@@ -284,6 +314,7 @@ module.exports = async function handler(request, response) {
         redeemedCredits: sumBy(redemptions, "audio_story_credits"),
       },
       access,
+      creditHolders,
       previewFunnel: buildPreviewFunnel(Array.isArray(eventCounts) ? eventCounts : []),
       analytics: {
         windowDays: 30,

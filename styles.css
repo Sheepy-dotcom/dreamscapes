@@ -1920,6 +1920,53 @@ body.night-mode .story-path-button.active {
   background: rgba(255, 248, 220, 0.42);
 }
 
+/* Each holder is a button, not a row of text: tapping one fills the form with
+   that address, so nobody retypes a stranger's email to take credits off them. */
+.admin-credit-holders {
+  margin-top: 14px;
+  display: grid;
+  gap: 8px;
+}
+
+.admin-credit-holders h4 {
+  margin: 0 0 2px;
+  font-size: 0.92rem;
+}
+
+.admin-credit-holder {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  border: 1px solid rgba(123, 78, 216, 0.18);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: rgba(255, 248, 220, 0.42);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.admin-credit-holder strong,
+.admin-credit-holder span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.admin-credit-holder span {
+  flex: none;
+  font-weight: 800;
+  opacity: 0.78;
+}
+
+.admin-credit-holder:hover,
+.admin-credit-holder:focus-visible {
+  border-color: rgba(255, 183, 42, 0.72);
+  outline: none;
+}
+
 /* Two roles, two colours, so a glance down the list separates "can do
    everything" from "can only top up credits". Sits inside the strong, after
    the address. */
