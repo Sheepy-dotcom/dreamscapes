@@ -87,6 +87,7 @@ const accountActions = document.querySelector("#account-actions");
 const deleteAccountButton = document.querySelector("#delete-account-button");
 const deleteAccountStatus = document.querySelector("#delete-account-status");
 const openAdminButton = document.querySelector("#open-admin-button");
+const adminTitle = document.querySelector("#admin-title");
 const adminStatus = document.querySelector("#admin-status");
 const adminSummary = document.querySelector("#admin-summary");
 const adminDashboard = document.querySelector("#admin-dashboard");
@@ -576,15 +577,20 @@ const MAX_LIBRARY_RENDER_ITEMS = 30;
 // silently never appeared. Rendering is still capped when the list is sliced.
 const CLOUD_LIBRARY_FETCH_LIMIT = MAX_LIBRARY_RENDER_ITEMS * 3;
 const STORY_FAVOURITES_KEY = "dreamscapesStoryFavourites";
-/* Shown-the-button list, not the authorising one: api/admin.js decides what an
-   admin may actually do, from the ADMIN_EMAILS environment variable. Both have
-   to contain an address or it does not work - this one alone offers a door the
-   API refuses to open, and the variable alone authorises someone who is never
-   shown the door.
+/* Shown-the-button lists, not the authorising ones: api/admin.js decides what
+   each account may actually do, from the ADMIN_EMAILS and CREDIT_ADMIN_EMAILS
+   environment variables. An address has to be in both places or it does not
+   work - the list here alone offers a door the API refuses to open, and the
+   variable alone authorises someone who is never shown the door.
 
-   Entries must be lowercase. isCurrentUserAdmin lowercases the signed-in
-   address but not this list. */
-const ADMIN_EMAILS = ["shaunrussett@gmail.com", "jack.croftbaker@icloud.com"];
+   CREDIT_ADMINS may top up a parent's audio credits and nothing else. The
+   dashboard is every user's email, every story title and every piece of
+   feedback, which is more than anyone needs in order to fix one family's audio.
+
+   Entries must be lowercase: the checks lowercase the signed-in address but not
+   these lists. */
+const ADMIN_EMAILS = ["shaunrussett@gmail.com"];
+const CREDIT_ADMINS = ["jack.croftbaker@icloud.com"];
 const ADMIN_LAST_SEEN_KEY = "dreamscapesAdminLastSeenAt";
 
 const plans = {
@@ -1898,7 +1904,7 @@ function updateAccountUI() {
   if (accountAudioCredits) {
     accountAudioCredits.textContent = totalsReady ? String(signedIn ? getAudioStoryCredits() : 0) : pending;
   }
-  if (openAdminButton) openAdminButton.hidden = !isCurrentUserAdmin();
+  if (openAdminButton) openAdminButton.hidden = !canCurrentUserGiveCredits();
   if (accountActions) accountActions.hidden = !signedIn;
 
   /* A bar is only honest where there is a ceiling to be a fraction of. The
@@ -5702,6 +5708,12 @@ function isCurrentUserAdmin() {
   return ADMIN_EMAILS.includes(String(currentUser?.email || "").trim().toLowerCase());
 }
 
+// Full admins can do this too, so the credits screen is offered to both.
+function canCurrentUserGiveCredits() {
+  const email = String(currentUser?.email || "").trim().toLowerCase();
+  return isCurrentUserAdmin() || CREDIT_ADMINS.includes(email);
+}
+
 function setAdminStatus(message, isError = false) {
   if (!adminStatus) return;
   adminStatus.textContent = message;
@@ -5949,9 +5961,29 @@ function renderAdminDashboard(data) {
   setAdminLastSeenTime(data.generatedAt || new Date().toISOString());
 }
 
+/* The screen is shared by both roles, so the parts a credits-only account may
+   not have are taken off it rather than left to fail: asking for the dashboard
+   would only earn a 403, and an error where a page should be reads as broken
+   rather than as not-for-you. */
+function applyAdminRoleToScreen() {
+  const fullAdmin = isCurrentUserAdmin();
+  if (adminTitle) adminTitle.textContent = fullAdmin ? "DreamScapes Admin" : "Give audio credits";
+  if (refreshAdminButton) refreshAdminButton.hidden = !fullAdmin;
+  if (adminSummary) adminSummary.hidden = !fullAdmin;
+  if (adminDashboard) adminDashboard.hidden = !fullAdmin;
+}
+
 async function loadAdminDashboard() {
+  applyAdminRoleToScreen();
+
   if (!isCurrentUserAdmin()) {
-    setAdminStatus("Admin access is only enabled for the DreamScapes owner account.", true);
+    // Not an error for this account: the credits form above is the whole of it.
+    setAdminStatus(
+      canCurrentUserGiveCredits()
+        ? "Enter a parent's email address and the number of audio credits to add."
+        : "Admin access is not enabled for this account.",
+      !canCurrentUserGiveCredits()
+    );
     if (adminSummary) adminSummary.innerHTML = "";
     if (adminDashboard) adminDashboard.innerHTML = "";
     return;

@@ -18,6 +18,24 @@ function isAdminEmail(email) {
   return getAdminEmails().includes(String(email || "").trim().toLowerCase());
 }
 
+/* A second, narrower list: these addresses may top up a parent's audio credits
+   and nothing else. The dashboard is every user's email, every story title and
+   every piece of feedback, which is more than someone needs in order to fix an
+   audio problem for one family.
+
+   Anyone on the full ADMIN_EMAILS list can do this too, so an address only
+   needs to be in one of the two. */
+function getCreditOnlyEmails() {
+  return String(process.env.CREDIT_ADMIN_EMAILS || "")
+    .split(",")
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+function isCreditOnlyEmail(email) {
+  return getCreditOnlyEmails().includes(String(email || "").trim().toLowerCase());
+}
+
 function getCurrentMonthKey() {
   const date = new Date();
   return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
@@ -93,11 +111,15 @@ async function getVerifiedAdminAccount(request) {
   const account = await getAccountContext(request);
   const email = account.user?.email || account.profile?.email || "";
 
-  if (!isAdminEmail(email)) {
-    return { account, email, allowed: false };
+  if (isAdminEmail(email)) {
+    return { account, email, allowed: true, canSeeDashboard: true };
   }
 
-  return { account, email, allowed: true };
+  if (isCreditOnlyEmail(email)) {
+    return { account, email, allowed: true, canSeeDashboard: false };
+  }
+
+  return { account, email, allowed: false, canSeeDashboard: false };
 }
 
 async function addAudioCreditsToProfile(body) {
@@ -169,6 +191,12 @@ module.exports = async function handler(request, response) {
 
       const result = await addAudioCreditsToProfile(body);
       return response.status(result.status).json(result.body);
+    }
+
+    // Everything below reads the whole user base, so it is refused here rather
+    // than filtered: a credits-only account never receives the rows at all.
+    if (!admin.canSeeDashboard) {
+      return response.status(403).json({ error: "This account can add audio credits, but not open the dashboard." });
     }
 
     const tableErrors = [];
