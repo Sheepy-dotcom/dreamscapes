@@ -6022,7 +6022,7 @@ function renderAdminCreditHolders(holders) {
       .map((row) => {
         const credits = Number(row.audio_story_credits || 0);
         return `
-          <button class="admin-credit-holder" type="button" data-credit-email="${escapeHtml(row.email || "")}">
+          <button class="admin-credit-holder" type="button" data-credit-email="${escapeHtml(row.email || "")}" title="${escapeHtml(row.email || "")}">
             <strong>${escapeHtml(row.email || "(no email)")}</strong>
             <span>${credits} ${credits === 1 ? "credit" : "credits"}</span>
           </button>`;
@@ -6046,7 +6046,7 @@ function renderAdminSignups(signups) {
     ${rows
       .map(
         (row) => `
-          <button class="admin-credit-holder" type="button" data-credit-email="${escapeHtml(row.email || "")}">
+          <button class="admin-credit-holder" type="button" data-credit-email="${escapeHtml(row.email || "")}" title="${escapeHtml(row.email || "")}">
             <strong>${escapeHtml(row.email || "(no email)")}</strong>
             <span>${escapeHtml(getAdminPlanLabel(row.plan))} &middot; ${escapeHtml(formatAdminDate(row.created_at))}</span>
           </button>`
@@ -6060,6 +6060,10 @@ function applyAdminRoleToScreen() {
   if (refreshAdminButton) refreshAdminButton.hidden = !fullAdmin;
   if (adminSummary) adminSummary.hidden = !fullAdmin;
   if (adminDashboard) adminDashboard.hidden = !fullAdmin;
+  // Only the credits-only view fills this, and a full admin has Recent Users
+  // in the dashboard instead, so it is cleared rather than left holding rows
+  // from whatever was rendered before.
+  if (fullAdmin && adminSignups) adminSignups.innerHTML = "";
 }
 
 async function loadAdminDashboard() {

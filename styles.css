@@ -337,6 +337,12 @@ textarea:focus-visible {
 .admin-screen,
 .info-screen {
   padding: clamp(18px, 3vw, 32px);
+  /* These are grid items of .app-shell, and a grid item defaults to
+     min-width:auto - it refuses to shrink below its content. One long
+     unbreakable string, which an email address is, therefore widens the whole
+     screen past the viewport and the page slides sideways. min-width:0 lets it
+     shrink so the truncation in the rows can do its job. */
+  min-width: 0;
 }
 
 .top-bar,
@@ -1771,21 +1777,58 @@ body.night-mode .story-path-button.active {
   margin-bottom: 16px;
 }
 
+/* Two fields and two actions. On a phone the address needs the full width and
+   the two buttons read better as a pair than stacked, so the grid is two
+   columns with the fields spanning both; the wider layout below puts the lot
+   on one line. */
 .admin-credit-form {
   display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(90px, 0.5fr) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 10px;
   align-items: end;
 }
 
+.admin-credit-form .field {
+  grid-column: 1 / -1;
+}
+
+.admin-credit-form .button {
+  width: 100%;
+}
+
+@media (min-width: 700px) {
+  .admin-credit-form {
+    grid-template-columns: minmax(0, 1.4fr) minmax(90px, 0.4fr) auto auto;
+  }
+
+  .admin-credit-form .field {
+    grid-column: auto;
+  }
+
+  .admin-credit-form .button {
+    width: auto;
+  }
+}
+
+/* A line of guidance, not a banner. It was a mint block left from the light
+   theme the app no longer has, and it shouted louder than the heading above
+   it. The error state is the one that earns colour. */
 .admin-status {
   margin: 0 0 14px;
-  border: 1px solid rgba(138, 215, 189, 0.42);
-  border-radius: 8px;
-  padding: 10px 12px;
-  background: rgba(232, 255, 247, 0.82);
-  color: #244f48;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: rgba(214, 205, 255, 0.76);
+  font-size: 0.92rem;
   text-align: left;
+}
+
+.admin-status.error {
+  border-radius: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 138, 138, 0.42);
+  background: rgba(255, 86, 86, 0.12);
+  color: #ffd9d9;
 }
 
 .admin-summary-grid {
@@ -1920,51 +1963,72 @@ body.night-mode .story-path-button.active {
   background: rgba(255, 248, 220, 0.42);
 }
 
-/* Each holder is a button, not a row of text: tapping one fills the form with
-   that address, so nobody retypes a stranger's email to take credits off them. */
+/* The credits panel. Everything here is read down a long list on a phone, so
+   the rows are quiet and tight rather than card-like - the address is what the
+   eye is scanning for, and the number beside it is the answer. */
 .admin-credit-holders {
-  margin-top: 14px;
+  margin-top: 18px;
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 
 .admin-credit-holders h4 {
-  margin: 0 0 2px;
-  font-size: 0.92rem;
+  margin: 0 0 4px;
+  color: rgba(214, 205, 255, 0.72);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
+/* Each holder is a button, not a row of text: tapping one fills the form with
+   that address, so nobody retypes a stranger's email to take credits off them. */
 .admin-credit-holder {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
-  gap: 12px;
+  gap: 14px;
   width: 100%;
-  border: 1px solid rgba(123, 78, 216, 0.18);
+  border: 1px solid rgba(216, 198, 255, 0.14);
   border-radius: 10px;
-  padding: 10px 12px;
-  background: rgba(255, 248, 220, 0.42);
+  padding: 9px 12px;
+  background: rgba(255, 255, 255, 0.04);
   color: inherit;
   font: inherit;
   text-align: left;
   cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease;
 }
 
-.admin-credit-holder strong,
-.admin-credit-holder span {
+/* The address truncates rather than wrapping. A long one broken across two
+   lines ("sardiagascoyne77@outlo / ok.com") doubles the height of every row
+   and is no easier to read; the whole value still goes into the form on tap. */
+.admin-credit-holder strong {
   min-width: 0;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  font-size: 0.94rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .admin-credit-holder span {
   flex: none;
-  font-weight: 800;
-  opacity: 0.78;
+  color: rgba(214, 205, 255, 0.7);
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .admin-credit-holder:hover,
 .admin-credit-holder:focus-visible {
-  border-color: rgba(255, 183, 42, 0.72);
+  border-color: rgba(255, 183, 42, 0.56);
+  background: rgba(255, 255, 255, 0.08);
   outline: none;
+}
+
+.admin-credit-holder:active {
+  transform: scale(0.995);
 }
 
 /* Two roles, two colours, so a glance down the list separates "can do
