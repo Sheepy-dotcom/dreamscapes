@@ -576,7 +576,15 @@ const MAX_LIBRARY_RENDER_ITEMS = 30;
 // silently never appeared. Rendering is still capped when the list is sliced.
 const CLOUD_LIBRARY_FETCH_LIMIT = MAX_LIBRARY_RENDER_ITEMS * 3;
 const STORY_FAVOURITES_KEY = "dreamscapesStoryFavourites";
-const ADMIN_EMAILS = ["shaunrussett@gmail.com"];
+/* Shown-the-button list, not the authorising one: api/admin.js decides what an
+   admin may actually do, from the ADMIN_EMAILS environment variable. Both have
+   to contain an address or it does not work - this one alone offers a door the
+   API refuses to open, and the variable alone authorises someone who is never
+   shown the door.
+
+   Entries must be lowercase. isCurrentUserAdmin lowercases the signed-in
+   address but not this list. */
+const ADMIN_EMAILS = ["shaunrussett@gmail.com", "jack.croftbaker@icloud.com"];
 const ADMIN_LAST_SEEN_KEY = "dreamscapesAdminLastSeenAt";
 
 const plans = {
