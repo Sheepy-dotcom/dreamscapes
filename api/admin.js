@@ -213,10 +213,22 @@ module.exports = async function handler(request, response) {
        whether a top-up landed, or find the balance they are about to correct.
        Only accounts that actually hold credits, and only the address and the
        number - not the plan, the stories or anything else on the row. */
+    const tableErrors = [];
+
     const creditHolders = await safeServiceRequest(
       "/rest/v1/profiles?audio_story_credits=gt.0&select=email,audio_story_credits&order=audio_story_credits.desc&limit=200",
-      [],
+      tableErrors,
       "credit holders"
+    );
+
+    /* Who has just joined. Not the dashboard's user list: the address, the
+       plan and when they signed up, and only the most recent few. Enough to
+       welcome somebody or to put credits on a brand new account, which is the
+       moment it is usually needed. */
+    const recentSignups = await safeServiceRequest(
+      "/rest/v1/profiles?select=email,plan,created_at&order=created_at.desc&limit=25",
+      tableErrors,
+      "recent signups"
     );
 
     if (!admin.canSeeDashboard) {
@@ -226,10 +238,10 @@ module.exports = async function handler(request, response) {
         generatedAt: new Date().toISOString(),
         creditsOnly: true,
         creditHolders,
+        recentSignups,
       });
     }
 
-    const tableErrors = [];
     const currentMonth = getCurrentMonthKey();
     const [profiles, stories, usageRows, audioIssues, feedbackReports, redeemCodes, redemptions, eventCounts, builderStepCounts] =
       await Promise.all([

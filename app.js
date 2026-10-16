@@ -98,6 +98,7 @@ const adminCreditAmount = document.querySelector("#admin-credit-amount");
 const adminCreditStatus = document.querySelector("#admin-credit-status");
 const adminCreditRemoveButton = document.querySelector("#admin-credit-remove");
 const adminCreditHolders = document.querySelector("#admin-credit-holders");
+const adminSignups = document.querySelector("#admin-signups");
 const childProfilesCard = document.querySelector("#child-profiles-card");
 const childProfileForm = document.querySelector("#child-profile-form");
 const childProfileList = document.querySelector("#child-profile-list");
@@ -6021,6 +6022,30 @@ function renderAdminCreditHolders(holders) {
       .join("")}`;
 }
 
+/* Who has just joined. Tapping one fills the form, because the usual reason to
+   look at a new signup from here is to put credits on it. */
+function renderAdminSignups(signups) {
+  if (!adminSignups) return;
+  const rows = Array.isArray(signups) ? signups : [];
+
+  if (!rows.length) {
+    adminSignups.innerHTML = "";
+    return;
+  }
+
+  adminSignups.innerHTML = `
+    <h4>New signups</h4>
+    ${rows
+      .map(
+        (row) => `
+          <button class="admin-credit-holder" type="button" data-credit-email="${escapeHtml(row.email || "")}">
+            <strong>${escapeHtml(row.email || "(no email)")}</strong>
+            <span>${escapeHtml(getAdminPlanLabel(row.plan))} &middot; ${escapeHtml(formatAdminDate(row.created_at))}</span>
+          </button>`
+      )
+      .join("")}`;
+}
+
 function applyAdminRoleToScreen() {
   const fullAdmin = isCurrentUserAdmin();
   if (adminTitle) adminTitle.textContent = fullAdmin ? "DreamScapes Admin" : "Give audio credits";
@@ -6047,6 +6072,7 @@ async function loadAdminDashboard() {
       if (!response.ok) throw new Error(await readApiError(response, "Credits could not be loaded."));
       const data = await response.json();
       renderAdminCreditHolders(data.creditHolders);
+      renderAdminSignups(data.recentSignups);
       setAdminStatus("Enter a parent's email address and the number of audio credits to add or remove.");
     } catch (error) {
       setAdminStatus(error.message || "Credits could not be loaded.", true);
@@ -7802,7 +7828,7 @@ adminCreditRemoveButton?.addEventListener("click", async () => {
 
 /* Delegated: the rows are rendered, so a listener bound now would attach to
    the ones that exist now and to none of the ones a refresh draws after. */
-adminCreditHolders?.addEventListener("click", (event) => {
+[adminCreditHolders, adminSignups].forEach((list) => list?.addEventListener("click", (event) => {
   const row = event.target.closest("[data-credit-email]");
   if (!row || !adminCreditEmail) return;
   adminCreditEmail.value = row.dataset.creditEmail;
@@ -7810,7 +7836,7 @@ adminCreditHolders?.addEventListener("click", (event) => {
   if (adminCreditStatus) {
     adminCreditStatus.textContent = `Editing credits for ${row.dataset.creditEmail}.`;
   }
-});
+}));
 
 document.querySelector("#sign-in-button")?.addEventListener("click", async () => {
   if (!(await ensureSupabaseClient())) {
