@@ -1470,7 +1470,15 @@ function showScreen(name) {
     setRepeatArmed(false);
   }
   trackEvent("screen_view", { screen: name });
-  window.scrollTo({ top: 0, behavior: name === "builder" ? "auto" : "smooth" });
+  /* Instant, for every screen rather than only the builder. Changing screen is
+     a navigation, not a scroll within a page: there is nothing to follow with
+     the eye, and animating it means watching the screen you just left slide
+     away. Worse, a smooth scroll is animated, so it is silently dropped
+     wherever animation is not running - and then you land on the new screen at
+     the old screen's offset, with its heading under the status bar, looking
+     exactly like a safe-area fault. The builder was already exempted for this
+     reason; every other screen had the same problem. */
+  window.scrollTo({ top: 0, behavior: "auto" });
 }
 
 // Signing in with Apple or Google sends no email at all, which sidesteps the
