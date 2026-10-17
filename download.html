@@ -197,6 +197,60 @@ button.badge {
       }
 
       /* Only shown to the browsers that need it - see the script below. */
+      .inapp-first {
+        width: 100%;
+        margin: -4px 0 2px;
+        border: 1.5px solid rgba(255, 212, 92, 0.4);
+        border-radius: 20px;
+        padding: 18px 18px 20px;
+        background: rgba(255, 212, 92, 0.08);
+      }
+
+      .inapp-first h2 {
+        margin: 0 0 6px;
+        font-family: "Baloo 2", "Nunito", sans-serif;
+        font-size: 1.25rem;
+        line-height: 1.2;
+      }
+
+      .inapp-first p {
+        margin: 0 0 14px;
+        color: rgba(214, 205, 255, 0.82);
+        font-size: 0.92rem;
+        line-height: 1.5;
+      }
+
+      .inapp-cta {
+        display: block;
+        border-radius: 999px;
+        padding: 14px 20px;
+        background: linear-gradient(135deg, #ffd45c, #ffb02e);
+        color: #3b2500;
+        font-size: 1.02rem;
+        font-weight: 800;
+        text-align: center;
+        text-decoration: none;
+      }
+
+      /* Quieter than the gold button above it, because it is the slower road:
+         it gets them the app, but only after a copy, a paste and a browser
+         switch. Scoped under .inapp-first so it beats .copy-link, which is
+         defined later and would otherwise win on source order. */
+      .inapp-first .copy-link {
+        display: block;
+        width: 100%;
+        margin: 10px 0 0;
+        border: 1px solid rgba(214, 205, 255, 0.28);
+        padding: 12px;
+        background: none;
+        color: rgba(226, 219, 255, 0.86);
+        font-size: 0.92rem;
+      }
+
+      .inapp-cta:active {
+        transform: scale(0.99);
+      }
+
       .inapp-note {
         margin: -6px 0 0;
         max-width: 36ch;
@@ -324,6 +378,16 @@ button.badge {
       </p>
 
       <span class="free">★ The first story is free</span>
+
+      <!-- For an iPhone inside TikTok, where the App Store cannot be reached
+           at all. Shown instead of leading with a door iOS has bolted: the web
+           app runs perfectly well in that same browser, so a story is thirty
+           seconds away without installing anything. -->
+      <section class="inapp-first" id="inapp-first" hidden>
+        <h2>Read one tonight, right here</h2>
+        <p>No install, no account. The App Store needs Safari on iPhone, so get the app later.</p>
+        <a class="inapp-cta" href="https://www.dreamscapes.cloud/">Start a free story</a>
+      </section>
 
       <p class="inapp-note" id="inapp-note" hidden>
         This browser will not open the App Store. Copy the link and paste it
@@ -459,6 +523,33 @@ button.badge {
             note.scrollIntoView({ block: "center" });
           }, 2400);
         });
+
+        /* An iPhone inside an in-app browser. Measured, not guessed: the Play
+           badge works from TikTok because Android treats a Play link as an
+           ordinary URL, while iOS needs a hand-off to the App Store that this
+           browser will not perform - the same address opens fine in Safari and
+           Chrome on the same phone. Three mechanisms and four attempts went at
+           that hand-off before the asymmetry made it plain.
+
+           So these visitors are led to the thing that does work. The web app
+           runs in this very browser, which is how they are reading this page,
+           and the note below still offers Safari for anyone who wants the app
+           now. The badges stay where they are underneath. */
+        var inAppBrowser = /musical_ly|Bytedance|TikTok|Instagram|FBAN|FBAV|Line\/|Snapchat/i.test(navigator.userAgent || "");
+        if (inAppBrowser) {
+          var first = document.getElementById("inapp-first");
+          if (first) {
+            first.hidden = false;
+            /* The copy button moves inside this block rather than the warning
+               below it appearing as well: both were explaining the same thing
+               twice, one above the other. Moving it keeps its handler. */
+            var copy = document.getElementById("copy-link");
+            if (copy) {
+              copy.classList.add("inapp-secondary");
+              first.appendChild(copy);
+            }
+          }
+        }
 
         var button = document.getElementById("copy-link");
         var link = "https://www.dreamscapes.cloud/download";
