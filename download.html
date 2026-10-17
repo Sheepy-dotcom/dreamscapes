@@ -95,8 +95,11 @@
         line-height: 0;
       }
 
+      /* Smaller than it was. The wordmark is already repeated in the headline
+         underneath it, so the height it was taking was bought from the
+         picture, which says far more about the app than the logo does. */
       .logo {
-        width: min(300px, 76%);
+        width: min(210px, 56%);
         height: auto;
       }
 
@@ -194,7 +197,7 @@ button.badge {
            is here to make the page feel like the app; the badges are what the
            page is for, and a visitor who has to scroll to find them is a
            visitor the picture cost us. */
-        max-height: 27vh;
+        max-height: 30vh;
         object-fit: cover;
         object-position: center 64%;
         border-radius: 22px;
