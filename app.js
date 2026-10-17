@@ -7944,17 +7944,6 @@ function stopTasteClip() {
   });
 }
 
-/* Someone who arrived from the download page has already been offered a
-   storyteller there and chose to come and make a story instead. Showing them
-   the same seven seconds again on the way in is asking a question they have
-   answered. The one on the signup screen stays: that is a different moment,
-   at the point of deciding whether to keep what they just made. */
-if (/[?&]from=download\b/.test(location.search)) {
-  document.querySelectorAll("#welcome-screen [data-voice-sample]").forEach((button) => {
-    button.hidden = true;
-  });
-}
-
 document.querySelectorAll("[data-voice-sample]").forEach((button) => {
   button.addEventListener("click", () => {
     const playing = tasteAudio && !tasteAudio.paused;

@@ -6442,6 +6442,16 @@ body.builder-active .app-shell {
   padding-top: 0;
 }
 
+/* The shell reserves room for the tab bar and this screen reserves it again -
+   96 points of its own padding below. Paying for the clearance twice made the
+   page taller than the viewport by exactly the shell's share of it, at every
+   size: 92 points over on a 390x844 phone, and the same 92 on the web where
+   there is far less height to spare. The shell's share is dropped here, and
+   the screen keeps its own. */
+body.home-active .app-shell {
+  padding-bottom: 0;
+}
+
 #welcome-screen.active {
   border: 0;
   border-radius: 0;
@@ -11918,4 +11928,70 @@ input[type="range"] {
 
 .plan-miss {
   color: rgba(185, 196, 255, 0.4);
+}
+
+/* ---- The home screen on a short viewport -------------------------------- */
+/* The app gets a whole phone screen; the web gets what is left after the
+   address bar and the toolbar, which on a 390x844 phone is about 629 points.
+   At that height the home screen ran roughly ninety points over: the child's
+   face sat behind the Create button and the offer line and the sample sat on
+   busy artwork.
+
+   Keyed on height rather than on being native, because height is the actual
+   problem. A small phone running the app has it too, and a tall browser does
+   not - sniffing for Capacitor would have fixed it in the wrong places. */
+@media (max-height: 700px) {
+  /* #welcome-screen.active, not .welcome-screen: the rules being overridden
+     here are written with the id, and a class selector loses to it every
+     time. */
+  #welcome-screen.active {
+    /* Lifted, so the child clears the button rather than sitting behind it.
+       The picture is cropped a little harder at the foot for it, which is
+       quilt. */
+    background:
+      /* Ground under the words. On a screen this short there is no room to
+         put the button below the picture, so it sits on it - and the lower
+         half of this frame is a lit bed and a glowing book, not the plain
+         quilt the layout was drawn against. */
+      linear-gradient(
+        0deg,
+        rgba(16, 22, 64, 0.96) 0%,
+        rgba(16, 22, 64, 0.82) 18%,
+        rgba(16, 22, 64, 0.34) 36%,
+        rgba(16, 22, 64, 0) 52%
+      ),
+      url("./assets/home-scene.webp?v=2026100900") center -8% / auto 126% no-repeat,
+      linear-gradient(180deg, #141c55 0%, #101640 100%);
+  }
+
+  .welcome-screen .brand-logo {
+    width: min(210px, 54%);
+  }
+
+  .welcome-screen .welcome-copy {
+    margin-top: 14px;
+  }
+
+  .welcome-screen .welcome-headline {
+    font-size: clamp(1.4rem, 6vw, 1.8rem);
+  }
+
+  .welcome-screen .welcome-points {
+    gap: 6px;
+    font-size: 0.78rem;
+  }
+
+  .welcome-screen .point-icon img {
+    width: 22px;
+    height: 22px;
+  }
+
+  .welcome-screen .taste-play-compact {
+    padding: 8px 16px 8px 10px;
+  }
+
+  .welcome-screen .taste-play-compact .taste-play-icon {
+    width: 30px;
+    height: 30px;
+  }
 }
