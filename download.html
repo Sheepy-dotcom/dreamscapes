@@ -94,36 +94,59 @@
          only across the top, because the words sit there and the picture has a
          dragon and a balloon in that corner; the rest of the frame is left
          alone. */
-      .hero {
-        position: relative;
-        width: 100%;
-        border-radius: 26px;
-        overflow: hidden;
-        border: 1px solid rgba(185, 196, 255, 0.16);
-        box-shadow: 0 26px 60px rgba(6, 9, 34, 0.5);
-      }
+      /* The picture is the page. Full bleed behind everything, with a scrim
+         over the top for the lockup and a heavier one up from the foot for the
+         button and the badges - the artwork is lit and busy in both places, so
+         the words need ground under them.
 
-      .hero-art {
+         Sized by cover against the screen rather than by the file's own
+         proportions: the frame is 1:1.5 and a phone is nearer 1:2.16, so a
+         little is lost from the sides, and the child sits close enough to the
+         middle to survive it. */
+      body {
+        /* Overrides the padding and centring the rule above sets: the layout
+           is main's job now, and the picture has to reach every edge. */
         display: block;
-        width: 100%;
-        /* Capped by height, not width. A 1:1.5 picture at full width pushes
-           the store badges off the first screen on a phone, and the badges are
-           half of what this page is for. */
-        height: clamp(260px, 48vh, 460px);
-        object-fit: cover;
-        object-position: center 64%;
+        padding: 0;
+        background:
+          linear-gradient(
+            180deg,
+            rgba(8, 11, 38, 0.88) 0%,
+            rgba(8, 11, 38, 0.42) 18%,
+            rgba(8, 11, 38, 0.12) 34%,
+            rgba(8, 11, 38, 0.52) 62%,
+            rgba(8, 11, 38, 0.93) 82%,
+            #0a0e2c 100%
+          ),
+          url("./assets/web-only/download-hero.webp?v=2026101706") center / cover no-repeat,
+          linear-gradient(176deg, #1b2160 0%, var(--night) 52%, var(--night-deep) 100%);
       }
 
-      .hero-words {
-        position: absolute;
-        inset: 0 0 auto;
-        padding: 20px 18px 42px;
-        background: linear-gradient(
-          180deg,
-          rgba(8, 11, 38, 0.88) 0%,
-          rgba(8, 11, 38, 0.58) 48%,
-          rgba(8, 11, 38, 0) 100%
-        );
+      main {
+        width: 100%;
+        min-height: 100svh;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 24px;
+        padding: calc(26px + env(safe-area-inset-top)) 20px
+          calc(22px + env(safe-area-inset-bottom));
+      }
+
+      .top {
+        display: grid;
+        justify-items: center;
+        gap: 10px;
+      }
+
+      /* Everything a visitor can act on, gathered at the foot where a thumb
+         is. */
+      .actions {
+        display: grid;
+        justify-items: center;
+        gap: 16px;
+        width: min(420px, 100%);
+        margin: 0 auto;
       }
 
       .home {
@@ -132,15 +155,16 @@
       }
 
       .logo {
-        width: min(190px, 52%);
+        width: min(210px, 56%);
         height: auto;
       }
 
       h1 {
-        margin: 10px 0 0;
+        margin: 0;
         font-family: "Baloo 2", "Nunito", sans-serif;
-        font-size: clamp(1.5rem, 6vw, 1.95rem);
+        font-size: clamp(1.6rem, 6.4vw, 2.1rem);
         line-height: 1.15;
+        text-shadow: 0 2px 18px rgba(6, 9, 34, 0.7);
       }
 
       h1 span {
@@ -148,32 +172,6 @@
         color: var(--gold);
       }
 
-      /* Sat on the foot of the picture rather than below it, so it reads as a
-         ribbon on the artwork and costs the page no height of its own. */
-      .free {
-        position: absolute;
-        left: 50%;
-        bottom: 14px;
-        transform: translateX(-50%);
-        white-space: nowrap;
-        border-radius: 999px;
-        padding: 8px 16px;
-        background: linear-gradient(135deg, #ffd45c, #ffb02e);
-        color: #3b2500;
-        font-size: 0.86rem;
-        font-weight: 800;
-        box-shadow: 0 10px 24px rgba(6, 9, 34, 0.45);
-      }
-
-      .lead {
-        margin: 0;
-        max-width: 34ch;
-        color: var(--soft);
-        font-size: 1rem;
-        line-height: 1.6;
-      }
-
-      /* The one action that works everywhere. */
       .cta {
         display: block;
         width: 100%;
@@ -336,92 +334,74 @@
   </head>
   <body>
     <main>
-      <!-- The picture carries the page, with the lockup and the line over it
-           rather than stacked above - the same shape the app itself opens on.
-           It lives in assets/web-only, which scripts/build-mobile.js skips:
-           this page is served by Vercel and is not part of the app, so the
-           artwork has no business riding into both bundles. -->
-      <header class="hero">
-        <img
-          class="hero-art"
-          src="./assets/web-only/download-hero.webp?v=2026101706"
-          alt="A child reading in bed while a dragon, a hot-air balloon, a lighthouse and a whale rise out of the storybook"
-          width="768"
-          height="1152"
-          loading="eager"
-        />
-        <div class="hero-words">
-          <!-- A logo going home is a convention people already know, so the
-               footer does not need a link for it. -->
-          <a class="home" href="https://www.dreamscapes.cloud/">
-            <img
-              class="logo"
-              src="./assets/dreamscapes-logo.png?v=2026101501"
-              alt="DreamScapes"
-              width="900"
-              height="394"
-            />
-          </a>
-          <h1>A bedtime story<span>made just for them</span></h1>
-        </div>
-        <span class="free">★ The first story is free</span>
+      <header class="top">
+        <!-- A logo going home is a convention people already know, so the
+             footer does not need a link for it. -->
+        <a class="home" href="https://www.dreamscapes.cloud/">
+          <img
+            class="logo"
+            src="./assets/dreamscapes-logo.png?v=2026101501"
+            alt="DreamScapes"
+            width="900"
+            height="394"
+          />
+        </a>
+        <h1>A bedtime story<span>made just for them</span></h1>
       </header>
 
-      <p class="lead">
-        Their name, their favourite things, and a storyteller you choose.
-      </p>
-
-      <!-- The one action that works for everybody, on every browser. The store
-           badges below need a hand-off iOS will not perform inside TikTok, and
-           a laptop cannot install an iPhone app at all; this needs neither. -->
-      <a class="cta" href="https://www.dreamscapes.cloud/">
-        <strong>Start a free story</strong>
-        <small>No install, no account</small>
-      </a>
-
-      <p class="inapp-note" id="inapp-note" hidden>
-        This browser will not open the App Store. Copy the link and paste it
-        into Safari.
-        <button class="copy-link" id="copy-link" type="button">Copy link</button>
-      </p>
-
-      <p class="or"><span>or get the app</span></p>
-
-      <div class="stores">
-        <!-- Apple's and Google's own artwork, unaltered, as both brand
-             guidelines require. Straight to the stores rather than through
-             /app: that one guesses from the user agent, which is right for a
-             link in a profile, but someone on a laptop wants to see both.
-
-             No mt=8 on the Apple link. It is a legacy hint that pushes the
-             link at the App Store application rather than the web listing,
-             and on a Mac that application cannot show an iPhone-only app - it
-             answers "the action cannot be completed". Without it the listing
-             opens as a web page, which is what a desktop visitor can
-             actually use. ct=download stays, so the campaign still counts. -->
-        <a
-          class="badge badge-apple"
-          href="https://apps.apple.com/app/id6784545562?ct=download"
-          aria-label="Download DreamScapes on the App Store"
-        >
-          <img src="./assets/badges/app-store-badge.svg?v=2026101501" alt="Download on the App Store" />
+      <div class="actions">
+        <!-- The one action that works for everybody, on every browser. The
+             store badges below need a hand-off iOS will not perform inside
+             TikTok, and a laptop cannot install an iPhone app at all; this
+             needs neither. -->
+        <a class="cta" href="https://www.dreamscapes.cloud/">
+          <strong>Start a free story</strong>
+          <small>No install, no account</small>
         </a>
 
-        <a
-          class="badge badge-google"
-          href="https://play.google.com/store/apps/details?id=cloud.dreamscapes.app&amp;referrer=utm_source%3Ddownload%26utm_medium%3Dweb"
-          aria-label="Get DreamScapes on Google Play"
-        >
-          <img src="./assets/badges/google-play-badge.png?v=2026101501" alt="Get it on Google Play" />
-        </a>
+        <p class="inapp-note" id="inapp-note" hidden>
+          This browser will not open the App Store. Copy the link and paste it
+          into Safari.
+          <button class="copy-link" id="copy-link" type="button">Copy link</button>
+        </p>
+
+        <p class="or"><span>or get the app</span></p>
+
+        <div class="stores">
+          <!-- Apple's and Google's own artwork, unaltered, as both brand
+               guidelines require. Straight to the stores rather than through
+               /app: that one guesses from the user agent, which is right for a
+               link in a profile, but someone on a laptop wants to see both.
+
+               No mt=8 on the Apple link. It is a legacy hint that pushes the
+               link at the App Store application rather than the web listing,
+               and on a Mac that application cannot show an iPhone-only app -
+               it answers "the action cannot be completed". Without it the
+               listing opens as a web page, which is what a desktop visitor can
+               actually use. ct=download stays, so the campaign still counts. -->
+          <a
+            class="badge badge-apple"
+            href="https://apps.apple.com/app/id6784545562?ct=download"
+            aria-label="Download DreamScapes on the App Store"
+          >
+            <img src="./assets/badges/app-store-badge.svg?v=2026101501" alt="Download on the App Store" />
+          </a>
+
+          <a
+            class="badge badge-google"
+            href="https://play.google.com/store/apps/details?id=cloud.dreamscapes.app&amp;referrer=utm_source%3Ddownload%26utm_medium%3Dweb"
+            aria-label="Get DreamScapes on Google Play"
+          >
+            <img src="./assets/badges/google-play-badge.png?v=2026101501" alt="Get it on Google Play" />
+          </a>
+        </div>
+
+        <footer>
+          <a href="https://www.dreamscapes.cloud/support.html">Support</a>
+          <span aria-hidden="true">·</span>
+          <a href="https://www.dreamscapes.cloud/support.html#privacy">Privacy</a>
+        </footer>
       </div>
-
-
-      <footer>
-        <a href="https://www.dreamscapes.cloud/support.html">Support</a>
-        <span aria-hidden="true">·</span>
-        <a href="https://www.dreamscapes.cloud/support.html#privacy">Privacy</a>
-      </footer>
     </main>
 
     <script>
