@@ -468,6 +468,7 @@
            So on iOS the anchor is replaced with a real button carrying the
            same artwork and the same address. The markup keeps the <a>, which
            is what desktop, no-JS and long-press-to-copy all use. */
+        var inAppBrowser = /musical_ly|Bytedance|TikTok|Instagram|FBAN|FBAV|Line\/|Snapchat/i.test(navigator.userAgent || "");
         var url = apple.getAttribute("href");
         var swap = document.createElement("button");
         swap.type = "button";
@@ -477,21 +478,36 @@
         apple.parentNode.replaceChild(swap, apple);
 
         swap.addEventListener("click", function () {
-          window.location.href = url;
-
           var left = false;
           var onHide = function () {
             if (document.hidden) left = true;
           };
           document.addEventListener("visibilitychange", onHide);
 
-          /* Kept for any browser that refuses even this: the undocumented
-             scheme, then the way out. Both wait for evidence that the tap went
-             nowhere rather than guessing from the user agent. */
-          window.setTimeout(function () {
-            if (left || document.hidden) return;
-            window.location.href = "itms-appss://apps.apple.com/app/id6784545562?ct=download";
-          }, 1200);
+          /* Inside an in-app browser, x-safari-https:// goes first.
+
+             It is Safari's own scheme and asks iOS to open the address in
+             Safari, where the App Store link works perfectly. It is also
+             undocumented and depends on the host app passing an unknown scheme
+             to iOS at all - which is the exact thing TikTok would not do for
+             itms-appss://, so this is a long shot rather than a fix.
+
+             First, though, because it is the only route that ends somewhere
+             useful, and because the https address here produces the "action
+             cannot be completed" dialog - so anything tried after it arrives
+             behind an error the parent is already reading. */
+          var attempts = inAppBrowser
+            ? ["x-safari-" + url, url, "itms-appss://apps.apple.com/app/id6784545562?ct=download"]
+            : [url, "itms-appss://apps.apple.com/app/id6784545562?ct=download"];
+
+          window.location.href = attempts[0];
+
+          attempts.slice(1).forEach(function (next, index) {
+            window.setTimeout(function () {
+              if (left || document.hidden) return;
+              window.location.href = next;
+            }, 1100 * (index + 1));
+          });
 
           window.setTimeout(function () {
             document.removeEventListener("visibilitychange", onHide);
@@ -500,7 +516,7 @@
             if (!note) return;
             note.hidden = false;
             note.scrollIntoView({ block: "center" });
-          }, 2400);
+          }, 1100 * attempts.length);
         });
 
         /* An iPhone inside an in-app browser. Measured, not guessed: the Play
@@ -514,7 +530,6 @@
            runs in this very browser, which is how they are reading this page,
            and the note below still offers Safari for anyone who wants the app
            now. The badges stay where they are underneath. */
-        var inAppBrowser = /musical_ly|Bytedance|TikTok|Instagram|FBAN|FBAV|Line\/|Snapchat/i.test(navigator.userAgent || "");
         if (inAppBrowser) {
           /* The badges below will not work here, so say so where it will be
              read - directly under the button that does work, above them. The
