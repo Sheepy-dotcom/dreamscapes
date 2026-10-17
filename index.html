@@ -37,7 +37,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026101701" />
+    <link rel="stylesheet" href="./styles.css?v=2026101702" />
   </head>
   <body class="home-active night-mode">
     <svg class="art-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -80,6 +80,17 @@
           <button class="button primary-button" id="start-button" type="button"><span>Create their free story</span><span class="cta-chevron" aria-hidden="true"></span></button>
         </div>
         <p class="welcome-offer" id="welcome-offer" hidden>No account needed</p>
+        <!-- "Read together or let them listen" is one of the three promises
+             below, and the listening half of it was never once demonstrated
+             anywhere in the app. Seven seconds of a real storyteller, from the
+             clip that already ships for the voice picker. -->
+        <button class="taste-play taste-play-compact" data-voice-sample type="button">
+          <span class="taste-play-icon" aria-hidden="true"></span>
+          <span>
+            <strong>Hear a storyteller</strong>
+            <small>Seven seconds</small>
+          </span>
+        </button>
         <ul class="welcome-points">
           <li><span class="point-icon" aria-hidden="true"><img src="./assets/home-icon-create.webp?v=2026101016" alt="" /></span>Personalised just for them</li>
           <li><span class="point-icon" aria-hidden="true"><img src="./assets/home-icon-listen.webp?v=2026101016" alt="" /></span>Read together or let them listen</li>
@@ -1061,7 +1072,7 @@
                a story every night are Plus, and saying otherwise here is a
                promise broken a minute later. -->
           <article class="auth-card signup-taste" id="signup-taste" hidden>
-            <button class="taste-play" id="taste-play" type="button">
+            <button class="taste-play" data-voice-sample type="button">
               <span class="taste-play-icon" aria-hidden="true"></span>
               <span>
                 <strong>Hear a storyteller</strong>
@@ -1372,6 +1383,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js?v=2026101505"></script>
-    <script src="./app.js?v=2026101701"></script>
+    <script src="./app.js?v=2026101702"></script>
   </body>
 </html>

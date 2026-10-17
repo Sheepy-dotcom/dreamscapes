@@ -1469,7 +1469,7 @@ function showScreen(name) {
     Rain.stop();
     setRepeatArmed(false);
   }
-  if (name !== "signup") stopTasteClip();
+  stopTasteClip();
   updateBackToStory();
   trackEvent("screen_view", { screen: name });
   /* Instant, for every screen rather than only the builder. Changing screen is
@@ -7931,36 +7931,40 @@ function updateBackToStory() {
 const TASTE_CLIP = "./assets/voice-preview-marin-audition.mp3?v=2026101701";
 let tasteAudio = null;
 
+/* One clip, one <audio>, however many buttons offer it - the home screen and
+   the signup screen both do. Clearing the class on all of them means the one
+   that was left playing cannot keep its pause icon after another starts. */
 function stopTasteClip() {
   if (tasteAudio) {
     tasteAudio.pause();
     tasteAudio.currentTime = 0;
   }
-  document.querySelector("#taste-play")?.classList.remove("is-playing");
+  document.querySelectorAll("[data-voice-sample]").forEach((button) => {
+    button.classList.remove("is-playing");
+  });
 }
 
-document.querySelector("#taste-play")?.addEventListener("click", () => {
-  const button = document.querySelector("#taste-play");
-  if (!button) return;
-
-  if (tasteAudio && !tasteAudio.paused) {
+document.querySelectorAll("[data-voice-sample]").forEach((button) => {
+  button.addEventListener("click", () => {
+    const playing = tasteAudio && !tasteAudio.paused;
+    const thisOne = button.classList.contains("is-playing");
     stopTasteClip();
-    return;
-  }
+    if (playing && thisOne) return;
 
-  if (!tasteAudio) {
-    tasteAudio = new Audio(TASTE_CLIP);
-    tasteAudio.addEventListener("ended", stopTasteClip);
-    tasteAudio.addEventListener("error", stopTasteClip);
-  }
+    if (!tasteAudio) {
+      tasteAudio = new Audio(TASTE_CLIP);
+      tasteAudio.addEventListener("ended", stopTasteClip);
+      tasteAudio.addEventListener("error", stopTasteClip);
+    }
 
-  button.classList.add("is-playing");
-  tasteAudio.play().catch(() => {
-    // Autoplay rules, a missing file, a silent switch - none of it is worth an
-    // error in front of someone mid-signup.
-    stopTasteClip();
+    button.classList.add("is-playing");
+    tasteAudio.play().catch(() => {
+      // Autoplay rules, a missing file, a silent switch - none of it is worth
+      // an error in front of someone deciding whether to trust us.
+      stopTasteClip();
+    });
+    trackEvent("voice_sample_played", { where: button.closest(".screen")?.id || "" });
   });
-  trackEvent("signup_voice_sample_played", {});
 });
 
 document.querySelectorAll(".back-to-story").forEach((button) => {

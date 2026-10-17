@@ -2033,6 +2033,41 @@ body.night-mode .story-path-button.active {
     linear-gradient(#3b2500, #3b2500) right / 4px 100% no-repeat;
 }
 
+/* The home-screen version. Narrower and centred, so it reads as an invitation
+   under the main button rather than a second call to action competing with it. */
+.taste-play-compact {
+  width: auto;
+  max-width: 320px;
+  margin: 2px auto 0;
+  padding: 10px 18px 10px 12px;
+  gap: 11px;
+}
+
+.taste-play-compact .taste-play-icon {
+  width: 34px;
+  height: 34px;
+}
+
+.taste-play-compact .taste-play-icon::before {
+  border-width: 6px 0 6px 10px;
+}
+
+.taste-play-compact.is-playing .taste-play-icon::before {
+  width: 10px;
+  height: 12px;
+  background:
+    linear-gradient(#3b2500, #3b2500) left / 3px 100% no-repeat,
+    linear-gradient(#3b2500, #3b2500) right / 3px 100% no-repeat;
+}
+
+.taste-play-compact strong {
+  font-size: 0.94rem;
+}
+
+.taste-play-compact small {
+  font-size: 0.76rem;
+}
+
 .taste-list {
   display: grid;
   gap: 10px;
