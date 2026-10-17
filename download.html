@@ -103,23 +103,14 @@
          proportions: the frame is 1:1.5 and a phone is nearer 1:2.16, so a
          little is lost from the sides, and the child sits close enough to the
          middle to survive it. */
+      /* The page is the picture and then a block beneath it, rather than the
+         picture behind everything. #171024 is sampled from the artwork's own
+         bottom edge, so the join is invisible and the links sit on their own
+         ground instead of on top of the scene. */
       body {
-        /* Overrides the padding and centring the rule above sets: the layout
-           is main's job now, and the picture has to reach every edge. */
         display: block;
         padding: 0;
-        background:
-          linear-gradient(
-            180deg,
-            rgba(8, 11, 38, 0.88) 0%,
-            rgba(8, 11, 38, 0.42) 18%,
-            rgba(8, 11, 38, 0.12) 34%,
-            rgba(8, 11, 38, 0.52) 62%,
-            rgba(8, 11, 38, 0.93) 82%,
-            #0a0e2c 100%
-          ),
-          url("./assets/web-only/download-hero.webp?v=2026101706") center / cover no-repeat,
-          linear-gradient(176deg, #1b2160 0%, var(--night) 52%, var(--night-deep) 100%);
+        background: linear-gradient(180deg, #171024 0%, #171024 42%, #0e0918 100%);
       }
 
       main {
@@ -127,26 +118,67 @@
         min-height: 100svh;
         display: flex;
         flex-direction: column;
-        justify-content: space-between;
-        gap: 24px;
-        padding: calc(26px + env(safe-area-inset-top)) 20px
-          calc(22px + env(safe-area-inset-bottom));
+        padding: 0;
       }
 
+      .art {
+        position: relative;
+        width: 100%;
+      }
+
+      /* The picture dissolves into the block rather than meeting it on a line.
+         Sampling the file's bottom edge was not enough on its own: object-fit
+         crops, so the row actually on show at the foot changes with the shape
+         of the screen. A fade works whatever is there. */
+      .art::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: -1px;
+        height: 92px;
+        background: linear-gradient(180deg, rgba(23, 16, 36, 0) 0%, #171024 86%, #171024 100%);
+      }
+
+      .art-img {
+        display: block;
+        width: 100%;
+        /* Capped so the links always clear the fold on a short phone. The
+           whole frame shows when there is room for it. */
+        max-height: 62vh;
+        height: auto;
+        object-fit: cover;
+        object-position: center 46%;
+      }
+
+      /* Over the top of the picture, where the sky is. A scrim because the
+         artwork has a dragon and a balloon in that corner. */
       .top {
+        position: absolute;
+        inset: 0 0 auto;
         display: grid;
         justify-items: center;
-        gap: 10px;
+        gap: 8px;
+        padding: calc(22px + env(safe-area-inset-top)) 20px 46px;
+        background: linear-gradient(
+          180deg,
+          rgba(8, 11, 38, 0.86) 0%,
+          rgba(8, 11, 38, 0.5) 46%,
+          rgba(8, 11, 38, 0) 100%
+        );
       }
 
-      /* Everything a visitor can act on, gathered at the foot where a thumb
-         is. */
+      /* Everything a visitor can act on, on the plain block below the picture
+         where nothing has to compete with the artwork. */
       .actions {
+        flex: 1;
         display: grid;
+        align-content: center;
         justify-items: center;
         gap: 16px;
         width: min(420px, 100%);
         margin: 0 auto;
+        padding: 22px 20px calc(20px + env(safe-area-inset-bottom));
       }
 
       .home {
@@ -334,7 +366,16 @@
   </head>
   <body>
     <main>
-      <header class="top">
+      <div class="art">
+        <img
+          class="art-img"
+          src="./assets/web-only/download-hero.webp?v=2026101706"
+          alt="A child reading in bed while a dragon, a hot-air balloon, a lighthouse and a whale rise out of the storybook"
+          width="768"
+          height="1152"
+          loading="eager"
+        />
+        <header class="top">
         <!-- A logo going home is a convention people already know, so the
              footer does not need a link for it. -->
         <a class="home" href="https://www.dreamscapes.cloud/">
@@ -347,7 +388,8 @@
           />
         </a>
         <h1>A bedtime story<span>made just for them</span></h1>
-      </header>
+        </header>
+      </div>
 
       <div class="actions">
         <!-- The one action that works for everybody, on every browser. The
