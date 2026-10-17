@@ -215,6 +215,50 @@
         transform: scale(0.98);
       }
 
+      .debug {
+        width: 100%;
+        margin-top: 8px;
+        border: 1px solid rgba(185, 196, 255, 0.3);
+        border-radius: 14px;
+        padding: 14px;
+        text-align: left;
+      }
+
+      .debug h2 {
+        margin: 0 0 4px;
+        font-size: 1rem;
+      }
+
+      .debug p {
+        margin: 0 0 10px;
+        font-size: 0.85rem;
+        opacity: 0.8;
+      }
+
+      .debug-try {
+        display: block;
+        width: 100%;
+        margin-bottom: 8px;
+        border: 1px solid rgba(255, 212, 92, 0.5);
+        border-radius: 999px;
+        padding: 11px 14px;
+        background: rgba(255, 212, 92, 0.12);
+        color: var(--gold);
+        font: inherit;
+        font-weight: 700;
+      }
+
+      #debug-log {
+        margin: 10px 0 0;
+        max-height: 220px;
+        overflow: auto;
+        font-size: 0.72rem;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        word-break: break-word;
+        opacity: 0.85;
+      }
+
       footer {
         display: flex;
         flex-wrap: wrap;
@@ -304,6 +348,19 @@
         </a>
       </div>
 
+
+      <!-- Only ever shown with ?debug=1 on the URL. Three buttons, one per
+           mechanism, so a tap in a real in-app browser says which of them the
+           browser will actually follow instead of us inferring it from a page
+           that silently does nothing. -->
+      <section class="debug" id="debug" hidden>
+        <h2>Link test</h2>
+        <p>Tap each one. Whichever opens the App Store is the one that works here.</p>
+        <button class="debug-try" type="button" data-try="https">1 &nbsp;https://apps.apple.com</button>
+        <button class="debug-try" type="button" data-try="itms-appss">2 &nbsp;itms-appss://</button>
+        <button class="debug-try" type="button" data-try="itms-apps">3 &nbsp;itms-apps://</button>
+        <pre id="debug-log"></pre>
+      </section>
 
       <footer>
         <a href="https://www.dreamscapes.cloud/support.html">Support</a>
@@ -416,6 +473,65 @@
             }
             document.body.removeChild(field);
           }
+        });
+      })();
+
+      /* Diagnostics, off unless the URL says ?debug=1.
+
+         Three attempts have now been made at this link and all three have
+         failed, which means the thing being guessed at - what this particular
+         browser will follow - has to be measured instead. Each button tries
+         exactly one mechanism and the log records whether the page was still
+         here afterwards, so one screenshot from inside TikTok answers it. */
+      (function () {
+        if (!/[?&]debug=1\b/.test(location.search)) return;
+
+        var panel = document.getElementById("debug");
+        var log = document.getElementById("debug-log");
+        if (!panel || !log) return;
+        panel.hidden = false;
+
+        var lines = [];
+        function say(text) {
+          lines.push(text);
+          log.textContent = lines.join("\n");
+        }
+
+        var ua = navigator.userAgent || "";
+        say("UA: " + ua);
+        say("iOS: " + /iPhone|iPad|iPod/i.test(ua));
+        say("in-app: " + /musical_ly|Bytedance|TikTok|Instagram|FBAN|FBAV|Snapchat/i.test(ua));
+        say("standalone: " + Boolean(window.navigator.standalone));
+        say("---");
+
+        var targets = {
+          https: "https://apps.apple.com/app/id6784545562?ct=debug",
+          "itms-appss": "itms-appss://apps.apple.com/app/id6784545562?ct=debug",
+          "itms-apps": "itms-apps://apps.apple.com/app/id6784545562?ct=debug",
+        };
+
+        document.addEventListener("visibilitychange", function () {
+          say("  visibilitychange -> hidden=" + document.hidden);
+        });
+
+        window.addEventListener("pagehide", function () {
+          say("  pagehide (the page is being left)");
+        });
+
+        document.querySelectorAll("[data-try]").forEach(function (button) {
+          button.addEventListener("click", function () {
+            var name = button.dataset.try;
+            say("tap: " + name);
+            try {
+              window.location.href = targets[name];
+              say("  navigation requested, no error thrown");
+            } catch (error) {
+              say("  THREW: " + (error && error.name) + " " + (error && error.message));
+            }
+            window.setTimeout(function () {
+              say("  2s later: still here=" + !document.hidden);
+            }, 2000);
+          });
         });
       })();
     </script>
