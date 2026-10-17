@@ -109,7 +109,7 @@
         /* Capped by height, not width. A 1:1.5 picture at full width pushes
            the store badges off the first screen on a phone, and the badges are
            half of what this page is for. */
-        height: clamp(230px, 38vh, 360px);
+        height: clamp(260px, 48vh, 460px);
         object-fit: cover;
         object-position: center 64%;
       }
@@ -226,10 +226,16 @@
         background: rgba(185, 196, 255, 0.2);
       }
 
+      /* Side by side, not stacked. Stacking cost about seventy points of
+         height and all of it came out of the picture, which is the reason
+         anyone looks at this page twice. They wrap back to a column if the
+         screen is too narrow to hold both. */
       .stores {
-        display: grid;
-        gap: 12px;
-        justify-items: center;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
         width: 100%;
       }
 
@@ -245,7 +251,7 @@
 
       .badge img {
         display: block;
-        height: 52px;
+        height: 46px;
         width: auto;
       }
 
@@ -253,7 +259,7 @@
          matching height it reads noticeably smaller than Apple's. Scaled up to
          sit level with it; neither file is altered. */
       .badge-google img {
-        height: 60px;
+        height: 53px;
       }
 
       /* The Apple badge becomes a <button> on iOS, so it has to shed the
@@ -362,8 +368,7 @@
       </header>
 
       <p class="lead">
-        Their name, their favourite things, and a storyteller you choose. Read
-        aloud at lights-out, or together on the page.
+        Their name, their favourite things, and a storyteller you choose.
       </p>
 
       <!-- The one action that works for everybody, on every browser. The store
