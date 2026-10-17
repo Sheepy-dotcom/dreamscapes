@@ -143,9 +143,12 @@
       .art-img {
         display: block;
         width: 100%;
-        /* Capped so the links always clear the fold on a short phone. The
-           whole frame shows when there is room for it. */
-        max-height: 62vh;
+        /* The picture takes whatever is left once the links have their room,
+           rather than a share of the screen that happens to fit a tall phone.
+           288 points is what the button, the rule, the badges and the footer
+           need; below that the fraction would push them off a short screen,
+           above it the picture would be smaller than it needs to be. */
+        max-height: min(64vh, calc(100svh - 288px));
         height: auto;
         object-fit: cover;
         object-position: center 46%;
@@ -552,14 +555,11 @@
            runs in this very browser, which is how they are reading this page,
            and the note below still offers Safari for anyone who wants the app
            now. The badges stay where they are underneath. */
-        if (inAppBrowser) {
-          /* The badges below will not work here, so say so where it will be
-             read - directly under the button that does work, above them. The
-             note carries the copy-link button for anyone who wants the app
-             now and is willing to paste it into Safari. */
-          var note = document.getElementById("inapp-note");
-          if (note) note.hidden = false;
-        }
+        /* The note is not shown here. It waits for a tap on the App Store
+           badge that went nowhere, which the handler above reveals it on -
+           telling everybody in advance that a thing will not work is worse
+           than letting the ones it affects find out at the moment it matters,
+           and the detection is a guess at a user agent either way. */
 
         var button = document.getElementById("copy-link");
         var link = "https://www.dreamscapes.cloud/download";
