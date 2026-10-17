@@ -398,41 +398,41 @@
         var apple = document.querySelector(".badge-apple");
         if (!apple) return;
 
-        /* The https link stays on the button, and the scheme is only tried if
-           it goes nowhere. That order matters, and it is the opposite of what
-           this did before.
+        /* Why this navigates by script instead of letting the link be a link.
+           Measured from inside TikTok with ?debug=1: the same address that does
+           nothing as an <a href> opens the App Store immediately when a click
+           handler assigns it to window.location. The in-app browser intercepts
+           anchor clicks and hands them to its own tab logic, which cannot
+           perform the hand-off, but a top-level navigation started by script
+           goes through.
 
-           An in-app browser that handles App Store links at all does it by
-           recognising the apps.apple.com address. Handing it itms-appss://
-           up front takes that recognition away and stakes everything on a
-           scheme Apple has never documented - Apple's own developer forums
-           say there is no guarantee about engineering side changes to it. So
-           https goes first, because Safari and anything that special-cases the
-           address both work with it, and the scheme is the fallback rather
-           than the opening move.
+           So it was never about which URL. Three attempts were spent on the
+           address - dropping mt=8, itms-apps://, itms-appss:// - when the
+           address was right all along and the mechanism was wrong.
 
-           No country in the path either way, so the App Store opens in
-           whichever storefront the device belongs to rather than sending a
-           British visitor to a US listing. */
-        var scheme = "itms-appss://apps.apple.com/app/id6784545562?ct=download";
+           The href stays on the markup: it is what no-JS, long-press and
+           copy-link all use, and it is what this assigns. */
+        apple.addEventListener("click", function (event) {
+          // A modified click means "open this somewhere else" and is left alone.
+          if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button) return;
 
-        apple.addEventListener("click", function () {
+          event.preventDefault();
+          window.location.href = apple.getAttribute("href");
+
           var left = false;
           var onHide = function () {
             if (document.hidden) left = true;
           };
           document.addEventListener("visibilitychange", onHide);
 
-          // Still here a second later: the https link went nowhere, so try the
-          // scheme.
+          /* Kept for any browser that refuses the address even this way: the
+             undocumented scheme, then the way out. Both wait for evidence that
+             the tap went nowhere rather than guessing from the user agent. */
           window.setTimeout(function () {
             if (left || document.hidden) return;
-            window.location.href = scheme;
-          }, 1000);
+            window.location.href = "itms-appss://apps.apple.com/app/id6784545562?ct=download";
+          }, 1200);
 
-          /* Still here after that as well: both routes are blocked, so show
-             the way out. It only ever reveals a note, so being wrong is cheap
-             - a visitor who left and came back sees one extra line. */
           window.setTimeout(function () {
             document.removeEventListener("visibilitychange", onHide);
             if (left || document.hidden) return;
@@ -440,7 +440,7 @@
             if (!note) return;
             note.hidden = false;
             note.scrollIntoView({ block: "center" });
-          }, 2200);
+          }, 2400);
         });
 
         var button = document.getElementById("copy-link");
