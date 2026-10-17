@@ -37,7 +37,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026101609" />
+    <link rel="stylesheet" href="./styles.css?v=2026101701" />
   </head>
   <body class="home-active night-mode">
     <svg class="art-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -523,8 +523,7 @@
         <div class="preview-cta" id="preview-cta" hidden>
           <h3>Keep this story</h3>
           <p id="preview-cta-note">
-            Create a free account to save it to your library, add calm audio narration, and turn it
-            into a seven-night adventure.
+            Create a free account and this story is yours to keep, on every device you sign in on.
           </p>
           <div class="preview-cta-actions">
             <button class="button primary-button" id="preview-create-account-button" type="button">
@@ -1054,6 +1053,38 @@
 
 
         <div class="auth-grid">
+          <!-- Shown only when a story is waiting to be kept. The sample is the
+               point of it: a parent is being asked to trust a storyteller they
+               have never heard, and seven seconds of one costs nothing because
+               the clip already ships for the voice picker. The three lines
+               underneath are what a FREE account actually gives - narration and
+               a story every night are Plus, and saying otherwise here is a
+               promise broken a minute later. -->
+          <article class="auth-card signup-taste" id="signup-taste" hidden>
+            <button class="taste-play" id="taste-play" type="button">
+              <span class="taste-play-icon" aria-hidden="true"></span>
+              <span>
+                <strong>Hear a storyteller</strong>
+                <small>Seven seconds, no sign-up</small>
+              </span>
+            </button>
+            <ul class="taste-list">
+              <li>
+                <img src="./assets/plan-ic-saved.webp?v=2026101701" alt="" width="28" height="28" />
+                <span>This story, saved on every device you sign in on</span>
+              </li>
+              <li>
+                <img src="./assets/home-icon-create.webp?v=2026101701" alt="" width="28" height="28" />
+                <span>Their name and their favourite things, in every story</span>
+              </li>
+              <li>
+                <img src="./assets/plan-ic-stories.webp?v=2026101701" alt="" width="28" height="28" />
+                <span>A new free story every month</span>
+              </li>
+            </ul>
+            <p class="taste-plus">Narration and a story every night come with Plus.</p>
+          </article>
+
           <article class="auth-card signup-card">
             <h3 id="signup-card-title">Start your DreamScapes account</h3>
             <p id="signup-card-note">Save stories, child profiles, and audio across your devices.</p>

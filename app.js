@@ -1469,6 +1469,7 @@ function showScreen(name) {
     Rain.stop();
     setRepeatArmed(false);
   }
+  if (name !== "signup") stopTasteClip();
   updateBackToStory();
   trackEvent("screen_view", { screen: name });
   /* Instant, for every screen rather than only the builder. Changing screen is
@@ -6871,8 +6872,13 @@ function setPreviewCtaVisible(story) {
   if (isPreview && previewCtaNote) {
     const left = Number(story.previewsLeft || 0);
     previewCtaNote.textContent = left
-      ? `Create a free account to save this story, add calm audio narration, and turn it into a seven-night adventure. You have ${left} more free ${left === 1 ? "story" : "stories"} today.`
-      : "Create a free account to save this story, add calm audio narration, and turn it into a seven-night adventure.";
+      /* This used to promise narration and a seven-night adventure. A free
+         account has canUseAudio false and one story a month, so it could do
+         neither - a promise broken within a minute of being made, at the exact
+         moment someone decided to trust us. What it says now is what a free
+         account actually does. */
+      ? `Create a free account and this story is yours to keep, on every device you sign in on. You have ${left} more free ${left === 1 ? "story" : "stories"} today.`
+      : "Create a free account and this story is yours to keep, on every device you sign in on.";
   }
 }
 
@@ -7911,7 +7917,51 @@ function updateBackToStory() {
   document.querySelectorAll(".back-to-story").forEach((button) => {
     button.hidden = !available;
   });
+  var taste = document.querySelector("#signup-taste");
+  if (taste) taste.hidden = !available;
 }
+
+/* A parent is being asked to trust a storyteller they have never heard. The
+   clip already ships for the voice picker, so seven seconds of one costs
+   nothing and is the most persuasive thing on the screen.
+
+   Deliberately not the story they just read: narrating that would be a real
+   OpenAI call for every signed-out visitor, and the point here is to show what
+   a voice sounds like, not to give the thing away. */
+const TASTE_CLIP = "./assets/voice-preview-marin-audition.mp3?v=2026101701";
+let tasteAudio = null;
+
+function stopTasteClip() {
+  if (tasteAudio) {
+    tasteAudio.pause();
+    tasteAudio.currentTime = 0;
+  }
+  document.querySelector("#taste-play")?.classList.remove("is-playing");
+}
+
+document.querySelector("#taste-play")?.addEventListener("click", () => {
+  const button = document.querySelector("#taste-play");
+  if (!button) return;
+
+  if (tasteAudio && !tasteAudio.paused) {
+    stopTasteClip();
+    return;
+  }
+
+  if (!tasteAudio) {
+    tasteAudio = new Audio(TASTE_CLIP);
+    tasteAudio.addEventListener("ended", stopTasteClip);
+    tasteAudio.addEventListener("error", stopTasteClip);
+  }
+
+  button.classList.add("is-playing");
+  tasteAudio.play().catch(() => {
+    // Autoplay rules, a missing file, a silent switch - none of it is worth an
+    // error in front of someone mid-signup.
+    stopTasteClip();
+  });
+  trackEvent("signup_voice_sample_played", {});
+});
 
 document.querySelectorAll(".back-to-story").forEach((button) => {
   button.addEventListener("click", () => {

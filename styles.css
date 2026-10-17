@@ -1966,6 +1966,101 @@ body.night-mode .story-path-button.active {
 /* The credits panel. Everything here is read down a long list on a phone, so
    the rows are quiet and tight rather than card-like - the address is what the
    eye is scanning for, and the number beside it is the answer. */
+/* The taste of the product shown at the moment someone is deciding whether to
+   trust it. Sits above the signup form, not inside it, so the form stays a
+   form. */
+.signup-taste {
+  display: grid;
+  gap: 14px;
+}
+
+.taste-play {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  border: 1.5px solid rgba(255, 212, 92, 0.45);
+  border-radius: 16px;
+  padding: 14px 16px;
+  background: rgba(255, 212, 92, 0.1);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.taste-play strong {
+  display: block;
+  font-size: 1.02rem;
+}
+
+.taste-play small {
+  display: block;
+  margin-top: 2px;
+  opacity: 0.72;
+  font-size: 0.82rem;
+}
+
+/* A triangle drawn in CSS rather than another image to download. It becomes
+   two bars while the clip plays. */
+.taste-play-icon {
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ffd45c, #ffb02e);
+  position: relative;
+}
+
+.taste-play-icon::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 54%;
+  transform: translate(-50%, -50%);
+  border-style: solid;
+  border-width: 8px 0 8px 13px;
+  border-color: transparent transparent transparent #3b2500;
+}
+
+.taste-play.is-playing .taste-play-icon::before {
+  left: 50%;
+  border-width: 0;
+  width: 13px;
+  height: 15px;
+  background:
+    linear-gradient(#3b2500, #3b2500) left / 4px 100% no-repeat,
+    linear-gradient(#3b2500, #3b2500) right / 4px 100% no-repeat;
+}
+
+.taste-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.taste-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.taste-list img {
+  flex: none;
+  width: 28px;
+  height: 28px;
+}
+
+.taste-plus {
+  margin: 0;
+  opacity: 0.68;
+  font-size: 0.86rem;
+}
+
 .admin-credit-holders {
   margin-top: 18px;
   display: grid;
