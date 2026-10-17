@@ -1469,6 +1469,7 @@ function showScreen(name) {
     Rain.stop();
     setRepeatArmed(false);
   }
+  updateBackToStory();
   trackEvent("screen_view", { screen: name });
   /* Instant, for every screen rather than only the builder. Changing screen is
      a navigation, not a scroll within a page: there is nothing to follow with
@@ -7894,6 +7895,30 @@ planAuthCreateButton?.addEventListener("click", () => {
 planAuthSigninButton?.addEventListener("click", () => {
   setAuthStatus("Sign in, then return to Plans to choose your package.");
   showScreen("account");
+});
+
+/* Choosing to make an account used to be a one-way door. "Save it to my
+   library" goes to the signup screen, which has no back of its own; the tab
+   bar leads home, to the builder, or to a library a preview is not in yet; and
+   the story they just read is reachable from none of them. So the one thing
+   that had won them over was gone, and the only way back to it was to write
+   another.
+
+   The story is still in currentStory the whole time - nothing needed keeping,
+   only a way back to it. */
+function updateBackToStory() {
+  var available = Boolean(currentStory) && !currentUser;
+  document.querySelectorAll(".back-to-story").forEach((button) => {
+    button.hidden = !available;
+  });
+}
+
+document.querySelectorAll(".back-to-story").forEach((button) => {
+  button.addEventListener("click", () => {
+    if (!currentStory) return;
+    showScreen("result");
+    trackEvent("preview_back_to_story", {});
+  });
 });
 
 document.querySelector("#preview-create-account-button")?.addEventListener("click", () => {

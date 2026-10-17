@@ -726,6 +726,15 @@
             <svg viewBox="0 0 24 24" focusable="false"><circle cx="12" cy="8.6" r="3.9" /><path d="M4.6 20.4c0-4 3.3-6.6 7.4-6.6s7.4 2.6 7.4 6.6z" /></svg>
           </span>
         </header>
+        <!-- The way back to the story they just read. Without it, choosing to
+             make an account strands them: the signup screen has no back of its
+             own, the tab bar does not lead to a story, and a preview is not in
+             the library yet - so the thing that just won them over is gone.
+             Revealed only while a story is waiting. -->
+        <button class="button secondary-button back-to-story" type="button" hidden>
+          &#8249;&nbsp; Back to your story
+        </button>
+
 
         <div class="signin-sky" aria-hidden="true">
           <img class="signin-sky-art" src="./assets/signin-scene.webp?v=2026101033" alt="" />
@@ -1034,6 +1043,15 @@
             <h2 id="signup-title">Create Account</h2>
           </div>
         </header>
+        <!-- The way back to the story they just read. Without it, choosing to
+             make an account strands them: the signup screen has no back of its
+             own, the tab bar does not lead to a story, and a preview is not in
+             the library yet - so the thing that just won them over is gone.
+             Revealed only while a story is waiting. -->
+        <button class="button secondary-button back-to-story" type="button" hidden>
+          &#8249;&nbsp; Back to your story
+        </button>
+
 
         <div class="auth-grid">
           <article class="auth-card signup-card">
@@ -1323,6 +1341,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js?v=2026101505"></script>
-    <script src="./app.js?v=2026101609"></script>
+    <script src="./app.js?v=2026101701"></script>
   </body>
 </html>
