@@ -90,25 +90,57 @@
         display: none !important;
       }
 
+      /* The hero: artwork with the lockup and the line laid over it. A scrim
+         only across the top, because the words sit there and the picture has a
+         dragon and a balloon in that corner; the rest of the frame is left
+         alone. */
+      .hero {
+        position: relative;
+        width: 100%;
+        border-radius: 26px;
+        overflow: hidden;
+        border: 1px solid rgba(185, 196, 255, 0.16);
+        box-shadow: 0 26px 60px rgba(6, 9, 34, 0.5);
+      }
+
+      .hero-art {
+        display: block;
+        width: 100%;
+        /* Capped by height, not width. A 1:1.5 picture at full width pushes
+           the store badges off the first screen on a phone, and the badges are
+           half of what this page is for. */
+        height: clamp(230px, 38vh, 360px);
+        object-fit: cover;
+        object-position: center 64%;
+      }
+
+      .hero-words {
+        position: absolute;
+        inset: 0 0 auto;
+        padding: 20px 18px 42px;
+        background: linear-gradient(
+          180deg,
+          rgba(8, 11, 38, 0.88) 0%,
+          rgba(8, 11, 38, 0.58) 48%,
+          rgba(8, 11, 38, 0) 100%
+        );
+      }
+
       .home {
         display: block;
         line-height: 0;
       }
 
-      /* Smaller than it was. The wordmark is already repeated in the headline
-         underneath it, so the height it was taking was bought from the
-         picture, which says far more about the app than the logo does. */
       .logo {
-        width: min(210px, 56%);
+        width: min(190px, 52%);
         height: auto;
       }
 
       h1 {
-        margin: 0;
+        margin: 10px 0 0;
         font-family: "Baloo 2", "Nunito", sans-serif;
-        font-size: clamp(1.7rem, 7vw, 2.3rem);
-        font-weight: 700;
-        line-height: 1.18;
+        font-size: clamp(1.5rem, 6vw, 1.95rem);
+        line-height: 1.15;
       }
 
       h1 span {
@@ -116,159 +148,124 @@
         color: var(--gold);
       }
 
-      p.lead {
+      /* Sat on the foot of the picture rather than below it, so it reads as a
+         ribbon on the artwork and costs the page no height of its own. */
+      .free {
+        position: absolute;
+        left: 50%;
+        bottom: 14px;
+        transform: translateX(-50%);
+        white-space: nowrap;
+        border-radius: 999px;
+        padding: 8px 16px;
+        background: linear-gradient(135deg, #ffd45c, #ffb02e);
+        color: #3b2500;
+        font-size: 0.86rem;
+        font-weight: 800;
+        box-shadow: 0 10px 24px rgba(6, 9, 34, 0.45);
+      }
+
+      .lead {
         margin: 0;
         max-width: 34ch;
         color: var(--soft);
-        font-size: 1.04rem;
-        font-weight: 600;
-        line-height: 1.5;
+        font-size: 1rem;
+        line-height: 1.6;
+      }
+
+      /* The one action that works everywhere. */
+      .cta {
+        display: block;
+        width: 100%;
+        border-radius: 999px;
+        padding: 15px 22px;
+        background: linear-gradient(135deg, #ffd45c, #ffb02e);
+        color: #3b2500;
+        text-decoration: none;
+        box-shadow: 0 16px 36px rgba(255, 176, 46, 0.26);
+      }
+
+      .cta strong {
+        display: block;
+        font-size: 1.1rem;
+        font-weight: 800;
+      }
+
+      .cta small {
+        display: block;
+        margin-top: 2px;
+        font-size: 0.84rem;
+        font-weight: 700;
+        opacity: 0.74;
+      }
+
+      .cta:active {
+        transform: scale(0.99);
+      }
+
+      /* A rule with the words sitting in it, so the badges below read as the
+         second option rather than a competing first one. */
+      .or {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        margin: 0;
+        color: rgba(214, 205, 255, 0.6);
+        font-size: 0.82rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .or::before,
+      .or::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: rgba(185, 196, 255, 0.2);
       }
 
       .stores {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: center;
-        gap: 14px;
+        display: grid;
+        gap: 12px;
+        justify-items: center;
+        width: 100%;
       }
 
-      /* Both badges are used as supplied and only scaled. Apple's SVG is the
-         badge itself; Google's PNG carries its own mandated clear space, 41px
-         of padding around a 564x168 badge - two thirds of the canvas - so
-         rendering them at the same height would leave Google's looking a
-         third smaller. Google's is set taller by exactly that ratio, which
-         lands both visible badges on the same 52px. */
       .badge {
         display: inline-flex;
         border-radius: 10px;
         transition: transform 0.18s ease, opacity 0.18s ease;
       }
 
+      .badge:hover {
+        transform: translateY(-2px);
+      }
+
       .badge img {
         display: block;
-        height: auto;
-      }
-
-/* The Apple badge becomes a <button> on iOS, so it has to shed the browser's
-   own button styling and match the anchor beside it exactly. */
-button.badge {
-  border: 0;
-  padding: 0;
-  background: none;
-  font: inherit;
-  cursor: pointer;
-  -webkit-appearance: none;
-  appearance: none;
-}
-
-      .badge-apple img {
         height: 52px;
+        width: auto;
       }
 
+      /* Google's artwork carries its own clear space inside the file, so at a
+         matching height it reads noticeably smaller than Apple's. Scaled up to
+         sit level with it; neither file is altered. */
       .badge-google img {
-        height: 77px;
-        /* Cancels the clear space so the two sit on the same baseline. */
-        margin: -12px 0;
+        height: 60px;
       }
 
-      .badge:hover,
-      .badge:focus-visible {
-        opacity: 0.88;
-        outline: none;
-      }
-
-      .badge:focus-visible {
-        outline: 2px solid var(--gold);
-        outline-offset: 4px;
-      }
-
-      .badge:active {
-        transform: scale(0.98);
-      }
-
-      /* Portrait art on a page people scroll very little of, so it is capped by
-         height rather than width - at full width it would push the badges off
-         the bottom on a phone, and the badges are the point of the page. */
-      .hero {
-        width: 100%;
-        max-width: 300px;
-        /* Small enough that the badges stay on the first screen. The picture
-           is here to make the page feel like the app; the badges are what the
-           page is for, and a visitor who has to scroll to find them is a
-           visitor the picture cost us. */
-        max-height: 30vh;
-        object-fit: cover;
-        object-position: center 64%;
-        border-radius: 22px;
-        border: 1px solid rgba(185, 196, 255, 0.18);
-      }
-
-      .free {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 9px 16px;
-        border-radius: 999px;
-        background: linear-gradient(104deg, #ffd978 0%, #ffbf63 100%);
-        color: #3a2708;
-        font-size: 0.9rem;
-        font-weight: 900;
-      }
-
-      /* Only shown to the browsers that need it - see the script below. */
-      .inapp-first {
-        width: 100%;
-        margin: -4px 0 2px;
-        border: 1.5px solid rgba(255, 212, 92, 0.4);
-        border-radius: 20px;
-        padding: 18px 18px 20px;
-        background: rgba(255, 212, 92, 0.08);
-      }
-
-      .inapp-first h2 {
-        margin: 0 0 6px;
-        font-family: "Baloo 2", "Nunito", sans-serif;
-        font-size: 1.25rem;
-        line-height: 1.2;
-      }
-
-      .inapp-first p {
-        margin: 0 0 14px;
-        color: rgba(214, 205, 255, 0.82);
-        font-size: 0.92rem;
-        line-height: 1.5;
-      }
-
-      .inapp-cta {
-        display: block;
-        border-radius: 999px;
-        padding: 14px 20px;
-        background: linear-gradient(135deg, #ffd45c, #ffb02e);
-        color: #3b2500;
-        font-size: 1.02rem;
-        font-weight: 800;
-        text-align: center;
-        text-decoration: none;
-      }
-
-      /* Quieter than the gold button above it, because it is the slower road:
-         it gets them the app, but only after a copy, a paste and a browser
-         switch. Scoped under .inapp-first so it beats .copy-link, which is
-         defined later and would otherwise win on source order. */
-      .inapp-first .copy-link {
-        display: block;
-        width: 100%;
-        margin: 10px 0 0;
-        border: 1px solid rgba(214, 205, 255, 0.28);
-        padding: 12px;
+      /* The Apple badge becomes a <button> on iOS, so it has to shed the
+         browser's own button styling and match the anchor beside it exactly. */
+      button.badge {
+        border: 0;
+        padding: 0;
         background: none;
-        color: rgba(226, 219, 255, 0.86);
-        font-size: 0.92rem;
-      }
-
-      .inapp-cta:active {
-        transform: scale(0.99);
+        font: inherit;
+        cursor: pointer;
+        -webkit-appearance: none;
+        appearance: none;
       }
 
       .inapp-note {
@@ -333,55 +330,57 @@ button.badge {
   </head>
   <body>
     <main>
-      <!-- The logo is the way to the web app, so the footer does not need a
-           link for it. A logo going home is a convention people already
-           know, and it costs the page nothing. -->
-      <a class="home" href="https://www.dreamscapes.cloud/">
+      <!-- The picture carries the page, with the lockup and the line over it
+           rather than stacked above - the same shape the app itself opens on.
+           It lives in assets/web-only, which scripts/build-mobile.js skips:
+           this page is served by Vercel and is not part of the app, so the
+           artwork has no business riding into both bundles. -->
+      <header class="hero">
         <img
-          class="logo"
-          src="./assets/dreamscapes-logo.png?v=2026101501"
-          alt="DreamScapes"
-          width="900"
-          height="394"
+          class="hero-art"
+          src="./assets/web-only/download-hero.webp?v=2026101706"
+          alt="A child reading in bed while a dragon, a hot-air balloon, a lighthouse and a whale rise out of the storybook"
+          width="768"
+          height="1152"
+          loading="eager"
         />
-      </a>
-
-      <h1>A bedtime story<span>made just for them</span></h1>
+        <div class="hero-words">
+          <!-- A logo going home is a convention people already know, so the
+               footer does not need a link for it. -->
+          <a class="home" href="https://www.dreamscapes.cloud/">
+            <img
+              class="logo"
+              src="./assets/dreamscapes-logo.png?v=2026101501"
+              alt="DreamScapes"
+              width="900"
+              height="394"
+            />
+          </a>
+          <h1>A bedtime story<span>made just for them</span></h1>
+        </div>
+        <span class="free">★ The first story is free</span>
+      </header>
 
       <p class="lead">
         Their name, their favourite things, and a storyteller you choose. Read
         aloud at lights-out, or together on the page.
       </p>
 
-      <!-- Lives in assets/web-only, which scripts/build-mobile.js skips: this
-           page is served by Vercel and is not part of the app, so the picture
-           has no business riding into both app bundles. -->
-      <img
-        class="hero"
-        src="./assets/web-only/download-hero.webp?v=2026101706"
-        alt="A child reading in bed while a dragon, a hot-air balloon, a lighthouse and a whale rise out of the storybook"
-        width="768"
-        height="1152"
-        loading="eager"
-      />
-
-      <span class="free">★ The first story is free</span>
-
-      <!-- For an iPhone inside TikTok, where the App Store cannot be reached
-           at all. Shown instead of leading with a door iOS has bolted: the web
-           app runs perfectly well in that same browser, so a story is thirty
-           seconds away without installing anything. -->
-      <section class="inapp-first" id="inapp-first" hidden>
-        <h2>Read one tonight, right here</h2>
-        <p>No install, no account. The App Store needs Safari on iPhone, so get the app later.</p>
-        <a class="inapp-cta" href="https://www.dreamscapes.cloud/">Start a free story</a>
-      </section>
+      <!-- The one action that works for everybody, on every browser. The store
+           badges below need a hand-off iOS will not perform inside TikTok, and
+           a laptop cannot install an iPhone app at all; this needs neither. -->
+      <a class="cta" href="https://www.dreamscapes.cloud/">
+        <strong>Start a free story</strong>
+        <small>No install, no account</small>
+      </a>
 
       <p class="inapp-note" id="inapp-note" hidden>
         This browser will not open the App Store. Copy the link and paste it
         into Safari.
         <button class="copy-link" id="copy-link" type="button">Copy link</button>
       </p>
+
+      <p class="or"><span>or get the app</span></p>
 
       <div class="stores">
         <!-- Apple's and Google's own artwork, unaltered, as both brand
@@ -512,18 +511,12 @@ button.badge {
            now. The badges stay where they are underneath. */
         var inAppBrowser = /musical_ly|Bytedance|TikTok|Instagram|FBAN|FBAV|Line\/|Snapchat/i.test(navigator.userAgent || "");
         if (inAppBrowser) {
-          var first = document.getElementById("inapp-first");
-          if (first) {
-            first.hidden = false;
-            /* The copy button moves inside this block rather than the warning
-               below it appearing as well: both were explaining the same thing
-               twice, one above the other. Moving it keeps its handler. */
-            var copy = document.getElementById("copy-link");
-            if (copy) {
-              copy.classList.add("inapp-secondary");
-              first.appendChild(copy);
-            }
-          }
+          /* The badges below will not work here, so say so where it will be
+             read - directly under the button that does work, above them. The
+             note carries the copy-link button for anyone who wants the app
+             now and is willing to paste it into Safari. */
+          var note = document.getElementById("inapp-note");
+          if (note) note.hidden = false;
         }
 
         var button = document.getElementById("copy-link");
