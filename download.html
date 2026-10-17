@@ -147,6 +147,18 @@
         height: auto;
       }
 
+/* The Apple badge becomes a <button> on iOS, so it has to shed the browser's
+   own button styling and match the anchor beside it exactly. */
+button.badge {
+  border: 0;
+  padding: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
       .badge-apple img {
         height: 52px;
       }
@@ -398,26 +410,31 @@
         var apple = document.querySelector(".badge-apple");
         if (!apple) return;
 
-        /* Why this navigates by script instead of letting the link be a link.
-           Measured from inside TikTok with ?debug=1: the same address that does
-           nothing as an <a href> opens the App Store immediately when a click
-           handler assigns it to window.location. The in-app browser intercepts
-           anchor clicks and hands them to its own tab logic, which cannot
-           perform the hand-off, but a top-level navigation started by script
-           goes through.
+        /* The link test that worked used a <button>, and the badge is an <a>.
+           That difference is the whole bug.
 
-           So it was never about which URL. Three attempts were spent on the
-           address - dropping mt=8, itms-apps://, itms-appss:// - when the
-           address was right all along and the mechanism was wrong.
+           Preventing the anchor's default was not enough: this in-app browser
+           takes the tap at the anchor itself and hands it to its own tab
+           logic, which cannot perform the App Store hand-off - so the click
+           handler runs too late to matter, if it runs at all. A <button> is
+           not a navigation to intercept, so the browser leaves it alone and
+           the window.location assignment inside it goes straight through.
+           That is exactly what the test proved, and the previous fix failed to
+           copy it.
 
-           The href stays on the markup: it is what no-JS, long-press and
-           copy-link all use, and it is what this assigns. */
-        apple.addEventListener("click", function (event) {
-          // A modified click means "open this somewhere else" and is left alone.
-          if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button) return;
+           So on iOS the anchor is replaced with a real button carrying the
+           same artwork and the same address. The markup keeps the <a>, which
+           is what desktop, no-JS and long-press-to-copy all use. */
+        var url = apple.getAttribute("href");
+        var swap = document.createElement("button");
+        swap.type = "button";
+        swap.className = apple.className;
+        swap.setAttribute("aria-label", apple.getAttribute("aria-label") || "Download on the App Store");
+        swap.innerHTML = apple.innerHTML;
+        apple.parentNode.replaceChild(swap, apple);
 
-          event.preventDefault();
-          window.location.href = apple.getAttribute("href");
+        swap.addEventListener("click", function () {
+          window.location.href = url;
 
           var left = false;
           var onHide = function () {
@@ -425,9 +442,9 @@
           };
           document.addEventListener("visibilitychange", onHide);
 
-          /* Kept for any browser that refuses the address even this way: the
-             undocumented scheme, then the way out. Both wait for evidence that
-             the tap went nowhere rather than guessing from the user agent. */
+          /* Kept for any browser that refuses even this: the undocumented
+             scheme, then the way out. Both wait for evidence that the tap went
+             nowhere rather than guessing from the user agent. */
           window.setTimeout(function () {
             if (left || document.hidden) return;
             window.location.href = "itms-appss://apps.apple.com/app/id6784545562?ct=download";
