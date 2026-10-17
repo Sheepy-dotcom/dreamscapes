@@ -5966,28 +5966,12 @@ body.night-mode .field-boxed input::placeholder {
        picture down the screen by the same proportion. The dinosaur's head is
        24.5% down the file - measured, not guessed - and the second line of the
        headline sits just under it, so at cover they were in the same place.
-       Fitted to the width now, not the height. The artwork is 1:1.5 where the
-       old one was 1:2.16 - close to a phone's own shape - so scaling it to the
-       screen's height would crop about a third off each side, and the child,
-       the teddy and the lamp all live in the left of that frame. At 100% width
-       it stays whole: the scene fills the top of the screen and the gradient
-       below carries the rest, which is where the button and the three lines
-       sit anyway. */
-    /* A scrim over the top of the picture only. The old artwork kept its upper
-       third plain for the lockup and the headline; this one has a dragon and a
-       balloon up there, so the words need their own ground to stand on. It
-       fades out by the time it reaches the sky, and the picture below is
-       untouched. */
-    linear-gradient(180deg, rgba(13, 18, 54, 0.74) 0%, rgba(13, 18, 54, 0.34) 20%, rgba(13, 18, 54, 0) 38%),
-    /* And one up from the foot. The button, the offer line, the sample and the
-       three points all sit over the lower part of the picture - that is how
-       this screen has always been laid out, and the old artwork got away with
-       it because its lower third was a plain dark quilt. This one is busy and
-       lit, so the words need ground under them. Measured against the screen
-       rather than the image, so it stays under the content on a tall phone and
-       a short one alike. */
-    linear-gradient(0deg, rgba(13, 18, 54, 0.94) 0%, rgba(13, 18, 54, 0.78) 16%, rgba(13, 18, 54, 0.3) 32%, rgba(13, 18, 54, 0) 46%),
-    url("./assets/home-scene.webp?v=2026101706") center top / 100% auto no-repeat,
+       Six per cent of lift puts his head just clear of the words and the
+       headline moving up into the gap under the lockup pays for the rest.
+       Six is close to the floor: the file is drawn at almost exactly the
+       screen's proportions, so below about 104% he is back in the text and
+       below 100% the picture stops covering the screen at all. */
+    url("./assets/home-scene.webp?v=2026100900") center top / auto 106% no-repeat,
     linear-gradient(180deg, #141c55 0%, #101640 100%);
 }
 
