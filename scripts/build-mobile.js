@@ -10,7 +10,7 @@ const folders = ["assets"];
 // there therefore ships: app-illustrations alone is 59MB of originals that no
 // page loads. Named here so a working folder can live beside the assets that
 // use it without riding along into the download.
-const skipFolders = new Set(["app-illustrations", "source-art"]);
+const skipFolders = new Set(["app-illustrations", "source-art", "web-only"]);
 
 function copyFile(source, destination) {
   fs.mkdirSync(path.dirname(destination), { recursive: true });
