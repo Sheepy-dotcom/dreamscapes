@@ -341,34 +341,49 @@
         var apple = document.querySelector(".badge-apple");
         if (!apple) return;
 
-        /* No country in the path, matching the redirect above: the App Store
-           then opens in whichever storefront the device belongs to, rather
-           than sending a British visitor to a US listing. ct=download is kept,
-           so the campaign still counts. */
-        apple.href = "itms-appss://apps.apple.com/app/id6784545562?ct=download";
+        /* The https link stays on the button, and the scheme is only tried if
+           it goes nowhere. That order matters, and it is the opposite of what
+           this did before.
 
-        /* If the webview refuses it, nothing visibly happens - so the escape
-           route appears at the moment it is needed, instead of sitting on the
-           page warning everybody in advance.
+           An in-app browser that handles App Store links at all does it by
+           recognising the apps.apple.com address. Handing it itms-appss://
+           up front takes that recognition away and stakes everything on a
+           scheme Apple has never documented - Apple's own developer forums
+           say there is no guarantee about engineering side changes to it. So
+           https goes first, because Safari and anything that special-cases the
+           address both work with it, and the scheme is the fallback rather
+           than the opening move.
 
-           It only ever reveals a note, so being wrong is cheap: a visitor who
-           left and came back sees one extra line. That is why this waits for
-           evidence of failure rather than guessing from the user agent, which
-           is what it used to do. */
+           No country in the path either way, so the App Store opens in
+           whichever storefront the device belongs to rather than sending a
+           British visitor to a US listing. */
+        var scheme = "itms-appss://apps.apple.com/app/id6784545562?ct=download";
+
         apple.addEventListener("click", function () {
           var left = false;
           var onHide = function () {
             if (document.hidden) left = true;
           };
           document.addEventListener("visibilitychange", onHide);
+
+          // Still here a second later: the https link went nowhere, so try the
+          // scheme.
+          window.setTimeout(function () {
+            if (left || document.hidden) return;
+            window.location.href = scheme;
+          }, 1000);
+
+          /* Still here after that as well: both routes are blocked, so show
+             the way out. It only ever reveals a note, so being wrong is cheap
+             - a visitor who left and came back sees one extra line. */
           window.setTimeout(function () {
             document.removeEventListener("visibilitychange", onHide);
             if (left || document.hidden) return;
             var note = document.getElementById("inapp-note");
             if (!note) return;
             note.hidden = false;
-            note.scrollIntoView({ block: "center", behavior: "smooth" });
-          }, 1200);
+            note.scrollIntoView({ block: "center" });
+          }, 2200);
         });
 
         var button = document.getElementById("copy-link");
