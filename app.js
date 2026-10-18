@@ -2560,7 +2560,23 @@ function getRevenueCatApiKey() {
   return REVENUECAT_API_KEYS[getCapacitorPlatform()] || "";
 }
 
+/* Errors this file writes itself, as opposed to anything the RevenueCat SDK
+   or the store hands back. They say exactly what is wrong and they are safe to
+   show, so they must not be swept into the generic line below. */
+function ownError(message) {
+  const error = new Error(message);
+  error.isOwnDiagnosis = true;
+  return error;
+}
+
 function getRevenueCatErrorMessage(error, fallback = "Purchase could not be started. Please try again.") {
+  /* Without this the app threw its own diagnosis away. "DreamScapes Plus is
+     not available in RevenueCat offerings yet" contains the word "offerings",
+     so the rule below rewrote it as "Purchases are not available just now" -
+     turning the one message that says which half of the setup is wrong into
+     the one that says nothing. */
+  if (error?.isOwnDiagnosis && error.message) return error.message;
+
   const candidates = [
     error?.message,
     error?.underlyingErrorMessage,
@@ -2602,7 +2618,7 @@ async function configureRevenueCat() {
   const apiKey = getRevenueCatApiKey();
 
   if (!Purchases || !apiKey) {
-    throw new Error("RevenueCat is not configured for this app build yet.");
+    throw ownError("RevenueCat is not configured for this app build yet.");
   }
 
   if (!revenueCatConfiguredForUser) {
@@ -2666,7 +2682,7 @@ async function purchasePlan(planKey) {
   const packageToBuy = findRevenueCatPackage(offerings, planKey);
 
   if (!packageToBuy) {
-    throw new Error(`${plan.label} is not available in RevenueCat offerings yet.`);
+    throw ownError(`${plan.label} is not available in RevenueCat offerings yet.`);
   }
 
   const result = await Purchases.purchasePackage({ aPackage: packageToBuy });
