@@ -235,15 +235,22 @@ const PRONOUNS = {
   they: { subject: "they", object: "them", possessive: "their" },
 };
 
+/* Eight shapes, one picked at random per story, because banning one formula
+   only moves the model to the next one.
+
+   Two of these were the strange titles: one asked outright for something "a
+   little odd", and one asked for a line of dialogue, which came back as
+   sentence fragments rather than titles. A shape should vary what a title is
+   about, never how sensible it is. */
 const TITLE_SHAPES = [
   "name a place from the story, with no verb in it.",
-  "use something a character says out loud, in their own words.",
+  "take a short phrase a character says and use it as the title, three or four words, no quotation marks.",
   "ask a question a child would ask.",
-  "use two or three words only, concrete and a little odd.",
+  "use two or three words only, concrete and plain.",
   "name an object from the story and what happened to it.",
   "say when the story happens, as a time or a moment rather than a date.",
   "name the problem the story solves, plainly.",
-  "use a small, specific detail a child would notice before an adult would.",
+  "name one small thing from the story that a child would notice before an adult would, and make it clear what it is.",
 ];
 
 /* The age was being handed over as a bare number with one bullet saying to
@@ -410,6 +417,11 @@ function buildPrompt(data, section = null) {
     // different interests, six came back with that exact title shape. Naming
     // the rut is the only thing that gets it out.
     `- Title: ${titleShape} Do not use the words moonlit, moonbeam, lantern, twinkling, shimmering, glowing or starlight in it, and do not use the shape "<child's name> and the ...".`,
+    // The shapes vary what a title is about; this is what every one of them
+    // has to clear. Without it the looser shapes read as riddles - and a
+    // parent chooses a story off a shelf by its title, before anybody has
+    // read a word of it.
+    "- The title must make plain sense to a parent who has not read the story yet: six words at most, no full stop or exclamation mark at the end, nothing cryptic, and nothing that only means something once you know the ending.",
     nameInTitle
       ? `- Put ${cleanText(data.childName, "the child")}'s name in the title, somewhere other than the opening words.`
       : "- Keep the child's name out of the title; let the title name something from the story instead.",
@@ -616,7 +628,9 @@ const storySchema = {
     title: {
       type: "string",
       minLength: 3,
-      maxLength: 90,
+      // Was 90, which is a sentence rather than a title. Six words of
+      // children's-book English rarely runs past fifty characters.
+      maxLength: 58,
     },
     summary: {
       type: "string",
