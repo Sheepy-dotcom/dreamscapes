@@ -2681,8 +2681,27 @@ async function purchasePlan(planKey) {
   const offerings = await Purchases.getOfferings();
   const packageToBuy = findRevenueCatPackage(offerings, planKey);
 
+  /* Two different faults were reported as one. getOfferings reads
+     offerings.current, so an account with the products registered but no
+     offering marked current comes back empty - and "not available yet" sent
+     somebody looking at the products, which were fine. These say which it is,
+     and name what was actually found, because the usual cause after that is a
+     product id that differs from the one being matched. */
   if (!packageToBuy) {
-    throw ownError(`${plan.label} is not available in RevenueCat offerings yet.`);
+    const current = offerings?.current;
+    if (!current) {
+      throw ownError(
+        "No current offering is set in RevenueCat. Add one and mark it current, with packages for both subscriptions."
+      );
+    }
+
+    const found = (current.availablePackages || [])
+      .map((item) => item?.product?.identifier || item?.identifier || "")
+      .filter(Boolean)
+      .join(", ");
+    throw ownError(
+      `${plan.label} is not in the current RevenueCat offering. Looking for ${REVENUECAT_PRODUCT_IDS[planKey]}; the offering has ${found || "no packages"}.`
+    );
   }
 
   const result = await Purchases.purchasePackage({ aPackage: packageToBuy });
