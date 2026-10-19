@@ -6317,7 +6317,14 @@ async function getSignedAudioUrls(paths) {
 }
 
 async function uploadAudioTracksToCloud(story, tracks) {
-  if (!canUseCloudLibrary() || !Array.isArray(tracks) || tracks.length === 0) return [];
+  if (!Array.isArray(tracks) || tracks.length === 0) return [];
+
+  /* Waits for the client rather than giving up on it. supabaseClient is made
+     lazily, so narration that finished before it existed skipped the upload
+     silently and the audio stayed on that one device - which is why a story
+     narrated on a phone was billed again when it was opened on the web. */
+  if (!supabaseClient) await ensureSupabaseClient().catch(() => null);
+  if (!canUseCloudLibrary()) return [];
 
   const storyId = story.cloudId || story.id || createStoryId();
   const uploadedPaths = await mapWithConcurrency(tracks, AUDIO_UPLOAD_CONCURRENCY, async (track, index) => {
@@ -9558,6 +9565,29 @@ async function startAiNarration() {
       ? `Using saved audio: ${formatAudioTime(getSavedAudioDurationSeconds(currentStory))}`
       : "Using saved audio, no new AI request";
     trackEvent("cached_ai_audio_played", { voiceStyle: currentStory.voiceStyle });
+
+    /* Audio that only ever reached this device gets carried up to the cloud
+       the next time it is played. Stories narrated before the upload was fixed
+       are stranded otherwise: they play here and are paid for again on every
+       other device, which is the opposite of what caching audio was for.
+
+       In the background and failure-tolerant on purpose - the story is already
+       playing, and nothing about this is worth interrupting it for. */
+    if (!currentStory.aiAudioPaths?.length) {
+      const story = currentStory;
+      const tracks = story.aiAudioTracks;
+      Promise.resolve()
+        .then(async () => {
+          const paths = await uploadAudioTracksToCloud(story, tracks);
+          if (!paths.length) return;
+          story.aiAudioPaths = paths;
+          if (currentStory === story) currentStory = { ...currentStory, aiAudioPaths: paths };
+          await saveStoryToCloud(story).catch(() => {});
+          trackEvent("local_audio_backfilled", { tracks: paths.length });
+        })
+        .catch(() => {});
+    }
+
     return true;
   }
 
@@ -9624,6 +9654,9 @@ async function startAiNarration() {
     const completedAudioSeconds = aiAudioDurationSeconds > 0 ? Math.ceil(aiAudioDurationSeconds) : chargeAudioSeconds;
     await updateAudioUsage("complete", completedAudioSeconds, { requestedAudioSeconds: chargeAudioSeconds });
     let aiAudioPaths = currentStory.aiAudioPaths || [];
+    // Same wait here, so the decision to upload is not taken before the client
+    // that would do it has finished being created.
+    if (!supabaseClient && currentUser) await ensureSupabaseClient().catch(() => null);
     if (canUseCloudLibrary()) {
       try {
         statusNote.textContent = "Saving audio to your library...";
