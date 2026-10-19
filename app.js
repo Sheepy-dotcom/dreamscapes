@@ -6286,7 +6286,21 @@ function dataUrlToBlob(dataUrl) {
 }
 
 async function getSignedAudioUrls(paths) {
-  if (!canUseCloudLibrary() || !Array.isArray(paths) || paths.length === 0) return [];
+  if (!Array.isArray(paths) || paths.length === 0) return [];
+
+  /* This used to return an empty array when the cloud was unavailable, and an
+     empty array is not an error to the caller - so startAiNarration set no
+     tracks, announced "Playing saved cloud AI narration", and played nothing.
+     Silence under a confident caption is the worst of both.
+
+     The usual way in was timing rather than being signed out: supabaseClient
+     is created lazily, so opening the app and going straight to the library
+     reached this before it existed. Waiting for it covers that, and anything
+     still missing afterwards throws, so the message a parent sees is true. */
+  if (!supabaseClient) await ensureSupabaseClient().catch(() => null);
+  if (!canUseCloudLibrary()) {
+    throw new Error("Saved audio needs you to be signed in. Sign in and try again.");
+  }
 
   const { data, error } = await supabaseClient.storage
     .from(AUDIO_BUCKET)
@@ -9550,6 +9564,9 @@ async function startAiNarration() {
   if (Array.isArray(currentStory.aiAudioPaths) && currentStory.aiAudioPaths.length > 0) {
     try {
       currentAudioTracks = await getSignedAudioUrls(currentStory.aiAudioPaths);
+      // Nothing to play is a failure however we got here: without this the
+      // next lines announce narration over silence.
+      if (!currentAudioTracks.length) throw new Error("No saved audio came back for this story.");
       currentAudioTrackDurations = Array.isArray(currentStory.aiAudioTrackDurations)
         ? currentStory.aiAudioTrackDurations
         : [];
