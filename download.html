@@ -207,14 +207,23 @@
         color: var(--gold);
       }
 
+      /* Quiet where it sits by default, under the badges. It only takes the
+         gold when it leads, which is inside an in-app browser. */
       .cta {
         display: block;
         width: 100%;
         border-radius: 999px;
-        padding: 15px 22px;
+        padding: 14px 22px;
+        border: 1px solid rgba(214, 205, 255, 0.3);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--white);
+        text-decoration: none;
+      }
+
+      .cta.is-primary {
+        border-color: transparent;
         background: linear-gradient(135deg, #ffd45c, #ffb02e);
         color: #3b2500;
-        text-decoration: none;
         box-shadow: 0 16px 36px rgba(255, 176, 46, 0.26);
       }
 
@@ -399,10 +408,6 @@
              store badges below need a hand-off iOS will not perform inside
              TikTok, and a laptop cannot install an iPhone app at all; this
              needs neither. -->
-        <a class="cta" href="https://www.dreamscapes.cloud/?from=download">
-          <strong>Start a free story</strong>
-          <small>No install, no account</small>
-        </a>
 
         <p class="inapp-note" id="inapp-note" hidden>
           This browser will not open the App Store. Copy the link and paste it
@@ -410,7 +415,6 @@
           <button class="copy-link" id="copy-link" type="button">Copy link</button>
         </p>
 
-        <p class="or"><span>or get the app</span></p>
 
         <div class="stores">
           <!-- Apple's and Google's own artwork, unaltered, as both brand
@@ -440,6 +444,17 @@
             <img src="./assets/badges/google-play-badge.png?v=2026101501" alt="Get it on Google Play" />
           </a>
         </div>
+
+        <p class="or"><span id="or-label">or read one now</span></p>
+
+        <!-- Second by default, first inside an in-app browser. Most visitors
+             reach this page in Safari or on a laptop, where the badges above
+             work and are what they came for - leading everybody to the web app
+             was right for TikTok and wrong for them. -->
+        <a class="cta" id="start-free" href="https://www.dreamscapes.cloud/?from=download">
+          <strong>Start a free story</strong>
+          <small>No install, no account</small>
+        </a>
 
         <footer>
           <a href="https://www.dreamscapes.cloud/support.html">Support</a>
@@ -494,6 +509,31 @@
            same artwork and the same address. The markup keeps the <a>, which
            is what desktop, no-JS and long-press-to-copy all use. */
         var inAppBrowser = /musical_ly|Bytedance|TikTok|Instagram|FBAN|FBAV|Line\/|Snapchat/i.test(navigator.userAgent || "");
+
+        /* An iPhone in an in-app browser is the one case where the badges
+           above genuinely cannot work, so there the order flips: the web app
+           leads and the store becomes the afterthought. Everywhere else the
+           markup order stands, because the badges do work and are what the
+           visitor came for - leading everybody to the web app was right for
+           TikTok and wrong for Safari and for a laptop.
+
+           Android is left alone deliberately: the Play badge works from an
+           in-app browser, so there is nothing to work around. */
+        if (inAppBrowser) {
+          var actions = document.querySelector(".actions");
+          var free = document.getElementById("start-free");
+          var orLabel = document.getElementById("or-label");
+          var stores = document.querySelector(".stores");
+          var rule = document.querySelector(".or");
+          if (actions && free) {
+            free.classList.add("is-primary");
+            actions.insertBefore(free, actions.firstChild);
+            // The rule travels with the badges: it introduces whatever follows
+            // it, so leaving it behind left it announcing the footer.
+            if (rule && stores) actions.insertBefore(rule, stores);
+            if (orLabel) orLabel.textContent = "or get the app";
+          }
+        }
         var url = apple.getAttribute("href");
         var swap = document.createElement("button");
         swap.type = "button";
