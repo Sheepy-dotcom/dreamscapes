@@ -5573,6 +5573,7 @@ function renderStory(story) {
 
   // Last, so it overrides the account-only controls this function just set up.
   setPreviewCtaVisible(story);
+  setGetAppVisible();
 }
 
 function storyAsText(story) {
@@ -6907,6 +6908,17 @@ const PREVIEW_HIDDEN_SELECTORS = [
   ".sleep-timer-panel",
   ".narration-panel",
 ];
+
+/* The one place the website invites an install, and it waits until a story
+   has actually been read - a parent who has just heard one is a different
+   person from one who has read a landing page.
+
+   Never in the app, where it would be an advert for the thing you are already
+   holding. */
+function setGetAppVisible() {
+  const panel = document.querySelector("#get-app");
+  if (panel) panel.hidden = isNativeMobileApp();
+}
 
 function setPreviewCtaVisible(story) {
   if (!previewCta) return;

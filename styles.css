@@ -2096,6 +2096,42 @@ body.night-mode .story-path-button.active {
   font-size: 0.86rem;
 }
 
+/* Quiet on purpose. It sits under the story's own actions, after the thing a
+   parent came for, and must not compete with "Create another story". */
+.get-app {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(185, 196, 255, 0.18);
+  text-align: center;
+}
+
+.get-app-line {
+  margin: 0 0 10px;
+  color: rgba(214, 205, 255, 0.78);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.get-app-stores {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.get-app-badge img {
+  display: block;
+  height: 42px;
+  width: auto;
+}
+
+/* Google's artwork carries its own clear space inside the file, so it reads
+   smaller than Apple's at a matching height. */
+.get-app-badge:last-child img {
+  height: 48px;
+}
+
 .admin-credit-holders {
   margin-top: 18px;
   display: grid;

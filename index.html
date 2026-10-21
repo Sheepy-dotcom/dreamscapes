@@ -37,7 +37,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026101707" />
+    <link rel="stylesheet" href="./styles.css?v=2026102101" />
   </head>
   <body class="home-active night-mode">
     <svg class="art-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -399,6 +399,32 @@
         </div>
             </div>
           </details>
+
+        <!-- Only on the web, and only once a story has been read. Until now the
+             single place the site mentioned the app was the plans screen, after
+             a purchase failed - so the people most likely to want it, the ones
+             who just read a story to their child, were never told it existed.
+             That matters more since iPhone visitors from TikTok are sent here
+             deliberately, the App Store being unreachable from that browser. -->
+        <aside class="get-app" id="get-app" hidden>
+          <p class="get-app-line">Keep tonight's story and hear it read aloud</p>
+          <div class="get-app-stores">
+            <a
+              class="get-app-badge"
+              href="https://apps.apple.com/app/id6784545562?ct=story"
+              aria-label="Download DreamScapes on the App Store"
+            >
+              <img src="./assets/badges/app-store-badge.svg?v=2026101501" alt="Download on the App Store" />
+            </a>
+            <a
+              class="get-app-badge"
+              href="https://play.google.com/store/apps/details?id=cloud.dreamscapes.app&amp;referrer=utm_source%3Dstory%26utm_medium%3Dweb"
+              aria-label="Get DreamScapes on Google Play"
+            >
+              <img src="./assets/badges/google-play-badge.png?v=2026101501" alt="Get it on Google Play" />
+            </a>
+          </div>
+        </aside>
         </div>
 
         <!-- Reading mode. One page at a time, in type you can read across a
@@ -694,7 +720,7 @@
             <a
               class="button primary-button"
               id="plan-store-ios"
-              href="https://apps.apple.com/app/id6784545562?mt=8&amp;ct=plans"
+              href="https://apps.apple.com/app/id6784545562?ct=plans"
               target="_blank"
               rel="noopener"
               >App Store</a
@@ -1372,6 +1398,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js?v=2026101505"></script>
-    <script src="./app.js?v=2026101902"></script>
+    <script src="./app.js?v=2026102101"></script>
   </body>
 </html>
