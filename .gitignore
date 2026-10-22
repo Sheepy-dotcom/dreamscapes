@@ -27,3 +27,7 @@ __pycache__/
 # originals the webp files in assets/ were made from.
 /source-art/
 /assets/app-illustrations/
+
+# Throwaway clips from scripts/probe-audio-models.js - comparison material,
+# not store assets.
+store-assets/audio-probe/

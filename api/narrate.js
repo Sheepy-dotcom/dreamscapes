@@ -1,5 +1,6 @@
 const OPENAI_SPEECH_URL = "https://api.openai.com/v1/audio/speech";
 const { enforceNarrationAccess, handleCorsPreflight, incrementUsage, sendApiError } = require("../lib/auth");
+const { getMp3DurationSeconds } = require("../lib/mp3");
 // Pinned rather than using the undated alias: narration voices were tuned by
 // ear over many takes, and an alias can be repointed at a new snapshot without
 // warning, changing how every story sounds. This snapshot reports about a third
@@ -24,6 +25,21 @@ function getSpeechSpeed() {
 const MAX_CHUNK_LENGTH = 3200;
 const MAX_CHUNKS = 20;
 const SPEECH_CONCURRENCY = 2;
+/* Since late 2026 the pinned snapshot has been returning HTTP 200 with audio
+   that is silent or missing its closing sentence; OpenAI support acknowledged
+   it in September and has not shipped a fix. It matters more here than it
+   would elsewhere: narration is cached on the device and in Supabase so it
+   never re-bills and never regenerates, which makes one bad chunk permanent
+   for that story.
+
+   This is a floor, not a cure. Measured across the shipped voice previews the
+   model reads at 9.1 to 11.8 characters a second, so anything under 18 a
+   second is not a reading of the text at all - an empty body, or a cut of
+   roughly half. A single sentence lost from a 3200 character chunk is about
+   three percent and sits well inside the model's own run-to-run variation, so
+   it cannot be caught this way and is not claimed to be. */
+const MAX_PLAUSIBLE_CHARS_PER_SECOND = 18;
+const SPEECH_ATTEMPTS = 2;
 const SUPPORTED_VOICES = new Set([
   "alloy",
   "ash",
@@ -129,7 +145,7 @@ function getChunkInstructions(instructions, index, total) {
   ].join(" ");
 }
 
-async function createSpeech({ input, voice, instructions, index = 0, total = 1 }) {
+async function requestSpeech({ input, voice, instructions, index = 0, total = 1 }) {
   const chunkInstructions = getChunkInstructions(instructions, index, total);
   // OPENAI_TTS_MODEL used to be quietly rewritten back to the undated alias
   // whenever it named the 2025-12-15 snapshot, so setting it had no effect. That
@@ -158,8 +174,36 @@ async function createSpeech({ input, voice, instructions, index = 0, total = 1 }
     throw new Error(message || "Narration request failed");
   }
 
-  const audioBuffer = Buffer.from(await response.arrayBuffer());
-  return `data:audio/mpeg;base64,${audioBuffer.toString("base64")}`;
+  return Buffer.from(await response.arrayBuffer());
+}
+
+// Scaled by speed, because the parameter resamples the finished audio: at 1.5
+// the same words legitimately come back a third shorter.
+function getMinimumPlausibleSeconds(input) {
+  return cleanText(input).length / (MAX_PLAUSIBLE_CHARS_PER_SECOND * getSpeechSpeed());
+}
+
+/* Keeps the longest attempt rather than failing the story. A chunk that is
+   short twice is still better narration than an error screen at bedtime, and
+   the parent has already waited for it. */
+async function createSpeech(options) {
+  const minimumSeconds = getMinimumPlausibleSeconds(options.input);
+  let best = null;
+
+  for (let attempt = 1; attempt <= SPEECH_ATTEMPTS; attempt += 1) {
+    const buffer = await requestSpeech(options);
+    const seconds = getMp3DurationSeconds(buffer);
+    if (!best || seconds > best.seconds) best = { buffer, seconds };
+    if (seconds >= minimumSeconds) break;
+
+    console.warn(
+      `narrate: part ${(options.index || 0) + 1}/${options.total || 1} came back at ${seconds.toFixed(1)}s for ` +
+        `${cleanText(options.input).length} characters (expected at least ${minimumSeconds.toFixed(1)}s)` +
+        (attempt < SPEECH_ATTEMPTS ? ", retrying" : ", keeping the longest attempt")
+    );
+  }
+
+  return `data:audio/mpeg;base64,${best.buffer.toString("base64")}`;
 }
 
 async function mapWithConcurrency(items, limit, mapper) {
