@@ -2132,6 +2132,34 @@ body.night-mode .story-path-button.active {
   height: 48px;
 }
 
+.signup-sent {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+  text-align: left;
+}
+
+.signup-sent-lead {
+  margin: 0;
+  font-size: 1.04rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.signup-sent-lead strong {
+  display: block;
+  margin-top: 2px;
+  color: var(--gold, #ffd96a);
+  overflow-wrap: anywhere;
+}
+
+.signup-sent-note {
+  margin: 0;
+  opacity: 0.8;
+  font-size: 0.94rem;
+  line-height: 1.55;
+}
+
 .admin-credit-holders {
   margin-top: 18px;
   display: grid;

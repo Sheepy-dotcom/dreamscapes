@@ -37,7 +37,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026102101" />
+    <link rel="stylesheet" href="./styles.css?v=2026102202" />
   </head>
   <body class="home-active night-mode">
     <svg class="art-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -1136,6 +1136,27 @@
                 <button class="button primary-button" id="create-account-button" type="button">Create Account</button>
               </div>
             </form>
+
+            <!-- Shown instead of the form once the account exists. Signing up
+                 used to hand the parent straight back to a sign-in box with an
+                 empty password field, which reads as "it is asking me again" -
+                 and signing in there fails anyway until the emailed link is
+                 clicked, so they could try the password all evening and never
+                 get in. -->
+            <div class="signup-sent" id="signup-sent" hidden>
+              <p class="signup-sent-lead">
+                Check your email to finish setting up
+                <strong id="signup-sent-email"></strong>
+              </p>
+              <p class="signup-sent-note">
+                We have sent a link that confirms the address. You will not be able
+                to sign in until it is clicked, so if it is not there in a minute,
+                look in junk or spam.
+              </p>
+              <button class="button secondary-button" data-screen-target="account" type="button">
+                Back to sign in
+              </button>
+            </div>
           </article>
         </div>
         <p class="status-note account-status" id="signup-status" role="status"></p>
@@ -1397,6 +1418,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js?v=2026101505"></script>
-    <script src="./app.js?v=2026102201"></script>
+    <script src="./app.js?v=2026102202"></script>
   </body>
 </html>

@@ -1444,6 +1444,7 @@ function showScreen(name) {
   }
   if (name === "account") refreshAccountSummary();
   if (name === "admin") loadAdminDashboard();
+  if (name === "signup") resetSignupForm();
   if (name === "loading") startLoadingMessages();
   if (name !== "account") closeAccountPage();
   if (name === "signup") updateSignupContext();
@@ -2472,10 +2473,28 @@ function getFriendlyFaultMessage(errorOrMessage, fallback = "Something went wron
   if (/failed to fetch|networkerror|load failed|could not connect/i.test(rawMessage)) {
     return "DreamScapes could not connect. Check your connection and try again.";
   }
+  /* Supabase says "Email not confirmed", which sounds like a complaint about
+     the address rather than a job still to do - and the parent reads it after
+     typing a password that was always correct, so they try it again. */
+  if (/email not confirmed|not confirmed/i.test(lowerMessage)) {
+    return "Click the link in the email we sent you first, then sign in. Check junk or spam if it is not there.";
+  }
+  // Supabase's own words for the two most common ones, which tell a parent
+  // what happened but not what to do about it.
+  if (/invalid login credentials/i.test(lowerMessage)) {
+    return "That email and password do not match. Try again, or use Forgot password.";
+  }
+  if (/already registered|user already exists/i.test(lowerMessage)) {
+    return "There is already an account with that email. Sign in instead, or use Forgot password.";
+  }
   if (/not valid|invalid|expired|already used|redeem/i.test(lowerMessage) && !/[{}]|stack|code:/i.test(rawMessage)) {
     return rawMessage;
   }
-  if (/[{}]|\"stack\"|error_code|trace|jwt|code:\s*\d+|underlying|at\s+\w+/i.test(rawMessage)) {
+  /* "at least" is not a stack frame. The old pattern here was /at\s+\w+/,
+     which swallowed "Password should be at least 6 characters" - the clearest
+     message in the whole sign-up flow - and replaced it with "Something went
+     wrong". A real frame has a bracket or a newline before it. */
+  if (/[{}]|\"stack\"|error_code|trace|jwt|code:\s*\d+|underlying|\bat\s+\S+\s*\(|\n\s*at\s/i.test(rawMessage)) {
     return fallback;
   }
 
@@ -6812,6 +6831,16 @@ function clearPendingPreview() {
    route leaves its reason here instead. */
 let signupReason = "";
 
+/* The confirmation state replaces the form, so anyone coming back to this
+   screen - a second account, or a return trip after signing out - needs the
+   form put back rather than finding the last message still sitting there. */
+function resetSignupForm() {
+  const signupForm = document.querySelector("#signup-form");
+  const sent = document.querySelector("#signup-sent");
+  if (signupForm) signupForm.hidden = false;
+  if (sent) sent.hidden = true;
+}
+
 function setSignupReason(reason) {
   signupReason = reason || "";
 }
@@ -8057,12 +8086,22 @@ document.querySelector("#create-account-button")?.addEventListener("click", asyn
     return;
   }
 
+  /* Stay here and say what happens next, rather than handing them back to a
+     sign-in box with an empty password field. That read as the app asking for
+     the password again - and signing in there cannot work until the emailed
+     link is clicked, so the password was never the problem. */
   if (authEmail) authEmail.value = email;
   if (authPassword) authPassword.value = "";
   if (signupPassword) signupPassword.value = "";
   if (signupPasswordConfirm) signupPasswordConfirm.value = "";
-  showScreen("account");
-  setAuthStatus("Account created. Check your inbox to confirm your DreamScapes account. If it is not there, check junk or spam and mark DreamScapes as safe.");
+
+  const signupForm = document.querySelector("#signup-form");
+  const sent = document.querySelector("#signup-sent");
+  const sentEmail = document.querySelector("#signup-sent-email");
+  if (sentEmail) sentEmail.textContent = email;
+  if (signupForm) signupForm.hidden = true;
+  if (sent) sent.hidden = false;
+  setSignupStatus("");
   trackEvent("account_signed_up");
 });
 
