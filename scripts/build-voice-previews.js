@@ -62,6 +62,22 @@ function previewInputFor(name) {
 // 0.95 here: that is the value that made every preview sound fuzzy, because
 // the parameter resamples finished audio, and narration was moved back to 1.
 const model = process.env.OPENAI_TTS_MODEL || "gpt-4o-mini-tts-2025-12-15";
+/* Narration moved to gpt-audio-mini on Chat Completions; this script still
+   speaks to /v1/audio/speech, which that model does not serve. OPENAI_TTS_MODEL
+   is shared between the two, so a value set for narration would otherwise
+   arrive here and fail with a flat 400 about an unsupported model.
+
+   The shipped preview clips were made by the old model, so they now advertise
+   a voice narration no longer renders exactly. Regenerating them means porting
+   this script to Chat Completions and re-cutting all of assets/voice-preview-*
+   with fresh ?v= strings - worth doing before the old endpoint shuts down on
+   6 January 2027, and not something to stumble into halfway through a run. */
+if (!/^(tts-1|gpt-4o(-mini)?-tts)/.test(model)) {
+  console.error(`This script uses /v1/audio/speech, which does not serve "${model}".`);
+  console.error("Unset OPENAI_TTS_MODEL to use the speech model, or port this to Chat");
+  console.error("Completions the way api/narrate.js now does.");
+  process.exit(1);
+}
 const speed = Number(process.env.OPENAI_TTS_SPEED || 1);
 
 // The shared direction every voice gets, so a preview matches the real thing.

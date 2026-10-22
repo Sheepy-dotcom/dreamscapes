@@ -1,11 +1,37 @@
 const OPENAI_SPEECH_URL = "https://api.openai.com/v1/audio/speech";
+const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
 const { enforceNarrationAccess, handleCorsPreflight, incrementUsage, sendApiError } = require("../lib/auth");
 const { getMp3DurationSeconds } = require("../lib/mp3");
-// Pinned rather than using the undated alias: narration voices were tuned by
-// ear over many takes, and an alias can be repointed at a new snapshot without
-// warning, changing how every story sounds. This snapshot reports about a third
-// fewer word errors than the one before it. OPENAI_TTS_MODEL still overrides.
-const DEFAULT_SPEECH_MODEL = "gpt-4o-mini-tts-2025-12-15";
+
+/* OpenAI retires every /v1/audio/speech model on 6 January 2027, the pinned
+   gpt-4o-mini-tts-2025-12-15 among them, so narration had to move. The
+   replacement OpenAI names, gpt-realtime-2.1-mini, is a session model it also
+   says is unsupported on that endpoint - taking it would mean a websocket
+   under a 60 second function ceiling. gpt-audio-mini is a plain Chat
+   Completions POST that returns base64 audio, which is the shape this file
+   already had.
+
+   Measured A/B on identical text before switching: mp3 kept, all 13 voices
+   present, pace within 0.95x of the old narration and steerable by prompt
+   (which the old model never was - only its speed parameter moved), audio at
+   0.52x the bytes, and the voices approved by ear. It costs about 1.6x, which
+   is the rate rather than the model being slower: $20 per 1M audio output
+   tokens against $12.
+
+   To go back before January, set OPENAI_TTS_MODEL to a gpt-4o-mini-tts or
+   tts-1 model: the endpoint follows the model name, so that is a Vercel
+   setting away and needs no deploy. */
+const DEFAULT_SPEECH_MODEL = "gpt-audio-mini";
+
+// Models that still belong to the old speech endpoint. Everything else is
+// assumed to be a Chat Completions audio model.
+function usesSpeechEndpoint(model) {
+  return /^(tts-1|gpt-4o(-mini)?-tts)/.test(model);
+}
+
+function getSpeechModel() {
+  return cleanText(process.env.OPENAI_TTS_MODEL) || DEFAULT_SPEECH_MODEL;
+}
 // Natural speed, and the only control over pace that does anything. Measured on
 // this model with a 115 word bedtime passage: speed 1 reads at about 158 words
 // per minute, 0.9 at about 135, 0.7 at about 124. The curve is not clean - the
@@ -22,9 +48,22 @@ function getSpeechSpeed() {
   if (!Number.isFinite(configured) || configured <= 0) return DEFAULT_SPEECH_SPEED;
   return Math.min(MAX_SPEECH_SPEED, Math.max(MIN_SPEECH_SPEED, configured));
 }
-const MAX_CHUNK_LENGTH = 3200;
-const MAX_CHUNKS = 20;
-const SPEECH_CONCURRENCY = 2;
+/* 3200 was fine for the old endpoint, which read whatever it was given.
+   gpt-audio-mini stops early on long inputs and reports finish_reason "stop"
+   while doing it, so nothing downstream can tell. Measured: 983 characters
+   read in full 4 times out of 4, 1075 only 2 of 4, 1169 one of 4, and 3174
+   came back having spoken 14-28% of the text. 900 sits below the cliff with
+   room to spare.
+
+   Shorter chunks mean about four times as many requests, which is why
+   concurrency goes to 6: measured end to end, 6 at a time clears a round in
+   ~7.2s, so 36 chunks - about 35 minutes of narration, past the longest
+   subscriber tier - fit inside Vercel's 60 second ceiling with headroom. No
+   rate limiting appeared at 6. Both are overridable if that headroom turns
+   out to be thinner from Vercel's network than from a laptop. */
+const MAX_CHUNK_LENGTH = Number(process.env.OPENAI_TTS_CHUNK_CHARS) || 900;
+const MAX_CHUNKS = Number(process.env.OPENAI_TTS_MAX_CHUNKS) || 36;
+const SPEECH_CONCURRENCY = Number(process.env.OPENAI_TTS_CONCURRENCY) || 6;
 /* Since late 2026 the pinned snapshot has been returning HTTP 200 with audio
    that is silent or missing its closing sentence; OpenAI support acknowledged
    it in September and has not shipped a fix. It matters more here than it
@@ -130,7 +169,30 @@ function splitText(text) {
   });
 
   if (chunk) chunks.push(chunk);
-  return chunks.slice(0, MAX_CHUNKS);
+  return chunks.flatMap(splitOverlongChunk).slice(0, MAX_CHUNKS);
+}
+
+/* A sentence longer than the chunk limit was never split: the loop above only
+   breaks between sentences, so it became an over-long chunk of its own. That
+   was harmless when the limit was 3200 and the endpoint read whatever it was
+   given. It is not harmless now - over-long is exactly what gpt-audio-mini
+   silently stops reading - and the limit is a third of what it was, so a
+   single unpunctuated run of text is far likelier to reach it. Breaks on
+   spaces so no word is cut in half. */
+function splitOverlongChunk(chunk) {
+  if (chunk.length <= MAX_CHUNK_LENGTH) return [chunk];
+
+  const parts = [];
+  let rest = chunk;
+  while (rest.length > MAX_CHUNK_LENGTH) {
+    let cut = rest.lastIndexOf(" ", MAX_CHUNK_LENGTH);
+    // A single "word" longer than the limit has nowhere better to break.
+    if (cut <= 0) cut = MAX_CHUNK_LENGTH;
+    parts.push(rest.slice(0, cut).trim());
+    rest = rest.slice(cut).trim();
+  }
+  if (rest) parts.push(rest);
+  return parts;
 }
 
 function getChunkInstructions(instructions, index, total) {
@@ -145,62 +207,162 @@ function getChunkInstructions(instructions, index, total) {
   ].join(" ");
 }
 
-async function requestSpeech({ input, voice, instructions, index = 0, total = 1 }) {
-  const chunkInstructions = getChunkInstructions(instructions, index, total);
-  // OPENAI_TTS_MODEL used to be quietly rewritten back to the undated alias
-  // whenever it named the 2025-12-15 snapshot, so setting it had no effect. That
-  // snapshot now exists and reports markedly fewer word errors than the model
-  // this has been using, so the setting is honoured as written and the narration
-  // can be compared by changing one environment variable.
-  const model = cleanText(process.env.OPENAI_TTS_MODEL) || DEFAULT_SPEECH_MODEL;
+function authHeaders() {
+  return {
+    Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+    "Content-Type": "application/json",
+  };
+}
+
+async function failed(response) {
+  const message = await response.text();
+  throw new Error(message || "Narration request failed");
+}
+
+// The old endpoint, kept reachable so OPENAI_TTS_MODEL can roll narration back
+// without a deploy for as long as OpenAI keeps it alive.
+async function requestViaSpeechEndpoint({ model, input, voice, instructions }) {
   const response = await fetch(OPENAI_SPEECH_URL, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-      "Content-Type": "application/json",
-    },
+    headers: authHeaders(),
     body: JSON.stringify({
       model,
       voice,
       input,
-      instructions: chunkInstructions,
+      instructions,
       speed: getSpeechSpeed(),
       response_format: "mp3",
     }),
   });
 
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || "Narration request failed");
-  }
-
-  return Buffer.from(await response.arrayBuffer());
+  if (!response.ok) await failed(response);
+  // This endpoint returns audio and nothing else, so there is no transcript to
+  // check against - only the duration floor below can say anything went wrong.
+  return { buffer: Buffer.from(await response.arrayBuffer()), transcript: null };
 }
 
-// Scaled by speed, because the parameter resamples the finished audio: at 1.5
-// the same words legitimately come back a third shorter.
+/* The model on the other end answers rather than reads. Asked warmly to read a
+   children's story aloud it invented 389 characters about a baker from a 57
+   character prompt and spoke a literal "[Pause]" out loud, which for this app
+   is the worst failure available: narration that does not match the words on
+   screen, and unreviewed content read to a child.
+
+   Saying plainly that it is not an assistant fixes it - measured verbatim on
+   every run once this wording was in front of the narration direction, with
+   the pacing, accent and part-of-n lines still doing their work. Leave the
+   first and last sentences alone; they are what keep it reading. */
+function buildSystemDirection(instructions) {
+  return [
+    "You are a text-to-speech engine, not an assistant.",
+    "Speak the user's message aloud word for word, exactly as written.",
+    "Add nothing: no greeting, no reply, no commentary, no continuation, no stage directions.",
+    "Never invent story content. Your entire spoken output must be the user's text and nothing else.",
+    instructions,
+    "Everything above changes delivery only - never the words themselves.",
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+async function requestViaChatCompletions({ model, input, voice, instructions }) {
+  const response = await fetch(OPENAI_CHAT_URL, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({
+      model,
+      modalities: ["text", "audio"],
+      audio: { voice, format: "mp3" },
+      messages: [
+        { role: "system", content: buildSystemDirection(instructions) },
+        { role: "user", content: input },
+      ],
+    }),
+  });
+
+  if (!response.ok) await failed(response);
+
+  const payload = await response.json();
+  const audio = payload?.choices?.[0]?.message?.audio;
+  if (!audio?.data) throw new Error("Narration came back without audio");
+
+  return {
+    buffer: Buffer.from(audio.data, "base64"),
+    transcript: cleanText(audio.transcript || ""),
+  };
+}
+
+async function requestSpeech({ input, voice, instructions, index = 0, total = 1 }) {
+  const chunkInstructions = getChunkInstructions(instructions, index, total);
+  const model = getSpeechModel();
+  const send = usesSpeechEndpoint(model) ? requestViaSpeechEndpoint : requestViaChatCompletions;
+  return send({ model, input, voice, instructions: chunkInstructions });
+}
+
+// The speed parameter only exists on the old endpoint, where it resamples the
+// finished audio: at 1.5 the same words legitimately come back a third shorter.
+// Chat Completions has no such parameter - pace is asked for in words instead.
 function getMinimumPlausibleSeconds(input) {
-  return cleanText(input).length / (MAX_PLAUSIBLE_CHARS_PER_SECOND * getSpeechSpeed());
+  const speed = usesSpeechEndpoint(getSpeechModel()) ? getSpeechSpeed() : 1;
+  return cleanText(input).length / (MAX_PLAUSIBLE_CHARS_PER_SECOND * speed);
 }
 
-/* Keeps the longest attempt rather than failing the story. A chunk that is
-   short twice is still better narration than an error screen at bedtime, and
-   the parent has already waited for it. */
+/* Punctuation and casing are delivery, not words: the model may render an
+   ellipsis as a pause or spell a number differently without having read the
+   wrong thing. Comparing words alone keeps the check strict about what
+   matters and quiet about what does not. */
+function sameWords(a, b) {
+  const words = (value) =>
+    String(value || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, " ")
+      .split(/\s+/)
+      .filter(Boolean)
+      .join(" ");
+  return words(a) === words(b);
+}
+
+/* Two different failures, and only one of them was ever detectable before.
+
+   Too short catches an empty or badly truncated body. It is a floor, not a
+   cure: a single sentence lost from a 3200 character chunk is about three
+   percent and sits inside the model's own variation.
+
+   Wrong words is the new one, and it is exact. Chat Completions returns a
+   transcript of what was actually spoken, so narration can compare it with
+   what it asked for instead of inferring from duration. That is the real
+   argument for this endpoint over the one it replaces.
+
+   Keeps the best attempt rather than failing the story: a parent who has
+   waited for narration is better served by slightly short audio than by an
+   error screen at bedtime. A reading that matches the words always wins over
+   a longer one that does not. */
 async function createSpeech(options) {
   const minimumSeconds = getMinimumPlausibleSeconds(options.input);
+  const part = `part ${(options.index || 0) + 1}/${options.total || 1}`;
   let best = null;
 
   for (let attempt = 1; attempt <= SPEECH_ATTEMPTS; attempt += 1) {
-    const buffer = await requestSpeech(options);
+    const { buffer, transcript } = await requestSpeech(options);
     const seconds = getMp3DurationSeconds(buffer);
-    if (!best || seconds > best.seconds) best = { buffer, seconds };
-    if (seconds >= minimumSeconds) break;
+    // A null transcript means the endpoint cannot tell us, not that it strayed.
+    const read = transcript === null || sameWords(transcript, options.input);
+    const score = (read ? 1e6 : 0) + seconds;
+    if (!best || score > best.score) best = { buffer, seconds, score };
+    if (read && seconds >= minimumSeconds) break;
 
-    console.warn(
-      `narrate: part ${(options.index || 0) + 1}/${options.total || 1} came back at ${seconds.toFixed(1)}s for ` +
-        `${cleanText(options.input).length} characters (expected at least ${minimumSeconds.toFixed(1)}s)` +
-        (attempt < SPEECH_ATTEMPTS ? ", retrying" : ", keeping the longest attempt")
-    );
+    const last = attempt === SPEECH_ATTEMPTS;
+    const ending = last ? ", keeping the best attempt" : ", retrying";
+    if (!read) {
+      console.warn(
+        `narrate: ${part} spoke something other than the story text` +
+          ` (${transcript.length} characters against ${cleanText(options.input).length} asked for)${ending}`
+      );
+    } else {
+      console.warn(
+        `narrate: ${part} came back at ${seconds.toFixed(1)}s for ` +
+          `${cleanText(options.input).length} characters (expected at least ${minimumSeconds.toFixed(1)}s)${ending}`
+      );
+    }
   }
 
   return `data:audio/mpeg;base64,${best.buffer.toString("base64")}`;
