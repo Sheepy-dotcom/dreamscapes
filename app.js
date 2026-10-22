@@ -157,6 +157,11 @@ let currentAudioTrackDurations = [];
 let currentAudioStoryId = "";
 let aiAudioPausedBetweenTracks = false;
 let nativeAudioActive = false;
+/* Whether the native player is actually playing, which is a different question
+   from whether it is the engine in use. Conflating the two is why the button
+   showed pause for a whole story on iOS: nativeAudioActive stays true across a
+   pause, deliberately, because the engine is still loaded. */
+let nativeAudioPlaying = false;
 let nativeAudioListenersReady = false;
 let narrationRequestInFlight = false;
 let pendingAudioSeekPercent = null;
@@ -4487,7 +4492,8 @@ const PLAYER_PAUSE_ICON =
   '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><g fill="currentColor"><rect x="6.6" y="5" width="4.3" height="14" rx="1.6"/><rect x="13.1" y="5" width="4.3" height="14" rx="1.6"/></g></svg>';
 
 function isNarrationPlaying() {
-  return Boolean((currentAudio && !currentAudio.paused) || nativeAudioActive);
+  if (nativeAudioActive) return nativeAudioPlaying;
+  return Boolean(currentAudio && !currentAudio.paused);
 }
 
 function playerTotalSeconds() {
@@ -9139,6 +9145,10 @@ function ensureNativeAudioListeners() {
   nativeAudioListenersReady = true;
   plugin.addListener("progress", (state = {}) => {
     nativeAudioActive = true;
+    /* The native side reports this now. The fallback is for a build whose
+       Swift predates that, where the pause flag is the best guess going. */
+    nativeAudioPlaying =
+      typeof state.playing === "boolean" ? state.playing : !aiAudioPausedBetweenTracks;
     currentAudioIndex = Math.max(0, Number(state.trackIndex || 0));
     const duration = Number(state.duration || getSavedAudioDurationSeconds(currentStory) || 0);
     const position = Math.max(0, Number(state.position || 0));
@@ -9146,6 +9156,7 @@ function ensureNativeAudioListeners() {
   });
   plugin.addListener("ended", () => {
     nativeAudioActive = false;
+    nativeAudioPlaying = false;
     currentAudio = null;
     currentAudioIndex = 0;
     aiAudioPausedBetweenTracks = false;
@@ -9153,8 +9164,20 @@ function ensureNativeAudioListeners() {
     setMediaSessionState("none");
     statusNote.textContent = "AI narration finished.";
   });
+  /* The plugin has always emitted this and nothing has ever listened, so a
+     stop from outside the app - the lock screen, another app taking the audio
+     session - left the web layer believing a story was still playing. */
+  plugin.addListener("stopped", () => {
+    nativeAudioActive = false;
+    nativeAudioPlaying = false;
+    aiAudioPausedBetweenTracks = false;
+    setMediaSessionState("none");
+    syncPlayerUi();
+  });
+
   plugin.addListener("error", () => {
     nativeAudioActive = false;
+    nativeAudioPlaying = false;
     currentAudio = null;
     statusNote.textContent = "Native narration stopped. Trying the web player instead.";
     playAiAudioTrack({ forceWeb: true });
@@ -9168,6 +9191,7 @@ async function playNativeAiAudioQueue() {
   ensureNativeAudioListeners();
   setupMediaSession(currentStory);
   nativeAudioActive = true;
+  nativeAudioPlaying = true;
   aiAudioPausedBetweenTracks = false;
   currentAudio = null;
 
@@ -9188,6 +9212,7 @@ async function pauseNativeAudio() {
   const plugin = getNativeAudioPlugin();
   if (!nativeAudioActive || !plugin) return false;
   await plugin.pause();
+  nativeAudioPlaying = false;
   aiAudioPausedBetweenTracks = true;
   setMediaSessionState("paused");
   return true;
@@ -9197,6 +9222,7 @@ async function resumeNativeAudio() {
   const plugin = getNativeAudioPlugin();
   if (!nativeAudioActive || !plugin) return false;
   await plugin.resume();
+  nativeAudioPlaying = true;
   aiAudioPausedBetweenTracks = false;
   setMediaSessionState("playing");
   return true;
@@ -9207,6 +9233,7 @@ function stopNativeAudio() {
   if (!plugin || !nativeAudioActive) return;
   plugin.stop().catch(() => {});
   nativeAudioActive = false;
+  nativeAudioPlaying = false;
 }
 
 function setAudioGenerationProgress(partIndex, totalParts, state = "creating") {

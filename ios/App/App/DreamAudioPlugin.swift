@@ -248,6 +248,10 @@ public class DreamAudioPlugin: CAPPlugin, CAPBridgedPlugin {
         data["position"] = elapsedSeconds()
         data["duration"] = totalDuration
         data["trackIndex"] = currentIndex
+        // The web layer was inferring this and getting it wrong: it treated
+        // "native audio is the engine in use" as "native audio is playing", so
+        // the button showed pause for the whole story. Only this side knows.
+        data["playing"] = player?.timeControlStatus != .paused
         notifyListeners("progress", data: data)
         updateNowPlayingInfo(state: player?.timeControlStatus == .paused ? .paused : .playing)
     }
