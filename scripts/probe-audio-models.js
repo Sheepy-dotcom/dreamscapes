@@ -2,14 +2,19 @@
 // Answers the three questions that decide whether narration can move off the
 // speech endpoint before it shuts down on 6 January 2027.
 //
-//   npx vercel env pull                              # once, writes .env.local
 //   node scripts/probe-audio-models.js
 //   node scripts/probe-audio-models.js --model gpt-audio
 //   node scripts/probe-audio-models.js --dry-run     # prints bodies, sends nothing
 //
 // The key is read from .env.local, or from OPENAI_API_KEY if it is already in
 // the environment. Pasting a key on the command line puts it in the shell
-// history, and twice now the example line itself has been pasted verbatim.
+// history, and the example line itself has been pasted verbatim more than once.
+//
+// `vercel env pull` will not supply it: every secret on this project is marked
+// Sensitive, which makes it write-only, so neither the CLI nor the dashboard
+// can hand the value back. Mint a separate key for local use instead - which
+// is the better habit anyway, since the production key then never reaches a
+// laptop, and the local one can be revoked the moment this is finished.
 //
 // OpenAI's named replacement for gpt-4o-mini-tts is gpt-realtime-2.1-mini,
 // which it also says is not supported on /v1/audio/speech - it is a session
@@ -69,13 +74,13 @@ const foundIn = envFiles.find((name) => readEnvFile(name));
 const apiKey = process.env.OPENAI_API_KEY || (foundIn ? readEnvFile(foundIn) : null);
 
 if (!apiKey && !dryRun) {
-  console.error("No OPENAI_API_KEY found. Bring the project's environment down with:");
+  console.error("No OPENAI_API_KEY found.");
+  console.error("Create one for local use at https://platform.openai.com/api-keys");
+  console.error("and paste it into the OPENAI_API_KEY= line of .env.local (gitignored).");
   console.error("");
-  console.error("  npx vercel env pull");
-  console.error("");
-  console.error("That writes .env.local, which this script reads. It is gitignored.");
-  console.error("Not linked? Copy OPENAI_API_KEY from the project's Settings >");
-  console.error("Environment Variables into a .env.local line of the same name.");
+  console.error("Vercel cannot supply it: the project's secrets are marked Sensitive,");
+  console.error("so they are write-only and `vercel env pull` returns [SENSITIVE].");
+  console.error("Revoke the local key when the probe is done.");
   process.exit(1);
 }
 
@@ -88,13 +93,14 @@ if (!apiKey && !dryRun) {
 const MIN_REAL_KEY_LENGTH = 40;
 if (!dryRun && apiKey.trim().length < MIN_REAL_KEY_LENGTH) {
   console.error(`OPENAI_API_KEY is only ${apiKey.trim().length} characters, so it is not a real key.`);
-  console.error("It looks like an example or a truncated copy.");
+  console.error("It is an example, a truncated copy, or Vercel's [SENSITIVE] placeholder.");
   console.error("");
-  console.error("  npx vercel env pull");
+  console.error("Create one for local use at https://platform.openai.com/api-keys");
+  console.error("and paste it into the OPENAI_API_KEY= line of .env.local (gitignored).");
   console.error("");
-  console.error("That writes .env.local, which this script reads. It is gitignored.");
-  console.error("Not linked? Copy OPENAI_API_KEY from the project's Settings >");
-  console.error("Environment Variables into a .env.local line of the same name.");
+  console.error("Vercel cannot supply it: the project's secrets are marked Sensitive,");
+  console.error("so they are write-only and `vercel env pull` returns [SENSITIVE].");
+  console.error("Revoke the local key when the probe is done.");
   process.exit(1);
 }
 
@@ -161,12 +167,11 @@ function scrub(message) {
 function stop(kind, message) {
   const advice = {
     auth: [
-      "The API key was not accepted - it is real enough in shape, but wrong,",
-      "revoked, or for another account.",
+      "The API key was not accepted - right shape, but wrong, revoked, or for",
+      "another account.",
       "",
-      "  npx vercel env pull",
-      "",
-      "That rewrites .env.local with the key production is actually using.",
+      "Mint a fresh one at https://platform.openai.com/api-keys and put it in",
+      "the OPENAI_API_KEY= line of .env.local.",
     ],
     quota: [
       "Rate limited or out of quota, so nothing could be measured.",
