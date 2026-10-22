@@ -115,21 +115,41 @@ if (!voiceBlock) {
 const voices = (voiceBlock[1].match(/"([a-z]+)"/g) || []).map((value) => value.slice(1, -1));
 const defaultVoice = voices.includes("cedar") ? "cedar" : voices[0];
 
-// Short on purpose: this is a capability probe, not a narration sample, and
-// every request is billed. Long enough to hear the voice and to make a
-// truncated answer obvious.
-const PROBE_TEXT = "Settle in, take a gentle breath, and let the story begin.";
+/* Stops mid-story on purpose. gpt-audio-mini is a conversational model, so the
+   dangerous moment is a chunk that trails off - which is every part but the
+   last of a real narration. A one-line probe would not show the failure. */
+const PROBE_TEXT =
+  "Maya pressed her nose to the window. Outside, the snow had stopped falling and the whole garden " +
+  "had gone quiet and blue. On the lawn, where the old apple tree stood, something was glowing. It was " +
+  "small and round and it bobbed gently, the way a lantern does when somebody is carrying it. Maya pulled " +
+  "on her boots over her pyjamas. She opened the back door very slowly, so it would not creak, and stepped " +
+  "out into the cold.";
 const FORMATS = ["mp3", "wav", "opus", "pcm16", "flac", "aac"];
 
-// The speech endpoint takes an `instructions` field. Chat Completions has no
-// such parameter, so direction has to move into a system message - which is
-// the part of this migration most likely to change how narration sounds.
+/* The speech endpoint takes an `instructions` field and only ever reads what
+   it is given. Chat Completions has no such parameter, and the model on the
+   other end answers rather than reads: asked warmly to "read this children's
+   story aloud", it invented 389 characters about a baker in a village from a
+   57 character prompt, and spoke a literal "[Pause]" stage direction.
+
+   For a children's app that is the worst failure available - narration that
+   does not match the words on screen, and unreviewed content read to a child.
+   So the direction has to say plainly that it is not an assistant. Measured
+   10/10 verbatim with the wording below, including with the part-of-n
+   continuity lines narrate.js appends. */
 const SYSTEM_DIRECTION = [
-  "You are reading a children's bedtime story aloud to one child.",
-  "Read slowly and softly, letting each sentence settle before the next.",
-  "Keep a natural UK/British English accent throughout.",
-  "Read only the text given to you. Do not add anything.",
+  "You are a text-to-speech engine, not an assistant.",
+  "Speak the user's message aloud word for word, exactly as written.",
+  "Add nothing: no greeting, no reply, no commentary, no continuation, no stage directions.",
+  "Never invent story content. Your entire spoken output must be the user's text and nothing else.",
 ].join(" ");
+
+// Punctuation and casing can differ without anything being wrong with the
+// reading, so compare on words alone.
+function saidTheSameWords(spoken) {
+  const words = (value) => value.toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter(Boolean);
+  return words(spoken || "").join(" ") === words(PROBE_TEXT).join(" ");
+}
 
 function requestBody({ voice, format }) {
   return {
@@ -230,12 +250,25 @@ function describe(result, format) {
   // Only mp3 can be measured without decoding; for the rest the byte count is
   // still the number that matters for storage.
   const seconds = format === "mp3" ? getMp3DurationSeconds(bytes) : 0;
+  const transcript = (result.audio.transcript || "").trim().replace(/\s+/g, " ");
   return {
     bytes,
     size: `${Math.round(bytes.length / 1024)}KB`,
     seconds,
     tokens: audioTokens(result.usage),
+    transcript,
+    verbatim: saidTheSameWords(transcript),
   };
+}
+
+/* The transcript is the whole reason this endpoint is safer than the one it
+   replaces: it says exactly what was spoken, so narration can check the words
+   rather than guessing from duration. An "ok" that skipped this check is how
+   the first run of this script reported 13 usable voices while the model was
+   making up a story about a baker. */
+function verdict(info) {
+  if (info.verbatim) return "read";
+  return info.transcript.length > PROBE_TEXT.length * 1.2 ? "INVENTED" : "DRIFTED";
 }
 
 (async () => {
@@ -249,7 +282,7 @@ function describe(result, format) {
   fs.mkdirSync(outDir, { recursive: true });
   console.log(`key:   ${process.env.OPENAI_API_KEY ? "OPENAI_API_KEY in the environment" : foundIn}`);
   console.log(`model: ${model}`);
-  console.log(`text:  "${PROBE_TEXT}" (${PROBE_TEXT.length} chars)\n`);
+  console.log(`text:  ${PROBE_TEXT.length} characters, a chunk that stops mid-story\n`);
 
   // 1. Which output formats are accepted.
   console.log("FORMATS");
@@ -269,7 +302,9 @@ function describe(result, format) {
     }
     accepted.push(format);
     const duration = info.seconds ? ` ${info.seconds.toFixed(2)}s` : "";
-    console.log(`  ${format.padEnd(6)} ok   ${info.size.padStart(7)}${duration}  ${info.tokens} audio tokens`);
+    console.log(
+      `  ${format.padEnd(6)} ${verdict(info).padEnd(8)} ${info.size.padStart(7)}${duration}  ${info.tokens} audio tokens`
+    );
     fs.writeFileSync(path.join(outDir, `format-${format}.${format === "pcm16" ? "pcm" : format}`), info.bytes);
   }
 
@@ -292,6 +327,7 @@ function describe(result, format) {
   console.log(`\nVOICES (as ${probeFormat})`);
   const present = [];
   const missing = [];
+  const strayed = [];
   let totalTokens = 0;
 
   for (const voice of voices) {
@@ -309,17 +345,30 @@ function describe(result, format) {
       console.log(`  ${voice.padEnd(9)} ${info}`);
       continue;
     }
-    present.push(voice);
-    totalTokens += info.tokens;
     const duration = info.seconds ? ` ${info.seconds.toFixed(2)}s` : "";
-    console.log(`  ${voice.padEnd(9)} ok   ${info.size.padStart(7)}${duration}  ${info.tokens} audio tokens`);
+    console.log(
+      `  ${voice.padEnd(9)} ${verdict(info).padEnd(8)} ${info.size.padStart(7)}${duration}  ${info.tokens} audio tokens`
+    );
+    if (info.verbatim) {
+      present.push(voice);
+      totalTokens += info.tokens;
+    } else {
+      strayed.push(voice);
+      console.log(`      said: ${JSON.stringify(info.transcript.slice(0, 120))}`);
+    }
     fs.writeFileSync(path.join(outDir, `voice-${voice}.${probeFormat}`), info.bytes);
   }
 
   // 3. What it costs, from the tokens actually billed rather than a rate card.
   console.log("\nSUMMARY");
-  console.log(`  voices present : ${present.length}/${voices.length}${present.length ? ` (${present.join(", ")})` : ""}`);
+  console.log(`  voices reading : ${present.length}/${voices.length}${present.length ? ` (${present.join(", ")})` : ""}`);
   if (missing.length) console.log(`  voices missing : ${missing.join(", ")}`);
+  if (strayed.length) {
+    console.log(`  DID NOT READ   : ${strayed.join(", ")}`);
+    console.log("                   These spoke something other than the text they were given.");
+    console.log("                   Narration cannot ship on a voice that does that, whatever");
+    console.log("                   its format support - check SYSTEM_DIRECTION before anything else.");
+  }
 
   if (present.length) {
     const perRequest = totalTokens / present.length;
@@ -331,6 +380,15 @@ function describe(result, format) {
     console.log(`  a full story   : about ${Math.round(perChar * storyChars).toLocaleString()} audio tokens at the 20-chunk cap`);
     console.log("  cost           : multiply that by the audio output rate on");
     console.log("                   https://openai.com/api/pricing and compare with what a story costs today");
+    console.log("                   (measured on verbatim readings only, so it is not inflated by");
+    console.log("                   a model that talked for longer than it was asked to)");
+  }
+
+  if (strayed.length === 0 && present.length === voices.length) {
+    console.log("\n  Every voice read the text back word for word. The transcript is returned");
+    console.log("  on every call, so narration on this endpoint can verify what was actually");
+    console.log("  spoken instead of inferring it from duration - which the speech endpoint");
+    console.log("  never allowed. That is the real argument for this path.");
   }
 
   console.log(`\n  clips written to ${path.relative(root, outDir)}/ - listen before deciding anything.`);
