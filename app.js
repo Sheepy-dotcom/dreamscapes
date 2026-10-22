@@ -445,12 +445,12 @@ const VOICE_PREVIEW_GAINS = {
 const VOICE_PREVIEW_VERSION = "2026101101";
 
 const VOICE_PREVIEW_FILES = {
-  "female calm": "./assets/voice-preview-female-calm.mp3?v=2026101505",
-  "male calm": "./assets/voice-preview-male-calm.mp3?v=2026101505",
-  "ash storyteller": "./assets/voice-preview-ash-storyteller.mp3?v=2026101505",
-  "cedar audition": "./assets/voice-preview-cedar-audition.mp3?v=2026101505",
-  "marin audition": "./assets/voice-preview-marin-audition.mp3?v=2026101505",
-  "shimmer soft": "./assets/voice-preview-shimmer-soft.mp3?v=2026101505",
+  "female calm": "./assets/voice-preview-female-calm.mp3?v=2026102200",
+  "male calm": "./assets/voice-preview-male-calm.mp3?v=2026102200",
+  "ash storyteller": "./assets/voice-preview-ash-storyteller.mp3?v=2026102200",
+  "cedar audition": "./assets/voice-preview-cedar-audition.mp3?v=2026102200",
+  "marin audition": "./assets/voice-preview-marin-audition.mp3?v=2026102200",
+  "shimmer soft": "./assets/voice-preview-shimmer-soft.mp3?v=2026102200",
 };
 // OpenAI rates marin and cedar highest for audio quality, so they lead each
 // group in the picker and marin is what a parent gets without choosing. Keep

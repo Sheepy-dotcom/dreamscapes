@@ -61,23 +61,11 @@ function previewInputFor(name) {
 // that is not what their stories will sound like. The speed in particular was
 // 0.95 here: that is the value that made every preview sound fuzzy, because
 // the parameter resamples finished audio, and narration was moved back to 1.
-const model = process.env.OPENAI_TTS_MODEL || "gpt-4o-mini-tts-2025-12-15";
-/* Narration moved to gpt-audio-mini on Chat Completions; this script still
-   speaks to /v1/audio/speech, which that model does not serve. OPENAI_TTS_MODEL
-   is shared between the two, so a value set for narration would otherwise
-   arrive here and fail with a flat 400 about an unsupported model.
-
-   The shipped preview clips were made by the old model, so they now advertise
-   a voice narration no longer renders exactly. Regenerating them means porting
-   this script to Chat Completions and re-cutting all of assets/voice-preview-*
-   with fresh ?v= strings - worth doing before the old endpoint shuts down on
-   6 January 2027, and not something to stumble into halfway through a run. */
-if (!/^(tts-1|gpt-4o(-mini)?-tts)/.test(model)) {
-  console.error(`This script uses /v1/audio/speech, which does not serve "${model}".`);
-  console.error("Unset OPENAI_TTS_MODEL to use the speech model, or port this to Chat");
-  console.error("Completions the way api/narrate.js now does.");
-  process.exit(1);
-}
+const model = process.env.OPENAI_TTS_MODEL || "gpt-audio-mini";
+// Follows the same rule as api/narrate.js, so a preview is always cut by the
+// model that will narrate - otherwise a parent picks a voice from a sample the
+// story will not match.
+const usesSpeechEndpoint = /^(tts-1|gpt-4o(-mini)?-tts)/.test(model);
 const speed = Number(process.env.OPENAI_TTS_SPEED || 1);
 
 // The shared direction every voice gets, so a preview matches the real thing.
@@ -155,26 +143,85 @@ function buildInstructions(profile) {
     .join(" ");
 }
 
+/* gpt-audio-mini answers rather than reads, and here that would be obvious:
+   the preview is the voice introducing itself by name, so anything invented
+   lands in the one clip a parent listens to before choosing. Same wording
+   api/narrate.js uses, for the same reason. */
+function systemDirectionFor(profile) {
+  return [
+    "You are a text-to-speech engine, not an assistant.",
+    "Speak the user's message aloud word for word, exactly as written.",
+    "Add nothing: no greeting, no reply, no commentary, no continuation, no stage directions.",
+    "Never invent content. Your entire spoken output must be the user's text and nothing else.",
+    buildInstructions(profile),
+    "Everything above changes delivery only - never the words themselves.",
+  ].join(" ");
+}
+
 function requestBody(profile) {
+  if (usesSpeechEndpoint) {
+    return {
+      model,
+      voice: profile.voice,
+      input: previewInputFor(profile.name),
+      instructions: buildInstructions(profile),
+      speed,
+      response_format: "mp3",
+    };
+  }
+
   return {
     model,
-    voice: profile.voice,
-    input: previewInputFor(profile.name),
-    instructions: buildInstructions(profile),
-    speed,
-    response_format: "mp3",
+    modalities: ["text", "audio"],
+    audio: { voice: profile.voice, format: "mp3" },
+    messages: [
+      { role: "system", content: systemDirectionFor(profile) },
+      { role: "user", content: previewInputFor(profile.name) },
+    ],
   };
 }
 
-async function generate(profile) {
-  const response = await fetch("https://api.openai.com/v1/audio/speech", {
+// Punctuation and casing are delivery; the words are what must match.
+function sameWords(a, b) {
+  const words = (value) =>
+    String(value || "").toLowerCase().replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter(Boolean).join(" ");
+  return words(a) === words(b);
+}
+
+async function send(profile) {
+  const url = usesSpeechEndpoint
+    ? "https://api.openai.com/v1/audio/speech"
+    : "https://api.openai.com/v1/chat/completions";
+  const response = await fetch(url, {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify(requestBody(profile)),
   });
 
   if (!response.ok) throw new Error(`${response.status} ${await response.text()}`);
-  return Buffer.from(await response.arrayBuffer());
+  if (usesSpeechEndpoint) return { audio: Buffer.from(await response.arrayBuffer()), spoken: null };
+
+  const payload = await response.json();
+  const part = payload?.choices?.[0]?.message?.audio;
+  if (!part?.data) throw new Error("no audio in the response");
+  return { audio: Buffer.from(part.data, "base64"), spoken: (part.transcript || "").trim() };
+}
+
+/* A preview that says the wrong thing is worse than a missing one: it is the
+   sample a parent judges the whole app's narration by. The transcript says
+   exactly what was spoken, so a stray take is thrown away rather than shipped. */
+async function generate(profile) {
+  const wanted = previewInputFor(profile.name);
+  let last = null;
+
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    const { audio, spoken } = await send(profile);
+    if (spoken === null || sameWords(spoken, wanted)) return audio;
+    last = spoken;
+    console.log(`  retry  ${profile.style.padEnd(18)} said ${JSON.stringify(spoken.slice(0, 70))}`);
+  }
+
+  throw new Error(`never read the preview line; last take was ${JSON.stringify((last || "").slice(0, 90))}`);
 }
 
 (async () => {
@@ -223,7 +270,17 @@ async function generate(profile) {
     process.exit(1);
   }
 
-  const mapping = written.map((p) => `  "${p.style}": "./assets/${p.file}",`).join("\n");
+  /* Everything under assets/ is served immutable for a year, so a clip
+     replaced in place never reaches anyone who has already heard it - not on a
+     reload, not on a hard reload. The old version of this script wrote the
+     paths bare, which would have quietly stripped the ?v= strings already in
+     app.js and left six stale previews in every existing install. Stamp one
+     that is always higher than what is there now. */
+  const today = Number(new Date().toISOString().slice(0, 10).replace(/-/g, "")) * 100;
+  const existing = [...appJs.matchAll(/voice-preview-[a-z-]+\.mp3\?v=(\d+)/g)].map((m) => Number(m[1]));
+  const stamp = Math.max(today, ...existing.map((v) => v + 1));
+
+  const mapping = written.map((p) => `  "${p.style}": "./assets/${p.file}?v=${stamp}",`).join("\n");
   const updated = appJs.replace(
     /const VOICE_PREVIEW_FILES = \{[\s\S]*?\n\};/,
     `const VOICE_PREVIEW_FILES = {\n${mapping}\n};`
@@ -231,7 +288,7 @@ async function generate(profile) {
 
   if (updated === appJs) {
     // Either the mapping already matches, or the block could not be found.
-    if (written.every((p) => appJs.includes(`./assets/${p.file}`))) {
+    if (written.every((p) => appJs.includes(`./assets/${p.file}?v=`))) {
       console.log(`\nVOICE_PREVIEW_FILES already points at all ${written.length} clips.`);
       console.log("Now bump app.js?v= in index.html and run: npm run mobile:sync");
       return;
@@ -241,6 +298,6 @@ async function generate(profile) {
   }
 
   fs.writeFileSync(appJsPath, updated);
-  console.log(`\nPointed VOICE_PREVIEW_FILES at ${written.length} clips.`);
+  console.log(`\nPointed VOICE_PREVIEW_FILES at ${written.length} clips, stamped ?v=${stamp}.`);
   console.log("Now bump app.js?v= in index.html and run: npm run mobile:sync");
 })();
