@@ -2093,7 +2093,77 @@ body.night-mode .story-path-button.active {
 .taste-plus {
   margin: 0;
   opacity: 0.68;
-  font-size: 0.86rem;
+  font-size: 0.8rem;
+}
+
+/* This screen has to carry a pitch and a form, and the form is what the parent
+   came for. Measured at 375x812 with a story waiting, the pitch ran to 299px
+   and pushed the password field to y=761 and the Create Account button to
+   y=886 - both off the bottom of the phone. Everything below buys that space
+   back without dropping anything that was being said. */
+.signup-screen .back-to-story {
+  width: auto;
+  justify-self: start;
+  min-height: 0;
+  margin-bottom: 2px;
+  padding: 7px 14px;
+  font-size: 0.88rem;
+}
+
+.signup-screen .signup-taste {
+  gap: 10px;
+  padding: 12px;
+}
+
+.signup-screen .taste-play {
+  gap: 11px;
+  padding: 10px 12px;
+  border-radius: 14px;
+}
+
+.signup-screen .taste-play-icon {
+  width: 34px;
+  height: 34px;
+}
+
+.signup-screen .taste-list {
+  gap: 7px;
+}
+
+.signup-screen .taste-list li {
+  gap: 10px;
+  font-size: 0.88rem;
+  line-height: 1.3;
+}
+
+.signup-screen .taste-list img {
+  width: 22px;
+  height: 22px;
+}
+
+/* The note under the card title repeats the first line of the list almost word
+   for word when a story is waiting - "This story will be waiting in your
+   library, on every device you sign in on" against "This story, saved on every
+   device you sign in on". The list says it better, so the note stands down
+   rather than saying it twice. */
+#signup-taste:not([hidden]) ~ .signup-card #signup-card-note {
+  display: none;
+}
+
+#signup-taste:not([hidden]) ~ .signup-card #signup-card-title {
+  margin-bottom: 2px;
+  font-size: 1.15rem;
+}
+
+/* The pitch and the form are two cards stacked on a phone, and the default
+   gap between them was most of what still stood between the parent and the
+   Create Account button. */
+.signup-screen .auth-grid {
+  gap: 12px;
+}
+
+.signup-screen .signup-card {
+  padding: 14px;
 }
 
 /* Quiet on purpose. It sits under the story's own actions, after the thing a
