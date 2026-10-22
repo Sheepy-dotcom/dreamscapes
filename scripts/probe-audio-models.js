@@ -2,7 +2,7 @@
 // Answers the three questions that decide whether narration can move off the
 // speech endpoint before it shuts down on 6 January 2027.
 //
-//   vercel env pull                                  # once, writes .env.local
+//   npx vercel env pull                              # once, writes .env.local
 //   node scripts/probe-audio-models.js
 //   node scripts/probe-audio-models.js --model gpt-audio
 //   node scripts/probe-audio-models.js --dry-run     # prints bodies, sends nothing
@@ -71,10 +71,10 @@ const apiKey = process.env.OPENAI_API_KEY || (foundIn ? readEnvFile(foundIn) : n
 if (!apiKey && !dryRun) {
   console.error("No OPENAI_API_KEY found. Bring the project's environment down with:");
   console.error("");
-  console.error("  vercel env pull");
+  console.error("  npx vercel env pull");
   console.error("");
   console.error("That writes .env.local, which this script reads. It is gitignored.");
-  console.error("No Vercel CLI? Copy OPENAI_API_KEY from the project's Settings >");
+  console.error("Not linked? Copy OPENAI_API_KEY from the project's Settings >");
   console.error("Environment Variables into a .env.local line of the same name.");
   process.exit(1);
 }
@@ -90,10 +90,10 @@ if (!dryRun && apiKey.trim().length < MIN_REAL_KEY_LENGTH) {
   console.error(`OPENAI_API_KEY is only ${apiKey.trim().length} characters, so it is not a real key.`);
   console.error("It looks like an example or a truncated copy.");
   console.error("");
-  console.error("  vercel env pull");
+  console.error("  npx vercel env pull");
   console.error("");
   console.error("That writes .env.local, which this script reads. It is gitignored.");
-  console.error("No Vercel CLI? Copy OPENAI_API_KEY from the project's Settings >");
+  console.error("Not linked? Copy OPENAI_API_KEY from the project's Settings >");
   console.error("Environment Variables into a .env.local line of the same name.");
   process.exit(1);
 }
@@ -164,7 +164,7 @@ function stop(kind, message) {
       "The API key was not accepted - it is real enough in shape, but wrong,",
       "revoked, or for another account.",
       "",
-      "  vercel env pull",
+      "  npx vercel env pull",
       "",
       "That rewrites .env.local with the key production is actually using.",
     ],
