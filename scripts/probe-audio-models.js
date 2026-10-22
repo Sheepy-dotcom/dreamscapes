@@ -2,9 +2,14 @@
 // Answers the three questions that decide whether narration can move off the
 // speech endpoint before it shuts down on 6 January 2027.
 //
-//   OPENAI_API_KEY=sk-... node scripts/probe-audio-models.js
-//   OPENAI_API_KEY=sk-... node scripts/probe-audio-models.js --model gpt-audio
+//   vercel env pull                                  # once, writes .env.local
+//   node scripts/probe-audio-models.js
+//   node scripts/probe-audio-models.js --model gpt-audio
 //   node scripts/probe-audio-models.js --dry-run     # prints bodies, sends nothing
+//
+// The key is read from .env.local, or from OPENAI_API_KEY if it is already in
+// the environment. Pasting a key on the command line puts it in the shell
+// history, and twice now the example line itself has been pasted verbatim.
 //
 // OpenAI's named replacement for gpt-4o-mini-tts is gpt-realtime-2.1-mini,
 // which it also says is not supported on /v1/audio/speech - it is a session
@@ -41,19 +46,55 @@ function flag(name, fallback = null) {
 
 const dryRun = process.argv.includes("--dry-run");
 const model = flag("--model", "gpt-audio-mini");
-const apiKey = process.env.OPENAI_API_KEY;
+
+/* `vercel env pull` writes .env.local, which is the least error-prone way to
+   get the key onto this machine: nothing is typed, nothing lands in shell
+   history, and it stays current. Values may be quoted or carry inline
+   comments, so neither survives into the key. */
+function readEnvFile(name) {
+  const file = path.join(root, name);
+  if (!fs.existsSync(file)) return null;
+  for (const line of fs.readFileSync(file, "utf8").split("\n")) {
+    const match = line.match(/^\s*(?:export\s+)?OPENAI_API_KEY\s*=\s*(.*)$/);
+    if (!match) continue;
+    const value = match[1].trim();
+    const quoted = value.match(/^(['"])([\s\S]*?)\1/);
+    return quoted ? quoted[2] : value.split("#")[0].trim();
+  }
+  return null;
+}
+
+const envFiles = [".env.local", ".env"];
+const foundIn = envFiles.find((name) => readEnvFile(name));
+const apiKey = process.env.OPENAI_API_KEY || (foundIn ? readEnvFile(foundIn) : null);
 
 if (!apiKey && !dryRun) {
-  console.error("OPENAI_API_KEY is not set. Copy it from the Vercel project settings:");
-  console.error("Settings > Environment Variables > OPENAI_API_KEY, or run `vercel env pull`.");
+  console.error("No OPENAI_API_KEY found. Bring the project's environment down with:");
+  console.error("");
+  console.error("  vercel env pull");
+  console.error("");
+  console.error("That writes .env.local, which this script reads. It is gitignored.");
+  console.error("No Vercel CLI? Copy OPENAI_API_KEY from the project's Settings >");
+  console.error("Environment Variables into a .env.local line of the same name.");
   process.exit(1);
 }
 
-// Costs nothing to notice here, and saves six round trips and a confusing
-// report when the example line gets pasted verbatim.
-if (!dryRun && /^sk-\.{2,}$|^sk-$|^(your|real)/i.test(apiKey.trim())) {
-  console.error(`OPENAI_API_KEY is still the placeholder ("${apiKey.trim()}").`);
-  console.error("Substitute the real key from the Vercel project settings.");
+/* Every real OpenAI key is far longer than this - legacy ones are 51
+   characters and project keys well over 100 - so a short value is a
+   placeholder, an example line pasted whole, or a truncated copy. Checking the
+   length rather than hunting for words like "your" cannot misfire on a real
+   key, and it costs nothing compared with six round trips and a report that
+   blames the model. */
+const MIN_REAL_KEY_LENGTH = 40;
+if (!dryRun && apiKey.trim().length < MIN_REAL_KEY_LENGTH) {
+  console.error(`OPENAI_API_KEY is only ${apiKey.trim().length} characters, so it is not a real key.`);
+  console.error("It looks like an example or a truncated copy.");
+  console.error("");
+  console.error("  vercel env pull");
+  console.error("");
+  console.error("That writes .env.local, which this script reads. It is gitignored.");
+  console.error("No Vercel CLI? Copy OPENAI_API_KEY from the project's Settings >");
+  console.error("Environment Variables into a .env.local line of the same name.");
   process.exit(1);
 }
 
@@ -120,13 +161,12 @@ function scrub(message) {
 function stop(kind, message) {
   const advice = {
     auth: [
-      "The API key was not accepted.",
+      "The API key was not accepted - it is real enough in shape, but wrong,",
+      "revoked, or for another account.",
       "",
-      "If you pasted the example literally, substitute the real one:",
-      "  OPENAI_API_KEY=sk-your-real-key node scripts/probe-audio-models.js",
+      "  vercel env pull",
       "",
-      "It is in the Vercel project under Settings > Environment Variables >",
-      "OPENAI_API_KEY, or run `vercel env pull` to bring the whole set down.",
+      "That rewrites .env.local with the key production is actually using.",
     ],
     quota: [
       "Rate limited or out of quota, so nothing could be measured.",
@@ -202,6 +242,7 @@ function describe(result, format) {
   }
 
   fs.mkdirSync(outDir, { recursive: true });
+  console.log(`key:   ${process.env.OPENAI_API_KEY ? "OPENAI_API_KEY in the environment" : foundIn}`);
   console.log(`model: ${model}`);
   console.log(`text:  "${PROBE_TEXT}" (${PROBE_TEXT.length} chars)\n`);
 

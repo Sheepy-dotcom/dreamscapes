@@ -31,3 +31,9 @@ __pycache__/
 # Throwaway clips from scripts/probe-audio-models.js - comparison material,
 # not store assets.
 store-assets/audio-probe/
+
+# Secrets pulled down with `vercel env pull`. SUPABASE_SERVICE_ROLE_KEY lands
+# in here, and it must never reach the repo.
+.env
+.env.*
+!.env.example
