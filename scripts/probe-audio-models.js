@@ -44,7 +44,16 @@ const model = flag("--model", "gpt-audio-mini");
 const apiKey = process.env.OPENAI_API_KEY;
 
 if (!apiKey && !dryRun) {
-  console.error("OPENAI_API_KEY is not set. Copy it from the Vercel project settings.");
+  console.error("OPENAI_API_KEY is not set. Copy it from the Vercel project settings:");
+  console.error("Settings > Environment Variables > OPENAI_API_KEY, or run `vercel env pull`.");
+  process.exit(1);
+}
+
+// Costs nothing to notice here, and saves six round trips and a confusing
+// report when the example line gets pasted verbatim.
+if (!dryRun && /^sk-\.{2,}$|^sk-$|^(your|real)/i.test(apiKey.trim())) {
+  console.error(`OPENAI_API_KEY is still the placeholder ("${apiKey.trim()}").`);
+  console.error("Substitute the real key from the Vercel project settings.");
   process.exit(1);
 }
 
@@ -87,6 +96,59 @@ function requestBody({ voice, format }) {
   };
 }
 
+/* A 401 on every format is not an answer about the model, and the first draft
+   of this script reported one as "narration cannot move to this model". Only a
+   400 about the request itself tells us anything about what gpt-audio-mini can
+   do; everything else is the account, the key or the model name, and has to
+   stop the run and say so. */
+function classifyFailure({ status, message, code }) {
+  if (status === 401 || status === 403) return "auth";
+  if (status === 429) return "quota";
+  if (code === "model_not_found" || status === 404 || /does not exist|do not have access/i.test(message)) {
+    return "model";
+  }
+  if (status >= 500) return "server";
+  return "capability";
+}
+
+// OpenAI redacts keys in its own error text, but nothing guarantees that for
+// every error path and these lines get pasted into chats and issues.
+function scrub(message) {
+  return message.replace(/sk-[A-Za-z0-9_-]{8,}/g, "sk-***");
+}
+
+function stop(kind, message) {
+  const advice = {
+    auth: [
+      "The API key was not accepted.",
+      "",
+      "If you pasted the example literally, substitute the real one:",
+      "  OPENAI_API_KEY=sk-your-real-key node scripts/probe-audio-models.js",
+      "",
+      "It is in the Vercel project under Settings > Environment Variables >",
+      "OPENAI_API_KEY, or run `vercel env pull` to bring the whole set down.",
+    ],
+    quota: [
+      "Rate limited or out of quota, so nothing could be measured.",
+      "Check billing on the OpenAI dashboard and run this again.",
+    ],
+    model: [
+      `The model "${model}" is not available on this account.`,
+      "",
+      "Try another with --model, for example:",
+      "  node scripts/probe-audio-models.js --model gpt-audio",
+      "",
+      "Audio models are listed at https://developers.openai.com/api/docs/models",
+    ],
+    server: ["OpenAI returned a server error. This is their side; try again shortly."],
+  }[kind];
+
+  console.error(`\n${advice.join("\n")}`);
+  console.error(`\nThe exact error was: ${scrub(message)}`);
+  console.error("\nNothing was measured, so this says nothing about whether narration can move.");
+  process.exit(1);
+}
+
 async function send(body) {
   const response = await fetch(CHAT_URL, {
     method: "POST",
@@ -104,7 +166,8 @@ async function send(body) {
 
   if (!response.ok) {
     const message = (parsed && parsed.error && parsed.error.message) || text;
-    return { ok: false, status: response.status, message: message.replace(/\s+/g, " ").trim() };
+    const code = (parsed && parsed.error && parsed.error.code) || "";
+    return { ok: false, status: response.status, code, message: message.replace(/\s+/g, " ").trim() };
   }
 
   const audio = parsed && parsed.choices && parsed.choices[0] && parsed.choices[0].message.audio;
@@ -148,7 +211,9 @@ function describe(result, format) {
   for (const format of FORMATS) {
     const result = await send(requestBody({ voice: defaultVoice, format }));
     if (!result.ok) {
-      console.log(`  ${format.padEnd(6)} rejected (${result.status}) ${result.message.slice(0, 150)}`);
+      const kind = classifyFailure(result);
+      if (kind !== "capability") stop(kind, result.message);
+      console.log(`  ${format.padEnd(6)} rejected (${result.status}) ${scrub(result.message).slice(0, 150)}`);
       continue;
     }
     const info = describe(result, format);
@@ -163,7 +228,8 @@ function describe(result, format) {
   }
 
   if (accepted.length === 0) {
-    console.error("\nNo format was accepted. Narration cannot move to this model as it stands.");
+    console.error(`\nEvery format was rejected by ${model} on its own merits, not by the`);
+    console.error("account or the key. Narration cannot move to this model as it stands.");
     process.exit(1);
   }
 
@@ -185,8 +251,10 @@ function describe(result, format) {
   for (const voice of voices) {
     const result = await send(requestBody({ voice, format: probeFormat }));
     if (!result.ok) {
+      const kind = classifyFailure(result);
+      if (kind !== "capability") stop(kind, result.message);
       missing.push(voice);
-      console.log(`  ${voice.padEnd(9)} rejected  ${result.message.slice(0, 110)}`);
+      console.log(`  ${voice.padEnd(9)} rejected  ${scrub(result.message).slice(0, 110)}`);
       continue;
     }
     const info = describe(result, probeFormat);
