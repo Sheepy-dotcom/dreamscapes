@@ -63,6 +63,7 @@ const authForm = document.querySelector("#auth-form");
 const authEmail = document.querySelector("#auth-email");
 const authPassword = document.querySelector("#auth-password");
 const authStatus = document.querySelector("#auth-status");
+const authStatusHome = authStatus ? authStatus.parentElement : null;
 const signupForm = document.querySelector("#signup-form");
 const signupEmail = document.querySelector("#signup-email");
 const signupPassword = document.querySelector("#signup-password");
@@ -1674,16 +1675,60 @@ document.addEventListener("click", (event) => {
   if (button) startProviderSignIn(button.dataset.authProvider);
 });
 
+/* A message nobody can see is the same as no message at all, and both account
+   screens were long enough to lose one. The account screen's status note sits
+   at the very bottom, below the settings accordions; the sign-in form sits at
+   the top. A wrong password was being reported about 380px below the fold of a
+   phone screen, so the parent saw the form sitting there unchanged and assumed
+   it had simply not registered the tap. Move the note to whatever the parent is
+   actually looking at, then check it really is on screen. */
+function placeAuthStatus() {
+  if (!authStatus) return;
+  const signInButton = document.querySelector("#sign-in-button");
+  let anchor = null;
+  if (passwordResetCard && !passwordResetCard.hidden) anchor = passwordResetCard;
+  else if (authSignedOut && !authSignedOut.hidden && signInButton) anchor = signInButton;
+
+  if (anchor) {
+    if (authStatus.previousElementSibling !== anchor) anchor.after(authStatus);
+  } else if (authStatusHome && authStatus.parentElement !== authStatusHome) {
+    authStatusHome.append(authStatus);
+  }
+}
+
+/* The keyboard is usually still up when a form reports a fault, and on iOS it
+   covers the bottom third of the screen without the layout viewport noticing -
+   hence visualViewport rather than innerHeight. Scrolling is instant: a smooth
+   scroll is animation-driven and gets dropped silently when the webview is not
+   animating, which is exactly the moment this matters. */
+function revealStatus(element) {
+  if (!element || !element.textContent.trim()) return;
+  const rect = element.getBoundingClientRect();
+  if (!rect.height) return;
+
+  const view = window.visualViewport;
+  const viewTop = view ? view.offsetTop : 0;
+  const viewHeight = view ? view.height : window.innerHeight;
+  const top = rect.top - viewTop;
+  if (top >= 72 && top + rect.height <= viewHeight - 24) return;
+
+  const drop = top - (viewHeight / 2 - rect.height / 2);
+  window.scrollBy({ top: drop, behavior: "auto" });
+}
+
 function setAuthStatus(message, isError = false) {
   if (!authStatus) return;
+  placeAuthStatus();
   authStatus.textContent = message;
   authStatus.classList.toggle("error", Boolean(isError));
+  if (message) requestAnimationFrame(() => revealStatus(authStatus));
 }
 
 function setSignupStatus(message, isError = false) {
   if (!signupStatus) return;
   signupStatus.textContent = message;
   signupStatus.classList.toggle("error", Boolean(isError));
+  if (message) requestAnimationFrame(() => revealStatus(signupStatus));
 }
 
 function getAuthCredentials() {
@@ -8102,6 +8147,7 @@ document.querySelector("#create-account-button")?.addEventListener("click", asyn
   if (signupForm) signupForm.hidden = true;
   if (sent) sent.hidden = false;
   setSignupStatus("");
+  if (sent) requestAnimationFrame(() => revealStatus(sent));
   trackEvent("account_signed_up");
 });
 

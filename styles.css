@@ -2794,6 +2794,20 @@ body.night-mode .story-path-button.active {
   color: #7f1d45;
 }
 
+/* Night mode is always on, so `body.night-mode .status-note` (0,2,1) quietly
+   outranked the plain `.account-status.error` above (0,2,0) and a wrong
+   password was painted the same soft white as "Signing in..." - the one line
+   that has to look different looked identical. Same fault pill the admin
+   screen already uses. */
+body.night-mode .account-status.error {
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 143, 183, 0.42);
+  border-radius: 12px;
+  background: rgba(255, 86, 140, 0.14);
+  color: #ffd3e3;
+  text-align: left;
+}
+
 .plan-auth-notice {
   display: flex;
   gap: 12px;
