@@ -5195,16 +5195,6 @@ body.night-mode .provider-google {
   list-style: none;
 }
 
-.welcome-points li {
-  display: grid;
-  justify-items: center;
-  gap: 2px;
-  color: rgba(232, 224, 255, 0.82);
-  font-size: 0.76rem;
-  font-weight: 700;
-  line-height: 1.35;
-}
-
 .welcome-points span {
   font-size: 1.5rem;
   line-height: 1;
@@ -5572,8 +5562,7 @@ body.night-mode .provider-google {
 
 /* A soft shadow under the type does the rest of the legibility work, so the
    scrim can stay light enough to see the picture through. */
-.welcome-headline,
-.welcome-points li {
+.welcome-headline {
   text-shadow: 0 2px 10px rgba(6, 8, 30, 0.85);
 }
 
@@ -6040,10 +6029,6 @@ body.night-mode .field-boxed input::placeholder {
   padding-left: 28px;
   padding-right: 24px;
   font-size: 1.05rem;
-}
-
-.welcome-points li {
-  font-size: 0.79rem;
 }
 
 @media (max-height: 700px) {
@@ -9008,9 +8993,15 @@ body.night-mode .builder-step[data-builder-step="8"] .narration-group {
    stronger colour. They sit on the busiest part of the busiest screen, so
    the only thing holding them off the bedspread is their own shadow. */
 .welcome-points li {
+  display: grid;
+  justify-items: center;
   gap: 7px;
   color: rgba(238, 232, 255, 0.9);
   font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.35;
+  /* Shared with .welcome-headline above, which keeps its own copy. */
+  text-shadow: 0 2px 10px rgba(6, 8, 30, 0.85);
 }
 
 .point-icon {
