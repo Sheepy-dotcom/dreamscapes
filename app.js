@@ -21,7 +21,6 @@ const builderStepNextButton = document.querySelector("#builder-step-next");
 const builderStepNextLabel = document.querySelector("#builder-step-next-label");
 const builderStepSub = document.querySelector("#builder-step-sub");
 const generateStoryButton = document.querySelector("#generate-story-button");
-const builderMakeNowButton = document.querySelector("#builder-make-now");
 const statusNote = document.querySelector("#status-note");
 const planNote = document.querySelector("#plan-note");
 const loadingMessage = document.querySelector("#loading-message");
@@ -1164,19 +1163,6 @@ function updateBuilderActions() {
   // person on either screen.
   generateStoryButton.hidden = !isLastStep;
   generateStoryButton.textContent = currentUser ? "Create their story" : "Create their free story";
-
-  /* A way out of the form at the moment the form stops being worth filling in.
-     Everything after the name has a sensible default, so a parent who came to
-     see what this is can have a story now and discover the rest afterwards -
-     the remaining steps are refinement, and asking for all of it before showing
-     anything is how a promise of "a bedtime story" turns into a questionnaire.
-
-     Only once there is a name, because that is the one answer no default can
-     supply, and never on the last step, where Create is already the action. */
-  if (builderMakeNowButton) {
-    const named = Boolean(form?.elements?.childName?.value?.trim());
-    builderMakeNowButton.hidden = isLastStep || !named;
-  }
 }
 
 function setBuilderStep(stepIndex, announce = true) {
@@ -7699,19 +7685,6 @@ builderStepBackButton?.addEventListener("click", () => {
   }
   goToActiveStep(getActiveStepPosition() - 1);
 });
-/* Submits the form rather than calling the generator, so this takes exactly
-   the same path as Create: the signed-out preview, the plan and quota checks
-   when signed in, and the audio rules all still apply. A second way to start a
-   story that skipped any of them would be a second way to get them wrong. */
-builderMakeNowButton?.addEventListener("click", () => {
-  trackEvent("builder_make_now", { step: currentBuilderStep + 1 });
-  form.requestSubmit();
-});
-
-/* The name is what decides whether the button is offered, so the decision has
-   to be revisited as it is typed, not only when the step changes. */
-form?.elements?.childName?.addEventListener("input", () => updateBuilderActions());
-
 builderStepNextButton?.addEventListener("click", () => {
   cancelAutoAdvance();
   if (!validateBuilderStep(currentBuilderStep)) return;
