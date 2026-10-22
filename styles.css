@@ -12093,9 +12093,16 @@ input[type="range"] {
      here are written with the id, and a class selector loses to it every
      time. */
   #welcome-screen.active {
-    /* Lifted, so the child clears the button rather than sitting behind it.
-       The picture is cropped a little harder at the foot for it, which is
-       quilt. */
+    /* A browser steals about 130px for its address bar, which is the whole
+       difference between this and the native app - and it landed on the one
+       part of the picture that sells it. At -8% the child's face sat directly
+       behind the Create button, so a parent on the web saw a plane, a dinosaur
+       and a castle but not the child reading.
+
+       32% moves the crop down rather than scaling the picture, which has to
+       stay at 126%: home-scene.webp is 1206x2607, so at 375px wide it needs
+       123% of the viewport height just to reach both edges. Anything smaller
+       fits more of the composition in and then leaves bars down the sides. */
     background:
       /* Ground under the words. On a screen this short there is no room to
          put the button below the picture, so it sits on it - and the lower
@@ -12108,7 +12115,7 @@ input[type="range"] {
         rgba(16, 22, 64, 0.34) 36%,
         rgba(16, 22, 64, 0) 52%
       ),
-      url("./assets/home-scene.webp?v=2026100900") center -8% / auto 126% no-repeat,
+      url("./assets/home-scene.webp?v=2026100900") center 32% / auto 126% no-repeat,
       linear-gradient(180deg, #141c55 0%, #101640 100%);
   }
 
