@@ -126,6 +126,19 @@ const PROBE_TEXT =
   "out into the cold.";
 const FORMATS = ["mp3", "wav", "opus", "pcm16", "flac", "aac"];
 
+/* Audio OUTPUT dollars per 1M tokens, from the "All models" table on
+   https://developers.openai.com/api/docs/pricing (22 October 2026). Text input
+   is charged separately and is negligible here: the story goes in as text at
+   $0.60/1M, and a whole story is a few thousand text tokens. */
+const AUDIO_OUTPUT_RATES = {
+  "gpt-audio-mini": 20,
+  "gpt-realtime-2.1-mini": 20,
+  "gpt-audio": 64,
+  "gpt-audio-1.5": 64,
+};
+const CURRENT_MODEL = "gpt-4o-mini-tts";
+const CURRENT_AUDIO_OUTPUT_RATE = 12;
+
 /* The speech endpoint takes an `instructions` field and only ever reads what
    it is given. Chat Completions has no such parameter, and the model on the
    other end answers rather than reads: asked warmly to "read this children's
@@ -376,12 +389,24 @@ function verdict(info) {
     // A long bedtime story is around 20 minutes of narration; narrate.js caps
     // a story at MAX_CHUNKS * MAX_CHUNK_LENGTH characters.
     const storyChars = 20 * 3200;
+    const storyTokens = Math.round(perChar * storyChars);
     console.log(`  audio tokens   : ${perRequest.toFixed(0)} per ${PROBE_TEXT.length} chars (${perChar.toFixed(2)}/char)`);
-    console.log(`  a full story   : about ${Math.round(perChar * storyChars).toLocaleString()} audio tokens at the 20-chunk cap`);
-    console.log("  cost           : multiply that by the audio output rate on");
-    console.log("                   https://openai.com/api/pricing and compare with what a story costs today");
+    console.log(`  a full story   : about ${storyTokens.toLocaleString()} audio tokens at the 20-chunk cap`);
     console.log("                   (measured on verbatim readings only, so it is not inflated by");
     console.log("                   a model that talked for longer than it was asked to)");
+
+    const rate = AUDIO_OUTPUT_RATES[model];
+    if (rate) {
+      const now = (storyTokens * CURRENT_AUDIO_OUTPUT_RATE) / 1e6;
+      const then = (storyTokens * rate) / 1e6;
+      console.log("");
+      console.log(`  today          : $${now.toFixed(3)} a story on ${CURRENT_MODEL} at $${CURRENT_AUDIO_OUTPUT_RATE}/1M`);
+      console.log(`  on ${model.padEnd(15)}: $${then.toFixed(3)} a story at $${rate}/1M`);
+      console.log(`  difference     : ${(then / now).toFixed(2)}x. Audio length barely changes, so this is`);
+      console.log("                   the rate, not the model being more talkative.");
+    } else {
+      console.log(`\n  No published audio rate held for ${model}; check the Pricing page.`);
+    }
   }
 
   if (strayed.length === 0 && present.length === voices.length) {
