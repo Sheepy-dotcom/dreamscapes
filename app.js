@@ -2650,7 +2650,18 @@ function getRevenueCatErrorMessage(error, fallback = "Purchase could not be star
     .join(" ");
 
   if (/configuration|offering|product|billing|store|entitlement/i.test(message)) {
-    return "Purchases are not available just now. Please try again later or contact support.";
+    /* This rule exists so a parent at bedtime is not shown a StoreKit dump,
+       and it works - but it also threw away the only description of what is
+       actually wrong, which is how "purchases do not work" stayed a mystery
+       across several builds. The owner is the one person who can act on the
+       real text and the one person who will never be surprised by it, so they
+       get it and nobody else does. */
+    const generic = "Purchases are not available just now. Please try again later or contact support.";
+    if (!isCurrentUserAdmin()) return generic;
+
+    const code = String(error?.readableErrorCode || error?.userInfo?.readableErrorCode || "").trim();
+    const detail = code && !message.includes(code) ? `${code} - ${message}` : message;
+    return `${generic}  |  ADMIN: ${detail}`.slice(0, 600);
   }
 
   return getFriendlyFaultMessage(message, fallback);
