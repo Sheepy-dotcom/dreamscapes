@@ -8085,10 +8085,25 @@ document.querySelector("#sign-in-button")?.addEventListener("click", async () =>
   }
 
   setAuthStatus("Signing in...");
-  const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
-  if (error) {
-    setAuthStatus(getFriendlyFaultMessage(error, "Sign in could not be completed. Please try again."), true);
+  // Same trap as sign-up: a rejection here left "Signing in..." on screen for
+  // ever rather than saying anything a parent could act on.
+  let signInError = null;
+  try {
+    ({ error: signInError } = await supabaseClient.auth.signInWithPassword({ email, password }));
+  } catch (thrown) {
+    trackEvent("account_signin_interrupted", {
+      reason: String(thrown?.name || thrown?.message || "unknown").slice(0, 80),
+    });
+    setAuthStatus(
+      getFriendlyFaultMessage(thrown, "Sign in could not be completed. Check your connection and try again."),
+      true
+    );
+    return;
+  }
+
+  if (signInError) {
+    setAuthStatus(getFriendlyFaultMessage(signInError, "Sign in could not be completed. Please try again."), true);
     return;
   }
 
@@ -8216,10 +8231,40 @@ document.querySelector("#create-account-button")?.addEventListener("click", asyn
   }
 
   setSignupStatus("Creating account...");
-  const { error } = await supabaseClient.auth.signUp({ email, password });
 
-  if (error) {
-    setSignupStatus(getFriendlyFaultMessage(error, "Account could not be created. Please try again."), true);
+  /* signUp rejects, rather than returning an error, when the request never
+     completes - a dropped connection, or our own 20 second auth deadline
+     firing while Supabase is still handing the confirmation email to Resend.
+     There was no catch here, so the handler stopped at the await: the parent
+     was left reading "Creating account..." indefinitely with no way forward,
+     and trackEvent("account_signed_up") on the last line never ran. That is
+     why the event stops dead on 8 October while accounts kept appearing in
+     auth.users.
+
+     The account usually does exist in that case - the request reached
+     Supabase, only the answer was lost - so this must not claim it failed and
+     send them round to "already registered" on the retry. */
+  let signUpError = null;
+  try {
+    ({ error: signUpError } = await supabaseClient.auth.signUp({ email, password }));
+  } catch (thrown) {
+    const lost =
+      thrown?.name === "AbortError" ||
+      /abort|failed to fetch|networkerror|load failed|timeout/i.test(String(thrown?.message || ""));
+    trackEvent("account_signup_interrupted", {
+      reason: String(thrown?.name || thrown?.message || "unknown").slice(0, 80),
+    });
+    setSignupStatus(
+      lost
+        ? "That took too long to confirm. Check your email - if a confirmation link has arrived, your account is ready and you can open it. If not, try again."
+        : getFriendlyFaultMessage(thrown, "Account could not be created. Please try again."),
+      true
+    );
+    return;
+  }
+
+  if (signUpError) {
+    setSignupStatus(getFriendlyFaultMessage(signUpError, "Account could not be created. Please try again."), true);
     return;
   }
 
@@ -8230,7 +8275,6 @@ document.querySelector("#create-account-button")?.addEventListener("click", asyn
   if (authEmail) authEmail.value = email;
   if (authPassword) authPassword.value = "";
   if (signupPassword) signupPassword.value = "";
-  if (signupPasswordConfirm) signupPasswordConfirm.value = "";
 
   const signupForm = document.querySelector("#signup-form");
   const sent = document.querySelector("#signup-sent");
