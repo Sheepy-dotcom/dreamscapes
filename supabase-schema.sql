@@ -182,6 +182,10 @@ create trigger redeem_codes_set_updated_at
 before update on public.redeem_codes
 for each row execute function public.set_updated_at();
 
+-- Never allowed to fail a sign-up. "Database error saving new user" is what
+-- GoTrue reports when this trigger raises, and it fails the whole sign-up for
+-- the sake of a row that lib/auth.js can create later on its own. The error is
+-- still recorded - Supabase > Logs > Postgres - just not fatal.
 create or replace function public.create_profile_for_new_user()
 returns trigger
 language plpgsql
@@ -189,10 +193,16 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into public.profiles (id, email)
-  values (new.id, new.email)
-  on conflict (id) do update
-    set email = excluded.email;
+  begin
+    insert into public.profiles (id, email)
+    values (new.id, new.email)
+    on conflict (id) do update
+      set email = excluded.email;
+  exception
+    when others then
+      raise warning 'create_profile_for_new_user failed for % (%): % [%]',
+        new.id, new.email, sqlerrm, sqlstate;
+  end;
 
   return new;
 end;
@@ -210,9 +220,15 @@ security definer
 set search_path = public
 as $$
 begin
-  update public.profiles
-  set email = new.email
-  where id = new.id;
+  begin
+    update public.profiles
+    set email = new.email
+    where id = new.id;
+  exception
+    when others then
+      raise warning 'sync_profile_email_from_auth failed for % (%): % [%]',
+        new.id, new.email, sqlerrm, sqlstate;
+  end;
 
   return new;
 end;
