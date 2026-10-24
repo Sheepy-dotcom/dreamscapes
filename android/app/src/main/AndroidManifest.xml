@@ -22,6 +22,26 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- Confirmation links in our own emails open the app instead of a
+                 browser. autoVerify makes Android fetch
+                 /.well-known/assetlinks.json on install and check the signing
+                 certificate against it, so no chooser dialog appears and no
+                 other app can claim the link.
+
+                 Scoped to /confirm rather than the whole host, because the
+                 rest of dreamscapes.cloud is a website people should be able
+                 to read in a browser. www only: the apex redirects, and
+                 verification does not follow redirects. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="www.dreamscapes.cloud"
+                    android:pathPrefix="/confirm" />
+            </intent-filter>
+
         </activity>
 
         <provider

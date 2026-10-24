@@ -1794,6 +1794,87 @@ function clearEmailLinkFromUrl() {
   window.history.replaceState({}, document.title, window.location.pathname);
 }
 
+/* The app claims its own confirmation links, so tapping one in Mail opens
+   DreamScapes rather than Safari. The association files have been live since
+   September (/.well-known/apple-app-site-association and assetlinks.json);
+   what was missing was the entitlement, the intent filter, and this - nothing
+   was listening, so even a link that opened the app did nothing once it got
+   there.
+
+   Resolved the same way as the audio and purchase plugins, because
+   Capacitor.Plugins starts empty and is only filled by registerPlugin. */
+let capacitorAppPlugin = null;
+function getCapacitorAppPlugin() {
+  if (!isNativeMobileApp()) return null;
+  if (capacitorAppPlugin) return capacitorAppPlugin;
+
+  const capacitor = window.Capacitor;
+  if (!capacitor) return null;
+
+  const registered = capacitor.Plugins?.App;
+  if (registered) {
+    capacitorAppPlugin = registered;
+    return capacitorAppPlugin;
+  }
+
+  const advertised = capacitor.PluginHeaders?.some((header) => header.name === "App");
+  if (!advertised || typeof capacitor.registerPlugin !== "function") return null;
+
+  capacitorAppPlugin = capacitor.registerPlugin("App");
+  return capacitorAppPlugin;
+}
+
+/* A link arriving this way carries the token in its own query string, not in
+   the address of the page we are running from - the app is served from the
+   bundle, so window.location never changes. Read it off the incoming url
+   instead and hand it to the same exchange the web uses. */
+function getEmailLinkActionFromUrl(url) {
+  try {
+    const query = new URL(url).searchParams;
+    const tokenHash = query.get("token_hash");
+    if (!tokenHash) return null;
+    return { tokenHash, type: query.get("type") || "email" };
+  } catch {
+    // Not a url we can parse; nothing to confirm.
+    return null;
+  }
+}
+
+async function handleDeepLink(url) {
+  const action = getEmailLinkActionFromUrl(url);
+  if (!action) return;
+
+  // The listener can fire before the client exists, on a cold start from a tap.
+  if (!(await ensureSupabaseClient())) {
+    setAuthStatus("Account login could not load. Check your connection and refresh DreamScapes.", true);
+    return;
+  }
+
+  trackEvent("deep_link_opened", { type: action.type });
+  await completeEmailLink(action);
+}
+
+function listenForDeepLinks() {
+  const plugin = getCapacitorAppPlugin();
+  if (!plugin?.addListener) return;
+
+  plugin.addListener("appUrlOpen", (event) => {
+    if (event?.url) handleDeepLink(event.url);
+  });
+
+  /* A cold start does not replay appUrlOpen, so the link that launched the app
+     would otherwise be lost between the tap and the listener being added. */
+  if (typeof plugin.getLaunchUrl === "function") {
+    Promise.resolve(plugin.getLaunchUrl())
+      .then((launch) => {
+        if (launch?.url) handleDeepLink(launch.url);
+      })
+      .catch(() => {
+        // No launch url, or the plugin does not offer one. Nothing to do.
+      });
+  }
+}
+
 // Confirming on a phone browser leaves the parent in the browser when the app
 // is where they were heading. Until the app claims these links itself - which
 // needs Universal Links and a new build - the next best thing is one tap back
@@ -9992,6 +10073,7 @@ window.visualViewport?.addEventListener("scroll", updateKeyboardOpenState);
 updatePlanFeatures();
 updateAccountUI();
 ensureSupabaseClient();
+listenForDeepLinks();
 renderAuthProviders();
 
 /* ---------------------------------------------------------------------------

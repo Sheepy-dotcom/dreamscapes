@@ -37,3 +37,9 @@ store-assets/audio-probe/
 .env
 .env.*
 !.env.example
+
+# iCloud sync duplicates. The repo lives under ~/Documents, and iCloud
+# resolves its own conflicts by writing "name 2.ext" beside the original.
+# Android refuses to build when one lands in res/, so they must never be
+# committed and are better deleted on sight.
+*[ ][0-9].*

@@ -6,5 +6,17 @@
 	<array>
 		<string>Default</string>
 	</array>
+	<!-- Claims the confirmation links in our own emails so they open the app
+	     rather than Safari. The file they are checked against is already live
+	     at /.well-known/apple-app-site-association and names
+	     JX5LYD6MZ2.cloud.dreamscapes.app for the /confirm path.
+
+	     www only. The apex 307-redirects to www, and iOS will not follow a
+	     redirect when fetching the association file, so claiming
+	     dreamscapes.cloud would fail silently and look like a code fault. -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:www.dreamscapes.cloud</string>
+	</array>
 </dict>
 </plist>
