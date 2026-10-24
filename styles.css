@@ -2869,6 +2869,31 @@ body.night-mode .story-path-button.active {
    password was painted the same soft white as "Signing in..." - the one line
    that has to look different looked identical. Same fault pill the admin
    screen already uses. */
+/* Sits under the resend buttons on both screens. Quieter than the fault pill
+   above it: this is usually good news, and the one error it shows is a rate
+   limit rather than anything broken. */
+.resend-status {
+  margin: 8px 0 0;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: rgba(226, 219, 255, 0.78);
+  text-align: center;
+}
+
+.resend-status:empty {
+  display: none;
+}
+
+.resend-status.error {
+  color: #ffd3e3;
+}
+
+.signin-resend,
+.signup-resend {
+  margin-top: 10px;
+  font-size: 0.92rem;
+}
+
 body.night-mode .account-status.error {
   padding: 10px 12px;
   border: 1px solid rgba(255, 143, 183, 0.42);

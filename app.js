@@ -8103,9 +8103,12 @@ document.querySelector("#sign-in-button")?.addEventListener("click", async () =>
   }
 
   if (signInError) {
+    setSigninResendVisible(/email not confirmed|not confirmed/i.test(String(signInError?.message || "")));
     setAuthStatus(getFriendlyFaultMessage(signInError, "Sign in could not be completed. Please try again."), true);
     return;
   }
+
+  setSigninResendVisible(false);
 
   setAuthStatus("Signed in.");
   trackEvent("account_signed_in");
@@ -8214,6 +8217,95 @@ document.querySelector("#preview-sign-in-button")?.addEventListener("click", () 
   setAuthStatus("Sign in and this story will be saved to your library.");
   showScreen("account");
   trackEvent("preview_account_signin_selected");
+});
+
+/* An unconfirmed account cannot be signed into, and until now there was no way
+   to ask for another link from inside the app. If the first email was missed,
+   expired, or was invalidated by tapping Create account a second time, that
+   was the end of it - 204 accounts were sitting in exactly that state, and the
+   expired-link message already told people to "ask for a new one" with nowhere
+   to do it.
+
+   Supabase rate-limits resends, so this holds itself shut for a minute
+   afterwards and says so. Earning a rate-limit error would read like yet
+   another fault to someone already convinced the app is broken. */
+const RESEND_COOLDOWN_MS = 60000;
+let resendAvailableAt = 0;
+
+async function resendConfirmationEmail({ email, setStatus, button }) {
+  const waitMs = resendAvailableAt - Date.now();
+  if (waitMs > 0) {
+    setStatus(`Just sent. You can ask again in ${Math.ceil(waitMs / 1000)} seconds.`);
+    return;
+  }
+
+  const address = String(email || "").trim();
+  if (!address) {
+    setStatus("Enter your email address first, then press this again.", true);
+    return;
+  }
+
+  if (!(await ensureSupabaseClient())) {
+    setStatus("Could not reach DreamScapes. Check your connection and try again.", true);
+    return;
+  }
+
+  if (button) button.disabled = true;
+  setStatus("Sending...");
+
+  let resendError = null;
+  try {
+    ({ error: resendError } = await supabaseClient.auth.resend({ type: "signup", email: address }));
+  } catch (thrown) {
+    // Same trap as sign-up: a rejection here would otherwise leave "Sending..."
+    // on screen for ever.
+    resendError = thrown;
+  }
+
+  if (button) button.disabled = false;
+
+  if (resendError) {
+    trackEvent("confirmation_resend_failed", {
+      reason: String(resendError?.message || resendError?.name || "unknown").slice(0, 80),
+    });
+    setStatus(getFriendlyFaultMessage(resendError, "That could not be sent. Please try again."), true);
+    return;
+  }
+
+  resendAvailableAt = Date.now() + RESEND_COOLDOWN_MS;
+  trackEvent("confirmation_resend_sent");
+  setStatus(`Sent again to ${address}. Give it a minute, and look in junk or spam.`);
+}
+
+function setResendStatus(id, message, isError = false) {
+  const note = document.querySelector(id);
+  if (!note) return;
+  note.textContent = message;
+  note.classList.toggle("error", Boolean(isError));
+}
+
+// Only offered when that is genuinely the fault, so it does not sit on the
+// sign-in form inviting people with a mistyped password to resend emails.
+function setSigninResendVisible(visible) {
+  const button = document.querySelector("#signin-resend");
+  if (button) button.hidden = !visible;
+  if (!visible) setResendStatus("#signin-resend-status", "");
+}
+
+document.querySelector("#signup-resend")?.addEventListener("click", (event) => {
+  resendConfirmationEmail({
+    email: document.querySelector("#signup-sent-email")?.textContent,
+    setStatus: (message, isError) => setResendStatus("#signup-resend-status", message, isError),
+    button: event.currentTarget,
+  });
+});
+
+document.querySelector("#signin-resend")?.addEventListener("click", (event) => {
+  resendConfirmationEmail({
+    email: authEmail?.value,
+    setStatus: (message, isError) => setResendStatus("#signin-resend-status", message, isError),
+    button: event.currentTarget,
+  });
 });
 
 document.querySelector("#create-account-button")?.addEventListener("click", async () => {

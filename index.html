@@ -37,7 +37,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026102210" />
+    <link rel="stylesheet" href="./styles.css?v=2026102404" />
   </head>
   <body class="home-active night-mode">
     <svg class="art-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -791,6 +791,10 @@
                 </label>
                 <button class="signin-forgot" id="forgot-password-button" type="button">Forgot password?</button>
                 <button class="button primary-button signin-submit" id="sign-in-button" type="button">Sign in</button>
+                <button class="button secondary-button signin-resend" id="signin-resend" type="button" hidden>
+                  Send the confirmation email again
+                </button>
+                <p class="resend-status" id="signin-resend-status" role="status"></p>
                 <div class="auth-providers" id="auth-providers-signin" data-provider-divider="before" hidden>
                   <div class="auth-divider"><span>or</span></div>
                 </div>
@@ -1153,6 +1157,10 @@
                 to sign in until it is clicked, so if it is not there in a minute,
                 look in junk or spam.
               </p>
+              <button class="button secondary-button signup-resend" id="signup-resend" type="button">
+                Send the email again
+              </button>
+              <p class="resend-status" id="signup-resend-status" role="status"></p>
               <button class="button secondary-button" data-screen-target="account" type="button">
                 Back to sign in
               </button>
@@ -1418,6 +1426,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js?v=2026101505"></script>
-    <script src="./app.js?v=2026102403"></script>
+    <script src="./app.js?v=2026102404"></script>
   </body>
 </html>
