@@ -294,10 +294,12 @@ const REVENUECAT_API_KEYS = {
 const REVENUECAT_PRODUCT_IDS = {
   premier: "dreamscapes_premier_monthly",
   plus: "dreamscapes_plus_monthly",
+  family: "dreamscapes_family_monthly",
 };
 const REVENUECAT_ENTITLEMENTS = {
   premier: ["dreamscapes_premier", "premier"],
   plus: ["dreamscapes_plus", "plus"],
+  family: ["dreamscapes_family", "family"],
 };
 const STORY_LANGUAGES = {
   "en-GB": {
@@ -614,6 +616,9 @@ const plans = {
     audioMinutes: 0,
     note: "Free package: one story to try, 3 saved stories, no audio narration.",
   },
+  /* Withdrawn from sale. `retired` keeps it out of everything that offers a
+     plan while leaving it a real plan for the people already paying for it -
+     their card, their limits and their renewals all carry on. */
   premier: {
     label: "Premier",
     price: "£4.99/month",
@@ -624,6 +629,7 @@ const plans = {
     canUseAudio: false,
     savedLimit: 15,
     audioMinutes: 0,
+    retired: true,
     note: "Premier package: £4.99/month for 15 stories, saved story library, and stories up to 20 minutes.",
   },
   plus: {
@@ -638,12 +644,25 @@ const plans = {
     audioMinutes: 200,
     note: "DreamScapes Plus: £9.99/month for 30 stories, larger saved library, audio narration, 200 audio minutes, and stories up to 30 minutes.",
   },
+  family: {
+    label: "DreamScapes Family",
+    price: "£19.99/month",
+    summary: "£19.99/month, 45 stories, 45 min + 300 audio minutes",
+    monthlyStories: 45,
+    maxDuration: 45,
+    canSave: true,
+    canUseAudio: true,
+    savedLimit: 100,
+    audioMinutes: 300,
+    note: "DreamScapes Family: £19.99/month for 45 stories, 100 saved stories, audio narration, 300 audio minutes, and stories up to 45 minutes.",
+  },
 };
 
 const planRanks = {
   free: 0,
   premier: 1,
   plus: 2,
+  family: 3,
 };
 
 const moodDetails = {
@@ -2750,6 +2769,9 @@ function getRevenueCatErrorMessage(error, fallback = "Purchase could not be star
 
 function getPlanFromCustomerInfo(customerInfo) {
   const active = customerInfo?.entitlements?.active || {};
+  // Highest first: somebody who upgrades holds both entitlements for a while,
+  // and reading that as the lower one would take away what they just bought.
+  if (REVENUECAT_ENTITLEMENTS.family.some((id) => active[id])) return "family";
   if (REVENUECAT_ENTITLEMENTS.plus.some((id) => active[id])) return "plus";
   if (REVENUECAT_ENTITLEMENTS.premier.some((id) => active[id])) return "premier";
   return "free";
@@ -3761,6 +3783,9 @@ const PLAN_ICONS = {
   free: "plan-card-free",
   premier: "plan-card-premier",
   plus: "plan-card-plus",
+  // No art of its own yet, so it borrows the Plus card rather than showing a
+  // gap where every other tier has a picture.
+  family: "plan-card-plus",
 };
 
 function planIcon(name) {
@@ -3835,7 +3860,7 @@ function renderPlansScreen() {
     </div>`;
 
   others.innerHTML = Object.entries(plans)
-    .filter(([key]) => key !== planKey)
+    .filter(([key, other]) => key !== planKey && !other.retired)
     .map(([key, other]) => {
       // "Included" rather than a price for a tier the parent is already above:
       // offering someone a downgrade they did not ask for is not a feature.
@@ -7973,7 +7998,7 @@ function handleDurationChoiceChange(input) {
 
   keepDurationWithinPlan(plan);
   syncDurationChoiceHighlight();
-  planNote.textContent = `${plan.label} includes stories up to ${plan.maxDuration} minutes. Open Plans to choose Premier or DreamScapes Plus.`;
+  planNote.textContent = `${plan.label} includes stories up to ${plan.maxDuration} minutes. Open Plans to choose DreamScapes Plus or Family.`;
 }
 
 durationInputs.forEach((input) => {
@@ -8867,7 +8892,7 @@ form.addEventListener("submit", async (event) => {
   }
 
   if (selectedDuration > selectedPlan.maxDuration) {
-    planNote.textContent = `${selectedPlan.label} includes stories up to ${selectedPlan.maxDuration} minutes. Open Plans to choose Premier or DreamScapes Plus.`;
+    planNote.textContent = `${selectedPlan.label} includes stories up to ${selectedPlan.maxDuration} minutes. Open Plans to choose DreamScapes Plus or Family.`;
     showScreen("upgrade");
     return;
   }
@@ -9020,7 +9045,7 @@ async function renderLibrary() {
       <article class="library-item library-empty">
         <img class="library-empty-art" src="./assets/story-loading.png?v=2026101505" alt="" />
         <h3>No saved stories yet</h3>
-        <p>${usingCloudLibrary ? "Stories you create while signed in will save to your cloud library." : "Free saves up to 3 stories here. Premier and Plus save more."}</p>
+        <p>${usingCloudLibrary ? "Stories you create while signed in will save to your cloud library." : "Free saves up to 3 stories here. Plus and Family save more."}</p>
         <button class="button primary-button" data-screen-target="builder" type="button">Create a Story</button>
       </article>
     `;

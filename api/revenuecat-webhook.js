@@ -8,17 +8,21 @@ const entitlementPlanMap = {
   dreamscapes_plus: "plus",
   dreamscapes_Plus: "plus",
   plus: "plus",
+  dreamscapes_family: "family",
+  family: "family",
 };
 
 const productPlanMap = {
   dreamscapes_premier_monthly: "premier",
   dreamscapes_plus_monthly: "plus",
+  dreamscapes_family_monthly: "family",
 };
 
 const paidPlanRank = {
   free: 0,
   premier: 1,
   plus: 2,
+  family: 3,
 };
 
 function getAuthHeader(request) {
