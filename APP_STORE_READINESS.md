@@ -12,7 +12,8 @@
 ## Products
 
 - DreamScapes Premier monthly: 15 stories/month, saved library, stories up to 20 minutes.
-- DreamScapes Plus monthly: 30 stories/month, saved library, stories up to 30 minutes, 150 audio minutes/month.
+- DreamScapes Plus monthly: 20 stories/month, saved library, stories up to 30 minutes, 200 audio minutes/month.
+- DreamScapes Family monthly: 45 stories/month, 100 saved stories, stories up to 45 minutes, 300 audio minutes/month.
 - Free: 3 stories/month, 5 and 10 minute text stories.
 
 ## Audio Support

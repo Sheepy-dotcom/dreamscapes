@@ -635,14 +635,14 @@ const plans = {
   plus: {
     label: "DreamScapes Plus",
     price: "£9.99/month",
-    summary: "£9.99/month, 30 stories, 30 min + audio",
-    monthlyStories: 30,
+    summary: "£9.99/month, 20 stories, 30 min + audio",
+    monthlyStories: 20,
     maxDuration: 30,
     canSave: true,
     canUseAudio: true,
     savedLimit: 30,
     audioMinutes: 200,
-    note: "DreamScapes Plus: £9.99/month for 30 stories, larger saved library, audio narration, 200 audio minutes, and stories up to 30 minutes.",
+    note: "DreamScapes Plus: £9.99/month for 20 stories, larger saved library, audio narration, 200 audio minutes, and stories up to 30 minutes.",
   },
   family: {
     label: "DreamScapes Family",
