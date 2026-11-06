@@ -37,7 +37,7 @@
       href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=2026110601" />
+    <link rel="stylesheet" href="./styles.css?v=2026110602" />
   </head>
   <body class="home-active night-mode">
     <svg class="art-defs" width="0" height="0" aria-hidden="true" focusable="false">
@@ -80,6 +80,11 @@
           <button class="button primary-button" id="start-button" type="button"><span>Create their free story</span><span class="cta-chevron" aria-hidden="true"></span></button>
         </div>
         <p class="welcome-offer" id="welcome-offer" hidden>No account needed</p>
+        <button class="welcome-trial" id="welcome-trial" type="button" hidden>
+          <span class="welcome-trial-badge" id="welcome-trial-badge">7 days free</span>
+          <span class="welcome-trial-text">Try Plus &#8212; audio narration and longer stories</span>
+          <span class="welcome-trial-go" aria-hidden="true">&#8250;</span>
+        </button>
         <ul class="welcome-points">
           <li><span class="point-icon" aria-hidden="true"><img src="./assets/home-icon-create.webp?v=2026101016" alt="" /></span>Personalised just for them</li>
           <li><span class="point-icon" aria-hidden="true"><img src="./assets/home-icon-listen.webp?v=2026101016" alt="" /></span>Read together or let them listen</li>
@@ -1302,6 +1307,32 @@
            screens: a parent who is finishing a bedtime story should be able
            to leave from any of them with one tap, and the router's history
            is not worth fighting for that. -->
+      <div class="trial-sheet-wrap" id="trial-sheet" role="dialog" aria-labelledby="trial-sheet-title" hidden>
+        <div class="trial-sheet">
+          <div class="outro-bar">
+            <button class="reveal-icon-button outro-close" id="trial-close" type="button" aria-label="Close"><span aria-hidden="true">&#215;</span></button>
+          </div>
+          <p class="trial-eyebrow" id="trial-eyebrow">7 days free</p>
+          <h2 class="trial-title" id="trial-sheet-title">Hear tonight&rsquo;s story read aloud</h2>
+          <p class="trial-copy">
+            DreamScapes Plus narrates every story in a storyteller&rsquo;s voice, so you can
+            lie beside them and just listen too.
+          </p>
+          <ul class="trial-points">
+            <li><span aria-hidden="true">&#10003;</span> Audio narration, six voices</li>
+            <li><span aria-hidden="true">&#10003;</span> 30 stories a month, up to 30 minutes</li>
+            <li><span aria-hidden="true">&#10003;</span> Saved on every device you sign in on</li>
+          </ul>
+          <div class="trial-actions">
+            <button class="button primary-button" id="trial-start" type="button">Start my 7 days free</button>
+            <button class="button secondary-button" id="trial-later" type="button">Not tonight</button>
+          </div>
+          <p class="trial-small" id="trial-small">
+            Free for 7 days, then &pound;9.99 a month. Cancel any time before it ends and you pay nothing.
+          </p>
+        </div>
+      </div>
+
       <div class="story-outro" id="story-outro" role="dialog" aria-label="Story finished" hidden>
         <div class="outro-sheet" id="outro-sheet">
           <div class="outro-bar">
@@ -1429,6 +1460,6 @@
       window.DREAMSCAPES_REVENUECAT_ANDROID_KEY = "goog_uQDLpGdzwbNFwBTAjvfdvyQOlqQ";
     </script>
     <script src="./assets/supabase.js?v=2026101505"></script>
-    <script src="./app.js?v=2026110601"></script>
+    <script src="./app.js?v=2026110602"></script>
   </body>
 </html>

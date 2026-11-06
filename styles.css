@@ -12166,3 +12166,150 @@ input[type="range"] {
     height: 30px;
   }
 }
+
+/* ---- Free trial -----------------------------------------------------------
+   The pill sits in the same slot as "No account needed", so the home screen
+   gains no height for it. That screen has no height to give: a browser's
+   address bar already crops the picture, and anything added below the button
+   pushes the child out of frame. */
+.welcome-trial {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(420px, 100%);
+  margin: 12px auto 0;
+  padding: 9px 12px 9px 10px;
+  border: 1px solid rgba(255, 193, 77, 0.5);
+  border-radius: 999px;
+  background: rgba(255, 193, 77, 0.12);
+  color: #fdf6e6;
+  font: inherit;
+  font-size: 0.82rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.welcome-trial-badge {
+  flex: none;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ffd45c, #ffb02e);
+  color: #2a1b00;
+  font-size: 0.74rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.welcome-trial-text {
+  flex: 1;
+  line-height: 1.3;
+}
+
+.welcome-trial-go {
+  flex: none;
+  opacity: 0.75;
+  font-size: 1.1rem;
+  font-weight: 900;
+}
+
+/* Same shape as the story outro, so it reads as part of the app rather than
+   an advert that wandered in. */
+.trial-sheet-wrap {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  align-items: end;
+  padding: calc(var(--safe-top) + 12px) 0 0;
+  background: rgba(7, 10, 36, 0.72);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  overscroll-behavior: contain;
+}
+
+.trial-sheet {
+  position: relative;
+  width: min(460px, 100%);
+  max-height: 100%;
+  margin: 0 auto;
+  padding: 10px 24px calc(22px + var(--safe-bottom));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 30px 30px 0 0;
+  background: linear-gradient(180deg, #1b2360 0%, #141b4c 58%, #10163f 100%);
+  box-shadow: 0 -24px 60px rgba(4, 6, 28, 0.55);
+  color: var(--white);
+  text-align: center;
+  animation: outro-rise 0.32s cubic-bezier(0.22, 0.9, 0.3, 1) both;
+}
+
+.trial-eyebrow {
+  display: inline-block;
+  margin: 0 0 10px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ffd45c, #ffb02e);
+  color: #2a1b00;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.trial-title {
+  margin: 0 0 10px;
+  font-size: 1.4rem;
+  line-height: 1.22;
+  font-weight: 900;
+}
+
+.trial-copy {
+  margin: 0 0 18px;
+  color: rgba(226, 219, 255, 0.86);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.trial-points {
+  display: grid;
+  gap: 9px;
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+
+.trial-points li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
+.trial-points li span {
+  flex: none;
+  color: #ffd45c;
+  font-weight: 900;
+}
+
+.trial-actions {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 14px;
+}
+
+/* The price and the length of the trial, in the same breath as the button.
+   Burying either is the thing that gets an app a reputation. */
+.trial-small {
+  margin: 0;
+  color: rgba(226, 219, 255, 0.62);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+/* A sheet over a scrolling page that still scrolls behind it is how a parent
+   loses their place in a story. */
+body.trial-sheet-open {
+  overflow: hidden;
+}

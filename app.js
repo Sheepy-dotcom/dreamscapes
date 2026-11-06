@@ -1262,6 +1262,92 @@ function setBuilderStep(stepIndex, announce = true) {
   }
 }
 
+/* Advertised only once it exists. Nothing is configured in App Store Connect
+   or Play yet and purchases do not complete, so a banner promising seven free
+   days would be a promise the app cannot keep - and an offer advertised in the
+   app that the product does not carry is a review rejection on its own. Flip
+   this to true when the introductory offer is live in both stores. */
+const FREE_TRIAL_ENABLED = false;
+const FREE_TRIAL_DAYS = 7;
+const TRIAL_SHEET_SEEN_KEY = "dreamscapesTrialSheetSeen";
+
+/* Who it is for, and when. Not a stranger: somebody who has not made a story
+   yet is being sold narration for a story they have never heard, and the home
+   screen's job at that moment is the free story, not a price. Not a
+   subscriber either, obviously. So: signed in, still on Free, and has at
+   least one story to their name. */
+function canOfferFreeTrial() {
+  if (!FREE_TRIAL_ENABLED) return false;
+  if (!currentUser) return false;
+  return getCurrentPlanKey() === "free";
+}
+
+function hasMadeAStory() {
+  if (Array.isArray(cloudStories) && cloudStories.length > 0) return true;
+  try {
+    const saved = JSON.parse(localStorage.getItem("dreamscapesStories") || "[]");
+    if (Array.isArray(saved) && saved.length > 0) return true;
+  } catch {
+    // Unreadable storage is not a reason to start selling to them.
+  }
+  return readPendingPreviews().length > 0;
+}
+
+function updateWelcomeTrial() {
+  const pill = document.querySelector("#welcome-trial");
+  if (!pill) return;
+  const offer = canOfferFreeTrial();
+  pill.hidden = !offer;
+
+  const badge = document.querySelector("#welcome-trial-badge");
+  if (badge) badge.textContent = `${FREE_TRIAL_DAYS} days free`;
+}
+
+function setTrialSheetVisible(visible) {
+  const sheet = document.querySelector("#trial-sheet");
+  if (!sheet) return;
+  sheet.hidden = !visible;
+  document.body.classList.toggle("trial-sheet-open", visible);
+}
+
+/* Shown once, ever, and only on the home screen - never over a story, and
+   never while a child is waiting for one. A parent who says "not tonight" is
+   not asked again; the pill stays for whenever they want it. */
+function maybeShowTrialSheet() {
+  if (!canOfferFreeTrial() || !hasMadeAStory()) return;
+  try {
+    if (localStorage.getItem(TRIAL_SHEET_SEEN_KEY)) return;
+    localStorage.setItem(TRIAL_SHEET_SEEN_KEY, String(Date.now()));
+  } catch {
+    // Private browsing: show it this once rather than every time, which is
+    // what returning here would do.
+    return;
+  }
+  setTrialSheetVisible(true);
+  trackEvent("trial_sheet_shown");
+}
+
+document.querySelector("#welcome-trial")?.addEventListener("click", () => {
+  trackEvent("trial_pill_tapped");
+  showScreen("upgrade");
+});
+
+document.querySelector("#trial-close")?.addEventListener("click", () => {
+  setTrialSheetVisible(false);
+  trackEvent("trial_sheet_dismissed", { how: "close" });
+});
+
+document.querySelector("#trial-later")?.addEventListener("click", () => {
+  setTrialSheetVisible(false);
+  trackEvent("trial_sheet_dismissed", { how: "later" });
+});
+
+document.querySelector("#trial-start")?.addEventListener("click", () => {
+  setTrialSheetVisible(false);
+  trackEvent("trial_sheet_accepted");
+  showScreen("upgrade");
+});
+
 // The home screen states the offer, because it is the first thing a stranger
 // sees and the only place to say it before they have spent any effort.
 function updateWelcomeOffer() {
@@ -1275,7 +1361,11 @@ function updateWelcomeOffer() {
     if (label) label.textContent = words;
     else startButton.textContent = words;
   }
+  // The pill and the "No account needed" line share a slot, so only one of
+  // them is ever on screen: signed out gets the line, a signed-in free
+  // account gets the offer.
   if (welcomeOffer) welcomeOffer.hidden = Boolean(currentUser);
+  updateWelcomeTrial();
 }
 
 /* The four (or five) things a parent can actually do with their account, as a
@@ -1437,6 +1527,7 @@ function showScreen(name) {
     updateBuilderAccountNotice();
   }
   document.body.classList.toggle("home-active", name === "welcome");
+  if (name === "welcome") window.setTimeout(maybeShowTrialSheet, 600);
   // The making screen is a thing to watch, not a page to read: nothing on it
   // is below the fold, so it should not move at all while it works.
   document.body.classList.toggle("loading-active", name === "loading");
