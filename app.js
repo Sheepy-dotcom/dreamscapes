@@ -3859,7 +3859,7 @@ async function addCloudUsage({ stories = 0, audioSeconds = 0 } = {}) {
    folded away: it is the most useful thing on the screen for the one parent in
    twenty who wants it, and the least useful for the other nineteen. */
 
-const PLAN_ICON_VERSION = "2026101021";
+const PLAN_ICON_VERSION = "2026110801";
 
 /* Painted artwork rather than the SVG approximations of it that were here
    before. The tile icons and the card icons are the same drawings at two
@@ -3874,9 +3874,7 @@ const PLAN_ICONS = {
   free: "plan-card-free",
   premier: "plan-card-premier",
   plus: "plan-card-plus",
-  // No art of its own yet, so it borrows the Plus card rather than showing a
-  // gap where every other tier has a picture.
-  family: "plan-card-plus",
+  family: "plan-card-family",
 };
 
 function planIcon(name) {
