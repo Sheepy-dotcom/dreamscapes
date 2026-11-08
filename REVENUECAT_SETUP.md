@@ -53,7 +53,12 @@ plan id does not matter** — only the part before the colon.
    - Reference Name: `DreamScapes Family`
    - Product ID: `dreamscapes_family_monthly`
    - Duration: 1 Month
-   - Price: £19.99 (UK), then let Apple generate the other territories
+   - Price: £19.99 — **change the territory dropdown to United Kingdom
+     before picking the price.** It defaults to the United States, and every
+     other territory is generated from whichever one you choose as the base,
+     so setting $19.99 first and fixing it afterwards means re-generating the
+     whole world. If the subscription already exists: *Subscription Prices →
+     Edit →* change the territory there.
 3. **Fill in the required bits or it will not go live.** Each subscription
    needs a localised display name and description, and the group needs a
    review screenshot. Missing these is a silent cause of a product never
@@ -85,7 +90,8 @@ plan id does not matter** — only the part before the colon.
 2. **Add a base plan.**
    - Base plan ID: `monthly-autorenew`
    - Type: Auto-renewing, Monthly
-   - Price: £19.99, then set the other regions
+   - Price: £19.99 — set on the **base plan**, not the subscription.
+     *Set prices →* United Kingdom, then let Play convert the other regions.
    - **Activate it.** A base plan left as a draft does not appear.
 3. **Add the free trial** as an *Offer* on the base plan: 7 days, eligibility
    "new customers only", then activate the offer.
@@ -102,6 +108,10 @@ plan id does not matter** — only the part before the colon.
 
 - App Store app → `dreamscapes_plus_monthly`, `dreamscapes_family_monthly`
 - Play Store app → the same two ids
+
+**Prices are read-only in RevenueCat** — it mirrors what the stores report
+and cannot set them. A product showing USD here means the store says USD; fix
+it in the store and RevenueCat follows on its next sync.
 
 If RevenueCat cannot see them, its store credentials are missing — check
 *Project settings → Apps*: the iOS app needs the App Store Connect shared
@@ -156,6 +166,10 @@ sign in with the sandbox tester when prompted.
 **Android:** add the Google account as a *licence tester* in Play Console
 (*Setup → Licence testing*), install from the internal testing track with
 that account.
+
+A sandbox purchase sheet shows the price for **the store account's region**,
+not the territory you priced. A US sandbox tester sees USD however you set it
+up — that is cosmetic, not a misconfiguration.
 
 **Then check the plan actually landed:** Supabase → `profiles` → that user's
 row → `plan` should read `family`. If the purchase succeeded but the column
